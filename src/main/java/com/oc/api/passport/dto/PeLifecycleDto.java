@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "pe_lifecycle")
-public class PeLifecycle {
+public class PeLifecycleDto {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

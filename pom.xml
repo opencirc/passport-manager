@@ -10,8 +10,7 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.opencirc.api</groupId>
-	<artifactId>PassportGenerator</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<artifactId>PassportManager</artifactId>
 	<name>PassportGenerator</name>
 	<description>Spring Boot</description>
 	<url />

@@ -1,16 +1,14 @@
 package com.oc.api.passport.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-import org.hibernate.annotations.ColumnTransformer;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,32 +16,32 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "pe_datasheet")
+@Table(name = "passport_entity")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class DataSheet {
+public class PassportEntityDto {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "pe_datasheet_id")
-	private Long peDatasheetId;
+	@Column(name = "passport_entity_id")
+	private String passportEntityId;
 
-	@Column(name = "template_entry", columnDefinition = "jsonb")
-	@ColumnTransformer(write = "?::jsonb")
-	private JsonNode templateEntry;
+	@Column(name = "pe_name")
+	private String peName;
 
 	@Column(name = "status")
 	private String status;
 
-	@Column(name = "data_category")
-	private String dataCategory;
+	@Column(name = "parent_pe_id")
+	private String parentPe;
 
 	@Column(name = "created_by")
 	private String createdBy;
 
 	@Column(name = "created_time", updatable = false)
 	private LocalDateTime createdTime;
-
+	
+    @OneToMany(mappedBy = "passportEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<PassportDataSheetMappingDto> peDatasheetMappings;
 }

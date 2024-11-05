@@ -30,12 +30,6 @@ public class ExternalApiService {
 	private ObjectMapper objectMapper;
 
 	@Autowired
-	private CacheService cacheService;
-
-	@Autowired
-	private DictionaryMapping dictionaryMapping;
-
-	@Autowired
 	private Properties props;
 
 
@@ -109,15 +103,15 @@ public class ExternalApiService {
 			rootObject = (ObjectNode) rootNode;
 
 			// Add new field at class level
-			rootObject.put("Data Category", "");
+			rootObject.put("dataCategory", "");
 
 			ArrayNode classProperties = (ArrayNode) rootObject.get("classProperties");
 			for (JsonNode propertyNode : classProperties) {
 				if (propertyNode.isObject()) {
 					ObjectNode propertyObject = (ObjectNode) propertyNode;
 
-					propertyObject.put("Actual Value", "");
-					propertyObject.put("Data Category", "");
+					propertyObject.put("actualValue", "");
+					//propertyObject.put("Data Category", "");
 				}
 			}
 
@@ -139,8 +133,8 @@ public class ExternalApiService {
 
 		ObjectNode template = objectMapper.createObjectNode();
 		ArrayNode propertiesArray = objectMapper.createArrayNode();
-		template.put("TemplateName", "");
-		template.put("Data Category", "");
+		template.put("templateName", "");
+		template.put("dataCategory", "");
 
 		for (Map.Entry<String, String> entry : properties.entrySet()) {
 

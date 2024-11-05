@@ -2,9 +2,7 @@ package com.oc.api.passport.mapping;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -64,6 +62,8 @@ public class DictionaryMapping {
 		return result;
 	}
 // remove unused methods
+	
+	/*
 	private String getMappedValue(String key, Map<String, String> dictionaryMappings) {
 	    return dictionaryMappings.get(key);
 	}
@@ -91,5 +91,5 @@ public class DictionaryMapping {
 		}
 		return null;
 	}
-
+*/
 }

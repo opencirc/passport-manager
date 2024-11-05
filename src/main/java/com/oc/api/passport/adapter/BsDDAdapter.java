@@ -37,31 +37,43 @@ public class BsDDAdapter implements DictionaryAdapter {
 
 	@Autowired
 	private DictionaryMapping dictionaryMapping;
+	
 
 	@Override
-	public JsonNode listClass(String text) {
+	public List<Map<String, String>> listClass(String text) {
 
 		if (props == null) {
 			throw new IllegalStateException("Properties bean is not injected!");
 		}
-
 		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(props.getBsDDClassSearchTextURL())
 				.queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text).queryParam(AppConstants.QP_BSDD_LIMIT, 20);
 		String url = uriBuilder.toUriString();
 		ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-
-		return response.getBody();
+		JsonNode responseBody = response.getBody();
+		
+		List<Map<String, String>> classList = new ArrayList<>();
+		if (responseBody != null) {
+			for (JsonNode node : responseBody.get("classes")) {
+				Map<String, String> classMap = new HashMap<>();
+				classMap.put("name", node.path("name").asText());
+				classMap.put("uri", node.path("uri").asText());
+				classMap.put("code", node.path("referenceCode").asText());
+				classList.add(classMap);
+			}
+		}
+		return classList;
 	}
 
 	@Override
 	public JsonNode getClassTemplatewithPropDetails(String uri) {
+		
+		if(uri.isEmpty()) {
+			return null;
+		}
 		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(props.getBsDDClassDetailsURL())
 				.queryParam(AppConstants.URI, uri).queryParam(AppConstants.QP_BSDD_INCLUDECLASSPROP, true);
-
 		String url = uriBuilder.toUriString();
-
 		ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-
 		JsonNode rootNode = response.getBody();
 		if (rootNode == null || !rootNode.isObject()) {
 			return null;
@@ -76,7 +88,6 @@ public class BsDDAdapter implements DictionaryAdapter {
 			ArrayNode classProperties = (ArrayNode) classPropertiesNode;
 
 			ArrayNode updatedProperties = objectMapper.createArrayNode();
-
 			for (JsonNode propertyNode : classProperties) {
 				if (propertyNode.isObject()) {
 					ObjectNode propertyObject = (ObjectNode) propertyNode;
@@ -84,21 +95,20 @@ public class BsDDAdapter implements DictionaryAdapter {
 					formPropertyTemplate(updatedProperties, propertyMap, "bsDD");
 				}
 			}
-
 			rootObject.set(AppConstants.BSDD_FIELD_CLASSPROPERTIES, updatedProperties);
 		}
 		return rootObject;
 	}
 
 	@Override
-	public JsonNode getPropertyTemplatewithDetails(Map<String, String> properties) {
+	public JsonNode getPropertyTemplatewithDetails(List<String> uriList) {
 		ObjectNode template = objectMapper.createObjectNode();
 		ArrayNode propertiesArray = objectMapper.createArrayNode();
-		template.put("TemplateName", "");
-		template.put("Data Category", "");
+		template.put("templateName", "");
+		template.put("dataCategory", "");
 
-		for (Map.Entry<String, String> entry : properties.entrySet()) {
-			String uri = entry.getValue();
+		for (String uri : uriList) {
+			System.out.println(uri);
 			UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(props.getBsDDPropertiesWithDetailURL())
 					.queryParam(AppConstants.URI, uri);
 			String url = uriBuilder.toUriString();
@@ -114,13 +124,10 @@ public class BsDDAdapter implements DictionaryAdapter {
 	private void formPropertyTemplate(ArrayNode propertiesArray, Map<String, Object> response,
 			String dataDictionaryName) {
 		Map<String, Object> mappedPropTemplate = new HashMap<String, Object>();
-
 		mappedPropTemplate = dictionaryMapping.mapDDFieldtoOC(response, dataDictionaryName);
 		ObjectNode propertyTemplateNode = objectMapper.valueToTree(mappedPropTemplate);
-
 		propertyTemplateNode.put(AppConstants.ACTUAL_VALUE, "");
-		propertyTemplateNode.put(AppConstants.DATA_CATEGORY_FIELD, "");
-
+		//propertyTemplateNode.put(AppConstants.DATA_CATEGORY_FIELD, "");
 		propertiesArray.add(propertyTemplateNode);
 
 	}
@@ -129,8 +136,11 @@ public class BsDDAdapter implements DictionaryAdapter {
 	public List<Map<String, String>> listProperties(String text) {
 		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(props.getBsDDTextSearchURL())
 				.queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
-				.queryParam(AppConstants.QP_BSDD_TYPEFILTER, "Property").queryParam(AppConstants.QP_BSDD_LIMIT, 20);
-		String url = uriBuilder.toUriString();
+				.queryParam(AppConstants.QP_BSDD_TYPEFILTER, "Property")
+		.queryParam("IncludeSearchDescriptions", "false")
+		.queryParam("Offset", 0);
+		//.queryParam(AppConstants.QP_BSDD_LIMIT, 20)
+		String url = uriBuilder.build(false).toUriString();
 
 		ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
 		JsonNode responseBody = response.getBody();
@@ -140,6 +150,7 @@ public class BsDDAdapter implements DictionaryAdapter {
 				Map<String, String> propertyMap = new HashMap<>();
 				propertyMap.put("name", node.path("name").asText());
 				propertyMap.put("uri", node.path("uri").asText());
+				propertyMap.put("code", node.path("code").asText());
 
 				propertyList.add(propertyMap);
 			}
@@ -151,7 +162,6 @@ public class BsDDAdapter implements DictionaryAdapter {
 	public void validateTemplateEntry(JsonNode jsonNode) throws BsDDJsonValidationException {
 
 		ArrayNode properties = null;
-
 		System.out.println(jsonNode.toString());
 		if (jsonNode.has("classType") && jsonNode.get("classType").equals("Class")) {
 			properties = (ArrayNode) jsonNode.get("classProperties");
@@ -165,7 +175,7 @@ public class BsDDAdapter implements DictionaryAdapter {
 
 			String propName = property.has("name") ? property.get("name").asText() : null;
 			String dataType = property.has("dataType") ? property.get("dataType").asText() : null;
-			JsonNode actualValueNode = property.get("Actual Value");
+			JsonNode actualValueNode = property.get("actualValue");
 			JsonNode allowedValuesNode = property.get("allowedValues");
 
 			Double maxExclusive = property.has("MaxExclusive") ? property.get("MaxExclusive").asDouble() : null;
@@ -180,7 +190,6 @@ public class BsDDAdapter implements DictionaryAdapter {
 				if (allowedValuesNode != null && allowedValuesNode.isArray()) {
 					validateAllowedValues(propName, (ArrayNode) allowedValuesNode, actualValueNode, errorMessages);
 				}
-
 				if ("Real".equals(dataType)) {
 					validateRangeChecks(propName, actualValueNode, maxExclusive, maxInclusive, minExclusive,
 							minInclusive, errorMessages);
@@ -191,7 +200,6 @@ public class BsDDAdapter implements DictionaryAdapter {
 			throw new BsDDJsonValidationException("Validation failed with the following errors : " + "\n\t- "
 					+ String.join(",\n\t- ", errorMessages));
 		}
-
 	}
 
 	private static void validateDataType(String propName, String dataType, JsonNode actualValueNode,

@@ -15,7 +15,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class OcConfig {
+public class OcConfigDto {
 
 	@Id
 	@Column(name = "hashvalue")

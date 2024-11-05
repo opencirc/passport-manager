@@ -24,7 +24,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class PELogs {
+public class PELogsDto {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

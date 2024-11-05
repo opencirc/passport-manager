@@ -5,24 +5,20 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import com.oc.api.passport.config.CompanyConfig;
-import com.oc.api.passport.dao.OcConfigRepository;
 
-@Service
+
 public class CompanyHashService {
 
 	private final CompanyConfig companyConfig;
 	private String companyHash;
 	
-	private OcConfigRepository ocConfigRepository;
 
 	@Autowired
-	public CompanyHashService(CompanyConfig companyConfig, OcConfigRepository ocConfigRepository ) {
+	public CompanyHashService(CompanyConfig companyConfig ) {
 		this.companyConfig = companyConfig;
-		this.ocConfigRepository = ocConfigRepository;
-		computeAndStoreHash(); // Compute hash on startup
+		// computeAndStoreHash(); // Compute hash on startup
 	}
 
 	public void computeAndStoreHash() {
@@ -38,7 +34,7 @@ public class CompanyHashService {
 				hexString.append(hex);
 			}
 			this.companyHash = hexString.toString();
-			ocConfigRepository.saveConfig(companyHash);
+		//	ocConfigRepository.saveConfig(companyHash);
 
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException("Error computing hash", e);

@@ -8,19 +8,13 @@ import com.oc.api.passport.exception.BsDDJsonValidationException;
 
 public interface DictionaryAdapter {
 
-	JsonNode listClass(String text);
+	List<Map<String, String>> listClass(String text);
 
-	/**
-	 * Retrieves detailed information for a class, including its properties.
-	 *
-	 * @param uri The URI of the class.
-	 * @return A JsonNode with the class template and property details.
-	 */
-	JsonNode getClassTemplatewithPropDetails(String uri);
+	JsonNode getClassTemplatewithPropDetails(String code);
 
 	List<Map<String, String>> listProperties(String text);
 	
-	JsonNode getPropertyTemplatewithDetails(Map<String, String> properties);
+	JsonNode getPropertyTemplatewithDetails(List<String> properties);
 
 	void validateTemplateEntry(JsonNode jsonNode) throws BsDDJsonValidationException;
 }

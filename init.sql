@@ -1,10 +1,3 @@
-CREATE TABLE pe_logs (
-    log_id SERIAL PRIMARY KEY,                  
-    pe_id VARCHAR(100) REFERENCES passport_entity(pe_id), 
-    log_details TEXT NOT NULL,                
-    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
-);
-
 
 CREATE TABLE IF NOT EXISTS pe_datasheet
 (
@@ -34,6 +27,7 @@ CREATE TABLE IF NOT EXISTS pe_datasheet_mapping
     passport_entity_id VARCHAR(100) REFERENCES passport_entity(passport_entity_id) ON DELETE CASCADE,
     datasheet_id INT REFERENCES pe_datasheet(datasheet_id) ON DELETE CASCADE
     );
+
     
     
  CREATE TABLE IF NOT EXISTS pe_template
@@ -46,4 +40,4 @@ CREATE TABLE IF NOT EXISTS pe_datasheet_mapping
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
+    

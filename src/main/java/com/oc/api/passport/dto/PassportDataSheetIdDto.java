@@ -9,7 +9,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class PassportDataSheetId {
+public class PassportDataSheetIdDto {
 	private String peId;
 	private Long datasheetId;
 }

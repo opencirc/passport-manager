@@ -2,11 +2,11 @@ package com.oc.api.passport.constants;
 
 public class AppConstants {
 
-	public static final String DATA_CATEGORY_FIELD = "Data Category";
+	public static final String DATA_CATEGORY_FIELD = "dataCategory";
 	
-	public static final String TEMPLATE_NAME = "Template Name";
+	public static final String TEMPLATE_NAME = "templateName";
 	
-	public static final String ACTUAL_VALUE = "Actual Value";
+	public static final String ACTUAL_VALUE = "actualValue";
 	
 	public static final String URI = "Uri";
 	
