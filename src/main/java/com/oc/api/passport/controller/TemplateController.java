@@ -67,7 +67,7 @@ public class TemplateController {
 		return templateService.createTemplateWithProperties(properties, CommonUtil.convertToLowercase(ddLibrary));
 
 	}
-
+/*
 	@GetMapping(value = "/api/clear/", produces = { "application/json" })
 	public String clearcache() {
 		 templateService.clearCache();
@@ -80,4 +80,6 @@ public class TemplateController {
 		return templateService.lookCache();
 		 
 	}
+
+	*/
 }
