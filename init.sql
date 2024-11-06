@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS pe_datasheet
 (
     datasheet_id SERIAL PRIMARY KEY,
     template_entry JSON NOT NULL,
-    status VARCHAR(50) NOT NULL,
     data_category VARCHAR(100),
     created_by VARCHAR(255) NOT NULL,
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
