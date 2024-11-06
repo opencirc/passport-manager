@@ -1,15 +1,20 @@
+<img src="https://github.com/user-attachments/assets/c57405ea-df1c-4dd4-b684-f49a9e1e1c67" alt="opencirc logo" width="80" style="vertical-align: down;">
+
+
+  
 **Construction Materials Passport Generator and Manager**
 
-  This application allows users to generate and manage passports for construction materials through a REST API. It uses external dictionaries such as bsDD and lexicon to generate passports in the defined templates.
+  This application allows users to generate and manage passports for construction materials through a REST API. It uses external dictionaries such as bsDD (https://search.bsdd.buildingsmart.org/) and lexicon (https://definehub.com/en/) to generate passports in the defined templates.
 
 This README will guide you through the steps to clone the code, set up the application on your local machine, and use the API to generate passports.
 
 **1. Prerequisites**
 Before getting started, ensure you have the following software installed on your system:
 
-- Git
-- Docker
-- Docker Compose
+- Git (https://git-scm.com/downloads)
+- Docker (https://docs.docker.com/get-started/get-docker/)
+- Docker Compose (https://docs.docker.com/compose/install/)
+
 
 **2. Clone the Repository**
 
@@ -30,7 +35,10 @@ Using Docker Compose
 
 2. From the project directory, run the following command to start the application:
 
-    docker-compose up --build
+```bash
+docker-compose up --build
+```
+   
 This command will:
 
 - Build the Docker images 
