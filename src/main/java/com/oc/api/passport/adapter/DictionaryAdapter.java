@@ -10,11 +10,13 @@ public interface DictionaryAdapter {
 
 	List<Map<String, String>> listClass(String text);
 
-	JsonNode getClassTemplatewithPropDetails(String code);
+	JsonNode getClassTemplatewithPropDetails(String code) throws BsDDJsonValidationException;
 
 	List<Map<String, String>> listProperties(String text);
 	
-	JsonNode getPropertyTemplatewithDetails(List<String> properties);
+	JsonNode getPropertyTemplatewithDetails(List<String> properties) throws BsDDJsonValidationException;
 
 	void validateTemplateEntry(JsonNode jsonNode) throws BsDDJsonValidationException;
+
+	boolean validateUri(String uri);
 }

@@ -19,9 +19,11 @@ import com.oc.api.passport.adapter.DictionaryAdapterFactory;
 import com.oc.api.passport.dao.DataSheetRepository;
 import com.oc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.oc.api.passport.dao.PassportEntityRepository;
+import com.oc.api.passport.dao.PassportEntityTemplateRepository;
 import com.oc.api.passport.dto.DataSheetDto;
 import com.oc.api.passport.dto.PassportDataSheetMappingDto;
 import com.oc.api.passport.dto.PassportEntityDto;
+import com.oc.api.passport.dto.PassportEntityTemplateDto;
 import com.oc.api.passport.exception.BsDDJsonValidationException;
 import com.oc.api.passport.model.DataSheet;
 import com.oc.api.passport.model.PassportEntity;
@@ -39,6 +41,9 @@ public class PassportEntityService {
 
 	@Autowired
 	private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+	
+	@Autowired
+	private PassportEntityTemplateRepository peTemplateRepository;
 
 	@Autowired
 	private DictionaryAdapterFactory dictionaryAdapterFactory;
@@ -70,8 +75,8 @@ public class PassportEntityService {
 		System.out.println(templateEntry.get("templateName").toString());
 		PassportEntityDto passportEntity = new PassportEntityDto();
 		passportEntity.setPassportEntityId(cuid);
-		passportEntity.setPeName(templateEntry.get("templateName").asText());
-		passportEntity.setStatus("Active");
+		passportEntity.setPassportEntityName(templateEntry.get("templateName").asText());
+		passportEntity.setStatus("active");
 		if(isUpdate) {
 			passportEntity.setParentPe(parentId);
 		}
@@ -99,29 +104,41 @@ public class PassportEntityService {
 		passportDatasheetMappingRepository.save(passportDataSheet);
 	}
 
-	public PassportEntity getActivePassportEntity(String peId)
+	public JsonNode getActivePassportEntity(String peId)
 			throws JsonMappingException, JsonProcessingException {
-		List<Object[]> results = passportEntityRepository.findActivePassportEntity(peId, "Active");
+		List<Object[]> results = passportEntityRepository.findActivePassportEntity(peId, "active");
 		PassportEntity passportEntity = new PassportEntity();
 		List<DataSheet> dataSheetList = new ArrayList<DataSheet>();
+		/*
+		 * for (Object[] result : results) { System.out.println("object result");
+		 * System.out.println(result.toString()); System.out.println(result[0] + "   " +
+		 * result[1] + "   " + result[2]); passportEntity.setPassportEntityId((String)
+		 * result[0]); passportEntity.setPeName((String) result[1]);
+		 * 
+		 * DataSheet dataSheet = new DataSheet(); dataSheet.setDatasheetId((Long)
+		 * result[2]);
+		 * 
+		 * ObjectMapper mapper = new ObjectMapper(); JsonNode jsonNode =
+		 * mapper.readTree((String) result[3]); dataSheet.setTemplateEntry(jsonNode);
+		 * 
+		 * dataSheetList.add(dataSheet); passportEntity.setDatasheets(dataSheetList); }
+		 */
+		ObjectMapper mapper = new ObjectMapper(); 
+		ObjectNode jsonObject = mapper.createObjectNode();
+		jsonObject.put("passportEntityId", (String) results.getFirst()[0]);
+        jsonObject.put("passportEntityName", (String) results.getFirst()[1]);
+        ArrayNode dataSheetArray = mapper.createArrayNode();
+    //    jsonObject.set("datasheets", dataSheetArray);
 		for (Object[] result : results) {
-			System.out.println("object result");
-			System.out.println(result.toString());
-			System.out.println(result[0] + "   " + result[1] + "   " + result[2]);
-			passportEntity.setPassportEntityId((String) result[0]);
-			passportEntity.setPeName((String) result[1]);
-
-			DataSheet dataSheet = new DataSheet();
-		//  dataSheet.setDatasheetId((Long) result[2]);
-
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode jsonNode = mapper.readTree((String) result[3]);
-			dataSheet.setTemplateEntry(jsonNode);
-
-			dataSheetList.add(dataSheet);
-			passportEntity.setDatasheets(dataSheetList);
+			ObjectNode dataSheetArrayObject = mapper.createObjectNode();
+			dataSheetArrayObject.put("datasheetId", (Long) result[2]);
+			dataSheetArrayObject.put("dataCategory", (String) result[4]);
+            JsonNode propertiesNode = mapper.readTree((String) result[3]);
+            dataSheetArrayObject.set("properties", propertiesNode.get("properties"));
+            dataSheetArray.add(dataSheetArrayObject);
 		}
-		return passportEntity;
+		jsonObject.set("datasheets", dataSheetArray);
+		return jsonObject;
 	}
 
 	public List<PassportEntity> getActivePassportEntitywithChildPE(String peId)
@@ -134,7 +151,7 @@ public class PassportEntityService {
 		for (Object[] result : results) {
 			PassportEntity passportEntity = new PassportEntity();
 			List<DataSheet> dataSheetList = new ArrayList<DataSheet>();
-			System.out.println(result[0] + "   " + result[1] + "   " + result[2] + "   " + result[3]);
+			System.out.println(result[0] + "   " + result[1] + "   " + result[2] + "   " + result[3]+ "   " + result[4]);
 
 			passportEntity.setPassportEntityId((String) result[0]);
 			passportEntity.setPeName((String) result[1]);
@@ -171,28 +188,54 @@ public class PassportEntityService {
 	private int inactivatePassportEntity(String peId) {
 		return passportEntityRepository.updateStatusToInactive(peId);
 	}
-	
-	public JsonNode createTemplateFromExistingPE(String peId) throws JsonMappingException, JsonProcessingException {
-		PassportEntity activePE = getActivePassportEntity(peId);
-		
-		for (DataSheet dataSheet : activePE.getDatasheets()) {
-			System.out.println(dataSheet.getTemplateEntry().toPrettyString());
+
+	public JsonNode createTemplateFromExistingPE(String peId, boolean saveTemplate, String templateName)
+			throws JsonMappingException, JsonProcessingException {
+		JsonNode activePE = getActivePassportEntity(peId);
+		if (activePE == null) {
+			return null;
 		}
-		return extractTemplatefromPE(activePE);
+		JsonNode extractedTemplate = extractTemplatefromPE(activePE);
+		if (saveTemplate) {
+			persistDataTemplate(extractedTemplate, templateName);
+		}
+		return extractedTemplate;
 	}
 	
 	
-	private JsonNode extractTemplatefromPE(PassportEntity activePE) {
+	private JsonNode extractTemplatefromPE(JsonNode activePE) {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		rootNode.put("templateName", "");
 		rootNode.put("dataCategory", "");
 		ArrayNode propertiesNode = mapper.createArrayNode();
-		for (DataSheet dataSheet : activePE.getDatasheets()) {
-			propertiesNode.add(dataSheet.getTemplateEntry());
+		JsonNode datasheetsNode = activePE.get("datasheets");
+		if (datasheetsNode.isArray()) {
+			for (JsonNode datasheet : datasheetsNode) {
+				if(datasheet.get("dataCategory").textValue().equalsIgnoreCase("unique")) {
+					continue;
+				}
+				
+				JsonNode propertiesArray = datasheet.get("properties");
+				for (JsonNode property : propertiesArray) {
+					if (property.has("actualValue")) {
+                    	((ObjectNode) property).put("actualValue", "");
+                    }
+				}
+				 propertiesNode.add(propertiesArray);
+			}
 		}
 		rootNode.set("properties", propertiesNode);
 		return rootNode;
+	}
+	
+	private void persistDataTemplate(JsonNode template, String templateName) {
+		PassportEntityTemplateDto passportEntityTemplateDto = new PassportEntityTemplateDto();
+		passportEntityTemplateDto.setExtractedTemplate(template);
+		passportEntityTemplateDto.setTemplateName(templateName);
+		passportEntityTemplateDto.setCreatedBy("OCTest");
+		passportEntityTemplateDto.setCreatedTime(LocalDateTime.now());
+		peTemplateRepository.save(passportEntityTemplateDto);
 	}
 
 }

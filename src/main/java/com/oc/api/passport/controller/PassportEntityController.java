@@ -42,30 +42,31 @@ public class PassportEntityController {
 	}
 
 	@GetMapping("/passports/active/")
-	public PassportEntity getActivePassportEntity(@RequestParam String peId) throws JsonMappingException, JsonProcessingException {
-		return passportEntityService.getActivePassportEntity(peId);
+	public JsonNode getActivePassportEntity(@RequestParam String passportEntityId) throws JsonMappingException, JsonProcessingException {
+		return passportEntityService.getActivePassportEntity(passportEntityId);
 	}
 	
 	@GetMapping("/passports/active/with-children/")
-	public List<PassportEntity> getActivePassportEntitywithChildPE(@RequestParam String peId) throws JsonMappingException, JsonProcessingException {
-		return passportEntityService.getActivePassportEntitywithChildPE(peId);
+	public List<PassportEntity> getActivePassportEntitywithChildPE(@RequestParam String passportEntityId) throws JsonMappingException, JsonProcessingException {
+		return passportEntityService.getActivePassportEntitywithChildPE(passportEntityId);
 	}
 	
 	@Operation(summary = "Update the existing Passport entity")
 	@PostMapping(value = "/api/passportEntity/update/", produces = { "application/text" }, consumes = { "application/json" })
 	public String updatePassportEntity(
 			@Parameter(description = "Updated Json with new values") @RequestBody JsonNode templateEntry,
-			String peId) throws NoSuchAlgorithmException {
+			String passportEntityId) throws NoSuchAlgorithmException {
 		System.out.println(templateEntry.toString());
-		return passportEntityService.updatePassportEntity(templateEntry, peId);
+		return passportEntityService.updatePassportEntity(templateEntry, passportEntityId);
 
 	}
 	
 	@Operation(summary = "Create a template from the existing passport entity")
 	@PostMapping(value = "/api/passportEntity/createTemplate/", produces = { "application/json" })
-	public JsonNode createTemplateFromExistingPE(@RequestParam String peId) {
+	public JsonNode createTemplateFromExistingPE(@RequestParam String passportEntityId, @RequestParam boolean saveTemplate,
+			@RequestParam String templateName) {
 		try {
-			return passportEntityService.createTemplateFromExistingPE(peId);
+			return passportEntityService.createTemplateFromExistingPE(passportEntityId, saveTemplate, templateName);
 		} catch (JsonMappingException e) {
 			e.printStackTrace();
 		} catch (JsonProcessingException e) {

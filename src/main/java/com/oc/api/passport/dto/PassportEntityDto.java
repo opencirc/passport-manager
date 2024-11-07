@@ -24,16 +24,16 @@ import lombok.ToString;
 public class PassportEntityDto {
 
 	@Id
-	@Column(name = "passport_entity_id")
+	@Column(name = "id")
 	private String passportEntityId;
 
-	@Column(name = "pe_name")
-	private String peName;
+	@Column(name = "name")
+	private String passportEntityName;
 
 	@Column(name = "status")
 	private String status;
 
-	@Column(name = "parent_pe_id")
+	@Column(name = "parent_id")
 	private String parentPe;
 
 	@Column(name = "created_by")

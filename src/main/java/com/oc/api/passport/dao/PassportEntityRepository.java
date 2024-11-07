@@ -12,35 +12,36 @@ import com.oc.api.passport.dto.PassportEntityDto;
 
 public interface PassportEntityRepository extends JpaRepository<PassportEntityDto, String> {
 
-	@Query(value = "SELECT pe.passport_entity_id as passportEntityId, pe.pe_name as peName, "
-			+ "ds.datasheet_id as datasheetId, ds.template_entry as templateEntry " + "FROM passport_entity pe "
-			+ "JOIN pe_datasheet_mapping pdm ON pe.passport_entity_id = pdm.passport_entity_id "
-			+ "JOIN pe_datasheet ds ON pdm.datasheet_id = ds.datasheet_id "
-			+ "WHERE pe.passport_entity_id = :passportEntityId "
-			// + "AND AND (:peName IS NULL OR pe.pe_name = :peName) "
+	@Query(value = "SELECT pe.id as passportEntityId, pe.name as peName, "
+			+ "ds.id as datasheetId, ds.template_entry as templateEntry, ds.data_category as dataCategory " + "FROM passport_entity pe "
+			+ "JOIN datasheet_mapping pdm ON pe.id = pdm.passport_entity_id "
+			+ "JOIN datasheet ds ON pdm.datasheet_id = ds.id "
+			+ "WHERE pe.id = :passportEntityId "
+			// + "AND AND (:peName IS NULL OR pe.passport_entity_name = :peName) "
 			+ "AND pe.status = :status", nativeQuery = true)
 	List<Object[]> findActivePassportEntity(@Param("passportEntityId") String peId,
 			@Param("status") String status);
 
 	@Query(value = """
 	        WITH RECURSIVE PassportTree AS (
-	            SELECT pe.passport_entity_id, pe.pe_name, pe.status, pe.parent_pe_id
+	            SELECT pe.id, pe.passport_entity_name, pe.status, pe.parent_id
 	            FROM passport_entity pe
-	            WHERE pe.passport_entity_id = :passportEntityId
+	            WHERE pe.id = :passportEntityId
 
 	            UNION ALL
 
-	            SELECT child.passport_entity_id, child.pe_name, child.status, child.parent_pe_id
+	            SELECT child.id, child.name, child.status, child.parent_id
 	            FROM passport_entity child
-	            INNER JOIN PassportTree parent ON child.parent_pe_id = parent.passport_entity_id
+	            INNER JOIN PassportTree parent ON child.parent_id = parent.id
 	        )
-	        SELECT pt.passport_entity_id AS passportEntityId, 
-	               pt.pe_name AS peName, 
-	               ds.datasheet_id AS datasheetId, 
+	        SELECT pt.id AS passportEntityId, 
+	               pt.name AS passportEntityName, 
+	               ds.id AS datasheetId, 
 	               ds.template_entry AS templateEntry 
+	               ds.data_category AS dataCategory
 	        FROM PassportTree pt
-	        JOIN pe_datasheet_mapping pdm ON pt.passport_entity_id = pdm.passport_entity_id
-	        JOIN pe_datasheet ds ON pdm.datasheet_id = ds.datasheet_id
+	        JOIN datasheet_mapping pdm ON pt.id = pdm.passport_entity_id
+	        JOIN datasheet ds ON pdm.datasheet_id = ds.id
 	        WHERE pt.status = 'active'
 	        """, nativeQuery = true)
 	List<Object[]> findActivePassportEntityWithDescendant(@Param("passportEntityId") String peId);

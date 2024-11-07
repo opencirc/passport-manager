@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "pe_datasheet_mapping")
+@Table(name = "datasheet_mapping")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,14 +24,14 @@ public class PassportDataSheetMappingDto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "mapping_id")
+    @Column(name = "id")
     private Long mappingId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "passport_entity_id", referencedColumnName = "passport_entity_id")
+    @JoinColumn(name = "passport_entity_id", referencedColumnName = "id")
     private PassportEntityDto passportEntity;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "datasheet_id", referencedColumnName = "datasheet_id")
+    @JoinColumn(name = "datasheet_id", referencedColumnName = "id")
     private DataSheetDto datasheet; 
 }

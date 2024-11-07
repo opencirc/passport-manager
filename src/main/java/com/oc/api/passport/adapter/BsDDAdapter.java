@@ -1,5 +1,7 @@
 package com.oc.api.passport.adapter;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,12 +65,14 @@ public class BsDDAdapter implements DictionaryAdapter {
 		}
 		return classList;
 	}
+	
+	
 
 	@Override
-	public JsonNode getClassTemplatewithPropDetails(String uri) {
+	public JsonNode getClassTemplatewithPropDetails(String uri) throws BsDDJsonValidationException {
 		
-		if(uri.isEmpty()) {
-			return null;
+		if(uri.isEmpty() || !validateUri(uri)) {
+			throw new BsDDJsonValidationException("Invalid URI : "+uri);
 		}
 		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(props.getBsDDClassDetailsURL())
 				.queryParam(AppConstants.URI, uri).queryParam(AppConstants.QP_BSDD_INCLUDECLASSPROP, true);
@@ -101,7 +105,7 @@ public class BsDDAdapter implements DictionaryAdapter {
 	}
 
 	@Override
-	public JsonNode getPropertyTemplatewithDetails(List<String> uriList) {
+	public JsonNode getPropertyTemplatewithDetails(List<String> uriList) throws BsDDJsonValidationException {
 		ObjectNode template = objectMapper.createObjectNode();
 		ArrayNode propertiesArray = objectMapper.createArrayNode();
 		template.put("templateName", "");
@@ -109,6 +113,9 @@ public class BsDDAdapter implements DictionaryAdapter {
 
 		for (String uri : uriList) {
 			System.out.println(uri);
+			if(!validateUri(uri)) {
+				throw new BsDDJsonValidationException("Invalid URI : "+uri);
+			}
 			UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(props.getBsDDPropertiesWithDetailURL())
 					.queryParam(AppConstants.URI, uri);
 			String url = uriBuilder.toUriString();
@@ -202,6 +209,18 @@ public class BsDDAdapter implements DictionaryAdapter {
 		}
 	}
 
+	
+	public boolean validateUri(String uriString) {
+		String REQUIRED_PREFIX = "https://identifier.buildingsmart.org/uri";
+		try {
+			URI uri = new URI(uriString);
+			return uri.getScheme() != null && uri.getHost() != null && uriString.startsWith(REQUIRED_PREFIX);
+		} catch (URISyntaxException e) {
+			return false;
+		}
+	}
+
+	
 	private static void validateDataType(String propName, String dataType, JsonNode actualValueNode,
 			List<String> errorMessages) {
 		String actualValue = actualValueNode.asText();
@@ -300,5 +319,9 @@ public class BsDDAdapter implements DictionaryAdapter {
 					.add(propName + " : Actual value: " + realValue + " is below MinInclusive limit: " + minInclusive);
 		}
 	}
+
+
+
+
 
 }

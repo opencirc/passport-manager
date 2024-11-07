@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "pe_log")
+@Table(name = "log")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,7 +28,7 @@ public class PELogsDto {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "pe_log_id")
+	@Column(name = "id")
 	private Long peLogId;
 
 	@Column(name = "passport_entity_id", nullable = false)

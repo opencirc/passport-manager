@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.oc.api.passport.exception.BsDDJsonValidationException;
 import com.oc.api.passport.service.TemplateService;
 import com.oc.api.passport.util.CommonUtil;
 
@@ -41,12 +42,13 @@ public class TemplateController {
 
 	/**
 	 * Returns list of classes fetched from bsDD
+	 * @throws BsDDJsonValidationException 
 	 */
 	@Operation(summary = "Get class from DD for the requested class code")
 	@GetMapping(value = "/api/classes/template/", produces = { "application/json" })
-	public JsonNode getClassTemplateWithProperties(
-			@Parameter(description = "Class Code", example = "EC000001") @RequestParam String code, @Parameter(description = "Name of library", required = true, example = "bsdd") @RequestParam String ddLibrary) {
-		return templateService.getClassTemplatewithPropDetails(code, ddLibrary);
+	public JsonNode createClassTemplateWithProperties(
+			@Parameter(description = "Class Code", example = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__") @RequestParam String uri, @Parameter(description = "Name of library", required = true, example = "bsdd") @RequestParam String ddLibrary) throws BsDDJsonValidationException {
+		return templateService.getClassTemplatewithPropDetails(uri, ddLibrary);
 	}
 
 
@@ -62,12 +64,12 @@ public class TemplateController {
 	@Operation(summary = "Create template with selected properties")
 	@PostMapping(value = "/api/createTemplateWithProperties/", produces = { "application/json" }, consumes = { "application/json"})
 	public JsonNode createTemplateWithProperties(
-			@Parameter(description = "List of Property name and its code", required = true, example = "{\"EN 318\": \"0b205c05-881f-44f3-83ca-568927baacfe\",\r\n"
-					+ "    \"EN 338\": \"0b44b46f-03ac-42c4-a500-408d5d175c0f\"}") @RequestBody List<String> properties,@Parameter(description = "Name of library", required = true, example = "bsdd")  @RequestParam String ddLibrary) {
-		return templateService.createTemplateWithProperties(properties, CommonUtil.convertToLowercase(ddLibrary));
+			@Parameter(description = "List of Property name and its code", required = true, example = "{\"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF000004\",\r\n"
+					+ "    \"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF000005\"}") @RequestBody List<String> propertiesUriList,@Parameter(description = "Name of library", required = true, example = "bsdd")  @RequestParam String ddLibrary) throws BsDDJsonValidationException {
+		return templateService.createTemplateWithProperties(propertiesUriList, CommonUtil.convertToLowercase(ddLibrary));
 
 	}
-
+/*
 	@GetMapping(value = "/api/clear/", produces = { "application/json" })
 	public String clearcache() {
 		 templateService.clearCache();
@@ -80,4 +82,6 @@ public class TemplateController {
 		return templateService.lookCache();
 		 
 	}
+	
+	*/
 }

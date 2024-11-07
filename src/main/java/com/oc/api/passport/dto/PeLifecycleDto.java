@@ -14,12 +14,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "pe_lifecycle")
+@Table(name = "lifecycle")
 public class PeLifecycleDto {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "pe_lifecycle_id")
+	@Column(name = "id")
 	private Long peLifecycleId;
 
 	@Column(name = "passport_entity_id", nullable = false)

@@ -1,20 +1,16 @@
 package com.oc.api.passport.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.hibernate.annotations.ColumnTransformer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,24 +18,24 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "datasheet")
+@Table(name = "template")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class DataSheetDto {
+public class PassportEntityTemplateDto {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
-	private long datasheetId;
+	private long templateId;
+	
+	@Column(name = "name")
+	private String templateName;
 
-	@Column(name = "template_entry", columnDefinition = "jsonb")
+	@Column(name = "template", columnDefinition = "jsonb")
 	@ColumnTransformer(write = "?::jsonb")
-	private JsonNode templateEntry;
-
-	@Column(name = "data_category")
-	private String dataCategory;
+	private JsonNode extractedTemplate;
 
 	@Column(name = "created_by")
 	private String createdBy;
@@ -47,8 +43,4 @@ public class DataSheetDto {
 	@Column(name = "created_time", updatable = false)
 	private LocalDateTime createdTime;
 
-	@OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<PassportDataSheetMappingDto> peDatasheetMappings;
-	  
-	  
 }
