@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,6 +18,8 @@ import com.oc.api.passport.util.CommonUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -44,10 +46,10 @@ public class TemplateController {
 	 * Returns list of classes fetched from bsDD
 	 * @throws BsDDJsonValidationException 
 	 */
-	@Operation(summary = "Get class from DD for the requested class code")
+	@Operation(summary = "Get class from DD for the requested uri")
 	@GetMapping(value = "/api/classes/template/", produces = { "application/json" })
 	public JsonNode createClassTemplateWithProperties(
-			@Parameter(description = "Class Code", example = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__") @RequestParam String uri, @Parameter(description = "Name of library", required = true, example = "bsdd") @RequestParam String ddLibrary) throws BsDDJsonValidationException {
+			@Parameter(description = "URI for the classification", example = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__") @RequestParam String uri, @Parameter(description = "Name of library", required = true, example = "bsdd") @RequestParam String ddLibrary) throws BsDDJsonValidationException {
 		return templateService.getClassTemplatewithPropDetails(uri, ddLibrary);
 	}
 
@@ -60,13 +62,16 @@ public class TemplateController {
 
 	}
 
-	// This method is to get the details of the selected properties from Dictionary
+
 	@Operation(summary = "Create template with selected properties")
-	@PostMapping(value = "/api/createTemplateWithProperties/", produces = { "application/json" }, consumes = { "application/json"})
+	@PostMapping(value = "/api/createTemplateWithProperties/", produces = { "application/json" }, consumes = {
+			"application/json" })
 	public JsonNode createTemplateWithProperties(
-			@Parameter(description = "List of Property name and its code", required = true, example = "{\"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF000004\",\r\n"
-					+ "    \"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF000005\"}") @RequestBody List<String> propertiesUriList,@Parameter(description = "Name of library", required = true, example = "bsdd")  @RequestParam String ddLibrary) throws BsDDJsonValidationException {
-		return templateService.createTemplateWithProperties(propertiesUriList, CommonUtil.convertToLowercase(ddLibrary));
+			@RequestBody(description = "List of property URIs", required = true, content = @Content(mediaType = "application/json", schema = @Schema(example = "[\"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF000004\", \"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF000005\"]"))) List<String> propertiesUriList,
+			@Parameter(description = "Name of library", required = true, example = "bsdd") @RequestParam String ddLibrary)
+			throws BsDDJsonValidationException {
+		return templateService.createTemplateWithProperties(propertiesUriList,
+				CommonUtil.convertToLowercase(ddLibrary));
 
 	}
 /*
