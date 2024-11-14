@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -67,7 +68,7 @@ public class TemplateController {
 	@PostMapping(value = "/api/createTemplateWithProperties/", produces = { "application/json" }, consumes = {
 			"application/json" })
 	public JsonNode createTemplateWithProperties(
-			@RequestBody(description = "List of property URIs", required = true, content = @Content(mediaType = "application/json", schema = @Schema(example = "[\"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF000004\", \"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF000005\"]"))) List<String> propertiesUriList,
+			@RequestBody List<String> propertiesUriList,
 			@Parameter(description = "Name of library", required = true, example = "bsdd") @RequestParam String ddLibrary)
 			throws BsDDJsonValidationException {
 		return templateService.createTemplateWithProperties(propertiesUriList,

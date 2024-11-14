@@ -134,7 +134,6 @@ public class BsDDAdapter implements DictionaryAdapter {
 		mappedPropTemplate = dictionaryMapping.mapDDFieldtoOC(response, dataDictionaryName);
 		ObjectNode propertyTemplateNode = objectMapper.valueToTree(mappedPropTemplate);
 		propertyTemplateNode.put(AppConstants.ACTUAL_VALUE, "");
-		//propertyTemplateNode.put(AppConstants.DATA_CATEGORY_FIELD, "");
 		propertiesArray.add(propertyTemplateNode);
 
 	}

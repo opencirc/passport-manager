@@ -24,7 +24,7 @@ public interface PassportEntityRepository extends JpaRepository<PassportEntityDt
 
 	@Query(value = """
 	        WITH RECURSIVE PassportTree AS (
-	            SELECT pe.id, pe.passport_entity_name, pe.status, pe.parent_id
+	            SELECT pe.id, pe.name, pe.status, pe.parent_id
 	            FROM passport_entity pe
 	            WHERE pe.id = :passportEntityId
 

@@ -28,8 +28,7 @@ import com.oc.api.passport.exception.BsDDJsonValidationException;
 import com.oc.api.passport.model.DataSheet;
 import com.oc.api.passport.model.PassportEntity;
 
-
-import cool.graph.cuid.Cuid;
+import io.github.thibaultmeyer.cuid.CUID;
 
 @Service
 public class PassportEntityService {
@@ -43,8 +42,14 @@ public class PassportEntityService {
 	@Autowired
 	private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
 	
-	@Autowired
-	private PassportEntityTemplateRepository peTemplateRepository;
+	 @Autowired
+	private PassportEntityTemplateRepository passportEntityTemplateRepository;
+
+	/*
+	 * @Autowired public PassportEntityService(PassportEntityTemplateRepository
+	 * passportEntityTemplateRepository) { this.passportEntityTemplateRepository =
+	 * passportEntityTemplateRepository; }
+	 */
 
 	@Autowired
 	private DictionaryAdapterFactory dictionaryAdapterFactory;
@@ -71,11 +76,13 @@ public class PassportEntityService {
 
 	private void persistTemplateEntry(JsonNode templateEntry, boolean isUpdate, String parentId) throws NoSuchAlgorithmException {
 
-		String cuid = Cuid.createCuid();
-		System.out.println(cuid);
+		int customLength = 36;
+		CUID cuid = CUID.randomCUID2(customLength);
+		//String cuid = Cuid.createCuid();
+		
 		System.out.println(templateEntry.get("templateName").toString());
 		PassportEntityDto passportEntity = new PassportEntityDto();
-		passportEntity.setPassportEntityId(cuid);
+		passportEntity.setPassportEntityId(cuid.toString());
 		passportEntity.setPassportEntityName(templateEntry.get("templateName").asText());
 		passportEntity.setStatus("active");
 		if(isUpdate) {
@@ -236,7 +243,16 @@ public class PassportEntityService {
 		passportEntityTemplateDto.setTemplateName(templateName);
 		passportEntityTemplateDto.setCreatedBy("OCTest");
 		passportEntityTemplateDto.setCreatedTime(LocalDateTime.now());
-		peTemplateRepository.save(passportEntityTemplateDto);
+		passportEntityTemplateRepository.save(passportEntityTemplateDto);
 	}
+	
+	
+	public PassportEntityTemplateDto getPersistedTemplate(String templateName)
+			throws JsonMappingException, JsonProcessingException {
+		return passportEntityTemplateRepository.findByTemplateName(templateName);
+	}
+	
+
+	
 
 }
