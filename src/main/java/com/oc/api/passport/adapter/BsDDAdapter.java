@@ -169,7 +169,7 @@ public class BsDDAdapter implements DictionaryAdapter {
 
 		ArrayNode properties = null;
 		System.out.println(jsonNode.toString());
-		if (jsonNode.has("classType") && jsonNode.get("classType").equals("Class")) {
+		if (jsonNode.has("classType") && jsonNode.get("classType").asText().equals("Class")) {
 			properties = (ArrayNode) jsonNode.get("classProperties");
 		} else {
 			properties = (ArrayNode) jsonNode.get("properties");
