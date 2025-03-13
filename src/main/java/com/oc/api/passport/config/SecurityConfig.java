@@ -44,7 +44,7 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.requiresChannel(channel -> channel.anyRequest().requiresSecure()).csrf(customizer -> customizer.disable())
+		http.csrf(customizer -> customizer.disable())
 				.authorizeHttpRequests(request -> request.requestMatchers("/api/auth/register", "/api/auth/login")
 						.permitAll().anyRequest().authenticated())
 				// .formLogin(Customizer.withDefaults()) // remove comment this to test api in browser

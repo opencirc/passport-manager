@@ -28,7 +28,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<Map<String, String>> login(@RequestBody UserDto user) {
+	public ResponseEntity<Map<String, String>> login(@RequestBody UserDto user) throws AuthenticationException {
 		Map<String, String> response = authService.verify(user);
 		return ResponseEntity.ok(response);
 	}

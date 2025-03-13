@@ -108,7 +108,32 @@
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
-
+		<dependency>
+        	<groupId>io.rest-assured</groupId>
+        	<artifactId>rest-assured</artifactId>
+        	<scope>test</scope>
+    	</dependency>
+    	<dependency>
+    <groupId>io.rest-assured</groupId>
+    <artifactId>spring-mock-mvc</artifactId>
+    <version>3.3.0</version>
+    <scope>test</scope>
+</dependency>
+        <dependency>
+        	<groupId>org.junit.jupiter</groupId>
+        	<artifactId>junit-jupiter-api</artifactId>
+        	<scope>test</scope>
+   		</dependency>
+    	<dependency>
+   			 <groupId>org.testcontainers</groupId>
+    		<artifactId>postgresql</artifactId>
+    		<scope>test</scope>
+    	</dependency>
+    	<dependency>
+    <groupId>org.mockito</groupId>
+    <artifactId>mockito-core</artifactId>
+    <scope>test</scope>
+</dependency>
 
 	</dependencies>
 

@@ -48,7 +48,7 @@ public class AuthService {
 		userRepository.save(user);
 	}
 
-	public Map<String, String> verify(UserDto user) {
+	public Map<String, String> verify(UserDto user) throws AuthenticationException {
 
 		Authentication authentication = authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
@@ -59,8 +59,9 @@ public class AuthService {
 			response.put("accessToken", accessToken);
 			response.put("refreshToken", refreshToken);
 			return response;
+		} else {
+			throw new AuthenticationException("Invalid Credentials");
 		}
-		return null;
 
 	}
 
