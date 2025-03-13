@@ -22,5 +22,22 @@ public class Properties {
 	
 	@Value("${bsDD.textSearch.url}")
 	private String bsDDTextSearchURL;
+	
+	@Value("${jwt.access.token.expiration.time}")
+	private String accessTokenExpiryTime;
+	
+	
+	@Value("${jwt.refresh.token.expiration.time}")
+	private String refreshTokenExpiryTime;
+	
+	
+	public int getRefreshTokenExpiryTime() {
+	    return Integer.parseInt(refreshTokenExpiryTime);
+	}
+	
+	public int getAccessTokenExpiryTime() {
+	    return Integer.parseInt(accessTokenExpiryTime);
+	}
+	
 
 }

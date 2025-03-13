@@ -21,6 +21,7 @@ services:
       REDIS_PORT: 6379
     networks:
       - spring-net
+    restart: always
 
   db:
     image: postgres:alpine
@@ -39,7 +40,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
     networks:
       - spring-net
 

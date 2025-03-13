@@ -19,5 +19,9 @@ public class AppConstants {
 	public static final String QP_BSDD_SEARCHTEXT = "SearchText";
 	
 	public static final String QP_BSDD_TYPEFILTER = "TypeFilter";
+	
+	public static final String JWT_AUTH = "Authorization";
+	
+	public static final String JWT_BEARER = "Bearer ";
 
 }
