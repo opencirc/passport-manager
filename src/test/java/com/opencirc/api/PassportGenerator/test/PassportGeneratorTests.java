@@ -12,3 +12,5 @@ class PassportGeneratorTests {
 
 }
 */
+package com;
+

@@ -1,4 +1,4 @@
-package com.opencirc.api.passport.controller;
+package com.opencirc.api.passport.controller.test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasKey;
@@ -13,7 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 
 import com.oc.api.passport.PassportManager;
 import com.oc.api.passport.service.AuthUserDetailsService;
-import com.opencirc.api.passport.helper.MockAuthenticationHelper;
+import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -34,12 +34,15 @@ public class TestAuthController {
 	@BeforeEach
 	public void setup() {
 		RestAssured.port = port;
-		MockAuthenticationHelper helper = new MockAuthenticationHelper();
+		MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
 		helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
     
 	}
 
-
+	/**
+	 * This test ensures that sending credentials to the server are valid.
+	 * If so, returns non-null access and refresh tokens
+	 */
 
 	@Test
 	public void testLoginWithRightCredentials() {
@@ -47,21 +50,25 @@ public class TestAuthController {
 		Response response =   given().contentType(ContentType.JSON)
 		.body("{\"username\": \"user1\", \"password\": \"user1password\"}")
 		.when().post("/api/auth/login");
-		System.out.println("Response Body: " + response.getBody().asString());
 		response.then()
 		.statusCode(200)
 		.contentType(ContentType.JSON)
 		.body("$", hasKey("accessToken"))
-		.body("refreshToken", notNullValue());; 
+		.body("accessToken", notNullValue())
+		.body("$", hasKey("accessToken"))
+		.body("refreshToken", notNullValue()); 
 	}
 	
+	/**
+	 * This test ensures that sending credentials to the server are invalid.
+	 * Throws UnAuthorized Exception
+	 */
 	@Test
 	public void testLoginWithWrongCredentials() {
 
 		Response response =   given().contentType(ContentType.JSON)
 		.body("{\"username\": \"user1d\", \"password\": \"wrongpassword\"}")
 		.when().post("/api/auth/login");
-		System.out.println("Response Body: " + response.getBody().asString());
 		response.then()
 		.statusCode(401); 
 	}

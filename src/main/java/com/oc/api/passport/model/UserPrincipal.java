@@ -7,16 +7,15 @@ import java.util.Collections;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.oc.api.passport.dto.UserEntity;
 
-import com.oc.api.passport.dto.UserDto;
 
-
-public class UserPrincipal  implements UserDetails {
+public class UserPrincipal implements UserDetails {
 
 	
-    private UserDto user;
+    private UserEntity user;
 
-    public UserPrincipal(UserDto user) {
+    public UserPrincipal(UserEntity user) {
         this.user = user;
     }
 

@@ -23,5 +23,18 @@ public class AppConstants {
 	public static final String JWT_AUTH = "Authorization";
 	
 	public static final String JWT_BEARER = "Bearer ";
+	
+	public static final int JWT_BEARER_LENGTH = 7;
+	
+	public static final String ACCESS_TOKEN = "accessToken";
+	
+	public static final String REFRESH_TOKEN = "refreshToken";
+	
+	// Error message
+	public static final String ERR_USERNAME_EXISTS = "Username already exists";
+	
+	public static final String ERR_INVALID_CREDENTIALS = "Invalid Credentials";
+	
+	public static final String ERR_INVALID_TOKEN = "Invalid token";
 
 }

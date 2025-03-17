@@ -23,7 +23,7 @@ public class TemplateService {
 	public List<Map<String, String>> searchClassesByText(String text, String ddLibrary) {
 		DictionaryAdapter adapter = dictionaryAdapterFactory.getAdapter(ddLibrary);
 		List<Map<String, String>> classMap = adapter.listClass(text);
-		//cacheService.storePropertiesInRedis(ddLibrary, classMap);
+		cacheService.storePropertiesInRedis(ddLibrary, classMap);
 		return classMap;
 	}
 

@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.oc.api.passport.dao.UserRepository;
-import com.oc.api.passport.dto.UserDto;
+import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.model.UserPrincipal;
 @Service
 public class AuthUserDetailsService implements UserDetailsService {
@@ -18,7 +18,7 @@ public class AuthUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserDto user = userRepository.findByUsername(username);
+        UserEntity user = userRepository.findByUsername(username);
         if (user == null) {
             System.out.println("User Not Found");
             throw new UsernameNotFoundException("user not found");

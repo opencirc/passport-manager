@@ -1,6 +1,6 @@
 package com.oc.api.passport.exception;
 
-public class AuthenticationException extends Exception{
+public class AuthenticationException extends RuntimeException{
 
     /**
 	 * 

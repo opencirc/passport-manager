@@ -41,11 +41,11 @@ CREATE TABLE IF NOT EXISTS datasheet_mapping
 CREATE TABLE IF NOT EXISTS users
 (
     id SERIAL PRIMARY KEY,
-    user_name VARCHAR(50) NOT NULL,
+    username VARCHAR(50) NOT NULL,
     email VARCHAR(50) NOT NULL,
     password VARCHAR(500) NOT NULL,
 	role VARCHAR(25) NOT NULL,
-	isActive BOOLEAN NOT NULL,
+	is_active BOOLEAN NOT NULL,
     created_by VARCHAR(255) NOT NULL,
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

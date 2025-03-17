@@ -27,6 +27,9 @@ public class SecurityConfig {
 
 	@Autowired
 	private UserDetailsService userDetailsService;
+	
+	   @Autowired
+	    private Properties properties;
 
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -45,7 +48,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf(customizer -> customizer.disable())
-				.authorizeHttpRequests(request -> request.requestMatchers("/api/auth/register", "/api/auth/login")
+				.authorizeHttpRequests(request -> request.requestMatchers(properties.getRegisterUrl(), properties.getLoginUrl())
 						.permitAll().anyRequest().authenticated())
 				// .formLogin(Customizer.withDefaults()) // remove comment this to test api in browser
 				.httpBasic(Customizer.withDefaults())

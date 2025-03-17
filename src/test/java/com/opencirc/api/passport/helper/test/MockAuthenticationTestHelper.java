@@ -1,11 +1,10 @@
-package com.opencirc.api.passport.helper;
+package com.opencirc.api.passport.helper.test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,15 +14,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.oc.api.passport.service.AuthUserDetailsService;
+import com.opencirc.api.passport.constants.test.TestConstants;
 
-public class MockAuthenticationHelper {
+public class MockAuthenticationTestHelper {
 	
 
 	
 	
 	public void mockUserDetailsDB(AuthUserDetailsService authUserDetailsService, AuthenticationManager authenticationManager) {
-		UserDetails mockUser = new User("user1", 
-                "$2a$10$UyTGFBClronaghiklkmnxunwi6iK2st/LtInbJNq8hQSBVsXt/yRa",
+		UserDetails mockUser = new User(TestConstants.TEST_USERNAME_1, 
+                TestConstants.GENERATED_PASSWORD,
                 Collections.singletonList(new SimpleGrantedAuthority("ADMIN")));
 
 		when(authUserDetailsService.loadUserByUsername("user1")).thenReturn(mockUser);

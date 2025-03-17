@@ -30,6 +30,12 @@ public class Properties {
 	@Value("${jwt.refresh.token.expiration.time}")
 	private String refreshTokenExpiryTime;
 	
+    @Value("${auth.register.url}")
+    private String registerUrl;
+
+    @Value("${auth.login.url}")
+    private String loginUrl;
+	
 	
 	public int getRefreshTokenExpiryTime() {
 	    return Integer.parseInt(refreshTokenExpiryTime);
@@ -38,6 +44,8 @@ public class Properties {
 	public int getAccessTokenExpiryTime() {
 	    return Integer.parseInt(accessTokenExpiryTime);
 	}
+	
+	
 	
 
 }

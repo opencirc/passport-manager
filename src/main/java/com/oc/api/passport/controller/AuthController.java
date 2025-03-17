@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.oc.api.passport.dto.UserDto;
+import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
 import com.oc.api.passport.service.AuthService;
 
@@ -22,13 +21,13 @@ public class AuthController {
 	private AuthService authService;
 
 	@PostMapping("/register")
-	public ResponseEntity<String> register(@RequestBody UserDto user) throws AuthenticationException {
+	public ResponseEntity<String> register(@RequestBody UserEntity user) throws AuthenticationException {
 		authService.register(user);
 		return ResponseEntity.ok("User registered successfully");
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<Map<String, String>> login(@RequestBody UserDto user) throws AuthenticationException {
+	public ResponseEntity<Map<String, String>> login(@RequestBody UserEntity user) throws AuthenticationException {
 		Map<String, String> response = authService.verify(user);
 		return ResponseEntity.ok(response);
 	}

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.oc.api.passport.constants.AppConstants;
+import com.oc.api.passport.exception.AuthenticationException;
 import com.oc.api.passport.service.AuthUserDetailsService;
 import com.oc.api.passport.service.JwtService;
 
@@ -38,18 +39,19 @@ public class JwtFilter extends OncePerRequestFilter {
         String username = null;
 
         if (authHeader != null && authHeader.startsWith(AppConstants.JWT_BEARER)) {
-            token = authHeader.substring(7);
-            username = jwtService.extractUserName(token);
+            token = authHeader.substring(AppConstants.JWT_BEARER_LENGTH);
+            username = jwtService.extractUsername(token);
         }
         
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(username);
-            if (jwtService.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource()
-                        .buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (!jwtService.validateToken(token, userDetails)) {
+            	throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
             }
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource()
+                    .buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
         filterChain.doFilter(request, response);

@@ -19,13 +19,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
+public class UserEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "user_name", unique = true, nullable = false)
+	@Column(name = "username", unique = true, nullable = false)
 	private String username;
 
 	@Column(unique = true, nullable = false)
