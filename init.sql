@@ -38,4 +38,16 @@ CREATE TABLE IF NOT EXISTS datasheet_mapping
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS users
+(
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(50) NOT NULL,
+    password VARCHAR(500) NOT NULL,
+	role VARCHAR(25) NOT NULL,
+	is_active BOOLEAN NOT NULL,
+    created_by VARCHAR(255) NOT NULL,
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
     
