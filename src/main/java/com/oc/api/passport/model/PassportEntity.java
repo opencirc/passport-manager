@@ -9,15 +9,29 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/**
+ * Passport entity.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 public class PassportEntity {
 
-	@JsonProperty
-	private String passportEntityId;
-	private String peName;
-	private List<DataSheet> datasheets;
+    /**
+     * Unique Id for Passport entity.
+     */
+    @JsonProperty
+    private String passportEntityId;
+
+    /**
+     * Name of Passport entity.
+     */
+    private String peName;
+
+    /**
+     * Linked datasheets.
+     */
+    private List<DataSheet> datasheets;
 
 }

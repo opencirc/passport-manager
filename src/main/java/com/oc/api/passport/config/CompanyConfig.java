@@ -12,6 +12,10 @@ import lombok.ToString;
 @ToString
 public class CompanyConfig {
 
+
+    /**
+     * Company name.
+     */
     private String name;
-    
+
 }

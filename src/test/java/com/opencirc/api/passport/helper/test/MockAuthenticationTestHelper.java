@@ -17,29 +17,36 @@ import com.oc.api.passport.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 
 public class MockAuthenticationTestHelper {
-	
 
-	
-	
-	public void mockUserDetailsDB(AuthUserDetailsService authUserDetailsService, AuthenticationManager authenticationManager) {
-		UserDetails mockUser = new User(TestConstants.TEST_USERNAME_1, 
+    /**
+     * Mocks User data.
+     *
+     * @param authUserDetailsService
+     * @param authenticationManager
+     */
+    public void mockUserDetailsDB(AuthUserDetailsService authUserDetailsService,
+            AuthenticationManager authenticationManager) {
+        UserDetails mockUser = new User(TestConstants.TEST_USERNAME_1,
                 TestConstants.GENERATED_PASSWORD,
                 Collections.singletonList(new SimpleGrantedAuthority("ADMIN")));
 
-		when(authUserDetailsService.loadUserByUsername("user1")).thenReturn(mockUser);
-		when(authUserDetailsService.loadUserByUsername("user1d"))
-		    .thenThrow(new UsernameNotFoundException("User not found"));
-     
+        when(authUserDetailsService.loadUserByUsername("user1"))
+                .thenReturn(mockUser);
+        when(authUserDetailsService.loadUserByUsername("user1d"))
+                .thenThrow(new UsernameNotFoundException("User not found"));
 
-		when(authenticationManager.authenticate(any()))
-	    .thenAnswer(invocation -> {
-	        UsernamePasswordAuthenticationToken authRequest = invocation.getArgument(0);
-	        if (authRequest.getName().equals("user1")) {
-	            return new UsernamePasswordAuthenticationToken(mockUser, null, mockUser.getAuthorities());
-	        } else {
-	            throw new BadCredentialsException("Invalid credentials");
-	        }
-	    });
-	}
-	
+        when(authenticationManager.authenticate(any()))
+                .thenAnswer(invocation -> {
+                    UsernamePasswordAuthenticationToken authRequest = invocation
+                            .getArgument(0);
+                    if (authRequest.getName().equals("user1")) {
+                        return new UsernamePasswordAuthenticationToken(mockUser,
+                                null, mockUser.getAuthorities());
+                    } else {
+                        throw new BadCredentialsException(
+                                "Invalid credentials");
+                    }
+                });
+    }
+
 }

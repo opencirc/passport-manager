@@ -13,38 +13,67 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * DTO for Lifecycle table.
+ */
 @Entity
 @Table(name = "lifecycle")
 public class PeLifecycleDto {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private Long peLifecycleId;
+    /**
+     * Unique Id for Passport entity Lifecycle.
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long peLifecycleId;
 
-	@Column(name = "passport_entity_id", nullable = false)
-	private String passportEntityId;
+    /**
+     * Passport entity id.
+     */
+    @Column(name = "passport_entity_id", nullable = false)
+    private String passportEntityId;
 
-	@Column(name = "event_type", nullable = false)
-	private String eventType;
+    /**
+     * Type of the event.
+     */
+    @Column(name = "event_type", nullable = false)
+    private String eventType;
 
-	@Convert(converter = JsonNodeConverter.class)
-	@Column(name = "lifecycle_data", nullable = false)
-	private JsonNode lifecycleData;
+    /**
+     * Lifecycle data in JSON format.
+     */
+    @Convert(converter = JsonNodeConverter.class)
+    @Column(name = "lifecycle_data", nullable = false)
+    private JsonNode lifecycleData;
 
-	@Column(name = "created_by", nullable = false)
-	private String createdBy;
+    /**
+     * Created by.
+     */
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
 
-	@Column(name = "created_time", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-	private LocalDateTime createdTime;
+    /**
+     * Created time.
+     */
+    @Column(name = "created_time",
+            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createdTime;
 
-	// Method to update lifecycle data
-	public void updateLifecycleData(JsonNode newLifecycleData) {
-		this.lifecycleData = newLifecycleData;
-	}
+    /**
+     * Method to update lifecycle data.
+     * @param newLifecycleData
+     */
+    public void updateLifecycleData(JsonNode newLifecycleData) {
+        this.lifecycleData = newLifecycleData;
+    }
 
-	// Method to change event type
-	public void changeEventType(String newEventType) {
-		this.eventType = newEventType;
-	}
+
+    /**
+     * Method to change event type.
+     * @param newEventType
+     */
+    public void changeEventType(String newEventType) {
+        this.eventType = newEventType;
+    }
 }

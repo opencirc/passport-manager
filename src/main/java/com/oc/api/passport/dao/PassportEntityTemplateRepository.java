@@ -4,8 +4,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.oc.api.passport.dto.PassportEntityTemplateDto;
 
-public interface PassportEntityTemplateRepository extends JpaRepository<PassportEntityTemplateDto, Long> {
-	
-	PassportEntityTemplateDto findByTemplateName(String templateName);
+public interface PassportEntityTemplateRepository
+        extends JpaRepository<PassportEntityTemplateDto, Long> {
+
+    /**
+     * Retrieves Template by name.
+     *
+     * @param templateName
+     *
+     * @return Templates
+     */
+    PassportEntityTemplateDto findByTemplateName(String templateName);
 
 }

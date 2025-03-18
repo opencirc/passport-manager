@@ -7,41 +7,61 @@ import java.security.NoSuchAlgorithmException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.oc.api.passport.config.CompanyConfig;
-
+import com.oc.api.passport.constants.AppConstants;
 
 public class CompanyHashService {
 
-	private final CompanyConfig companyConfig;
-	private String companyHash;
-	
+    /**
+     * Injecting CompanyConfig class.
+     */
+    private final CompanyConfig companyConfig;
 
-	@Autowired
-	public CompanyHashService(CompanyConfig companyConfig ) {
-		this.companyConfig = companyConfig;
-		// computeAndStoreHash(); // Compute hash on startup
-	}
+    /**
+     * Company hash value.
+     */
+    private String companyHash;
 
-	public void computeAndStoreHash() {
-		try {
-			String base = companyConfig.getName(); // +companyconfig.getanyprop();
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] hashBytes = digest.digest(base.getBytes(StandardCharsets.UTF_8));
-			StringBuilder hexString = new StringBuilder();
-			for (byte b : hashBytes) {
-				String hex = Integer.toHexString(0xff & b);
-				if (hex.length() == 1)
-					hexString.append('0');
-				hexString.append(hex);
-			}
-			this.companyHash = hexString.toString();
-		//	ocConfigRepository.saveConfig(companyHash);
+    /**
+     * CompanyHashService constructor with config.
+     * @param companyConfiguration
+     */
+    @Autowired
+    public CompanyHashService(CompanyConfig companyConfiguration) {
+        this.companyConfig = companyConfiguration;
+        // computeAndStoreHash(); // Compute hash on startup
+    }
 
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException("Error computing hash", e);
-		}
-	}
+    /**
+     * Computes and stores hash in database.
+     */
+    public void computeAndStoreHash() {
+        try {
+            String base = companyConfig.getName(); // +companyconfig.getanyprop();
+            MessageDigest digest = MessageDigest.getInstance(AppConstants.SHA_256);
+            byte[] hashBytes = digest
+                    .digest(base.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(AppConstants.HEX_STRING & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
 
-	public String getCompanyHash() {
-		return companyHash;
-	}
+                hexString.append(hex);
+            }
+            this.companyHash = hexString.toString();
+            // ocConfigRepository.saveConfig(companyHash);
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error computing hash", e);
+        }
+    }
+
+    /**
+     * Retrieves hash from database.
+     * @return hashvalue
+     */
+    public String getCompanyHash() {
+        return companyHash;
+    }
 }

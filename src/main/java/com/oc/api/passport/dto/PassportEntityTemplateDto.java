@@ -17,6 +17,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/**
+ * DTO for Template table.
+ */
 @Entity
 @Table(name = "template")
 @Data
@@ -25,22 +28,41 @@ import lombok.ToString;
 @ToString
 public class PassportEntityTemplateDto {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private long templateId;
-	
-	@Column(name = "name")
-	private String templateName;
+    /**
+     * Unique Id for Template.
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long templateId;
 
-	@Column(name = "template", columnDefinition = "jsonb")
-	@ColumnTransformer(write = "?::jsonb")
-	private JsonNode extractedTemplate;
 
-	@Column(name = "created_by")
-	private String createdBy;
+    /**
+     * Name of the Template.
+     */
+    @Column(name = "name")
+    private String templateName;
 
-	@Column(name = "created_time", updatable = false)
-	private LocalDateTime createdTime;
+
+    /**
+     * Template in JSON format.
+     */
+    @Column(name = "template", columnDefinition = "jsonb")
+    @ColumnTransformer(write = "?::jsonb")
+    private JsonNode extractedTemplate;
+
+
+    /**
+     * user created the template.
+     */
+    @Column(name = "created_by")
+    private String createdBy;
+
+
+    /**
+     * Template created time.
+     */
+    @Column(name = "created_time", updatable = false)
+    private LocalDateTime createdTime;
 
 }

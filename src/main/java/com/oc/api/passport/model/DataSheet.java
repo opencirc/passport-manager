@@ -10,20 +10,39 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/**
+ * DataSheet entity.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 public class DataSheet {
-	@JsonProperty
-	private long datasheetId;
 
-	@JsonProperty
-	private JsonNode templateEntry;
+    /**
+     * Unique Id for Datasheet.
+     */
+    @JsonProperty
+    private long datasheetId;
 
-	private String dataCategory;
-	
-	private String createdBy;
+    /**
+     * Template entry in JSON format.
+     */
+    @JsonProperty
+    private JsonNode templateEntry;
 
-	private LocalDateTime createdTime;
+    /**
+     * Data category (Unique or Generic).
+     */
+    private String dataCategory;
+
+    /**
+     * User who created the datasheet.
+     */
+    private String createdBy;
+
+    /**
+     * Time when datasheet is created.
+     */
+    private LocalDateTime createdTime;
 }

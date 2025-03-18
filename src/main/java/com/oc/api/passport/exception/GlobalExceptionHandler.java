@@ -8,9 +8,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Handler for JWT exception.
+     * @param ex - authentication exception
+     * @return response
+     */
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<String> handleJwtAuthenticationException(AuthenticationException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    public ResponseEntity<String> handleJwtAuthenticationException(
+            AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ex.getMessage());
     }
-    
+
 }

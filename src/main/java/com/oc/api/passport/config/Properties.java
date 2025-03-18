@@ -11,41 +11,68 @@ import lombok.Getter;
 @Getter
 public class Properties {
 
-	@Value("${bsDD.class.searchText.url}")
-	private String bsDDClassSearchTextURL;
+    /**
+     * URL for searching class in BsDD.
+     */
+    @Value("${bsDD.class.searchText.url}")
+    private String bsDDClassSearchTextURL;
 
-	@Value("${bsDD.classDetails.url}")
-	private String bsDDClassDetailsURL;
+    /**
+     * URL for fetching class details in BsDD.
+     */
+    @Value("${bsDD.classDetails.url}")
+    private String bsDDClassDetailsURL;
 
-	@Value("${bsDD.propertiesWithDetail.url}")
-	private String bsDDPropertiesWithDetailURL;
-	
-	@Value("${bsDD.textSearch.url}")
-	private String bsDDTextSearchURL;
-	
-	@Value("${jwt.access.token.expiration.time}")
-	private String accessTokenExpiryTime;
-	
-	
-	@Value("${jwt.refresh.token.expiration.time}")
-	private String refreshTokenExpiryTime;
-	
+    /**
+     * URL for fetching properties with detail BsDD.
+     */
+    @Value("${bsDD.propertiesWithDetail.url}")
+    private String bsDDPropertiesWithDetailURL;
+
+    /**
+     * URL for text based search in bsdd.
+     */
+    @Value("${bsDD.textSearch.url}")
+    private String bsDDTextSearchURL;
+
+    /**
+     * Access token expiration time.
+     */
+    @Value("${jwt.access.token.expiration.time}")
+    private String accessTokenExpiryTime;
+
+    /**
+     * Refresh token expiration time.
+     */
+    @Value("${jwt.refresh.token.expiration.time}")
+    private String refreshTokenExpiryTime;
+
+    /**
+     * URL for register.
+     */
     @Value("${auth.register.url}")
     private String registerUrl;
 
+    /**
+     * URL for login.
+     */
     @Value("${auth.login.url}")
     private String loginUrl;
-	
-	
-	public int getRefreshTokenExpiryTime() {
-	    return Integer.parseInt(refreshTokenExpiryTime);
-	}
-	
-	public int getAccessTokenExpiryTime() {
-	    return Integer.parseInt(accessTokenExpiryTime);
-	}
-	
-	
-	
+
+    /**
+     * Getter for refresh token.
+     * @return refresh token expiry time
+     */
+    public int getRefreshTokenExpiryTime() {
+        return Integer.parseInt(refreshTokenExpiryTime);
+    }
+
+    /**
+     * Getter for access token.
+     * @return access token expiry time
+     */
+    public int getAccessTokenExpiryTime() {
+        return Integer.parseInt(accessTokenExpiryTime);
+    }
 
 }
