@@ -25,6 +25,7 @@ import com.oc.api.passport.dto.PassportDataSheetMappingDto;
 import com.oc.api.passport.dto.PassportEntityDto;
 import com.oc.api.passport.dto.PassportEntityTemplateDto;
 import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.InvalidInputException;
 import com.oc.api.passport.model.DataSheet;
 import com.oc.api.passport.model.PassportEntity;
 
@@ -54,7 +55,7 @@ public class PassportEntityService {
 	@Autowired
 	private DictionaryAdapterFactory dictionaryAdapterFactory;
 
-	public String createTemplateEntry(JsonNode templateEntry, String ddLibrary) {
+	public String createTemplateEntry(JsonNode templateEntry, String ddLibrary) throws InvalidInputException {
 		String validationResult = null;
 		try {
 
@@ -250,6 +251,11 @@ public class PassportEntityService {
 	public PassportEntityTemplateDto getPersistedTemplate(String templateName)
 			throws JsonMappingException, JsonProcessingException {
 		return passportEntityTemplateRepository.findByTemplateName(templateName);
+	}
+	
+	public List<PassportEntityTemplateDto> listPersistedTemplate()
+			throws JsonMappingException, JsonProcessingException {
+		return passportEntityTemplateRepository.findAll();
 	}
 	
 
