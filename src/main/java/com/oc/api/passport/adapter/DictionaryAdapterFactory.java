@@ -3,6 +3,8 @@ package com.oc.api.passport.adapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.oc.api.passport.exception.InvalidInputException;
+
 @Component
 public class DictionaryAdapterFactory {
 	
@@ -10,7 +12,7 @@ public class DictionaryAdapterFactory {
     private BsDDAdapter bsddAdapter;
     
 	
-	public DictionaryAdapter getAdapter(String ddLibrary) {
+	public DictionaryAdapter getAdapter(String ddLibrary) throws InvalidInputException {
         switch (ddLibrary.toLowerCase()) {
             case "bsdd":
             	 return bsddAdapter;
@@ -18,7 +20,7 @@ public class DictionaryAdapterFactory {
                 return null;
             
             default:
-                throw new IllegalArgumentException("Invalid dictionary name: " + ddLibrary);
+                throw new InvalidInputException("Invalid dictionary name: " + ddLibrary);
         }
     }
 }

@@ -54,8 +54,18 @@ public class DictionaryMapping {
 			for (Map.Entry<String, String> mappingEntry : dictionaryMappings.entrySet()) {
 	            String mappingKey = mappingEntry.getKey();  
 	            String mappingValue = mappingEntry.getValue();
-	            if (ddResponse.containsKey(mappingValue)) {
-	                 result.put(mappingKey, ddResponse.get(mappingValue));
+	            
+	            
+	         // to handle array of Dictionary field names mapped to same key
+	            
+	            String[] mappedValues = mappingValue.split(",");
+	            for (String mappedValue : mappedValues) {
+	                mappedValue = mappedValue.trim(); // Remove any extra spaces
+	                
+	                if (ddResponse.containsKey(mappedValue)) {
+	                    result.put(mappingKey, ddResponse.get(mappedValue));
+	                    break;
+	                }
 	            }
 	        }
 		}

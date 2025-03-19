@@ -89,11 +89,17 @@ public class PassportEntityController {
 	}
 
 	@Operation(summary = "Retrieves the persisted Template")
-
 	@GetMapping("/passports/retrieveTemplate/")
 	public ResponseEntity<PassportEntityTemplateDto> getPersistedTemplate(
 			@Parameter(description = "Name of the Template stored in DB", required = true) @RequestParam String templateName)
 			throws JsonMappingException, JsonProcessingException {
 		return ResponseEntity.ok(passportEntityService.getPersistedTemplate(templateName));
+	}
+	
+	@Operation(summary = "Lists all the persisted Template")
+	@GetMapping("/passports/listPersistedTemplate/")
+	public ResponseEntity<List<PassportEntityTemplateDto>> listPersistedTemplates()
+			throws JsonMappingException, JsonProcessingException {
+		return ResponseEntity.ok(passportEntityService.listPersistedTemplate());
 	}
 }

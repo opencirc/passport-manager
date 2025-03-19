@@ -68,6 +68,7 @@ public class TemplateController {
 	@PostMapping(value = "/api/createTemplateWithProperties/", produces = { "application/json" }, consumes = {
 			"application/json" })
 	public JsonNode createTemplateWithProperties(
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "List of Property URI", required = true) 
 			@RequestBody List<String> propertiesUriList,
 			@Parameter(description = "Name of library", required = true, example = "bsdd") @RequestParam String ddLibrary)
 			throws BsDDJsonValidationException {
