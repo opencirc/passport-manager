@@ -21,6 +21,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/**
+ * DTO for Datasheet table.
+ */
 @Entity
 @Table(name = "datasheet")
 @Data
@@ -29,26 +32,43 @@ import lombok.ToString;
 @ToString
 public class DataSheetDto {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private long datasheetId;
+    /**
+     * Unique Id for Datasheet.
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long datasheetId;
 
-	@Column(name = "template_entry", columnDefinition = "jsonb")
-	@ColumnTransformer(write = "?::jsonb")
-	private JsonNode templateEntry;
+    /**
+     * Template entry in JSON format.
+     */
+    @Column(name = "template_entry", columnDefinition = "jsonb")
+    @ColumnTransformer(write = "?::jsonb")
+    private JsonNode templateEntry;
 
-	@Column(name = "data_category")
-	private String dataCategory;
+    /**
+     * Data category (Unique or Generic).
+     */
+    @Column(name = "data_category")
+    private String dataCategory;
 
-	@Column(name = "created_by")
-	private String createdBy;
+    /**
+     * User who created the datasheet.
+     */
+    @Column(name = "created_by")
+    private String createdBy;
 
-	@Column(name = "created_time", updatable = false)
-	private LocalDateTime createdTime;
+    /**
+     * Time when datasheet is created.
+     */
+    @Column(name = "created_time", updatable = false)
+    private LocalDateTime createdTime;
 
-	@OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<PassportDataSheetMappingDto> peDatasheetMappings;
-	  
-	  
+    /**
+     * Mapping to Passports.
+     */
+    @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<PassportDataSheetMappingDto> peDatasheetMappings;
+
 }

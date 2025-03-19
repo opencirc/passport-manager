@@ -1,15 +1,10 @@
 package com.opencirc.api.passport.controller.test;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,77 +21,109 @@ import com.oc.api.passport.adapter.DictionaryAdapterFactory;
 import com.oc.api.passport.controller.TemplateController;
 import com.oc.api.passport.service.AuthUserDetailsService;
 import com.oc.api.passport.service.TemplateService;
+import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-@SpringBootTest(classes = PassportManager.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = PassportManager.class,
+webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TestTemplateController {
 
-	@Mock
-	private TemplateService templateService;
+    /**
+     * TemplateService mock bean.
+     */
+    @Mock
+    private TemplateService templateService;
 
-	@Mock
-	private BsDDAdapter bsDDAdapter;
+    /**
+     * BsDDAdapter mock bean.
+     */
+    @Mock
+    private BsDDAdapter bsDDAdapter;
 
-	@Mock
-	private DictionaryAdapterFactory dictionaryAdapterFactory;
+    /**
+     * DictionaryAdapterFactory mock bean.
+     */
+    @Mock
+    private DictionaryAdapterFactory dictionaryAdapterFactory;
 
-	@InjectMocks
-	private TemplateController templateController;
+    /**
+     * TemplateController mock bean.
+     */
+    @InjectMocks
+    private TemplateController templateController;
 
-	private String jwtToken;
+    /**
+     * Jwt token.
+     */
+    private String jwtToken;
 
-	@LocalServerPort
-	private int port;
+    /**
+     * The port number for url.
+     */
+    @LocalServerPort
+    private int port;
 
-	@MockBean
-	private AuthUserDetailsService authUserDetailsService;
+    /**
+     * AuthUserDetailsService mock bean.
+     */
+    @MockBean
+    private AuthUserDetailsService authUserDetailsService;
 
-	@MockBean
-	private AuthenticationManager authenticationManager;
+    /**
+     * AuthenticationManager mock bean.
+     */
+    @MockBean
+    private AuthenticationManager authenticationManager;
 
-	@BeforeEach
-	public void setUp() {
-		RestAssured.port = port;
-		MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-		helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
-		mockJwtTokenGeneration();
+    /**
+     * Configuration setup before each test starts.
+     */
+    @BeforeEach
+    public void setUp() {
+        RestAssured.port = port;
+        MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
+        helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+        mockJwtTokenGeneration();
 
-	}
+    }
 
-	/**
-	 * This method generates mock JWT access token to hit the api. 
-	 */
-	private void mockJwtTokenGeneration() {
-		String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
+    /**
+     * This method generates mock JWT access token to hit the api.
+     */
+    private void mockJwtTokenGeneration() {
+        String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
 
-		Response response = given().contentType(ContentType.JSON)
-				.body(requestBody).when().post("/api/auth/login").then()
-				.statusCode(200).body("accessToken", notNullValue()).extract()
-				.response();
+        Response response = given().contentType(ContentType.JSON)
+                .body(requestBody).when().post("/api/auth/login").then()
+                .statusCode(TestConstants.STATUS_SUCCESS)
+                .body("accessToken", notNullValue()).extract()
+                .response();
 
-		jwtToken = response.jsonPath().getString("accessToken");
-	}
+        jwtToken = response.jsonPath().getString("accessToken");
+    }
 
-	/**
-	 * This test returns response from the data dictionary library for the given search text
-	 */
-	@Test
-	public void testListClassesByText() {
-		String searchText = "iso";
-		String ddLibrary = "bsdd";
+    /**
+     * This test returns response from the data dictionary library for the given
+     * search text.
+     */
+    @Test
+    public void testListClassesByText() {
+        String searchText = "iso";
+        String ddLibrary = "bsdd";
 
-		Response response = given()
-				.header("Authorization", "Bearer " + jwtToken)
-				.contentType(ContentType.JSON)
+        Response response = given()
+                .header("Authorization", "Bearer " + jwtToken)
+                .contentType(ContentType.JSON)
 
-				.when().get("/api/classes/search/{searchText}/{ddLibrary}",
-						searchText, ddLibrary);
-		response.then().statusCode(200).contentType(ContentType.JSON)
-				.body("$", hasSize(greaterThan(0))).body("[0]", hasKey("code"))
-				.body("[0]", hasKey("name"));
-	}
+                .when().get("/api/classes/search/{searchText}/{ddLibrary}",
+                        searchText, ddLibrary);
+        response.then().statusCode(TestConstants.STATUS_SUCCESS)
+        .contentType(ContentType.JSON)
+                .body("$", hasSize(greaterThan(0))).body("[0]", hasKey("code"))
+                .body("[0]", hasKey("name"));
+    }
 }

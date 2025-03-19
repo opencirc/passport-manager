@@ -15,6 +15,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/**
+ * DTO for Datasheet table.
+ */
 @Entity
 @Table(name = "passport_entity")
 @Data
@@ -23,25 +26,48 @@ import lombok.ToString;
 @ToString
 public class PassportEntityDto {
 
-	@Id
-	@Column(name = "id")
-	private String passportEntityId;
+    /**
+     * Unique Id for Passport entity.
+     */
+    @Id
+    @Column(name = "id")
+    private String passportEntityId;
 
-	@Column(name = "name")
-	private String passportEntityName;
+    /**
+     * Name of Passport entity.
+     */
+    @Column(name = "name")
+    private String passportEntityName;
 
-	@Column(name = "status")
-	private String status;
+    /**
+     * Status of Passport entity.
+     */
+    @Column(name = "status")
+    private String status;
 
-	@Column(name = "parent_id")
-	private String parentPe;
+    /**
+     * Id of Parent Passport entity.
+     */
+    @Column(name = "parent_id")
+    private String parentPe;
 
-	@Column(name = "created_by")
-	private String createdBy;
 
-	@Column(name = "created_time", updatable = false)
-	private LocalDateTime createdTime;
-	
-    @OneToMany(mappedBy = "passportEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    /**
+     * User who created Passport.
+     */
+    @Column(name = "created_by")
+    private String createdBy;
+
+    /**
+     * Time of passport entity creation.
+     */
+    @Column(name = "created_time", updatable = false)
+    private LocalDateTime createdTime;
+
+    /**
+     * Mapping of Passport entity.
+     */
+    @OneToMany(mappedBy = "passportEntity",
+            cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PassportDataSheetMappingDto> peDatasheetMappings;
 }

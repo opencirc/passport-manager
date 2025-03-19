@@ -8,8 +8,14 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan(basePackages = "com.oc.api.passport.*")
 public class PassportManager {
 
-	public static void main(String[] args) {
-		SpringApplication.run(PassportManager.class, args);
-	}
+
+    /**
+     * Main class.
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(PassportManager.class, args);
+    }
 
 }

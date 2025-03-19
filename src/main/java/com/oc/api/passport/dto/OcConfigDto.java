@@ -9,6 +9,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/**
+ * DTO for Config table.
+ */
 @Entity
 @Table(name = "oc_config")
 @Data
@@ -17,8 +20,11 @@ import lombok.ToString;
 @ToString
 public class OcConfigDto {
 
-	@Id
-	@Column(name = "hashvalue")
-	private String hashValue;
-	
+    /**
+     * hashvalue.
+     */
+    @Id
+    @Column(name = "hashvalue")
+    private String hashValue;
+
 }

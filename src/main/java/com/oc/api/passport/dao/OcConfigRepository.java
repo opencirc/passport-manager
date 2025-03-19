@@ -11,9 +11,15 @@ import com.oc.api.passport.dto.OcConfigDto;
 
 @Repository
 public interface OcConfigRepository extends JpaRepository<OcConfigDto, String> {
-	
+
+    /**
+     * Saves the company configuration in table.
+     *
+     * @param hashValue
+     */
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO oc_config (hashvalue) VALUES (:hashValue)", nativeQuery = true)
+    @Query(value = "INSERT INTO oc_config (hashvalue) "
+            + "VALUES (:hashValue)", nativeQuery = true)
     void saveConfig(@Param("hashValue") String hashValue);
 }

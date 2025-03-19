@@ -9,24 +9,47 @@ import org.springframework.web.context.request.WebRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-	
+
+
+    /**
+     * Handler for JWT exception.
+     *
+     * @param ex - authentication exception
+     * @return response
+     */
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<String> handleJwtAuthenticationException(AuthenticationException ex) {
+    public ResponseEntity<String> handleJwtAuthenticationException(
+            AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
-    
-    // Handle InvalidInputException
+
+    /**
+     * Handler for Invalid input  exception.
+     *
+     * @param ex - invalid input exception
+     * @param request
+     * @return response
+     */
     @ExceptionHandler(InvalidInputException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<?> handleInvalidInputException(InvalidInputException ex, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+    public ResponseEntity<?> handleInvalidInputException(InvalidInputException ex,
+            WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    // Handle all other exceptions
+    /**
+     * Handler for All other exception.
+     *
+     * @param ex - exception
+     * @param request
+     * @return response
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGlobalException(Exception ex, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An error occurred.");
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(), "An error occurred.");
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

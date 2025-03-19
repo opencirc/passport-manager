@@ -21,36 +21,60 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Filter to validate the JWT token.
+ */
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
+    /**
+     * Injecting JwtService class.
+     */
     @Autowired
     private JwtService jwtService;
 
+    /**
+     * Injecting ApplicationContext class.
+     */
     @Autowired
-    ApplicationContext context;
+    private ApplicationContext context;
 
+    /**
+     * Filters the http request and validates the jwt token.
+     *
+     * @param request
+     * @param response
+     * @param filterChain
+     */
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String authHeader = request.getHeader(AppConstants.JWT_AUTH);
         String token = null;
         String username = null;
 
-        if (authHeader != null && authHeader.startsWith(AppConstants.JWT_BEARER)) {
+        if (authHeader != null
+                && authHeader.startsWith(AppConstants.JWT_BEARER)) {
             token = authHeader.substring(AppConstants.JWT_BEARER_LENGTH);
             username = jwtService.extractUsername(token);
         }
-        
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = context.getBean(AuthUserDetailsService.class).loadUserByUsername(username);
+
+        if (username != null && SecurityContextHolder.getContext()
+                .getAuthentication() == null) {
+            UserDetails userDetails = context
+                    .getBean(AuthUserDetailsService.class)
+                    .loadUserByUsername(username);
             if (!jwtService.validateToken(token, userDetails)) {
-            	throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
+                throw new AuthenticationException(
+                        AppConstants.ERR_INVALID_TOKEN);
             }
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource()
-                    .buildDetails(request));
+            UsernamePasswordAuthenticationToken authToken = new
+                    UsernamePasswordAuthenticationToken(userDetails, null,
+                            userDetails.getAuthorities());
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 

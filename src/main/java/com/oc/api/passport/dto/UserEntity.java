@@ -13,6 +13,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * DTO for User table.
+ */
 @Entity
 @Table(name = "users")
 @Getter
@@ -21,28 +24,52 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    /**
+     * Unique Id for user.
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@Column(name = "username", unique = true, nullable = false)
-	private String username;
+    /**
+     * Name of the user.
+     */
+    @Column(name = "username", unique = true, nullable = false)
+    private String username;
 
-	@Column(unique = true, nullable = false)
-	private String email;
+    /**
+     * Users's email.
+     */
+    @Column(unique = true, nullable = false)
+    private String email;
 
-	@Column(nullable = false)
-	private String password;
+    /**
+     * Users's password.
+     */
+    @Column(nullable = false)
+    private String password;
 
-	@Column(nullable = false)
-	private String role;
+    /**
+     * Users's role.
+     */
+    @Column(nullable = false)
+    private String role;
 
-	@Column(name = "is_active", nullable = false)
-	private boolean isActive;
-	
-	@Column(name = "created_by")
-	private String createdBy;
+    /**
+     * Holds info if the user is active.
+     */
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive;
 
-	@Column(name = "created_time", updatable = false)
-	private LocalDateTime createdTime;
+    /**
+     * Created by.
+     */
+    @Column(name = "created_by")
+    private String createdBy;
+
+    /**
+     * Created time.
+     */
+    @Column(name = "created_time", updatable = false)
+    private LocalDateTime createdTime;
 }
