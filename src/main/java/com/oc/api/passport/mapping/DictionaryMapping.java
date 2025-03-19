@@ -58,6 +58,7 @@ public class DictionaryMapping {
 
     /**
      * Fetches the relevant dictionary mapping.
+     *
      * @param dictionaryName
      * @return the dictionary mappings for the requested dictionary
      */
@@ -67,6 +68,7 @@ public class DictionaryMapping {
 
     /**
      * Maps the fetched dictionary mapping.
+     *
      * @param ddResponse
      * @param dictionaryName
      * @return the dictionary mappings
@@ -80,30 +82,21 @@ public class DictionaryMapping {
             for (Map.Entry<String, String> mappingEntry : dictionaryMappings.entrySet()) {
                 String mappingKey = mappingEntry.getKey();
                 String mappingValue = mappingEntry.getValue();
-                if (ddResponse.containsKey(mappingValue)) {
-                    result.put(mappingKey, ddResponse.get(mappingValue));
+
+                // to handle array of Dictionary field names mapped to same key
+
+                String[] mappedValues = mappingValue.split(",");
+                for (String mappedValue : mappedValues) {
+                    mappedValue = mappedValue.trim(); // Remove any extra spaces
+
+                    if (ddResponse.containsKey(mappedValue)) {
+                        result.put(mappingKey, ddResponse.get(mappedValue));
+                        break;
+                    }
                 }
             }
         }
         return result;
     }
-// remove unused methods
 
-    /*
-     * private String getMappedValue(String key, Map<String, String>
-     * dictionaryMappings) { return dictionaryMappings.get(key); }
-     *
-     * private int parseInteger(Object value) { try { return value != null ?
-     * Integer.parseInt(String.valueOf(value)) : 0; } catch (NumberFormatException
-     * e) { return 0; } }
-     *
-     * private boolean parseBoolean(Object value) { return value != null &&
-     * Boolean.parseBoolean(String.valueOf(value)); }
-     *
-     * private List<String> getMappedList(String key, Map<String, Object>
-     * ddResponse) { if (key != null && ddResponse.containsKey(key)) { Object value
-     * = ddResponse.get(key); if (value instanceof List) { return (List<String>)
-     * value; } else if (value instanceof String) { return Arrays.asList(((String)
-     * value).split(",")); } } return null; }
-     */
 }

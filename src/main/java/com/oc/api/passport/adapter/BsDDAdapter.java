@@ -59,6 +59,7 @@ public class BsDDAdapter implements DictionaryAdapter {
     @Autowired
     private DictionaryMapping dictionaryMapping;
 
+
     /**
      * Fetches a list of classes matching the search text.
      *
@@ -81,7 +82,8 @@ public class BsDDAdapter implements DictionaryAdapter {
         JsonNode responseBody = response.getBody();
 
         List<Map<String, String>> classList = new ArrayList<>();
-        if (responseBody != null) {
+        int totalCount = responseBody.path("totalCount").asInt();
+        if (responseBody != null && totalCount > 0) {
             for (JsonNode node : responseBody.get("classes")) {
                 Map<String, String> classMap = new HashMap<>();
                 classMap.put("name", node.path("name").asText());

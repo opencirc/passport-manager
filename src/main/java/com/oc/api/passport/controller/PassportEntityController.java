@@ -136,8 +136,9 @@ public class PassportEntityController {
         return null;
     }
 
+
     /**
-     * Endpoint to retrieve template from databased.
+     * Endpoint to retrieve template from database.
      * @param templateName
      * @return the template
      */
@@ -150,4 +151,17 @@ public class PassportEntityController {
         return ResponseEntity
                 .ok(passportEntityService.getPersistedTemplate(templateName));
     }
+
+
+    /**
+     * Endpoint to list template from database.
+     * @return the template
+     */
+    @Operation(summary = "Lists all the persisted Template")
+    @GetMapping("/passports/listPersistedTemplate/")
+    public ResponseEntity<List<PassportEntityTemplateDto>> listPersistedTemplates()
+            throws JsonMappingException, JsonProcessingException {
+        return ResponseEntity.ok(passportEntityService.listPersistedTemplate());
+    }
+
 }

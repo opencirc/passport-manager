@@ -77,8 +77,16 @@ public class JwtService {
      * @return secret key
      */
     private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretkey);
-        return Keys.hmacShaKeyFor(keyBytes);
+       
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(secretkey.trim());
+            System.out.println("Secret Key Length (bytes): " + keyBytes.length);
+            
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid Base64 secret key", e);
+        }
+        
     }
 
     /**

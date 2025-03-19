@@ -78,7 +78,7 @@ public class SecurityConfig {
         http.csrf(customizer -> customizer.disable())
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(properties.getRegisterUrl(),
-                                properties.getLoginUrl())
+                                properties.getLoginUrl(), "/swagger-ui/index.html")
                         .permitAll().anyRequest().authenticated())
                 // .formLogin(Customizer.withDefaults()) // remove comment this
                 // to test api in browser

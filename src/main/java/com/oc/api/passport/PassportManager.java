@@ -6,12 +6,8 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "com.oc.api.passport.*")
-public final class PassportManager {
+public class PassportManager {
 
-    private PassportManager() {
-        throw new UnsupportedOperationException(
-                "Main class cannot be instantiated");
-    }
 
     /**
      * Main class.

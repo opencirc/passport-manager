@@ -38,7 +38,7 @@ public class TemplateService {
         DictionaryAdapter adapter = dictionaryAdapterFactory
                 .getAdapter(ddLibrary);
         List<Map<String, String>> classMap = adapter.listClass(text);
-        cacheService.storePropertiesInRedis(ddLibrary, classMap);
+      //  cacheService.storePropertiesInRedis(ddLibrary, classMap);
         return classMap;
     }
 

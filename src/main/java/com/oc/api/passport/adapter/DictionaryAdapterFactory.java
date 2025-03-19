@@ -2,6 +2,8 @@ package com.oc.api.passport.adapter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import com.oc.api.passport.exception.InvalidInputException;
+
 
 /**
  * Factory class for providing the appropriate implementation
@@ -16,6 +18,7 @@ public class DictionaryAdapterFactory {
     @Autowired
     private BsDDAdapter bsddAdapter;
 
+
     /**
      * Returns the appropriate instance based on the given dictionary name.
      *
@@ -23,16 +26,17 @@ public class DictionaryAdapterFactory {
      * @return The corresponding implementation.
      * @throws IllegalArgumentException
      */
-    public DictionaryAdapter getAdapter(String ddLibrary) {
+    public DictionaryAdapter getAdapter(String ddLibrary)
+           throws InvalidInputException {
         switch (ddLibrary.toLowerCase()) {
-        case "bsdd":
-            return bsddAdapter;
-        case "define":
-            return null;
+            case "bsdd":
+                return bsddAdapter;
+            case "define":
+                return null;
 
-        default:
-            throw new IllegalArgumentException(
-                    "Invalid dictionary name: " + ddLibrary);
+            default:
+                throw new InvalidInputException("Invalid dictionary name: " + ddLibrary);
+
         }
     }
 }

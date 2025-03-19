@@ -106,6 +106,8 @@ public class TemplateController {
     @PostMapping(value = "/api/createTemplateWithProperties/", produces = {
             "application/json" }, consumes = { "application/json" })
     public JsonNode createTemplateWithProperties(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description =
+            "List of Property URI", required = true)
             @RequestBody List<String> propertiesUriList,
             @Parameter(description = "Name of library", required = true, example = "bsdd")
             @RequestParam String ddLibrary)
@@ -114,18 +116,5 @@ public class TemplateController {
                 CommonUtil.convertToLowercase(ddLibrary));
 
     }
-    /*
-     * @GetMapping(value = "/api/clear/", produces = { "application/json" })
-     * public String clearcache() { templateService.clearCache(); return
-     * "success";
-     *
-     * }
-     *
-     * @GetMapping(value = "/api/lookCache/", produces = { "application/json" })
-     * public Map<String, Object> lookCache() { return
-     * templateService.lookCache();
-     *
-     * }
-     *
-     */
+
 }
