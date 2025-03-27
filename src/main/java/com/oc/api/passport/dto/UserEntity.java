@@ -62,6 +62,12 @@ public class UserEntity {
     private boolean isActive;
 
     /**
+     * Holds JWT refresh token.
+     */
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
+    /**
      * Created by.
      */
     @Column(name = "created_by")

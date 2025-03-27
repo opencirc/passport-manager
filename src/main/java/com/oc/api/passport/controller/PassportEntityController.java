@@ -1,6 +1,7 @@
 package com.oc.api.passport.controller;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,6 @@ public class PassportEntityController {
             @RequestBody JsonNode templateEntry,
             @Parameter(description = "Dictionary Name", required = true)
             @RequestParam String dictionaryName) {
-        System.out.println(templateEntry.toString());
         return passportEntityService.createTemplateEntry(templateEntry,
                 CommonUtil.convertToLowercase(dictionaryName));
 
@@ -64,12 +64,16 @@ public class PassportEntityController {
      * @return the passport in json
      */
     @Operation(summary = "Retrieves the PassportEntity")
-    @GetMapping("/passports/active/")
-    public JsonNode getActivePassportEntity(
+    @GetMapping("/api/passports/active/")
+    public ResponseEntity<?> getActivePassportEntity(
             @Parameter(description = "Id of the Passport Entity", required = true)
             @RequestParam String passportEntityId)
             throws JsonMappingException, JsonProcessingException {
-        return passportEntityService.getActivePassportEntity(passportEntityId);
+        System.out.println("passport id requested : " + passportEntityId);
+        JsonNode passport = passportEntityService
+                .getActivePassportEntity(passportEntityId);
+
+        return ResponseEntity.ok(Collections.singletonMap("passport", passport));
     }
 
     /**
@@ -100,7 +104,6 @@ public class PassportEntityController {
             @Parameter(description = "Id of the Passport Entity", required = true)
     @RequestParam String passportEntityId)
             throws NoSuchAlgorithmException {
-        System.out.println(templateEntry.toString());
         return passportEntityService.updatePassportEntity(templateEntry,
                 passportEntityId);
 

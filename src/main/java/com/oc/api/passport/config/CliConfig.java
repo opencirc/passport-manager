@@ -6,7 +6,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class CliConfig implements CommandLineRunner {
 
-    @Override
+    /**
+     * Main class.
+     *
+     * @param args
+     */
     public void run(String... args) throws Exception {
         if (args.length == 0) {
             System.out.println("HelloWorld!");

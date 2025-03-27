@@ -150,22 +150,11 @@ public class PassportEntityService {
             throws JsonMappingException, JsonProcessingException {
         List<Object[]> results = passportEntityRepository.findActivePassportEntity(peId,
                 "active");
+        if (results.isEmpty()) {
+            return null;
+        }
         PassportEntity passportEntity = new PassportEntity();
         List<DataSheet> dataSheetList = new ArrayList<DataSheet>();
-        /*
-         * for (Object[] result : results) { System.out.println("object result");
-         * System.out.println(result.toString()); System.out.println(result[0] + "   " +
-         * result[1] + "   " + result[2]); passportEntity.setPassportEntityId((String)
-         * result[0]); passportEntity.setPeName((String) result[1]);
-         *
-         * DataSheet dataSheet = new DataSheet(); dataSheet.setDatasheetId((Long)
-         * result[2]);
-         *
-         * ObjectMapper mapper = new ObjectMapper(); JsonNode jsonNode =
-         * mapper.readTree((String) result[3]); dataSheet.setTemplateEntry(jsonNode);
-         *
-         * dataSheetList.add(dataSheet); passportEntity.setDatasheets(dataSheetList); }
-         */
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode jsonObject = mapper.createObjectNode();
         jsonObject.put("passportEntityId",

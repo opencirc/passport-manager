@@ -135,6 +135,11 @@ public final class AppConstants {
     public static final int NUM_TWENTY = 20;
 
     /**
+     * number 20.
+     */
+    public static final int NUM_TWENTY_FIVE = 25;
+
+    /**
      * number 60.
      */
     public static final int NUM_SIXTY = 60;

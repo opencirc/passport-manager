@@ -14,9 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.oc.api.passport.config.Properties;
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.dao.UserRepository;
 import com.oc.api.passport.dto.UserEntity;
+import com.oc.api.passport.exception.AuthenticationException;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -33,6 +36,18 @@ public class JwtService {
      */
     @Autowired
     private UserRepository userRepository;
+
+    /**
+     * Injecting Properties class.
+     */
+    @Autowired
+    private Properties properties;
+
+    /**
+     * Injecting AuthUserDetailsService class.
+     */
+    @Autowired
+    private AuthUserDetailsService authUserDetailsService;
 
     /**
      * Secret key declaration.
@@ -77,16 +92,15 @@ public class JwtService {
      * @return secret key
      */
     private SecretKey getKey() {
-       
+
         try {
             byte[] keyBytes = Decoders.BASE64.decode(secretkey.trim());
-            System.out.println("Secret Key Length (bytes): " + keyBytes.length);
-            
+
             return Keys.hmacShaKeyFor(keyBytes);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid Base64 secret key", e);
         }
-        
+
     }
 
     /**
@@ -151,4 +165,30 @@ public class JwtService {
     public UserEntity extractUserFromToken(String token) {
         return userRepository.findByUsername(extractUsername(token));
     }
+
+    /**
+     * Validates the refresh token. If it is valid, generates new access token .
+     * @param refreshToken
+     * @return access Token
+     */
+    public String generateAccessTokenUsingRefreshToken(String refreshToken) {
+        String username = extractUsername(refreshToken);
+        UserDetails userDetails = authUserDetailsService.loadUserByUsername(username);
+        UserEntity user = userRepository.findByUsername(username);
+        if (!validateToken(refreshToken, userDetails)) {
+            throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
+        }
+
+        if (userDetails == null
+                || !validateToken(refreshToken, userDetails)) {
+            throw new AuthenticationException("Invalid refresh token");
+        }
+        if (!refreshToken.equals(user.getRefreshToken())) {
+            throw new AuthenticationException("Invalid Refresh Token");
+        }
+        String newAccessToken = generateToken(username,
+                properties.getAccessTokenExpiryTime());
+        return newAccessToken;
+    }
+
 }

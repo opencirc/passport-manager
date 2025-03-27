@@ -30,8 +30,7 @@ public class AuthUserDetailsService implements UserDetailsService {
             throws UsernameNotFoundException {
         UserEntity user = userRepository.findByUsername(username);
         if (user == null) {
-            System.out.println("User Not Found");
-            throw new UsernameNotFoundException("user not found");
+            throw new UsernameNotFoundException("User not found");
         }
 
         return new UserPrincipal(user);

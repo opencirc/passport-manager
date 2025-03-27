@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS users
     password VARCHAR(500) NOT NULL,
 	role VARCHAR(25) NOT NULL,
 	is_active BOOLEAN NOT NULL,
+	refresh_token VARCHAR(100),
     created_by VARCHAR(255) NOT NULL,
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
