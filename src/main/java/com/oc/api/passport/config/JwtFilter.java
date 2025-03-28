@@ -4,8 +4,6 @@ import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,7 +35,6 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JwtService jwtService;
 
-
     /**
      * Injecting ApplicationContext class.
      */
@@ -61,34 +58,15 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String accessToken = null;
-        String refreshToken = null;
-        String username = null;
 
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("access_token".equals(cookie.getName())) {
-                    accessToken = cookie.getValue();
+        String accessToken = extractTokenFromCookies(request, "access_token");
+        String refreshToken = extractTokenFromCookies(request, "refresh_token");
 
-                } else if ("refresh_token".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                }
-            }
-        }
         if (accessToken == null && refreshToken != null) {
-            try {
-                accessToken = jwtService
-                        .generateAccessTokenUsingRefreshToken(refreshToken);
-                ResponseCookie accessCookie = ResponseCookie
-                        .from("access_token", accessToken)
-                        .httpOnly(true)
-                        .secure(false)
-                        .path("/").maxAge(properties.getAccessTokenExpiryTime())
-                        .sameSite("Lax").build();
-                response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-            } catch (AuthenticationException e) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                        "Refresh token invalid: " + e.getMessage());
+            accessToken = handleRefreshToken(response, refreshToken);
+            if (accessToken == null) {
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "Invalid refresh token");
                 return;
             }
         }
@@ -98,47 +76,120 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        try {
-            username = jwtService.extractUsername(accessToken);
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                    "Invalid or expired token");
+        Long userId = extractUserIdFromToken(accessToken, response);
+        if (userId == null) {
             return;
         }
 
-        if (username != null && SecurityContextHolder.getContext()
-                .getAuthentication() == null) {
-            try {
-
-                UserDetails userDetails = context
-                        .getBean(AuthUserDetailsService.class)
-                        .loadUserByUsername(username);
-
-                if (!jwtService.validateToken(accessToken, userDetails)) {
-                    throw new AuthenticationException(
-                            AppConstants.ERR_INVALID_TOKEN);
-                }
-                UsernamePasswordAuthenticationToken authToken = new
-                        UsernamePasswordAuthenticationToken(userDetails, null,
-                                userDetails.getAuthorities());
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-
-            } catch (UsernameNotFoundException ex) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "User not found");
-                return;
-            } catch (AuthenticationException ex) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                        "Invalid token: " + ex.getMessage());
-                return;
-            } catch (Exception ex) {
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "Internal server error: " + ex.getMessage());
-                return;
-            }
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            authenticateUser(request, response, accessToken, userId);
         }
 
         filterChain.doFilter(request, response);
     }
+
+    /**
+     * Extracts the token from cookies.
+     * @param request
+     * @param tokenName
+     * @return token
+     */
+    private String extractTokenFromCookies(HttpServletRequest request,
+            String tokenName) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (tokenName.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Handles refresh token logic and generates a new access token.
+     * @param response
+     * @param refreshToken
+     * @return new access token
+     */
+    private String handleRefreshToken(HttpServletResponse response,
+            String refreshToken) {
+        try {
+            String newAccessToken = jwtService
+                    .generateAccessTokenUsingRefreshToken(refreshToken);
+            jwtService.generateTokenCookie(response, newAccessToken,
+                    AppConstants.COOKIE_ACCESS_TOKEN,
+                    properties.getAccessTokenExpiryTime());
+            return newAccessToken;
+        } catch (AuthenticationException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Extracts the user ID from the token.
+     * @param token
+     * @param response
+     * @return userId
+     */
+    private Long extractUserIdFromToken(String token, HttpServletResponse response)
+            throws IOException {
+        try {
+            return jwtService.extractUserId(token);
+        } catch (Exception e) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid or expired token");
+            return null;
+        }
+    }
+
+    /**
+     * Authenticates the user using extracted user ID.
+     * @param request
+     * @param response
+     * @param accessToken
+     * @param userId
+     */
+    private void authenticateUser(HttpServletRequest request,
+            HttpServletResponse response, String accessToken, Long userId)
+            throws IOException {
+        try {
+            AuthUserDetailsService authUserDetailsService = context
+                    .getBean(AuthUserDetailsService.class);
+            UserDetails userDetails = authUserDetailsService.loadUserById(userId);
+
+            if (!jwtService.validateToken(accessToken, userDetails)) {
+                throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
+            }
+
+            UsernamePasswordAuthenticationToken authToken = new
+                    UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        } catch (UsernameNotFoundException e) {
+            sendErrorResponse(response, HttpServletResponse.SC_NOT_FOUND,
+                    "User not found");
+        } catch (AuthenticationException e) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid token: " + e.getMessage());
+        } catch (Exception e) {
+            sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Internal server error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Sends an error response.
+     * @param response
+     * @param status
+     * @param message
+     */
+    private void sendErrorResponse(HttpServletResponse response, int status,
+            String message) throws IOException {
+        response.sendError(status, message);
+    }
+
 }

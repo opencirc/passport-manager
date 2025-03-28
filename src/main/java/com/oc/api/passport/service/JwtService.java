@@ -11,6 +11,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +21,13 @@ import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.dao.UserRepository;
 import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
+import com.oc.api.passport.model.UserPrincipal;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Service to handle JWT related funtions.
@@ -71,18 +75,18 @@ public class JwtService {
     /**
      * Generates token.
      *
-     * @param userName
+     * @param userId
      * @param expiryMinutes
      * @return token
      */
-    public String generateToken(String userName, int expiryMinutes) {
+    public String generateToken(Long userId, int expiryMinutes) {
         Map<String, Object> claims = new HashMap<>();
-        return Jwts.builder().claims().add(claims).subject(userName)
+        claims.put("userId", userId);
+        return Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(
-                        System.currentTimeMillis() + expiryMinutes
+                .expiration(new Date(System.currentTimeMillis() + expiryMinutes
                         * AppConstants.NUM_SIXTY * AppConstants.NUM_THOUSAND))
-                .and().signWith(getKey()).compact();
+                .signWith(getKey()).compact();
 
     }
 
@@ -103,13 +107,14 @@ public class JwtService {
 
     }
 
+
     /**
-     * Extracts the username.
-     * @param token
-     * @return username
+     * Extracts the user ID.
+     * @param token JWT token
+     * @return User ID
      */
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
     }
 
     /**
@@ -142,8 +147,14 @@ public class JwtService {
      * @return status
      */
     public boolean validateToken(String token, UserDetails userDetails) {
-        final String userName = extractUsername(token);
-        return (userName.equals(userDetails.getUsername())
+        if (!(userDetails instanceof UserPrincipal)) {
+            return false;
+        }
+
+        UserPrincipal userPrincipal = (UserPrincipal) userDetails;
+        final Long userIdFromToken = extractUserId(token);
+
+        return (userIdFromToken.equals(userPrincipal.getUserId())
                 && !isTokenExpired(token));
     }
 
@@ -163,7 +174,7 @@ public class JwtService {
      * @return user details
      */
     public UserEntity extractUserFromToken(String token) {
-        return userRepository.findByUsername(extractUsername(token));
+        return userRepository.findByUserId(extractUserId(token));
     }
 
     /**
@@ -172,9 +183,9 @@ public class JwtService {
      * @return access Token
      */
     public String generateAccessTokenUsingRefreshToken(String refreshToken) {
-        String username = extractUsername(refreshToken);
-        UserDetails userDetails = authUserDetailsService.loadUserByUsername(username);
-        UserEntity user = userRepository.findByUsername(username);
+        Long userId = extractUserId(refreshToken);
+        UserDetails userDetails = authUserDetailsService.loadUserById(userId);
+        UserEntity user = userRepository.findByUserId(userId);
         if (!validateToken(refreshToken, userDetails)) {
             throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
         }
@@ -186,9 +197,27 @@ public class JwtService {
         if (!refreshToken.equals(user.getRefreshToken())) {
             throw new AuthenticationException("Invalid Refresh Token");
         }
-        String newAccessToken = generateToken(username,
+        String newAccessToken = generateToken(userId,
                 properties.getAccessTokenExpiryTime());
         return newAccessToken;
     }
 
+    /**
+     * Sets a cookie with generated token.
+     * @param response
+     * @param token
+     * @param tokenType
+     * @param expiryTime
+
+     */
+    public void generateTokenCookie(HttpServletResponse response,
+            String token, String tokenType, int expiryTime) {
+        ResponseCookie accessCookie = ResponseCookie
+                .from("access_token", token)
+                .httpOnly(true)
+                .secure(false)
+                .path("/").maxAge(properties.getAccessTokenExpiryTime())
+                .sameSite("Lax").build();
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+    }
 }

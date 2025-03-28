@@ -55,10 +55,6 @@ public class AuthController {
     public ResponseEntity<?> login(
             @RequestBody UserEntity user, HttpServletResponse response)
                     throws AuthenticationException {
-        if (user.getUsername() == null || (user.getPassword() == null)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Not authenticated");
-        }
         authService.verify(user, response);
         return ResponseEntity.ok(Collections.singletonMap("message", "Logged in"));
     }
@@ -115,11 +111,11 @@ public class AuthController {
      * @return response with JWT token (new access token)
      */
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue(value = "refresh_token", required = false) String refreshToken,
-            @CookieValue(value = "access_token", required = false) String accessToken,
+    public ResponseEntity<?> logout(
+            @CookieValue(value = "refresh_token", required = false) String refreshToken,
             HttpServletResponse response) throws AuthenticationException {
         try {
-            authService.logout(accessToken, refreshToken, response);
+            authService.logout(refreshToken, response);
             return ResponseEntity.ok(Collections.singletonMap("message", "Logged out"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)

@@ -23,8 +23,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.oc.api.passport.constants.AppConstants;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 /**
  * Spring security configuration.
  */
@@ -83,27 +81,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
         http.csrf(customizer -> customizer.disable())
-                .cors(corsCustomizer -> corsCustomizer
-                        .configurationSource(new CorsConfigurationSource() {
-                            @Override
-                            public CorsConfiguration getCorsConfiguration(
-                                    HttpServletRequest request) {
-                                CorsConfiguration corsConfiguration = new
-                                        CorsConfiguration();
-                                corsConfiguration.setAllowCredentials(true);
-                                corsConfiguration.setAllowedOrigins(
-                                        Arrays.asList("http://localhost:3001"));
-                                //corsConfiguration.setAllowedOrigins(Collections
-                                //.singletonList(System.getenv("FRONTEND_URL")));
-                                corsConfiguration.setAllowedMethods(
-                                        Collections.singletonList("*"));
-                                corsConfiguration.setAllowedHeaders(
-                                        Collections.singletonList("*"));
-                                corsConfiguration.setMaxAge(Duration
-                                        .ofMinutes(AppConstants.NUM_TWENTY_FIVE));
-                                return corsConfiguration;
-                            }
-                        }))
+        .cors(corsCustomizer -> corsCustomizer
+                .configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(properties.getRegisterUrl(),
                                 properties.getLoginUrl(), "/swagger-ui/index.html")
@@ -116,5 +95,20 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+
+    private CorsConfigurationSource corsConfigurationSource() {
+        return request -> {
+            CorsConfiguration corsConfiguration = new CorsConfiguration();
+            corsConfiguration.setAllowCredentials(true);
+            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3001"));
+            // corsConfiguration.setAllowedOrigins(Collections
+            .singletonList(System.getenv("FRONTEND_URL")));
+            corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
+            corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
+            corsConfiguration.setMaxAge(Duration.ofMinutes(AppConstants.NUM_TWENTY_FIVE));
+            return corsConfiguration;
+        };
     }
 }

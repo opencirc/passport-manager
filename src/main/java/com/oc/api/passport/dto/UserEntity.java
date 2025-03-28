@@ -29,7 +29,7 @@ public class UserEntity {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long userId;
 
     /**
      * Name of the user.
