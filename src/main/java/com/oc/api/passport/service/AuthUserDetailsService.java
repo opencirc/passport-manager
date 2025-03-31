@@ -1,5 +1,7 @@
 package com.oc.api.passport.service;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,11 +30,20 @@ public class AuthUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
-        UserEntity user = userRepository.findByUsername(username);
-        if (user == null) {
-            System.out.println("User Not Found");
-            throw new UsernameNotFoundException("user not found");
-        }
+        throw new UnsupportedOperationException(
+                "Loading by username is not supported. Use loadUserById instead.");
+    }
+
+    /**
+     * Gets the user data by ID.
+     *
+     * @param userId User's unique identifier
+     * @return User details
+     */
+    public UserDetails loadUserById(Long userId) {
+        Optional<UserEntity> userOptional = userRepository.findById(userId);
+        UserEntity user = userOptional.orElseThrow(
+                () -> new UsernameNotFoundException("User not found : " + userId));
 
         return new UserPrincipal(user);
     }

@@ -135,6 +135,11 @@ public final class AppConstants {
     public static final int NUM_TWENTY = 20;
 
     /**
+     * number 25.
+     */
+    public static final int NUM_TWENTY_FIVE = 25;
+
+    /**
      * number 60.
      */
     public static final int NUM_SIXTY = 60;
@@ -153,5 +158,15 @@ public final class AppConstants {
      * SHA_256.
      */
     public static final String SHA_256 = "SHA-256";
+
+    /**
+     * COOKIE_ACCESS_TOKEN.
+     */
+    public static final String COOKIE_ACCESS_TOKEN = "access_token";
+
+    /**
+     * COOKIE_REFRESH_TOKEN.
+     */
+    public static final String COOKIE_REFRESH_TOKEN = "refresh_token";
 
 }

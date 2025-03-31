@@ -10,18 +10,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     /**
      * Gets the user details from name.
      *
-     * @param username
+     * @param userId
      * @return User Entity
      */
-    UserEntity findByUsername(String username);
-
-    /**
-     * Gets the user details from email.
-     *
-     * @param email
-     * @return User Entity
-     */
-    UserEntity findByEmail(String email);
+    UserEntity findByUserId(Long userId);
 
 
     /**

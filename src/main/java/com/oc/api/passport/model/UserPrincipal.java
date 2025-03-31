@@ -21,11 +21,28 @@ public class UserPrincipal implements UserDetails {
     private UserEntity user;
 
     /**
+     * User Id.
+     */
+    private Long userId;
+
+    /**
+     * User Email.
+     */
+    private String email;
+
+    /**
+     * User password.
+     */
+    private String password;
+
+    /**
      * Injecting UserPrincipal class.
      * @param userEntity
      */
     public UserPrincipal(UserEntity userEntity) {
-        this.user = userEntity;
+        this.userId = user.getUserId();
+        this.email = user.getEmail();
+        this.password = user.getPassword();
     }
 
     /**
@@ -44,6 +61,14 @@ public class UserPrincipal implements UserDetails {
     @Override
     public String getPassword() {
         return user.getPassword();
+    }
+
+    /**
+     * method to get password.
+     * @return password
+     */
+    public Long getUserId() {
+        return user.getUserId();
     }
 
     /**

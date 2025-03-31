@@ -29,7 +29,7 @@ public class UserEntity {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long userId;
 
     /**
      * Name of the user.
@@ -60,6 +60,12 @@ public class UserEntity {
      */
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
+
+    /**
+     * Holds JWT refresh token.
+     */
+    @Column(name = "refresh_token")
+    private String refreshToken;
 
     /**
      * Created by.
