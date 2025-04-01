@@ -2,10 +2,12 @@ package com.oc.api.passport.model;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import com.oc.api.passport.dto.UserEntity;
 
 public class UserPrincipal implements UserDetails {
@@ -16,14 +18,24 @@ public class UserPrincipal implements UserDetails {
     private static final long serialVersionUID = 1L;
 
     /**
-     * User entity instance.
-     */
-    private UserEntity user;
-
-    /**
      * User Id.
      */
-    private Long userId;
+    private final Long userId;
+
+    /**
+     * User name.
+     */
+    private final String username;
+
+    /**
+     * Indicator for the User account is active or not.
+     */
+    private final boolean isActive;
+
+    /**
+     * User Authorities.
+     */
+    private final Collection<? extends GrantedAuthority> authorities;
 
     /**
      * User Email.
@@ -40,9 +52,14 @@ public class UserPrincipal implements UserDetails {
      * @param userEntity
      */
     public UserPrincipal(UserEntity userEntity) {
-        this.userId = user.getUserId();
-        this.email = user.getEmail();
-        this.password = user.getPassword();
+        Objects.requireNonNull(userEntity, "UserEntity cannot be null");
+        this.userId = userEntity.getUserId();
+        this.username = userEntity.getUsername();
+        this.email = userEntity.getEmail();
+        this.password = userEntity.getPassword();
+        this.isActive = userEntity.isActive();
+        this.authorities = Collections.singleton(new SimpleGrantedAuthority(userEntity
+                .getRole()));
     }
 
     /**
@@ -60,24 +77,33 @@ public class UserPrincipal implements UserDetails {
      */
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return password;
     }
+
 
     /**
      * method to get password.
      * @return password
      */
     public Long getUserId() {
-        return user.getUserId();
+        return userId;
     }
 
     /**
-     * method to get username.
-     * @return username
+     * Email getter.
+     * @return password
+     */
+    public String getEmail() {
+        return email;
+    }
+
+    /**
+     * method to get User name.
+     * @return User name
      */
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return username;
     }
 
     /**

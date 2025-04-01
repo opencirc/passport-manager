@@ -45,7 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
      * Injecting Properties class.
      */
     @Autowired
-    private Properties properties;
+    private AppProperties properties;
 
     /**
      * Filters the http request and validates the jwt token.

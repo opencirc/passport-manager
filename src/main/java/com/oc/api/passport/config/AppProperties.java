@@ -1,15 +1,17 @@
 package com.oc.api.passport.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Component
-@Configuration
+@ConfigurationProperties(prefix = "app")
 @Getter
-public class Properties {
+@Setter
+public class AppProperties {
 
     /**
      * URL for searching class in BsDD.
@@ -58,6 +60,12 @@ public class Properties {
      */
     @Value("${auth.login.url}")
     private String loginUrl;
+    
+    /**
+     * URL for login.
+     */
+    @Value("${secret.key}")
+    private String jwtSecretKey;
 
     /**
      * Getter for refresh token.

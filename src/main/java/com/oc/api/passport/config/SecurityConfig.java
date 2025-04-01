@@ -46,7 +46,7 @@ public class SecurityConfig {
      * Injecting Properties class.
      */
     @Autowired
-    private Properties properties;
+    private AppProperties properties;
 
     /**
      * Bean to get authenticationManager.
@@ -104,7 +104,7 @@ public class SecurityConfig {
             corsConfiguration.setAllowCredentials(true);
             corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3001"));
             // corsConfiguration.setAllowedOrigins(Collections
-            .singletonList(System.getenv("FRONTEND_URL")));
+            //.singletonList(System.getenv("FRONTEND_URL")));
             corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
             corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
             corsConfiguration.setMaxAge(Duration.ofMinutes(AppConstants.NUM_TWENTY_FIVE));
