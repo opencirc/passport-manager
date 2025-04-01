@@ -445,7 +445,7 @@ public class BsDDAdapter implements DictionaryAdapter {
      * @return response
      * @throws JsonProcessingException
      */
-    public JsonNode viewRawTemplate(String uri, String type)
+    public JsonNode fetchRawTemplate(String uri, String type)
             throws JsonProcessingException {
         String uriPrefix = null;
         if (type.equalsIgnoreCase("class")) {

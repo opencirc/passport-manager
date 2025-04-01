@@ -91,19 +91,19 @@ public class ShellCommandConfig {
             response = templateController.createTemplateWithProperties(uriList,
                     dictionaryType);
         }
-        return printJsonResponse(response);
+        return formatJsonResponse(response);
     }
 
     private String generateRawTemplate(String dictionaryType, String uri, String type)
             throws JsonProcessingException {
         DictionaryAdapter adapter = dictionaryAdapterFactory
                 .getAdapter(dictionaryType);
-        return printJsonResponse(adapter.viewRawTemplate(uri, type));
+        return formatJsonResponse(adapter.fetchRawTemplate(uri, type));
     }
 
 
 
-    private String printJsonResponse(JsonNode response) throws JsonProcessingException {
+    private String formatJsonResponse(JsonNode response) throws JsonProcessingException {
         String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValueAsString(response);
         return prettyJson;

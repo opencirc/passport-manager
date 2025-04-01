@@ -66,6 +66,6 @@ public interface DictionaryAdapter {
      * @return response
      * @throws JsonProcessingException
      */
-    JsonNode viewRawTemplate(String uri, String type)
+    JsonNode fetchRawTemplate(String uri, String type)
             throws JsonProcessingException;
 }
