@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -174,7 +175,6 @@ public class BsDDAdapter implements DictionaryAdapter {
             formPropertyTemplate(propertiesArray, response, "bsDD");
         }
         template.set("properties", propertiesArray);
-        System.out.println(template.toPrettyString());
 
         return template;
     }
@@ -436,6 +436,32 @@ public class BsDDAdapter implements DictionaryAdapter {
             errorMessages.add(propName + " : Actual value: " + realValue
                     + " is below MinInclusive limit: " + minInclusive);
         }
+    }
+    
+    /**
+     * Displays the template from the dictionary without any processing.
+     * @param uri
+     * @param type
+     * @return response
+     * @throws JsonProcessingException
+     */
+    public JsonNode viewRawTemplate(String uri, String type)
+            throws JsonProcessingException {
+        String uriPrefix = null;
+        if (type.equalsIgnoreCase("class")) {
+            uriPrefix = props.getBsDDClassDetailsURL();
+        } else if (type.equalsIgnoreCase("property")) {
+            uriPrefix = props.getBsDDPropertiesWithDetailURL();
+        }
+
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder
+                .fromHttpUrl(uriPrefix).queryParam(AppConstants.URI, uri)
+                .queryParam(AppConstants.QP_BSDD_INCLUDECLASSPROP, true);
+        String url = uriBuilder.toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
+                JsonNode.class);
+        
+        return response.getBody();
     }
 
 }

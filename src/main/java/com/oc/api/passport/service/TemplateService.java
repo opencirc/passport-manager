@@ -55,7 +55,6 @@ public class TemplateService {
         DictionaryAdapter adapter = dictionaryAdapterFactory
                 .getAdapter(ddLibrary);
         JsonNode classTemplate = adapter.getClassTemplatewithPropDetails(uri);
-        System.out.println(classTemplate);
         return classTemplate;
     }
 

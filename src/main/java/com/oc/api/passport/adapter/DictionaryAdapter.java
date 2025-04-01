@@ -3,6 +3,7 @@ package com.oc.api.passport.adapter;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.oc.api.passport.exception.BsDDJsonValidationException;
 
@@ -57,4 +58,14 @@ public interface DictionaryAdapter {
      * @return true or false
      */
     boolean validateUri(String uri);
+    
+    /**
+     * Displays the template from the dictionary without any processing.
+     * @param uri
+     * @param type
+     * @return response
+     * @throws JsonProcessingException
+     */
+    JsonNode viewRawTemplate(String uri, String type)
+            throws JsonProcessingException;
 }
