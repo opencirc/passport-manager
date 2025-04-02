@@ -82,8 +82,8 @@ public class UserPrincipal implements UserDetails {
 
 
     /**
-     * method to get password.
-     * @return password
+     * method to get userId.
+     * @return userId
      */
     public Long getUserId() {
         return userId;
@@ -98,8 +98,8 @@ public class UserPrincipal implements UserDetails {
     }
 
     /**
-     * method to get User name.
-     * @return User name
+     * method to get Username.
+     * @return Username
      */
     @Override
     public String getUsername() {
