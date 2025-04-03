@@ -60,12 +60,12 @@ public class AppProperties {
      */
     @Value("${auth.login.url}")
     private String loginUrl;
-    
+
     /**
-     * URL for login.
+     * URL for encryptionKey.
      */
-    @Value("${secret.key}")
-    private String jwtSecretKey;
+    @Value("${secret.encryption.key}")
+    private String encryptionKey;
 
     /**
      * Getter for refresh token.

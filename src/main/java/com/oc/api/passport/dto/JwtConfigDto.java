@@ -13,18 +13,18 @@ import lombok.ToString;
  * DTO for Config table.
  */
 @Entity
-@Table(name = "oc_config")
+@Table(name = "jwt_config")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class OcConfigDto {
+public class JwtConfigDto {
 
     /**
-     * hashvalue.
+     * secretKey.
      */
     @Id
-    @Column(name = "hashvalue")
-    private String hashValue;
+    @Column(name = "secret_key")
+    private String secretKey;
 
 }

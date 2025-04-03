@@ -1,21 +1,11 @@
 package com.oc.api.passport.service;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +16,9 @@ import org.springframework.stereotype.Service;
 
 import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
+import com.oc.api.passport.dao.JwtConfigRepository;
 import com.oc.api.passport.dao.UserRepository;
+import com.oc.api.passport.dto.JwtConfigDto;
 import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
 import com.oc.api.passport.model.UserPrincipal;
@@ -36,6 +28,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -49,6 +42,12 @@ public class JwtService {
      */
     @Autowired
     private UserRepository userRepository;
+
+    /**
+     * Injecting JwtConfigRepository class.
+     */
+    @Autowired
+    private JwtConfigRepository jwtConfigRepository;
 
     /**
      * Injecting Properties class.
@@ -65,63 +64,61 @@ public class JwtService {
      * Secret key declaration.
      */
     private String secretKey = "";
-    
-    private static final String ENCRYPTION_KEY = "PBKDF2W7987HmacSHA256"; 
+
 
     /**
      * Instantiating JwtService class.
+     * @param appProp
      */
-    @Autowired 
-    public JwtService(AppProperties appProperties) {
+    @Autowired
+    public JwtService(AppProperties appProp) {
+        this.appProperties = appProp;
 
-        this.appProperties = appProperties;
-        secretKey = loadAndDecryptSecretKey();
-        if (secretKey == null || secretKey.isEmpty()) {
-            generateAndStoreSecretKey();
-        }
     }
 
-    private String loadAndDecryptSecretKey() {
-        String encryptedSecretKey = appProperties.getJwtSecretKey();
-        String decryptedSecretKey = null;
-        if (encryptedSecretKey != null) {
-            try {
-                decryptedSecretKey = EncryptionUtil.decrypt(encryptedSecretKey, ENCRYPTION_KEY);
-            } catch (Exception e) {
-                throw new RuntimeException("Error decrypting secret key", e);
+    /**
+     * Loading Secret Key after initialization.
+     */
+    @PostConstruct
+    public void init() {
+        loadSecretKey();
+    }
+
+    /**
+     * Loading Secret Key.
+     */
+    private void loadSecretKey() {
+
+        if (secretKey == null || secretKey.isEmpty()) {
+            Optional<JwtConfigDto> keyEntity = jwtConfigRepository.getSecretKey();
+            if (keyEntity.isPresent()) {
+                try {
+                    this.secretKey = EncryptionUtil.decrypt(keyEntity.get()
+                            .getSecretKey(), appProperties.getEncryptionKey());
+                } catch (Exception e) {
+                    throw new RuntimeException("Error decrypting secret key", e);
+                }
+            } else {
+                generateAndStoreSecretKey();
             }
         }
-        return decryptedSecretKey;
-     }
-    
+
+    }
+
     private void generateAndStoreSecretKey() {
         try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-            String rawKey = Base64.getEncoder()
-                    .encodeToString(keyGen.generateKey().getEncoded());
-            String encryptedKey = EncryptionUtil.encrypt(rawKey, ENCRYPTION_KEY);
-            storeEncryptedSecretKeyInProperties(encryptedKey);
+            String rawKey = EncryptionUtil.generateSecureKey();
+            String encryptedKey = EncryptionUtil.encrypt(rawKey,
+                    appProperties.getEncryptionKey());
+           // storeEncryptedSecretKeyInProperties(encryptedKey);
             this.secretKey = rawKey;
+            jwtConfigRepository.saveConfig(encryptedKey);
 
         } catch (Exception e) {
             throw new RuntimeException("Error generating and storing secret key", e);
         }
     }
-    
-    private void storeEncryptedSecretKeyInProperties(String encryptedKey) throws IOException {
-        appProperties.setJwtSecretKey(encryptedKey);
 
-        String propertiesFilePath = "src/main/resources/application.properties";
-        
-        Path path = Paths.get(propertiesFilePath);
-        List<String> lines = Files.readAllLines(path);
-        String keyField  = "secret.key";
-        List<String> updatedLines = lines.stream()
-                .map((String line) -> line.startsWith(keyField + "=") ? keyField + "=" + encryptedKey : line)
-                .collect(Collectors.toList());
-        Files.write(path, updatedLines);
-    }
-    
     /**
      * Generates token.
      *
@@ -146,10 +143,11 @@ public class JwtService {
      * @return secret key
      */
     private SecretKey getKey() {
-
+        if (secretKey == null || secretKey.isEmpty()) {
+            throw new RuntimeException("Secret key is missing or invalid");
+        }
         try {
             byte[] keyBytes = Decoders.BASE64.decode(secretKey.trim());
-
             return Keys.hmacShaKeyFor(keyBytes);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid Base64 secret key", e);
