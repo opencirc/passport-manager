@@ -10,11 +10,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.oc.api.passport.config.Properties;
+import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.dao.UserRepository;
 import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
+import com.oc.api.passport.model.UserPrincipal;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -31,7 +32,7 @@ public class AuthService {
      * Injecting Properties class.
      */
     @Autowired
-    private Properties properties;
+    private AppProperties properties;
 
     /**
      * Instantiating BCryptPasswordEncoder class.
@@ -101,18 +102,20 @@ public class AuthService {
                 throw new AuthenticationException(
                         AppConstants.ERR_INVALID_CREDENTIALS);
             }
-            String accessToken = jwtService.generateToken(user.getUserId(),
+            
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            Long userId = userPrincipal.getUserId(); 
+            
+            String accessToken = jwtService.generateToken(userId,
                     properties.getAccessTokenExpiryTime());
-            String refreshToken = jwtService.generateToken(user.getUserId(),
+            String refreshToken = jwtService.generateToken(userId,
                     properties.getRefreshTokenExpiryTime());
 
-            UserEntity existingUser = userRepository.findByUserId(user.getUserId());
-            existingUser.setRefreshToken(refreshToken);
-            userRepository.save(existingUser);
+            userRepository.updateRefreshTokenByUserId(userId, refreshToken);
             jwtService.generateTokenCookie(response, accessToken,
                     AppConstants.COOKIE_ACCESS_TOKEN,
                     properties.getAccessTokenExpiryTime());
-            jwtService.generateTokenCookie(response, accessToken,
+            jwtService.generateTokenCookie(response, refreshToken,
                     AppConstants.COOKIE_REFRESH_TOKEN,
                     properties.getRefreshTokenExpiryTime());
         } catch (BadCredentialsException bce) {

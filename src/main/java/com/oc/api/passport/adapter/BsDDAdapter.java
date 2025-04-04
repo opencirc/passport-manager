@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.oc.api.passport.config.Properties;
+import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.exception.BsDDJsonValidationException;
 import com.oc.api.passport.mapping.DictionaryMapping;
@@ -34,7 +34,7 @@ public class BsDDAdapter implements DictionaryAdapter {
     /**
      * Injecting Properties.
      */
-    private final Properties props;
+    private final AppProperties props;
 
     /**
      * Instantiating BsddAdapter.
@@ -43,7 +43,7 @@ public class BsDDAdapter implements DictionaryAdapter {
      * @param properties
      */
     @Autowired
-    public BsDDAdapter(RestTemplate injectedRestTemplate, Properties properties) {
+    public BsDDAdapter(RestTemplate injectedRestTemplate, AppProperties properties) {
         this.restTemplate = injectedRestTemplate;
         this.props = properties;
     }

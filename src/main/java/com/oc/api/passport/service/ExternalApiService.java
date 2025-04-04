@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.oc.api.passport.config.Properties;
+import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
 
 @Service
@@ -39,7 +39,7 @@ public class ExternalApiService {
      * Injecting Properties class.
      */
     @Autowired
-    private Properties props;
+    private AppProperties props;
 
     /**
      * Retrieves the class.

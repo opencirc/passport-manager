@@ -30,9 +30,13 @@ public class AuthUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
-        throw new UnsupportedOperationException(
-                "Loading by username is not supported. Use loadUserById instead.");
-    }
+        UserEntity user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        return new UserPrincipal(user);
+        }
 
     /**
      * Gets the user data by ID.

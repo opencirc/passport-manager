@@ -1,13 +1,11 @@
 package com.oc.api.passport.service;
 
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,17 +14,21 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import com.oc.api.passport.config.Properties;
+import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
+import com.oc.api.passport.dao.JwtConfigRepository;
 import com.oc.api.passport.dao.UserRepository;
+import com.oc.api.passport.dto.JwtConfigDto;
 import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
 import com.oc.api.passport.model.UserPrincipal;
+import com.oc.api.passport.util.EncryptionUtil;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -42,10 +44,15 @@ public class JwtService {
     private UserRepository userRepository;
 
     /**
-     * Injecting Properties class.
+     * Injecting JwtConfigRepository class.
      */
     @Autowired
-    private Properties properties;
+    private JwtConfigRepository jwtConfigRepository;
+
+    /**
+     * Injecting Properties class.
+     */
+    private final AppProperties appProperties;
 
     /**
      * Injecting AuthUserDetailsService class.
@@ -56,19 +63,59 @@ public class JwtService {
     /**
      * Secret key declaration.
      */
-    private String secretkey = "";
+    private String secretKey = "";
+
 
     /**
      * Instantiating JwtService class.
+     * @param appProp
      */
-    public JwtService() {
+    @Autowired
+    public JwtService(AppProperties appProp) {
+        this.appProperties = appProp;
 
+    }
+
+    /**
+     * Loading Secret Key after initialization.
+     */
+    @PostConstruct
+    public void init() {
+        loadSecretKey();
+    }
+
+    /**
+     * Loading Secret Key.
+     */
+    private void loadSecretKey() {
+
+        if (secretKey == null || secretKey.isEmpty()) {
+            Optional<JwtConfigDto> keyEntity = jwtConfigRepository.getSecretKey();
+            if (keyEntity.isPresent()) {
+                try {
+                    this.secretKey = EncryptionUtil.decrypt(keyEntity.get()
+                            .getSecretKey(), appProperties.getEncryptionKey());
+                } catch (Exception e) {
+                    throw new RuntimeException("Error decrypting secret key", e);
+                }
+            } else {
+                generateAndStoreSecretKey();
+            }
+        }
+
+    }
+
+    private void generateAndStoreSecretKey() {
         try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-            secretkey = Base64.getEncoder()
-                    .encodeToString(keyGen.generateKey().getEncoded());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            String rawKey = EncryptionUtil.generateSecureKey();
+            String encryptedKey = EncryptionUtil.encrypt(rawKey,
+                    appProperties.getEncryptionKey());
+           // storeEncryptedSecretKeyInProperties(encryptedKey);
+            this.secretKey = rawKey;
+            jwtConfigRepository.saveConfig(encryptedKey);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating and storing secret key", e);
         }
     }
 
@@ -96,10 +143,11 @@ public class JwtService {
      * @return secret key
      */
     private SecretKey getKey() {
-
+        if (secretKey == null || secretKey.isEmpty()) {
+            throw new RuntimeException("Secret key is missing or invalid");
+        }
         try {
-            byte[] keyBytes = Decoders.BASE64.decode(secretkey.trim());
-
+            byte[] keyBytes = Decoders.BASE64.decode(secretKey.trim());
             return Keys.hmacShaKeyFor(keyBytes);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid Base64 secret key", e);
@@ -198,7 +246,7 @@ public class JwtService {
             throw new AuthenticationException("Invalid Refresh Token");
         }
         String newAccessToken = generateToken(userId,
-                properties.getAccessTokenExpiryTime());
+                appProperties.getAccessTokenExpiryTime());
         return newAccessToken;
     }
 
@@ -212,12 +260,12 @@ public class JwtService {
      */
     public void generateTokenCookie(HttpServletResponse response,
             String token, String tokenType, int expiryTime) {
-        ResponseCookie accessCookie = ResponseCookie
-                .from("access_token", token)
+        ResponseCookie cookie = ResponseCookie
+                .from(tokenType, token)
                 .httpOnly(true)
                 .secure(false)
-                .path("/").maxAge(properties.getAccessTokenExpiryTime())
+                .path("/").maxAge(expiryTime)
                 .sameSite("Lax").build();
-        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }

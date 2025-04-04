@@ -1,0 +1,8 @@
+1743495512922:fetch-template --dictionaryType=bsdd --type=class --uri=https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__ --raw=false
+1743495712655:fetch-template bsdd class https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__ false
+1743496210362:fetch-template bsdd class https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__ true
+1743496353791:fetch-template bsdd class https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__ false
+1743496759126:fetch-template bsdd class https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__ true
+1743496806998:fetch-template bsdd property https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008 false
+1743496835118:fetch-template bsdd property https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008 true
+1743496923160:fetch-template bsdd property https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008 false
