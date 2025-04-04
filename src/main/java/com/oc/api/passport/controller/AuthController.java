@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
+import com.oc.api.passport.model.RegisterRequest;
 import com.oc.api.passport.service.AuthService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,9 +39,9 @@ public class AuthController {
      * @return response
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserEntity user)
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest userDetails) 
             throws AuthenticationException {
-        authService.register(user);
+        authService.register(userDetails);
         return ResponseEntity.ok("User registered successfully");
     }
 

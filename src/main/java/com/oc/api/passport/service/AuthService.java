@@ -1,5 +1,7 @@
 package com.oc.api.passport.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,6 +17,7 @@ import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.dao.UserRepository;
 import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
+import com.oc.api.passport.model.RegisterRequest;
 import com.oc.api.passport.model.UserPrincipal;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -63,7 +66,17 @@ public class AuthService {
      *
      * @param user details with username, email, password
      */
-    public void register(UserEntity user) throws AuthenticationException {
+    public void register(RegisterRequest registerUser) throws AuthenticationException {
+
+        UserEntity user = new UserEntity();
+        
+        user.setUsername(registerUser.getUsername());
+        user.setPassword(registerUser.getPassword());
+        user.setEmail(registerUser.getEmail());
+        user.setActive(true);
+        user.setCreatedBy("test");
+        user.setCreatedTime(LocalDateTime.now());
+        
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new AuthenticationException(AppConstants.ERR_USERNAME_EXISTS);
         }
