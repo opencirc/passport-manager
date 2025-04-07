@@ -1,15 +1,16 @@
 package com.opencirc.api.passport.controller.test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.oc.api.passport.PassportManager;
 import com.oc.api.passport.service.AuthUserDetailsService;
@@ -22,6 +23,7 @@ import io.restassured.response.Response;
 
 @SpringBootTest(classes = PassportManager.class,
 webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class TestAuthController {
 
     /**
@@ -48,6 +50,7 @@ public class TestAuthController {
     @BeforeEach
     public void setup() {
         RestAssured.port = port;
+        MockitoAnnotations.openMocks(this);
         MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
         helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
 
@@ -65,11 +68,12 @@ public class TestAuthController {
                 "{\"username\": \"user1\", \"password\": \"user1password\"}")
                 .when().post("/api/auth/login");
         response.then().statusCode(TestConstants.STATUS_SUCCESS)
-        .contentType(ContentType.JSON)
-                .body("$", hasKey("accessToken"))
-                .body("accessToken", notNullValue())
-                .body("$", hasKey("accessToken"))
-                .body("refreshToken", notNullValue());
+        .contentType(ContentType.JSON);
+        String accessToken = response.getCookie("access_token");
+        assertNotNull(accessToken, "Access token should be present in the response cookies");
+        String refToken = response.getCookie("refresh_token");
+        assertNotNull(refToken, "Access token should be present in the response cookies");
+        
     }
 
     /**
