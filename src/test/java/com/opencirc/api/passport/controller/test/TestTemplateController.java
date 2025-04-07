@@ -3,6 +3,7 @@ package com.opencirc.api.passport.controller.test;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,12 +21,15 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.oc.api.passport.PassportManager;
 import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
+import com.oc.api.passport.exception.BsDDJsonValidationException;
 import com.oc.api.passport.service.AuthUserDetailsService;
+import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 
@@ -82,13 +86,37 @@ public class TestTemplateController {
         if (response.getStatusCode() == 200) {
             jwtToken = response.getCookie("access_token");
         } else {
-            System.out
-                    .println("Request failed. Status Code: " + response.getStatusCode());
-            System.out.println("Response Body: " + response.getBody().asString());
             throw new AssertionError(
                     "Expected status 200, but got " + response.getStatusCode());
         }
 
+    }
+
+    @Test
+    public void testFetchBsddData() throws BsDDJsonValidationException {
+        String bsddUrl = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__";
+        String ddLibrary = "bsdd";
+        BsddMockStubHelper.stubBsddApiResponse();
+
+        Response response = RestAssured.given().log().all()
+                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
+                .queryParam("uri", bsddUrl).queryParam("ddLibrary", ddLibrary).when()
+                .get("/api/classes/template/").then()
+                .statusCode(TestConstants.STATUS_SUCCESS).contentType(ContentType.JSON)
+                .log().all().extract().response();
+
+        String json = response.getBody().asString();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(objectMapper.readTree(json));
+            System.out.println("Pretty Printed JSON: \n" + prettyJson);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assertTrue(json.contains("\"referenceCode\":\"A-A__\""));
+        assertTrue(json.contains("\"status\":\"Active\""));
     }
 
     @Test
