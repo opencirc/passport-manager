@@ -76,6 +76,8 @@ public class TestTemplateController {
         helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
 
         generateMockJwtToken();
+        
+        BsddMockStubHelper.stubBsddApiResponse();
 
     }
 
@@ -106,23 +108,14 @@ public class TestTemplateController {
                 .log().all().extract().response();
 
         String json = response.getBody().asString();
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(objectMapper.readTree(json));
-            System.out.println("Pretty Printed JSON: \n" + prettyJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        assertTrue(json.contains("\"referenceCode\":\"A-A__\""));
+        assertTrue(json.contains("\"name\":\"Use of Construction Spaces\""));
         assertTrue(json.contains("\"status\":\"Active\""));
+        assertTrue(json.contains("\"dataCategory\":\"\""));
+        assertTrue(json.contains("\"templateName\":\"\""));
     }
 
     @Test
     public void testStub() {
-
-        BsddMockStubHelper.stubBsddApiResponse();
 
         String queryParamUrl = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__";
 
