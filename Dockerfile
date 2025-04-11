@@ -1,14 +1,25 @@
+# Build
+
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
+
+WORKDIR /app
+
+COPY pom.xml .
+
+RUN mvn dependency:go-offline -B
+
+COPY src ./src
+
+RUN mvn clean package -DskipTests
+
 # Use the official OpenJDK image as the base image
-FROM openjdk:21-slim
+FROM eclipse-temurin:21-jdk-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Set the application's JAR file path
-ARG JAR_FILE=target/*.jar
-
 # Copy the application JAR file into the container
-COPY ${JAR_FILE} /app/app.jar
+COPY --from=builder /app/target/*.jar /app/app.jar
 
 # Expose port 8080
 EXPOSE 8080
