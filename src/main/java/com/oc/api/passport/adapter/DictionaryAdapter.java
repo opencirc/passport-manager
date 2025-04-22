@@ -25,8 +25,9 @@ public interface DictionaryAdapter {
      * @return JsonNode
      * @throws BsDDJsonValidationException
      */
-    JsonNode getClassTemplatewithPropDetails(String code)
-            throws BsDDJsonValidationException;
+    JsonNode createClassTemplate(String code, boolean addProperties)
+            throws BsDDJsonValidationException, JsonProcessingException;
+    
 
     /**
      * Retrieves a list of properties matching the given search text.

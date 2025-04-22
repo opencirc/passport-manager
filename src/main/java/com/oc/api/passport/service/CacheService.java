@@ -1,5 +1,6 @@
 package com.oc.api.passport.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class CacheService {
@@ -126,6 +131,26 @@ public class CacheService {
 
             redisTemplate.opsForValue().set(redisKey, uri);
         });
+    }
+    
+    public void storeClassTemplateInCache(String uri, JsonNode template) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(template);
+        redisTemplate.opsForValue().set(uri, json);
+    }
+
+    public JsonNode getClassTemplateFromCache(String uri) {
+        String json = (String) redisTemplate.opsForValue().get(uri);
+        if(json == null) {
+            return null;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.readTree(json);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to parse JSON", e);
+        }
+        
     }
 
 

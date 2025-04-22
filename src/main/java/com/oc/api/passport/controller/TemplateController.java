@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.oc.api.passport.exception.BsDDJsonValidationException;
 import com.oc.api.passport.service.TemplateService;
@@ -58,9 +59,10 @@ public class TemplateController {
      * @param ddLibrary
      * @return the template with all the relevant properties
      * @throws BsDDJsonValidationException
+     * @throws JsonProcessingException 
      */
     @Operation(summary = "Get class from DD for the requested uri")
-    @GetMapping(value = "/api/classes/template/", produces = {
+    @GetMapping(value = "/api/template/class-with-props/", produces = {
             "application/json" })
     public JsonNode createClassTemplateWithProperties(
             @Parameter(description = "URI for the classification",
@@ -69,8 +71,32 @@ public class TemplateController {
             @RequestParam String uri,
             @Parameter(description = "Name of library", required = true, example = "bsdd")
             @RequestParam String ddLibrary)
-            throws BsDDJsonValidationException {
+            throws BsDDJsonValidationException, JsonProcessingException {
         return templateService.getClassTemplatewithPropDetails(uri, ddLibrary);
+    }
+    
+    
+    /**
+     * Gets class template without any properties.
+     *
+     * @param uri
+     * @param ddLibrary
+     * @return the template with all the relevant properties
+     * @throws BsDDJsonValidationException
+     * @throws JsonProcessingException 
+     */
+    @Operation(summary = "Get class from DD for the requested uri")
+    @GetMapping(value = "/api/template/class", produces = {
+            "application/json" })
+    public JsonNode createClassTemplateWithoutProperties(
+            @Parameter(description = "URI for the classification",
+            example = "https://identifier.buildingsmart.org/uri/"
+                    + "molio/cciconstruction/1.0/class/A-A__")
+            @RequestParam String uri,
+            @Parameter(description = "Name of library", required = true, example = "bsdd")
+            @RequestParam String ddLibrary)
+            throws BsDDJsonValidationException, JsonProcessingException {
+        return templateService.getClassTemplatewithoutPropDetails(uri, ddLibrary);
     }
 
     /**
@@ -82,7 +108,7 @@ public class TemplateController {
      * @throws BsDDJsonValidationException
      */
     @Operation(summary = "Lists all the properties name and its URI matching the text")
-    @GetMapping(value = "/api/listProperties/{searchText}/{ddLibrary}", produces = {
+    @GetMapping(value = "/api/properties/{searchText}/{ddLibrary}", produces = {
             "application/json" })
     public List<Map<String, String>> listProperties(
             @Parameter(description = "The text to search for, minimum 3 characters",
@@ -103,7 +129,7 @@ public class TemplateController {
      * @throws BsDDJsonValidationException
      */
     @Operation(summary = "Create template with selected properties")
-    @PostMapping(value = "/api/createTemplateWithProperties/", produces = {
+    @PostMapping(value = "/api/template/properties", produces = {
             "application/json" }, consumes = { "application/json" })
     public JsonNode createTemplateWithProperties(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description =
@@ -116,5 +142,6 @@ public class TemplateController {
                 CommonUtil.convertToLowercase(ddLibrary));
 
     }
+    
 
 }

@@ -10,10 +10,12 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -21,7 +23,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.InvalidInputException;
 import com.oc.api.passport.mapping.DictionaryMapping;
+import com.oc.api.passport.service.CacheService;
 
 @Service
 public class BsDDAdapter implements DictionaryAdapter {
@@ -59,6 +63,12 @@ public class BsDDAdapter implements DictionaryAdapter {
      */
     @Autowired
     private DictionaryMapping dictionaryMapping;
+    
+    /**
+     * Injecting CacheService.
+     */
+    @Autowired
+    private CacheService cacheService;
 
 
     /**
@@ -102,48 +112,104 @@ public class BsDDAdapter implements DictionaryAdapter {
      * @param uri The class URI.
      * @return The class template as a JsonNode.
      * @throws BsDDJsonValidationException If the URI is invalid.
+     * @throws JsonProcessingException 
      */
     @Override
-    public JsonNode getClassTemplatewithPropDetails(String uri)
-            throws BsDDJsonValidationException {
+    public JsonNode createClassTemplate(String uri, boolean addProperties)
+            throws BsDDJsonValidationException, JsonProcessingException {
 
-        if (uri.isEmpty() || !validateUri(uri)) {
+        JsonNode classTemplate = getClassTemplate(uri, addProperties);
+
+        if (!(classTemplate instanceof ObjectNode)) {
+            throw new BsDDJsonValidationException(
+                    "Invalid response format for URI: " + uri);
+        }
+
+        ObjectNode rootObject = (ObjectNode) classTemplate;
+
+        if (addProperties) {
+            JsonNode classPropertiesNode = rootObject
+                    .get(AppConstants.BSDD_FIELD_CLASSPROPERTIES);
+
+            if (classPropertiesNode != null && classPropertiesNode.isArray()) {
+                ArrayNode classProperties = (ArrayNode) classPropertiesNode;
+                ArrayNode updatedProperties = objectMapper.createArrayNode();
+
+                for (JsonNode propertyNode : classProperties) {
+                    if (propertyNode.isObject()) {
+                        try {
+                            Map<String, Object> propertyMap = objectMapper.convertValue(
+                                    propertyNode,
+                                    new TypeReference<Map<String, Object>>() {
+                                    });
+                            formPropertyTemplate(updatedProperties, propertyMap, "bsDD");
+                        } catch (IllegalArgumentException e) {
+                            throw new BsDDJsonValidationException(
+                                    "Skipping invalid propertyNode: {}" + propertyNode);
+                        }
+                    }
+                }
+                rootObject.set(AppConstants.BSDD_FIELD_CLASSPROPERTIES,
+                        updatedProperties);
+            }
+        }
+
+        return rootObject;
+    }
+
+    /**
+     * Fetches class template with property details.
+     *
+     * @param uri The class URI.
+     * @return The class template as a JsonNode.
+     * @throws BsDDJsonValidationException If the URI is invalid.
+     * @throws JsonProcessingException 
+     */
+    private JsonNode getClassTemplate(String uri, boolean addProperties)
+            throws BsDDJsonValidationException, JsonProcessingException {
+
+        if (uri == null || uri.trim().isEmpty() || !validateUri(uri)) {
             throw new BsDDJsonValidationException("Invalid URI : " + uri);
         }
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromHttpUrl(props.getBsDDClassDetailsURL())
-                .queryParam(AppConstants.URI, uri)
-                .queryParam(AppConstants.QP_BSDD_INCLUDECLASSPROP, true);
+                .queryParam(AppConstants.URI, uri);
+
+        if (addProperties) {
+            uriBuilder.queryParam(AppConstants.QP_BSDD_INCLUDECLASSPROP, true);
+        }
+
         String url = uriBuilder.toUriString();
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
-                JsonNode.class);
-        JsonNode rootNode = response.getBody();
-        if (rootNode == null || !rootNode.isObject()) {
-            return null;
+
+        // Check data from Redis cache
+        JsonNode rootNode = cacheService.getClassTemplateFromCache(url);
+        if (rootNode == null) {
+            try {
+                ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
+                        JsonNode.class);
+                if (response.getStatusCode().is2xxSuccessful()
+                        && response.getBody() != null) {
+                    rootNode = response.getBody();
+                    cacheService.storeClassTemplateInCache(url, rootNode);
+                } else {
+                    throw new BsDDJsonValidationException(
+                            "Failed to fetch class template. HTTP Status: "
+                                    + response.getStatusCode());
+                }
+            } catch (RestClientException e) {
+                throw new BsDDJsonValidationException(
+                        "Error fetching class template: " + e.getMessage(), e);
+            }
+        }
+
+        if (!(rootNode instanceof ObjectNode)) {
+            throw new BsDDJsonValidationException(
+                    "Unexpected format in class template for URI: " + uri);
         }
 
         ObjectNode rootObject = (ObjectNode) rootNode;
         rootObject.put(AppConstants.TEMPLATE_NAME, "");
         rootObject.put(AppConstants.DATA_CATEGORY_FIELD, "");
-
-        JsonNode classPropertiesNode = rootObject
-                .get(AppConstants.BSDD_FIELD_CLASSPROPERTIES);
-        if (classPropertiesNode != null && classPropertiesNode.isArray()) {
-            ArrayNode classProperties = (ArrayNode) classPropertiesNode;
-
-            ArrayNode updatedProperties = objectMapper.createArrayNode();
-            for (JsonNode propertyNode : classProperties) {
-                if (propertyNode.isObject()) {
-                    ObjectNode propertyObject = (ObjectNode) propertyNode;
-                    Map<String, Object> propertyMap = objectMapper
-                            .convertValue(propertyObject, Map.class);
-                    formPropertyTemplate(updatedProperties, propertyMap,
-                            "bsDD");
-                }
-            }
-            rootObject.set(AppConstants.BSDD_FIELD_CLASSPROPERTIES,
-                    updatedProperties);
-        }
         return rootObject;
     }
 
@@ -243,59 +309,81 @@ public class BsDDAdapter implements DictionaryAdapter {
     public void validateTemplateEntry(JsonNode jsonNode)
             throws BsDDJsonValidationException {
 
+        if (jsonNode == null || jsonNode.isNull()
+                || jsonNode.isObject() && jsonNode.size() == 0) {
+            throw new InvalidInputException("Input JSON node is null");
+        }
+
         ArrayNode properties = null;
         System.out.println(jsonNode.toString());
-        if (jsonNode.has("classType")
-                && jsonNode.get("classType").asText().equals("Class")) {
-            properties = (ArrayNode) jsonNode.get("classProperties");
-        } else {
-            properties = (ArrayNode) jsonNode.get("properties");
+        try {
+            if (jsonNode.has("classType")
+                    && "Class".equals(jsonNode.path("classType").asText())) {
+                if (jsonNode.has("classProperties")) {
+                    properties = (ArrayNode) jsonNode.get("classProperties");
+                }
+
+            } else if (jsonNode.has("properties")) {
+                if (jsonNode.get("properties").isArray())
+                    properties = (ArrayNode) jsonNode.get("properties");
+
+            } else {
+                throw new InvalidInputException("Invalid Template");
+            }
+        } catch (ClassCastException e) {
+            throw new InvalidInputException("Expected an array node for properties");
         }
 
         List<String> errorMessages = new ArrayList<>();
-        for (JsonNode propertyNode : properties) {
-            ObjectNode property = (ObjectNode) propertyNode;
-
-            String propName = property.has("name")
-                    ? property.get("name").asText()
-                    : null;
-            String dataType = property.has("dataType")
-                    ? property.get("dataType").asText()
-                    : null;
-            JsonNode actualValueNode = property.get("actualValue");
-            JsonNode allowedValuesNode = property.get("allowedValues");
-
-            Double maxExclusive = property.has("MaxExclusive")
-                    ? property.get("MaxExclusive").asDouble()
-                    : null;
-            Double maxInclusive = property.has("MaxInclusive")
-                    ? property.get("MaxInclusive").asDouble()
-                    : null;
-            Double minExclusive = property.has("MinExclusive")
-                    ? property.get("MinExclusive").asDouble()
-                    : null;
-            Double minInclusive = property.has("MinInclusive")
-                    ? property.get("MinInclusive").asDouble()
-                    : null;
-
-            if (actualValueNode != null
-                    && !actualValueNode.asText().isEmpty()) {
-
-                validateDataType(propName, dataType, actualValueNode,
-                        errorMessages);
-
-                if (allowedValuesNode != null && allowedValuesNode.isArray()) {
-                    validateAllowedValues(propName,
-                            (ArrayNode) allowedValuesNode, actualValueNode,
-                            errorMessages);
+        if (properties != null) {
+            for (JsonNode propertyNode : properties) {
+                if (propertyNode == null || !propertyNode.isObject()) {
+                    errorMessages.add(
+                            "Invalid property node found (not an object). Skipping...");
+                    continue;
                 }
-                if ("Real".equals(dataType)) {
-                    validateRangeChecks(propName, actualValueNode, maxExclusive,
-                            maxInclusive, minExclusive, minInclusive,
-                            errorMessages);
+                ObjectNode property = (ObjectNode) propertyNode;
+
+                String propName = property.has("name") ? property.get("name").asText()
+                        : null;
+                String dataType = property.has("dataType")
+                        ? property.get("dataType").asText()
+                        : null;
+                JsonNode actualValueNode = property.get("actualValue");
+                JsonNode allowedValuesNode = property.get("allowedValues");
+
+                Double maxExclusive = property.has("MaxExclusive")
+                        ? property.get("MaxExclusive").asDouble()
+                        : null;
+                Double maxInclusive = property.has("MaxInclusive")
+                        ? property.get("MaxInclusive").asDouble()
+                        : null;
+                Double minExclusive = property.has("MinExclusive")
+                        ? property.get("MinExclusive").asDouble()
+                        : null;
+                Double minInclusive = property.has("MinInclusive")
+                        ? property.get("MinInclusive").asDouble()
+                        : null;
+
+                if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
+
+                    validateDataType(propName, dataType, actualValueNode, errorMessages);
+
+                    if (allowedValuesNode != null && allowedValuesNode.isArray()) {
+                        validateAllowedValues(propName, (ArrayNode) allowedValuesNode,
+                                actualValueNode, errorMessages);
+                    }
+                    if ("Real".equals(dataType)) {
+                        validateRangeChecks(propName, actualValueNode, maxExclusive,
+                                maxInclusive, minExclusive, minInclusive, errorMessages);
+                    }
+                } else {
+                    errorMessages.add(
+                            "Missing or empty 'actualValue' for property: " + propName);
                 }
             }
         }
+        
         if (!errorMessages.isEmpty()) {
             throw new BsDDJsonValidationException(
                     "Validation failed with the following errors : " + "\n\t- "
