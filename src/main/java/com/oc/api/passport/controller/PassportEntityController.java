@@ -16,6 +16,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.oc.api.passport.dto.PassportEntityTemplateDto;
+import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.InvalidInputException;
 import com.oc.api.passport.model.PassportEntity;
 import com.oc.api.passport.service.PassportEntityService;
 import com.oc.api.passport.util.CommonUtil;
@@ -42,6 +44,8 @@ public class PassportEntityController {
      * @param templateEntry
      * @param dictionaryName
      * @return the status
+     * @throws BsDDJsonValidationException 
+     * @throws InvalidInputException 
      */
     @Operation(summary = "Creates Passport and validates it")
     @PostMapping(value = "/api/templateEntry", produces = {
@@ -52,7 +56,7 @@ public class PassportEntityController {
                     + "populated with actual data to create the PassportEntity")
             @RequestBody JsonNode templateEntry,
             @Parameter(description = "Dictionary Name", required = true)
-            @RequestParam String dictionaryName) {
+            @RequestParam String dictionaryName) throws InvalidInputException, BsDDJsonValidationException {
         return passportEntityService.createTemplateEntry(templateEntry,
                 CommonUtil.convertToLowercase(dictionaryName));
 

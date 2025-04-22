@@ -71,9 +71,10 @@ public class PassportEntityService {
      * @param templateEntry
      * @param ddLibrary
      * @return the status
+     * @throws BsDDJsonValidationException 
      */
     public String createTemplateEntry(JsonNode templateEntry, String ddLibrary)
-            throws InvalidInputException {
+            throws InvalidInputException, BsDDJsonValidationException {
         String validationResult = null;
         try {
 
@@ -89,6 +90,7 @@ public class PassportEntityService {
         } catch (BsDDJsonValidationException e) {
             validationResult = e.getMessage();
             e.printStackTrace();
+            
         }
         return validationResult;
     }
