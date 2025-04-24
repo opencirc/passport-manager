@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -21,7 +24,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.oc.api.passport.PassportManager;
@@ -103,7 +105,7 @@ public class TestTemplateController {
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
                 .queryParam("uri", bsddUrl).queryParam("ddLibrary", ddLibrary).when()
-                .get("/api/classes/template/").then()
+                .get("/api/template/class-with-props/").then()
                 .statusCode(TestConstants.STATUS_SUCCESS).contentType(ContentType.JSON)
                 .log().all().extract().response();
 
@@ -135,4 +137,23 @@ public class TestTemplateController {
         assertEquals("Active", jsonResponse.get("status").asText());
     }
 
+    
+    @Test
+    public void testcreateTemplateWithProperties() {
+        List<String> propertiesUriList = new ArrayList<String>();
+        propertiesUriList.add("https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008");
+        String ddLibrary = "bsdd";
+        BsddMockStubHelper.stubBsddApiResponse();
+
+        Response response = RestAssured.given().log().all()
+                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
+                .body(propertiesUriList)
+                .queryParam("ddLibrary", ddLibrary).when()
+                .post("/api/createTemplateWithProperties/").then()
+                .statusCode(TestConstants.STATUS_SUCCESS).contentType(ContentType.JSON)
+                .log().all().extract().response();
+
+        String json = response.getBody().asString();
+        System.out.println(json);
+    }
 }

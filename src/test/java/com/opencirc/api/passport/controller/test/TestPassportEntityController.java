@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.controller.test;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.http.HttpResponse;
@@ -179,5 +180,114 @@ public class TestPassportEntityController {
         String responseBody = response.getBody().asString();
         assertTrue(responseBody.contains("Invalid Template"));
 
+    }
+    
+    @Test
+    public void testUpdatePassportEntity_Success() throws BsDDJsonValidationException {
+        String passportEntityId = "b33ruul55gzk0idd0kxvggyofmtjfdg8u1ka";
+        String jsonBody = """
+                                {
+                    "classType": "Class",
+                    "referenceCode": "A-A__",
+                    "relatedIfcEntityNames": [
+                        "IfcSpace"
+                    ],
+                    "parentClassReference": {
+                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/uocs",
+                        "name": "Use of Construction Spaces",
+                        "code": "uocs"
+                    },
+                    "classProperties": [
+                        {
+                            "dataType": "String",
+                            "name": "Handicap Accessible",
+                            "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+                            "actualValue": "true"
+                        }
+                    ],
+                    "definition": "space designed for human dwelling and related activities",
+                    "name": "Space for human dwelling",
+                    "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
+                    "status": "Active",
+                    "templateName": "testTemplate",
+                    "dataCategory": "Unique"
+                }
+                                """;
+        BsddMockStubHelper.stubBsddApiResponse();
+
+        Response response = RestAssured.given().log().all()
+                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
+                .body(jsonBody)
+                .queryParam("ddLibrary", "bsdd")
+                .queryParam("passportEntityId", passportEntityId).when()
+                .post("/api/passportEntity/update/").then()
+                .statusCode(TestConstants.STATUS_SUCCESS).contentType("application/text")
+                .log().all().extract().response();
+
+        String responseBody = response.getBody().asString();
+        assertTrue(responseBody.equalsIgnoreCase("Successfully updated"));
+
+    }
+    
+    @Test
+    public void testUpdatePassportEntity_NotFound() {
+        String invalidPassportId = "123543534534";
+        String jsonBody = """
+                                {
+                    "classType": "Class",
+                    "referenceCode": "A-A__",
+                    "relatedIfcEntityNames": [
+                        "IfcSpace"
+                    ],
+                    "parentClassReference": {
+                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/uocs",
+                        "name": "Use of Construction Spaces",
+                        "code": "uocs"
+                    },
+                    "classProperties": [
+                        {
+                            "dataType": "String",
+                            "name": "Handicap Accessible",
+                            "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+                            "actualValue": "true"
+                        }
+                    ],
+                    "definition": "space designed for human dwelling and related activities",
+                    "name": "Space for human dwelling",
+                    "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
+                    "status": "Active",
+                    "templateName": "testTemplate",
+                    "dataCategory": "Unique"
+                }
+                                """;
+
+        Response response = RestAssured.given().log().all()
+                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
+                .body(jsonBody)
+                .queryParam("ddLibrary", "bsdd")
+                .queryParam("passportEntityId", invalidPassportId).when()
+                .post("/api/passportEntity/update/").then()
+                .statusCode(TestConstants.STATUS_SUCCESS).contentType("application/text")
+                .log().all().extract().response();
+
+        assertEquals("passport is not available to update",
+                response.getBody().asString());
+    }
+    
+    @Test
+    public void testUpdatePassportEntity_InvalidJson() {
+        String invalidJson = "{ \"classType\": \"sdas\" }"; 
+        String passportEntityId = "b33ruul55gzk0idd0kxvggyofmtjfdg8u1ka";
+
+        Response response = RestAssured.given().log().all()
+                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
+                .body(invalidJson)
+                .queryParam("ddLibrary", "bsdd")
+                .queryParam("passportEntityId", passportEntityId).when()
+                .post("/api/passportEntity/update/").then()
+                .statusCode(400)
+                .log().all().extract().response();
+        System.out.println(response.getBody().asString());
+        assertTrue(response.getBody().asString().contains("Invalid Template"));
     }
 }

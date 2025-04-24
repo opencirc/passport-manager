@@ -99,17 +99,18 @@ public class PassportEntityController {
      * Endpoint to update the passport.
      * @param passportEntityId
      * @param templateEntry
+     * @param ddLibrary
      * @return the status
+     * @throws BsDDJsonValidationException 
      */
     @Operation(summary = "Update the existing Passport entity")
-    @PostMapping(value = "/api/passportEntity/update/", produces = {
-            "application/text" }, consumes = { "application/json" })
+    @PostMapping(value = "/api/passportEntity/update/", consumes = { "application/json" })
     public String updatePassportEntity(@RequestBody JsonNode templateEntry,
             @Parameter(description = "Id of the Passport Entity", required = true)
-    @RequestParam String passportEntityId)
-            throws NoSuchAlgorithmException {
+    @RequestParam String passportEntityId, @RequestParam String ddLibrary)
+            throws NoSuchAlgorithmException, BsDDJsonValidationException {
         return passportEntityService.updatePassportEntity(templateEntry,
-                passportEntityId);
+                passportEntityId, ddLibrary);
 
     }
 

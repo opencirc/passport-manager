@@ -78,19 +78,19 @@ public class PassportEntityService {
         String validationResult = null;
         try {
 
-            DictionaryAdapter adapter = dictionaryAdapterFactory.getAdapter(ddLibrary);
-            adapter.validateTemplateEntry(templateEntry);
-            validationResult = "Validation successful";
-            try {
-                persistTemplateEntry(templateEntry, false, null);
-                validationResult = "Data saved successfully";
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
+            if (validateTemplateEntry(templateEntry, ddLibrary)) {
+                try {
+                    persistTemplateEntry(templateEntry, false, null);
+                    validationResult = "Data saved successfully";
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                }
             }
+
         } catch (BsDDJsonValidationException e) {
             validationResult = e.getMessage();
             e.printStackTrace();
-            
+
         }
         return validationResult;
     }
@@ -127,9 +127,6 @@ public class PassportEntityService {
         // dataSheet.setTemplateEntry(templateEntry);
         dataSheet.setDataCategory(templateEntry.get("dataCategory").asText());
 
-        ObjectNode object = (ObjectNode) templateEntry;
-        object.remove("templateName");
-        object.remove("dataCategory");
 
         dataSheet.setTemplateEntry(templateEntry);
         dataSheet.setCreatedBy("OCTest");
@@ -225,17 +222,35 @@ public class PassportEntityService {
      * @param templateEntry
      * @param peId
      * @return the status
+     * @throws BsDDJsonValidationException 
      */
-    public String updatePassportEntity(JsonNode templateEntry, String peId)
-            throws NoSuchAlgorithmException {
+    public String updatePassportEntity(JsonNode templateEntry, String peId, String ddLibrary)
+            throws NoSuchAlgorithmException, BsDDJsonValidationException {
         String message = null;
-        if (inactivatePassportEntity(peId) > 0) {
-            persistTemplateEntry(templateEntry, true, getParentId(peId));
-            message = "Successfully updated";
+        if(validateTemplateEntry(templateEntry, ddLibrary)) {
+            if (inactivatePassportEntity(peId) > 0) {
+                persistTemplateEntry(templateEntry, true, getParentId(peId));
+                message = "Successfully updated";
+            } else {
+                message = "passport is not available to update";
+            }
         }
+
         return message;
     }
 
+    private boolean validateTemplateEntry(JsonNode templateEntry, String ddLibrary)
+            throws BsDDJsonValidationException {
+        boolean validTemplate = false;
+
+        DictionaryAdapter adapter = dictionaryAdapterFactory.getAdapter(ddLibrary);
+        adapter.validateTemplateEntry(templateEntry);
+        validTemplate = true;
+
+        return validTemplate;
+
+    }
+    
     /**
      * Retrieves parent Id.
      *
