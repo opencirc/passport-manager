@@ -22,12 +22,13 @@ public interface DictionaryAdapter {
     /**
      * Fetches the class template along with its property details based on the given URI.
      * @param code
+     * @param addProperties
      * @return JsonNode
      * @throws BsDDJsonValidationException
      */
     JsonNode createClassTemplate(String code, boolean addProperties)
             throws BsDDJsonValidationException, JsonProcessingException;
-    
+
 
     /**
      * Retrieves a list of properties matching the given search text.
@@ -59,7 +60,7 @@ public interface DictionaryAdapter {
      * @return true or false
      */
     boolean validateUri(String uri);
-    
+
     /**
      * Displays the template from the dictionary without any processing.
      * @param uri

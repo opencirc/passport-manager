@@ -132,16 +132,29 @@ public class CacheService {
             redisTemplate.opsForValue().set(redisKey, uri);
         });
     }
-    
-    public void storeClassTemplateInCache(String uri, JsonNode template) throws JsonProcessingException {
+
+    /**
+     * Stores the class template in cache.
+     *
+     * @param uri
+     * @param template
+     */
+    public void storeClassTemplateInCache(String uri, JsonNode template)
+            throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(template);
         redisTemplate.opsForValue().set(uri, json);
     }
 
+    /**
+     * Retrieves the cached class template.
+     *
+     * @param uri
+     * @return the template
+     */
     public JsonNode getClassTemplateFromCache(String uri) {
         String json = (String) redisTemplate.opsForValue().get(uri);
-        if(json == null) {
+        if (json == null) {
             return null;
         }
         ObjectMapper mapper = new ObjectMapper();
@@ -150,7 +163,7 @@ public class CacheService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse JSON", e);
         }
-        
+
     }
 
 

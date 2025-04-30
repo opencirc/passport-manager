@@ -39,26 +39,45 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = PassportManager.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+classes = PassportManager.class)
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
 public class TestTemplateController {
 
+    /**
+     * Assigns random port number in which application runs.
+     */
     @LocalServerPort
     private int port;
 
+    /**
+     * AuthUserDetailsService mock bean.
+     */
     @MockBean
     private AuthUserDetailsService authUserDetailsService;
 
+    /**
+     * AuthUserDetailsService mock bean.
+     */
     @MockBean
     private AuthenticationManager authenticationManager;
 
+    /**
+     * RestTemplate bean.
+     */
     @Autowired
     private RestTemplate restTemplate;
 
+    /**
+     * AppProperties bean.
+     */
     @Autowired
     private AppProperties props;
 
+    /**
+     * JWT token.
+     */
     private String jwtToken = null;
 
     @DynamicPropertySource
@@ -69,6 +88,13 @@ public class TestTemplateController {
                 () -> "http://localhost:8089" + "/api/Property/v4");
     }
 
+    /**
+     * Sets up necessary configurations and mocks before each test execution.
+     * Initializes REST Assured with the test server port, opens Mockito
+     * annotations, mocks the authentication context, generates a mock JWT token,
+     * and stubs the bsDD API response.
+     * @param wmInfo
+     */
     @BeforeEach
     void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
         RestAssured.port = port;
@@ -78,7 +104,7 @@ public class TestTemplateController {
         helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
 
         generateMockJwtToken();
-        
+
         BsddMockStubHelper.stubBsddApiResponse();
 
     }
@@ -87,7 +113,7 @@ public class TestTemplateController {
         String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
         Response response = given().contentType(ContentType.JSON).body(requestBody).when()
                 .post("/api/auth/login");
-        if (response.getStatusCode() == 200) {
+        if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
             jwtToken = response.getCookie("access_token");
         } else {
             throw new AssertionError(
@@ -96,9 +122,16 @@ public class TestTemplateController {
 
     }
 
+    /**
+     * Tests the functionality of fetching data from the bsDD API.
+     *
+     * Verifies that the data retrieval works correctly and the expected response is
+     * returned when the bsDD API is called with valid parameters.
+     */
     @Test
     public void testFetchBsddData() throws BsDDJsonValidationException {
-        String bsddUrl = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__";
+        String bsddUrl = "https://identifier.buildingsmart.org/uri/molio/cciconstruction"
+                + "/1.0/class/A-A__";
         String ddLibrary = "bsdd";
         BsddMockStubHelper.stubBsddApiResponse();
 
@@ -116,10 +149,14 @@ public class TestTemplateController {
         assertTrue(json.contains("\"templateName\":\"\""));
     }
 
+    /**
+     * Tests the creation of a template inlcluding properties.
+     */
     @Test
     public void testStub() {
 
-        String queryParamUrl = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__";
+        String queryParamUrl = "https://identifier.buildingsmart.org/uri/molio/"
+                + "cciconstruction/1.0/class/A-A__";
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromHttpUrl(props.getBsDDClassDetailsURL())
@@ -137,11 +174,15 @@ public class TestTemplateController {
         assertEquals("Active", jsonResponse.get("status").asText());
     }
 
-    
+
+    /**
+     * Tests the creation of a template including properties.
+     */
     @Test
-    public void testcreateTemplateWithProperties() {
+    public void testCreateTemplateWithProperties() {
         List<String> propertiesUriList = new ArrayList<String>();
-        propertiesUriList.add("https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008");
+        propertiesUriList.add("https://identifier.buildingsmart.org/uri/etim/etim/10.0/"
+                + "prop/EF000008");
         String ddLibrary = "bsdd";
         BsddMockStubHelper.stubBsddApiResponse();
 

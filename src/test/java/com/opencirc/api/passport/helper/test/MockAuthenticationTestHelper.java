@@ -34,7 +34,8 @@ public class MockAuthenticationTestHelper {
 
         UserPrincipal mockUserPrincipal = new UserPrincipal(mockUserEntity);
 
-        UsernamePasswordAuthenticationToken mockAuthenticationToken = new UsernamePasswordAuthenticationToken(
+        UsernamePasswordAuthenticationToken mockAuthenticationToken =
+                new UsernamePasswordAuthenticationToken(
                 mockUserPrincipal, null, mockUserPrincipal.getAuthorities());
 
         when(authUserDetailsService.loadUserById(1L)).thenReturn(mockUserPrincipal);

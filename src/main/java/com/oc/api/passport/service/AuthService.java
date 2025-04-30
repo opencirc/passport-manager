@@ -64,12 +64,12 @@ public class AuthService {
     /**
      * Register new user.
      *
-     * @param user details with username, email, password
+     * @param registerUser with username, email, password
      */
     public void register(RegisterRequest registerUser) throws AuthenticationException {
 
         UserEntity user = new UserEntity();
-        
+
         user.setUsername(registerUser.getUsername());
         user.setPassword(registerUser.getPassword());
         user.setRole(registerUser.getRole());
@@ -77,7 +77,7 @@ public class AuthService {
         user.setActive(true);
         user.setCreatedBy("test");
         user.setCreatedTime(LocalDateTime.now());
-        
+
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new AuthenticationException(AppConstants.ERR_USERNAME_EXISTS);
         }
@@ -116,10 +116,10 @@ public class AuthService {
                 throw new AuthenticationException(
                         AppConstants.ERR_INVALID_CREDENTIALS);
             }
-            
+
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            Long userId = userPrincipal.getUserId(); 
-            
+            Long userId = userPrincipal.getUserId();
+
             String accessToken = jwtService.generateToken(userId,
                     properties.getAccessTokenExpiryTime());
             String refreshToken = jwtService.generateToken(userId,

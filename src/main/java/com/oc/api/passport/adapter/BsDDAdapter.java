@@ -63,7 +63,7 @@ public class BsDDAdapter implements DictionaryAdapter {
      */
     @Autowired
     private DictionaryMapping dictionaryMapping;
-    
+
     /**
      * Injecting CacheService.
      */
@@ -112,7 +112,7 @@ public class BsDDAdapter implements DictionaryAdapter {
      * @param uri The class URI.
      * @return The class template as a JsonNode.
      * @throws BsDDJsonValidationException If the URI is invalid.
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     @Override
     public JsonNode createClassTemplate(String uri, boolean addProperties)
@@ -161,14 +161,15 @@ public class BsDDAdapter implements DictionaryAdapter {
      * Fetches class template with property details.
      *
      * @param uri The class URI.
+     * @param addProperties
      * @return The class template as a JsonNode.
      * @throws BsDDJsonValidationException If the URI is invalid.
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     private JsonNode getClassTemplate(String uri, boolean addProperties)
             throws BsDDJsonValidationException, JsonProcessingException {
 
-        if (uri == null || uri.trim().isEmpty() || !validateUri(uri)) {
+        if (!validateUri(uri)) {
             throw new BsDDJsonValidationException("Invalid URI : " + uri);
         }
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
@@ -324,8 +325,10 @@ public class BsDDAdapter implements DictionaryAdapter {
                 }
 
             } else if (jsonNode.has("properties")) {
-                if (jsonNode.get("properties").isArray())
+                if (jsonNode.get("properties").isArray()) {
                     properties = (ArrayNode) jsonNode.get("properties");
+                }
+
 
             } else {
                 throw new InvalidInputException("Invalid Template");
@@ -383,7 +386,7 @@ public class BsDDAdapter implements DictionaryAdapter {
                 }
             }
         }
-        
+
         if (!errorMessages.isEmpty()) {
             throw new BsDDJsonValidationException(
                     "Validation failed with the following errors : " + "\n\t- "
@@ -398,6 +401,10 @@ public class BsDDAdapter implements DictionaryAdapter {
      * @return True if valid, false otherwise.
      */
     public boolean validateUri(String uriString) {
+        if (uriString == null || uriString.trim().isEmpty()) {
+            return false;
+        }
+
         String uriPrefix = "https://identifier.buildingsmart.org/uri";
         try {
             URI uri = new URI(uriString);
@@ -525,7 +532,7 @@ public class BsDDAdapter implements DictionaryAdapter {
                     + " is below MinInclusive limit: " + minInclusive);
         }
     }
-    
+
     /**
      * Displays the template from the dictionary without any processing.
      * @param uri
@@ -548,7 +555,7 @@ public class BsDDAdapter implements DictionaryAdapter {
         String url = uriBuilder.toUriString();
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
                 JsonNode.class);
-        
+
         return response.getBody();
     }
 

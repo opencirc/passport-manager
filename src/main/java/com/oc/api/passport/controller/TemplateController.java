@@ -59,7 +59,7 @@ public class TemplateController {
      * @param ddLibrary
      * @return the template with all the relevant properties
      * @throws BsDDJsonValidationException
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     @Operation(summary = "Get class from DD for the requested uri")
     @GetMapping(value = "/api/template/class-with-props/", produces = {
@@ -74,8 +74,7 @@ public class TemplateController {
             throws BsDDJsonValidationException, JsonProcessingException {
         return templateService.getClassTemplatewithPropDetails(uri, ddLibrary);
     }
-    
-    
+
     /**
      * Gets class template without any properties.
      *
@@ -83,7 +82,7 @@ public class TemplateController {
      * @param ddLibrary
      * @return the template with all the relevant properties
      * @throws BsDDJsonValidationException
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     @Operation(summary = "Get class from DD for the requested uri")
     @GetMapping(value = "/api/template/class", produces = {
@@ -142,6 +141,6 @@ public class TemplateController {
                 CommonUtil.convertToLowercase(ddLibrary));
 
     }
-    
+
 
 }

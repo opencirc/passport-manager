@@ -44,11 +44,11 @@ public class PassportEntityController {
      * @param templateEntry
      * @param dictionaryName
      * @return the status
-     * @throws BsDDJsonValidationException 
-     * @throws InvalidInputException 
+     * @throws BsDDJsonValidationException
+     * @throws InvalidInputException
      */
     @Operation(summary = "Creates Passport and validates it")
-    @PostMapping(value = "/api/templateEntry", produces = {
+    @PostMapping(value = "/api/create-passport", produces = {
             "application/text" }, consumes = { "application/json" })
     public String createTemplateEntry(
             @io.swagger.v3.oas.annotations.parameters.RequestBody
@@ -56,7 +56,8 @@ public class PassportEntityController {
                     + "populated with actual data to create the PassportEntity")
             @RequestBody JsonNode templateEntry,
             @Parameter(description = "Dictionary Name", required = true)
-            @RequestParam String dictionaryName) throws InvalidInputException, BsDDJsonValidationException {
+            @RequestParam String dictionaryName)
+                    throws InvalidInputException, BsDDJsonValidationException {
         return passportEntityService.createTemplateEntry(templateEntry,
                 CommonUtil.convertToLowercase(dictionaryName));
 
@@ -101,10 +102,10 @@ public class PassportEntityController {
      * @param templateEntry
      * @param ddLibrary
      * @return the status
-     * @throws BsDDJsonValidationException 
+     * @throws BsDDJsonValidationException
      */
     @Operation(summary = "Update the existing Passport entity")
-    @PostMapping(value = "/api/passportEntity/update/", consumes = { "application/json" })
+    @PostMapping(value = "/api/passport/update/", consumes = { "application/json" })
     public String updatePassportEntity(@RequestBody JsonNode templateEntry,
             @Parameter(description = "Id of the Passport Entity", required = true)
     @RequestParam String passportEntityId, @RequestParam String ddLibrary)
@@ -122,7 +123,7 @@ public class PassportEntityController {
      * @return the template
      */
     @Operation(summary = "Create a template from the existing passport entity")
-    @PostMapping(value = "/api/passportEntity/createTemplate/", produces = {
+    @PostMapping(value = "/api/passport/extract-template/", produces = {
             "application/json" })
     public JsonNode createTemplateFromExistingPE(
             @Parameter(description = "Id of the Passport Entity", required = true)
@@ -151,7 +152,7 @@ public class PassportEntityController {
      * @return the template
      */
     @Operation(summary = "Retrieves the persisted Template")
-    @GetMapping("/passports/retrieveTemplate/")
+    @GetMapping("/api/passport-templates")
     public ResponseEntity<PassportEntityTemplateDto> getPersistedTemplate(
             @Parameter(description = "Name of the Template stored in DB", required = true)
             @RequestParam String templateName)
@@ -166,7 +167,7 @@ public class PassportEntityController {
      * @return the template
      */
     @Operation(summary = "Lists all the persisted Template")
-    @GetMapping("/passports/listPersistedTemplate/")
+    @GetMapping("/api/passport-templates/all")
     public ResponseEntity<List<PassportEntityTemplateDto>> listPersistedTemplates()
             throws JsonMappingException, JsonProcessingException {
         return ResponseEntity.ok(passportEntityService.listPersistedTemplate());

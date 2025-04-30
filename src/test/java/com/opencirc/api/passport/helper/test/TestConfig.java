@@ -7,8 +7,14 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
 @TestConfiguration
-@TestPropertySource(locations = "classpath:application-test.properties") 
+@TestPropertySource(locations = "classpath:application-test.properties")
 public class TestConfig {
+
+    /**
+     * RestTemplate Bean.
+     * @param builder
+     * @return restTemplate
+     */
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder.build();

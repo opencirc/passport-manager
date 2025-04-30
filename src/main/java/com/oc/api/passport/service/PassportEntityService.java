@@ -71,7 +71,7 @@ public class PassportEntityService {
      * @param templateEntry
      * @param ddLibrary
      * @return the status
-     * @throws BsDDJsonValidationException 
+     * @throws BsDDJsonValidationException
      */
     public String createTemplateEntry(JsonNode templateEntry, String ddLibrary)
             throws InvalidInputException, BsDDJsonValidationException {
@@ -221,13 +221,15 @@ public class PassportEntityService {
      *
      * @param templateEntry
      * @param peId
+     * @param ddLibrary
      * @return the status
-     * @throws BsDDJsonValidationException 
+     * @throws BsDDJsonValidationException
      */
-    public String updatePassportEntity(JsonNode templateEntry, String peId, String ddLibrary)
+    public String updatePassportEntity(JsonNode templateEntry, String peId,
+            String ddLibrary)
             throws NoSuchAlgorithmException, BsDDJsonValidationException {
         String message = null;
-        if(validateTemplateEntry(templateEntry, ddLibrary)) {
+        if (validateTemplateEntry(templateEntry, ddLibrary)) {
             if (inactivatePassportEntity(peId) > 0) {
                 persistTemplateEntry(templateEntry, true, getParentId(peId));
                 message = "Successfully updated";
@@ -250,7 +252,7 @@ public class PassportEntityService {
         return validTemplate;
 
     }
-    
+
     /**
      * Retrieves parent Id.
      *

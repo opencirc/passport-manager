@@ -49,10 +49,11 @@ public class TemplateService {
      * @param uri
      * @param ddLibrary
      * @return class with properties in json format
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
     public JsonNode getClassTemplatewithPropDetails(String uri,
-            String ddLibrary) throws BsDDJsonValidationException, JsonProcessingException {
+            String ddLibrary) throws BsDDJsonValidationException,
+    JsonProcessingException {
         // Gets adapter instance
         DictionaryAdapter adapter = dictionaryAdapterFactory
                 .getAdapter(ddLibrary);
@@ -66,10 +67,10 @@ public class TemplateService {
      * @param uri
      * @param ddLibrary
      * @return class with properties in json format
-     * @throws JsonProcessingException 
+     * @throws JsonProcessingException
      */
-    public JsonNode getClassTemplatewithoutPropDetails(String uri,
-            String ddLibrary) throws BsDDJsonValidationException, JsonProcessingException {
+    public JsonNode getClassTemplatewithoutPropDetails(String uri, String ddLibrary)
+            throws BsDDJsonValidationException, JsonProcessingException {
         DictionaryAdapter adapter = dictionaryAdapterFactory
                 .getAdapter(ddLibrary);
         JsonNode classTemplate = adapter.createClassTemplate(uri, false);

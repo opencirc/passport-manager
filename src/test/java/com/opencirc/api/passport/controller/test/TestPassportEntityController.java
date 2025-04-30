@@ -4,8 +4,6 @@ import static io.restassured.RestAssured.given;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.net.http.HttpResponse;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -34,28 +32,47 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = PassportManager.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+classes = PassportManager.class)
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
 public class TestPassportEntityController {
 
+    /**
+     * Assigns random port number in which application runs.
+     */
     @LocalServerPort
     private int port;
 
+    /**
+     * AuthUserDetailsService mock bean.
+     */
     @MockBean
     private AuthUserDetailsService authUserDetailsService;
 
+    /**
+     * AuthUserDetailsService mock bean.
+     */
     @MockBean
     private AuthenticationManager authenticationManager;
 
+    /**
+     * RestTemplate bean.
+     */
     @Autowired
     private RestTemplate restTemplate;
 
+    /**
+     * AppProperties bean.
+     */
     @Autowired
     private AppProperties props;
-    
+
+    /**
+     * JWT token.
+     */
     private String jwtToken = null;
-    
+
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
         registry.add("bsDD.classDetails.url",
@@ -64,6 +81,13 @@ public class TestPassportEntityController {
                 () -> "http://localhost:8089" + "/api/Property/v4");
     }
 
+    /**
+     * Sets up necessary configurations and mocks before each test execution.
+     * Initializes REST Assured with the test server port, opens Mockito
+     * annotations, mocks the authentication context, generates a mock JWT token,
+     * and stubs the bsDD API response.
+     * @param wmInfo
+     */
     @BeforeEach
     void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
         RestAssured.port = port;
@@ -73,17 +97,16 @@ public class TestPassportEntityController {
         helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
 
         generateMockJwtToken();
-        
+
         BsddMockStubHelper.stubBsddApiResponse();
 
     }
-    
-    
+
     private void generateMockJwtToken() {
         String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
         Response response = given().contentType(ContentType.JSON).body(requestBody).when()
                 .post("/api/auth/login");
-        if (response.getStatusCode() == 200) {
+        if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
             jwtToken = response.getCookie("access_token");
         } else {
             throw new AssertionError(
@@ -91,9 +114,12 @@ public class TestPassportEntityController {
         }
 
     }
-    
+
+    /**
+     * Tests the successful creation of a passport entity with valid JSON input.
+     */
     @Test
-    public void testCreatePassportEntity_Success() throws BsDDJsonValidationException {
+    public void testCreatePassportEntitySuccess() throws BsDDJsonValidationException {
         String ddLibrary = "bsdd";
         String jsonBody = """
                                 {
@@ -103,7 +129,8 @@ public class TestPassportEntityController {
                         "IfcSpace"
                     ],
                     "parentClassReference": {
-                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/uocs",
+                        "uri": "https://identifier.buildingsmart.org/uri/molio/
+                        cciconstruction/1.0/class/uocs",
                         "name": "Use of Construction Spaces",
                         "code": "uocs"
                     },
@@ -111,13 +138,17 @@ public class TestPassportEntityController {
                         {
                             "dataType": "Boolean",
                             "name": "Handicap Accessible",
-                            "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+                            "uri": "https://identifier.buildingsmart.org/uri/molio/
+                            cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/
+                            buildingsmart/ifc/4.3/prop/HandicapAccessible",
                             "actualValue": "true"
                         }
                     ],
-                    "definition": "space designed for human dwelling and related activities",
+                    "definition": "space designed for human dwelling
+                    and related activities",
                     "name": "Space for human dwelling",
-                    "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
+                    "uri": "https://identifier.buildingsmart.org/uri/molio/
+                    cciconstruction/1.0/class/A-A__",
                     "status": "Active",
                     "templateName": "testTemplate",
                     "dataCategory": "Unique"
@@ -128,7 +159,7 @@ public class TestPassportEntityController {
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
                 .body(jsonBody).queryParam("dictionaryName", ddLibrary).when()
-                .post("/api/templateEntry").then()
+                .post("/api/create-passport").then()
                 .statusCode(TestConstants.STATUS_SUCCESS).contentType("application/text")
                 .log().all().extract().response();
 
@@ -136,13 +167,18 @@ public class TestPassportEntityController {
         assertTrue(responseBody.equalsIgnoreCase("Data saved successfully"));
 
     }
-    
+
+    /**
+     * Tests the behaviour of the createPassportEntity method when an empty
+     * JSON body is provided.
+     */
     @Test
-    public void testCreatePassportEntity_Error_EmptyJsonBody() throws BsDDJsonValidationException {
+    public void testCreatePassportEntityErrorEmptyJsonBody()
+            throws BsDDJsonValidationException {
         String ddLibrary = "bsdd";
         String jsonBody = """
                                 {
-                    
+
                  }
                                 """;
         BsddMockStubHelper.stubBsddApiResponse();
@@ -150,7 +186,7 @@ public class TestPassportEntityController {
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
                 .body(jsonBody).queryParam("dictionaryName", ddLibrary).when()
-                .post("/api/templateEntry").then()
+                .post("/api/create-passport").then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .log().all().extract().response();
 
@@ -158,10 +194,15 @@ public class TestPassportEntityController {
         assertTrue(responseBody.contains("Input JSON node is null"));
 
     }
-    
-    
+
+
+    /**
+     * Tests the behaviour of the createPassportEntity method when an invalid
+     * JSON body is provided.
+     */
     @Test
-    public void testCreatePassportEntity_Error_InvalidJsonBody() throws BsDDJsonValidationException {
+    public void testCreatePassportEntityErrorInvalidJsonBody()
+            throws BsDDJsonValidationException {
         String ddLibrary = "bsdd";
         String jsonBody = """
                                 {
@@ -173,7 +214,7 @@ public class TestPassportEntityController {
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
                 .body(jsonBody).queryParam("dictionaryName", ddLibrary).when()
-                .post("/api/templateEntry").then()
+                .post("/api/create-passport").then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .log().all().extract().response();
 
@@ -181,9 +222,12 @@ public class TestPassportEntityController {
         assertTrue(responseBody.contains("Invalid Template"));
 
     }
-    
+
+    /**
+     * Tests the successful update of a passport entity with valid input data.
+     */
     @Test
-    public void testUpdatePassportEntity_Success() throws BsDDJsonValidationException {
+    public void testUpdatePassportEntitySuccess() throws BsDDJsonValidationException {
         String passportEntityId = "b33ruul55gzk0idd0kxvggyofmtjfdg8u1ka";
         String jsonBody = """
                                 {
@@ -193,7 +237,8 @@ public class TestPassportEntityController {
                         "IfcSpace"
                     ],
                     "parentClassReference": {
-                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/uocs",
+                        "uri": "https://identifier.buildingsmart.org/uri/molio/
+                        cciconstruction/1.0/class/uocs",
                         "name": "Use of Construction Spaces",
                         "code": "uocs"
                     },
@@ -201,13 +246,17 @@ public class TestPassportEntityController {
                         {
                             "dataType": "String",
                             "name": "Handicap Accessible",
-                            "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+                            "uri": "https://identifier.buildingsmart.org/uri/molio/
+                            cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/
+                            buildingsmart/ifc/4.3/prop/HandicapAccessible",
                             "actualValue": "true"
                         }
                     ],
-                    "definition": "space designed for human dwelling and related activities",
+                    "definition": "space designed for human dwelling and
+                    related activities",
                     "name": "Space for human dwelling",
-                    "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
+                    "uri": "https://identifier.buildingsmart.org/uri/molio/
+                    cciconstruction/1.0/class/A-A__",
                     "status": "Active",
                     "templateName": "testTemplate",
                     "dataCategory": "Unique"
@@ -220,7 +269,7 @@ public class TestPassportEntityController {
                 .body(jsonBody)
                 .queryParam("ddLibrary", "bsdd")
                 .queryParam("passportEntityId", passportEntityId).when()
-                .post("/api/passportEntity/update/").then()
+                .post("/api/passport/update/").then()
                 .statusCode(TestConstants.STATUS_SUCCESS).contentType("application/text")
                 .log().all().extract().response();
 
@@ -228,9 +277,12 @@ public class TestPassportEntityController {
         assertTrue(responseBody.equalsIgnoreCase("Successfully updated"));
 
     }
-    
+
+    /**
+     * Tests the update operation when the specified passport entity is not found.
+     */
     @Test
-    public void testUpdatePassportEntity_NotFound() {
+    public void testUpdatePassportEntityNotFound() {
         String invalidPassportId = "123543534534";
         String jsonBody = """
                                 {
@@ -240,7 +292,8 @@ public class TestPassportEntityController {
                         "IfcSpace"
                     ],
                     "parentClassReference": {
-                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/uocs",
+                        "uri": "https://identifier.buildingsmart.org/uri/molio/
+                        cciconstruction/1.0/class/uocs",
                         "name": "Use of Construction Spaces",
                         "code": "uocs"
                     },
@@ -248,13 +301,17 @@ public class TestPassportEntityController {
                         {
                             "dataType": "String",
                             "name": "Handicap Accessible",
-                            "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+                            "uri": "https://identifier.buildingsmart.org/uri/molio/
+                            cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/
+                            buildingsmart/ifc/4.3/prop/HandicapAccessible",
                             "actualValue": "true"
                         }
                     ],
-                    "definition": "space designed for human dwelling and related activities",
+                    "definition": "space designed for human dwelling and related
+                    activities",
                     "name": "Space for human dwelling",
-                    "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
+                    "uri": "https://identifier.buildingsmart.org/uri/
+                    molio/cciconstruction/1.0/class/A-A__",
                     "status": "Active",
                     "templateName": "testTemplate",
                     "dataCategory": "Unique"
@@ -266,17 +323,20 @@ public class TestPassportEntityController {
                 .body(jsonBody)
                 .queryParam("ddLibrary", "bsdd")
                 .queryParam("passportEntityId", invalidPassportId).when()
-                .post("/api/passportEntity/update/").then()
+                .post("/api/passport/update/").then()
                 .statusCode(TestConstants.STATUS_SUCCESS).contentType("application/text")
                 .log().all().extract().response();
 
         assertEquals("passport is not available to update",
                 response.getBody().asString());
     }
-    
+
+    /**
+     * Tests the update operation for a passport entity using invalid JSON input.
+     */
     @Test
-    public void testUpdatePassportEntity_InvalidJson() {
-        String invalidJson = "{ \"classType\": \"sdas\" }"; 
+    public void testUpdatePassportEntityInvalidJson() {
+        String invalidJson = "{ \"classType\": \"sdas\" }";
         String passportEntityId = "b33ruul55gzk0idd0kxvggyofmtjfdg8u1ka";
 
         Response response = RestAssured.given().log().all()
@@ -284,7 +344,7 @@ public class TestPassportEntityController {
                 .body(invalidJson)
                 .queryParam("ddLibrary", "bsdd")
                 .queryParam("passportEntityId", passportEntityId).when()
-                .post("/api/passportEntity/update/").then()
+                .post("/api/passport/update/").then()
                 .statusCode(400)
                 .log().all().extract().response();
         System.out.println(response.getBody().asString());
