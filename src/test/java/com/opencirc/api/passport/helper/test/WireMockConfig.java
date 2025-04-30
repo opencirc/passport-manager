@@ -10,6 +10,11 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 @TestConfiguration
 public class WireMockConfig {
 
+    /**
+     * WireMockServer Bean.
+     *
+     * @return WiremockerServer bean
+     */
     @Bean(initMethod = "start", destroyMethod = "stop")
     public WireMockServer wireMockServer() {
         return new WireMockServer(wireMockConfig().port(8089));

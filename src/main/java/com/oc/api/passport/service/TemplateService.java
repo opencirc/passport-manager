@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.oc.api.passport.adapter.DictionaryAdapter;
 import com.oc.api.passport.adapter.DictionaryAdapterFactory;
@@ -48,16 +49,33 @@ public class TemplateService {
      * @param uri
      * @param ddLibrary
      * @return class with properties in json format
+     * @throws JsonProcessingException
      */
     public JsonNode getClassTemplatewithPropDetails(String uri,
-            String ddLibrary) throws BsDDJsonValidationException {
+            String ddLibrary) throws BsDDJsonValidationException,
+    JsonProcessingException {
         // Gets adapter instance
         DictionaryAdapter adapter = dictionaryAdapterFactory
                 .getAdapter(ddLibrary);
-        JsonNode classTemplate = adapter.getClassTemplatewithPropDetails(uri);
+        JsonNode classTemplate = adapter.createClassTemplate(uri, true);
         return classTemplate;
     }
 
+    /**
+     * Search and retrieves the class without any of the properties.
+     *
+     * @param uri
+     * @param ddLibrary
+     * @return class with properties in json format
+     * @throws JsonProcessingException
+     */
+    public JsonNode getClassTemplatewithoutPropDetails(String uri, String ddLibrary)
+            throws BsDDJsonValidationException, JsonProcessingException {
+        DictionaryAdapter adapter = dictionaryAdapterFactory
+                .getAdapter(ddLibrary);
+        JsonNode classTemplate = adapter.createClassTemplate(uri, false);
+        return classTemplate;
+    }
     /**
      * Retrieves the list of properties.
      *

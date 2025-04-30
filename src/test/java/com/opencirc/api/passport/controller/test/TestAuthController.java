@@ -70,10 +70,11 @@ public class TestAuthController {
         response.then().statusCode(TestConstants.STATUS_SUCCESS)
         .contentType(ContentType.JSON);
         String accessToken = response.getCookie("access_token");
-        assertNotNull(accessToken, "Access token should be present in the response cookies");
+        assertNotNull(accessToken, "Access token should be present in the"
+                + " response cookies");
         String refToken = response.getCookie("refresh_token");
         assertNotNull(refToken, "Access token should be present in the response cookies");
-        
+
     }
 
     /**

@@ -15,17 +15,17 @@ public class RegisterRequest {
      * Username.
      */
     private String username;
-    
+
     /**
      * Email.
      */
     private String email;
-    
+
     /**
      * password.
      */
     private String password;
-    
+
     /**
      * Email.
      */

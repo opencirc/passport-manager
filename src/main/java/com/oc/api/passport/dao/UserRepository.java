@@ -12,7 +12,7 @@ import com.oc.api.passport.dto.UserEntity;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
-    
+
     /**
      * Gets the user details from name.
      *
@@ -20,7 +20,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * @return User Entity
      */
     UserEntity findByUsername(String username);
-    
+
     /**
      * Gets the user details from name.
      *
@@ -37,16 +37,17 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * @return status
      */
     boolean existsByUsername(String username);
-    
-   
+
     /**
      * Updates the refresh token.
      *
-     * @param username
-     * @return status
+     * @param userId
+     * @param refreshToken
      */
     @Transactional
     @Modifying
-    @Query("UPDATE UserEntity u SET u.refreshToken = :refreshToken WHERE u.userId = :userId")
-    void updateRefreshTokenByUserId(@Param("userId") Long userId, @Param("refreshToken") String refreshToken);
+    @Query("UPDATE UserEntity u SET u.refreshToken = :refreshToken"
+            + " WHERE u.userId = :userId")
+    void updateRefreshTokenByUserId(@Param("userId") Long userId,
+            @Param("refreshToken") String refreshToken);
 }
