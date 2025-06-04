@@ -145,35 +145,43 @@ public class PassportEntityService {
      * @param peId
      * @return passport in json format
      */
-    public JsonNode getActivePassportEntity(String peId)
+    public PassportEntity getActivePassportEntity(String peId)
             throws JsonMappingException, JsonProcessingException {
         List<Object[]> results = passportEntityRepository.findActivePassportEntity(peId,
                 "active");
         if (results.isEmpty()) {
             return null;
         }
+        Object[] result = results.getFirst();
+        PassportEntity passportEntity = setPassportEntity(result);
+        return passportEntity;
+    }
+
+    /**
+     * Set the passport entity values.
+     * @param result
+     * @return PassportEntity
+     * @throws JsonProcessingException
+     * @throws JsonMappingException
+     */
+    private PassportEntity setPassportEntity(Object[] result)
+            throws JsonProcessingException, JsonMappingException {
         PassportEntity passportEntity = new PassportEntity();
         List<DataSheet> dataSheetList = new ArrayList<DataSheet>();
+        passportEntity.setPassportEntityId((String) result[AppConstants.NUM_ZERO]);
+        passportEntity.setPeName((String) result[AppConstants.NUM_ONE]);
+
+        DataSheet datasheet = new DataSheet();
+        datasheet.setDatasheetId((Long) result[AppConstants.NUM_TWO]);
+        datasheet.setDataCategory((String) result[AppConstants.NUM_FOUR]);
+
         ObjectMapper mapper = new ObjectMapper();
-        ObjectNode jsonObject = mapper.createObjectNode();
-        jsonObject.put("passportEntityId",
-                (String) results.getFirst()[AppConstants.NUM_ZERO]);
-        jsonObject.put("passportEntityName",
-                (String) results.getFirst()[AppConstants.NUM_ONE]);
-        ArrayNode dataSheetArray = mapper.createArrayNode();
-        // jsonObject.set("datasheets", dataSheetArray);
-        for (Object[] result : results) {
-            ObjectNode dataSheetArrayObject = mapper.createObjectNode();
-            dataSheetArrayObject.put("datasheetId", (Long) result[AppConstants.NUM_TWO]);
-            dataSheetArrayObject.put("dataCategory",
-                    (String) result[AppConstants.NUM_FOUR]);
-            JsonNode propertiesNode = mapper
-                    .readTree((String) result[AppConstants.NUM_THREE]);
-            dataSheetArrayObject.set("properties", propertiesNode.get("properties"));
-            dataSheetArray.add(dataSheetArrayObject);
-        }
-        jsonObject.set("datasheets", dataSheetArray);
-        return jsonObject;
+        JsonNode jsonNode = mapper.readTree((String) result[AppConstants.NUM_THREE]);
+        datasheet.setTemplateEntry(jsonNode);
+
+        dataSheetList.add(datasheet);
+        passportEntity.setDatasheets(dataSheetList);
+        return passportEntity;
     }
 
     /**
@@ -189,28 +197,8 @@ public class PassportEntityService {
                 .findActivePassportEntityWithDescendant(peId);
 
         List<PassportEntity> passportEntityList = new ArrayList<PassportEntity>();
-
         for (Object[] result : results) {
-            PassportEntity passportEntity = new PassportEntity();
-            List<DataSheet> dataSheetList = new ArrayList<DataSheet>();
-            System.out.println(result[AppConstants.NUM_ZERO] + "   "
-                    + result[AppConstants.NUM_ONE] + "   " + result[AppConstants.NUM_TWO]
-                    + "   " + result[AppConstants.NUM_THREE] + "   "
-                    + result[AppConstants.NUM_FOUR]);
-
-            passportEntity.setPassportEntityId((String) result[AppConstants.NUM_ZERO]);
-            passportEntity.setPeName((String) result[AppConstants.NUM_ONE]);
-
-            DataSheet dataSheet = new DataSheet();
-            dataSheet.setDatasheetId((Long) result[AppConstants.NUM_TWO]);
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonNode = mapper.readTree((String) result[AppConstants.NUM_THREE]);
-            dataSheet.setTemplateEntry(jsonNode);
-
-            dataSheetList.add(dataSheet);
-            passportEntity.setDatasheets(dataSheetList);
-
+            PassportEntity passportEntity = setPassportEntity(result);
             passportEntityList.add(passportEntity);
         }
         return passportEntityList;
@@ -283,7 +271,7 @@ public class PassportEntityService {
      */
     public JsonNode createTemplateFromExistingPE(String peId, boolean saveTemplate,
             String templateName) throws JsonMappingException, JsonProcessingException {
-        JsonNode activePE = getActivePassportEntity(peId);
+        PassportEntity activePE = getActivePassportEntity(peId);
         if (activePE == null) {
             return null;
         }
@@ -300,27 +288,28 @@ public class PassportEntityService {
      * @param activePE
      * @return the template in json format
      */
-    private JsonNode extractTemplatefromPE(JsonNode activePE) {
+    private JsonNode extractTemplatefromPE(PassportEntity activePE) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
         rootNode.put("templateName", "");
         rootNode.put("dataCategory", "");
         ArrayNode propertiesNode = mapper.createArrayNode();
-        JsonNode datasheetsNode = activePE.get("datasheets");
+        JsonNode datasheetsNode = mapper.valueToTree(activePE.getDatasheets());
         if (datasheetsNode.isArray()) {
             for (JsonNode datasheet : datasheetsNode) {
-                if (datasheet.get("dataCategory").textValue()
-                        .equalsIgnoreCase("unique")) {
+                if ("unique".equalsIgnoreCase(datasheet.path("dataCategory").asText())) {
                     continue;
                 }
 
                 JsonNode propertiesArray = datasheet.get("properties");
-                for (JsonNode property : propertiesArray) {
-                    if (property.has("actualValue")) {
-                        ((ObjectNode) property).put("actualValue", "");
+                if (propertiesArray.isArray()) {
+                    for (JsonNode property : propertiesArray) {
+                        if (property.has("actualValue")) {
+                            ((ObjectNode) property).put("actualValue", "");
+                        }
                     }
+                    propertiesNode.addAll((ArrayNode) propertiesArray);
                 }
-                propertiesNode.add(propertiesArray);
             }
         }
         rootNode.set("properties", propertiesNode);

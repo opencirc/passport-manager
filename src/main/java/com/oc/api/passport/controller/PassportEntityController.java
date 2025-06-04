@@ -75,7 +75,7 @@ public class PassportEntityController {
             @RequestParam String passportEntityId)
             throws JsonMappingException, JsonProcessingException {
         System.out.println("passport id requested : " + passportEntityId);
-        JsonNode passport = passportEntityService
+        PassportEntity passport = passportEntityService
                 .getActivePassportEntity(passportEntityId);
 
         return ResponseEntity.ok(Collections.singletonMap("passport", passport));
@@ -100,7 +100,7 @@ public class PassportEntityController {
      * Endpoint to update the passport.
      * @param passportEntityId
      * @param templateEntry
-     * @param ddLibrary
+     * @param dictionaryName
      * @return the status
      * @throws BsDDJsonValidationException
      */
@@ -108,10 +108,10 @@ public class PassportEntityController {
     @PostMapping(value = "/api/passport/update/", consumes = { "application/json" })
     public String updatePassportEntity(@RequestBody JsonNode templateEntry,
             @Parameter(description = "Id of the Passport Entity", required = true)
-    @RequestParam String passportEntityId, @RequestParam String ddLibrary)
+    @RequestParam String passportEntityId, @RequestParam String dictionaryName)
             throws NoSuchAlgorithmException, BsDDJsonValidationException {
         return passportEntityService.updatePassportEntity(templateEntry,
-                passportEntityId, ddLibrary);
+                passportEntityId, dictionaryName);
 
     }
 
