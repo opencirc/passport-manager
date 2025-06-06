@@ -110,7 +110,7 @@ public class PassportEntityService {
         PassportEntity passportEntity = new PassportEntity();
         passportEntity.setId(cuid.toString());
         passportEntity.setName(datasheetData.get("templateName").asText());
-        passportEntity.setStatus("active");
+        passportEntity.setStatus(PassportEntity.Status.ACTIVE);
         if (isUpdate) {
             passportEntity.setParentId(parentId);
         }
@@ -189,7 +189,7 @@ public class PassportEntityService {
 
         for (Object[] result : results) {
             PassportEntityDto passportEntity = new PassportEntityDto();
-            List<DatasheetDto> datasheetList = new ArrayList<DatasheetDto>();
+            List<Datasheet> datasheetList = new ArrayList<Datasheet>();
             System.out.println(result[AppConstants.NUM_ZERO] + "   "
                     + result[AppConstants.NUM_ONE] + "   " + result[AppConstants.NUM_TWO]
                     + "   " + result[AppConstants.NUM_THREE] + "   "
@@ -198,12 +198,12 @@ public class PassportEntityService {
             passportEntity.setId((String) result[AppConstants.NUM_ZERO]);
             passportEntity.setName((String) result[AppConstants.NUM_ONE]);
 
-            DatasheetDto datasheet = new DatasheetDto();
-            datasheet.setDatasheetId((Long) result[AppConstants.NUM_TWO]);
+            Datasheet datasheet = new Datasheet();
+            datasheet.setId((Long) result[AppConstants.NUM_TWO]);
 
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonNode = mapper.readTree((String) result[AppConstants.NUM_THREE]);
-            datasheet.setTemplateEntry(jsonNode);
+            JsonNode datasheetData = mapper.readTree((String) result[AppConstants.NUM_THREE]);
+            datasheet.setData(datasheetData);
 
             datasheetList.add(datasheet);
             passportEntity.setDatasheets(datasheetList);

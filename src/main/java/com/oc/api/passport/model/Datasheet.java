@@ -1,26 +1,16 @@
 package com.oc.api.passport.model;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import com.oc.api.passport.enums.DataDictionary;
-import org.hibernate.annotations.ColumnTransformer;
-
 import com.fasterxml.jackson.databind.JsonNode;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import com.oc.api.passport.enums.DataDictionary;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnTransformer;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Model for datasheet table.
@@ -52,6 +42,7 @@ public class Datasheet {
      * Data category (Unique or Generic).
      */
     @Column(name = "type")
+    @Enumerated(EnumType.STRING)
     private DataDictionary type;
 
     /**

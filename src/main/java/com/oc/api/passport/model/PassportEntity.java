@@ -3,13 +3,7 @@ package com.oc.api.passport.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -43,7 +37,8 @@ public class PassportEntity {
      * Status of Passport entity.
      */
     @Column(name = "status")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     /**
      * Id of Parent Passport entity.
@@ -70,4 +65,24 @@ public class PassportEntity {
     @OneToMany(mappedBy = "passportEntity",
             cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PassportEntityDatasheetMapping> datasheetMappings;
+
+    public enum Status {
+        ACTIVE("active"),
+        INACTIVE("inactive");
+
+        private final String value;
+
+        Status(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
 }
