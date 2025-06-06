@@ -1,4 +1,4 @@
-package com.oc.api.passport.dto;
+package com.oc.api.passport.model;
 
 import java.time.LocalDateTime;
 
@@ -14,11 +14,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * DTO for Lifecycle table.
+ * DTO for PassportEntityLifecycle table.
  */
 @Entity
-@Table(name = "lifecycle")
-public class PeLifecycleDto {
+@Table(name = "passport_entity_lifecycle")
+public class PassportEntityLifecycle {
 
     /**
      * Unique Id for Passport entity Lifecycle.
@@ -26,7 +26,7 @@ public class PeLifecycleDto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long peLifecycleId;
+    private Long id;
 
     /**
      * Passport entity id.
@@ -44,8 +44,8 @@ public class PeLifecycleDto {
      * Lifecycle data in JSON format.
      */
     @Convert(converter = JsonNodeConverter.class)
-    @Column(name = "lifecycle_data", nullable = false)
-    private JsonNode lifecycleData;
+    @Column(name = "data", nullable = false)
+    private JsonNode data;
 
     /**
      * Created by.
@@ -59,21 +59,4 @@ public class PeLifecycleDto {
     @Column(name = "created_time",
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdTime;
-
-    /**
-     * Method to update lifecycle data.
-     * @param newLifecycleData
-     */
-    public void updateLifecycleData(JsonNode newLifecycleData) {
-        this.lifecycleData = newLifecycleData;
-    }
-
-
-    /**
-     * Method to change event type.
-     * @param newEventType
-     */
-    public void changeEventType(String newEventType) {
-        this.eventType = newEventType;
-    }
 }
