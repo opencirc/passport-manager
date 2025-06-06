@@ -3,14 +3,14 @@ package com.opencirc.api.passport.helper.test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.oc.api.passport.model.User;
+import com.opencirc.api.passport.model.User;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.oc.api.passport.auth.principal.UserPrincipal;
-import com.oc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.auth.principal.UserPrincipal;
+import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 
 public class MockAuthenticationTestHelper {
