@@ -21,13 +21,13 @@ import com.oc.api.passport.dao.DataSheetRepository;
 import com.oc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.oc.api.passport.dao.PassportEntityRepository;
 import com.oc.api.passport.dao.PassportEntityTemplateRepository;
-import com.oc.api.passport.dto.DataSheetDto;
+import com.oc.api.passport.model.DataSheet;
 import com.oc.api.passport.dto.PassportDataSheetMappingDto;
 import com.oc.api.passport.dto.PassportEntityDto;
 import com.oc.api.passport.dto.PassportEntityTemplateDto;
 import com.oc.api.passport.exception.BsDDJsonValidationException;
 import com.oc.api.passport.exception.InvalidInputException;
-import com.oc.api.passport.model.DataSheet;
+import com.oc.api.passport.dto.DataSheetDto;
 import com.oc.api.passport.model.PassportEntity;
 
 import io.github.thibaultmeyer.cuid.CUID;
@@ -80,7 +80,7 @@ public class PassportEntityService {
 
             if (validateTemplateEntry(templateEntry, ddLibrary)) {
                 try {
-                    persistTemplateEntry(templateEntry, false, null);
+                    persistPassportEntity(templateEntry, false, null);
                     validationResult = "Data saved successfully";
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
@@ -96,23 +96,19 @@ public class PassportEntityService {
     }
 
     /**
-     * Persists template Entry in database.
-     *
-     * @param templateEntry
-     * @param isUpdate
-     * @param parentId
+     * Persists passport entity in the database
      */
-    private void persistTemplateEntry(JsonNode templateEntry, boolean isUpdate,
-            String parentId) throws NoSuchAlgorithmException {
+    private void persistPassportEntity(JsonNode dataSheetData, boolean isUpdate,
+                                       String parentId) throws NoSuchAlgorithmException {
 
         int customLength = AppConstants.NUM_THIRTY_SIX;
         CUID cuid = CUID.randomCUID2(customLength);
         // String cuid = Cuid.createCuid();
 
-        System.out.println(templateEntry.get("templateName").toString());
+        System.out.println(dataSheetData.get("templateName").toString());
         PassportEntityDto passportEntity = new PassportEntityDto();
         passportEntity.setPassportEntityId(cuid.toString());
-        passportEntity.setPassportEntityName(templateEntry.get("templateName").asText());
+        passportEntity.setPassportEntityName(dataSheetData.get("templateName").asText());
         passportEntity.setStatus("active");
         if (isUpdate) {
             passportEntity.setParentPe(parentId);
@@ -123,12 +119,12 @@ public class PassportEntityService {
         passportEntity.setCreatedTime(LocalDateTime.now());
         passportEntityRepository.save(passportEntity);
 
-        DataSheetDto dataSheet = new DataSheetDto();
-        // dataSheet.setTemplateEntry(templateEntry);
-        dataSheet.setDataCategory(templateEntry.get("dataCategory").asText());
+        DataSheet dataSheet = new DataSheet();
+        // dataSheet.setTemplateEntry(dataSheetData);
+        dataSheet.setType(DataSheet.Type.valueOf(dataSheetData.get("dataCategory").asText()));
 
 
-        dataSheet.setTemplateEntry(templateEntry);
+        dataSheet.setData(dataSheetData);
         dataSheet.setCreatedBy("OCTest");
         dataSheet.setCreatedTime(LocalDateTime.now());
         dataSheetRepository.save(dataSheet);
@@ -153,7 +149,7 @@ public class PassportEntityService {
             return null;
         }
         PassportEntity passportEntity = new PassportEntity();
-        List<DataSheet> dataSheetList = new ArrayList<DataSheet>();
+        List<DataSheetDto> dataSheetList = new ArrayList<DataSheetDto>();
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode jsonObject = mapper.createObjectNode();
         jsonObject.put("passportEntityId",
@@ -192,7 +188,7 @@ public class PassportEntityService {
 
         for (Object[] result : results) {
             PassportEntity passportEntity = new PassportEntity();
-            List<DataSheet> dataSheetList = new ArrayList<DataSheet>();
+            List<DataSheetDto> dataSheetList = new ArrayList<DataSheetDto>();
             System.out.println(result[AppConstants.NUM_ZERO] + "   "
                     + result[AppConstants.NUM_ONE] + "   " + result[AppConstants.NUM_TWO]
                     + "   " + result[AppConstants.NUM_THREE] + "   "
@@ -201,7 +197,7 @@ public class PassportEntityService {
             passportEntity.setPassportEntityId((String) result[AppConstants.NUM_ZERO]);
             passportEntity.setPeName((String) result[AppConstants.NUM_ONE]);
 
-            DataSheet dataSheet = new DataSheet();
+            DataSheetDto dataSheet = new DataSheetDto();
             dataSheet.setDatasheetId((Long) result[AppConstants.NUM_TWO]);
 
             ObjectMapper mapper = new ObjectMapper();
@@ -231,7 +227,7 @@ public class PassportEntityService {
         String message = null;
         if (validateTemplateEntry(templateEntry, ddLibrary)) {
             if (inactivatePassportEntity(peId) > 0) {
-                persistTemplateEntry(templateEntry, true, getParentId(peId));
+                persistPassportEntity(templateEntry, true, getParentId(peId));
                 message = "Successfully updated";
             } else {
                 message = "passport is not available to update";

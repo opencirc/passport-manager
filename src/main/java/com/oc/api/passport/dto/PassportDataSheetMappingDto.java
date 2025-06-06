@@ -1,5 +1,6 @@
 package com.oc.api.passport.dto;
 
+import com.oc.api.passport.model.DataSheet;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -45,5 +46,5 @@ public class PassportDataSheetMappingDto {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "datasheet_id", referencedColumnName = "id")
-    private DataSheetDto datasheet;
+    private DataSheet datasheet;
 }
