@@ -18,7 +18,7 @@ import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.dao.JwtConfigRepository;
 import com.oc.api.passport.dao.UserRepository;
-import com.oc.api.passport.dto.JwtConfigDto;
+import com.oc.api.passport.model.JwtConfig;
 import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
 import com.oc.api.passport.model.UserPrincipal;
@@ -90,7 +90,7 @@ public class JwtService {
     private void loadSecretKey() {
 
         if (secretKey == null || secretKey.isEmpty()) {
-            Optional<JwtConfigDto> keyEntity = jwtConfigRepository.getSecretKey();
+            Optional<JwtConfig> keyEntity = jwtConfigRepository.getSecretKey();
             if (keyEntity.isPresent()) {
                 try {
                     this.secretKey = EncryptionUtil.decrypt(keyEntity.get()

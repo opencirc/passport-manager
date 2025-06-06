@@ -1,4 +1,4 @@
-package com.oc.api.passport.dto;
+package com.oc.api.passport.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * DTO for Config table.
+ * DTO for JWT Config table.
  */
 @Entity
 @Table(name = "jwt_config")
@@ -18,7 +18,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class JwtConfigDto {
+public class JwtConfig {
 
     /**
      * secretKey.
