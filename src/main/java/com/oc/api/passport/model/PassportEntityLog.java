@@ -1,4 +1,4 @@
-package com.oc.api.passport.dto;
+package com.oc.api.passport.model;
 
 import java.time.LocalDateTime;
 
@@ -27,7 +27,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class PELogsDto {
+public class PassportEntityLog {
 
     /**
      * Unique Id for logs.
@@ -35,7 +35,7 @@ public class PELogsDto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long peLogId;
+    private Long id;
 
     /**
      * Passport Entity id.
@@ -47,8 +47,8 @@ public class PELogsDto {
      * Log information in JSON format.
      */
     @Convert(converter = JsonNodeConverter.class)
-    @Column(name = "log_data", nullable = false)
-    private JsonNode logData;
+    @Column(name = "data", nullable = false)
+    private JsonNode data;
 
     /**
      * Created by.
@@ -62,29 +62,4 @@ public class PELogsDto {
     @Column(name = "created_time",
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdTime;
-
-    /**
-     * Method to update log data.
-     * @param newLogData
-     */
-    public void updateLogData(JsonNode newLogData) {
-        this.logData = newLogData;
-    }
-
-    /**
-     * Method to add key-value to log_data.
-     * @param key
-     * @param value
-     */
-    public void addLogDataField(String key, String value) {
-        ((ObjectNode) this.logData).put(key, value);
-    }
-
-    /**
-     * Method to delete key from log_data.
-     * @param key
-     */
-    public void removeLogDataField(String key) {
-        ((ObjectNode) this.logData).remove(key);
-    }
 }
