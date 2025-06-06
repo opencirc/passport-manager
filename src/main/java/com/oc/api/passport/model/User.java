@@ -1,13 +1,8 @@
-package com.oc.api.passport.dto;
+package com.oc.api.passport.model;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,19 +12,19 @@ import lombok.Setter;
  * DTO for User table.
  */
 @Entity
-@Table(name = "users")
+@Table(name = "user")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserEntity {
+public class User {
 
     /**
      * Unique Id for user.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long id;
 
     /**
      * Name of the user.
@@ -53,7 +48,8 @@ public class UserEntity {
      * Users's role.
      */
     @Column(nullable = false)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     /**
      * Holds info if the user is active.
@@ -78,4 +74,24 @@ public class UserEntity {
      */
     @Column(name = "created_time", updatable = false)
     private LocalDateTime createdTime;
+
+    public enum Role {
+        ADMIN("admin"),
+        USER("user");
+
+        private final String value;
+
+        Role(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
 }

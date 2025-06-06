@@ -1,7 +1,9 @@
-package com.oc.api.passport.service;
+package com.oc.api.passport.auth.service;
 
 import java.util.Optional;
 
+import com.oc.api.passport.auth.principal.UserPrincipal;
+import com.oc.api.passport.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -9,8 +11,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.oc.api.passport.dao.UserRepository;
-import com.oc.api.passport.dto.UserEntity;
-import com.oc.api.passport.model.UserPrincipal;
 
 @Service
 public class AuthUserDetailsService implements UserDetailsService {
@@ -30,7 +30,7 @@ public class AuthUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
-        UserEntity user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
         if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
@@ -45,8 +45,8 @@ public class AuthUserDetailsService implements UserDetailsService {
      * @return User details
      */
     public UserDetails loadUserById(Long userId) {
-        Optional<UserEntity> userOptional = userRepository.findById(userId);
-        UserEntity user = userOptional.orElseThrow(
+        Optional<User> userOptional = userRepository.findById(userId);
+        User user = userOptional.orElseThrow(
                 () -> new UsernameNotFoundException("User not found : " + userId));
 
         return new UserPrincipal(user);

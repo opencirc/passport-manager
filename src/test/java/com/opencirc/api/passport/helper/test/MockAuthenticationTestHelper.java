@@ -3,14 +3,14 @@ package com.opencirc.api.passport.helper.test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.oc.api.passport.model.User;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.oc.api.passport.dto.UserEntity;
-import com.oc.api.passport.model.UserPrincipal;
-import com.oc.api.passport.service.AuthUserDetailsService;
+import com.oc.api.passport.auth.principal.UserPrincipal;
+import com.oc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 
 public class MockAuthenticationTestHelper {
@@ -24,15 +24,15 @@ public class MockAuthenticationTestHelper {
     public void mockUserDetailsDB(AuthUserDetailsService authUserDetailsService,
             AuthenticationManager authenticationManager) {
 
-        UserEntity mockUserEntity = new UserEntity();
-        mockUserEntity.setUserId(1L);
-        mockUserEntity.setUsername(TestConstants.TEST_USERNAME_1);
-        mockUserEntity.setPassword("user1password");
-        mockUserEntity.setEmail("user1@example.com");
-        mockUserEntity.setActive(true);
-        mockUserEntity.setRole("ADMIN");
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setUsername(TestConstants.TEST_USERNAME_1);
+        mockUser.setPassword("user1password");
+        mockUser.setEmail("user1@example.com");
+        mockUser.setActive(true);
+        mockUser.setRole(User.Role.ADMIN);
 
-        UserPrincipal mockUserPrincipal = new UserPrincipal(mockUserEntity);
+        UserPrincipal mockUserPrincipal = new UserPrincipal(mockUser);
 
         UsernamePasswordAuthenticationToken mockAuthenticationToken =
                 new UsernamePasswordAuthenticationToken(

@@ -30,7 +30,7 @@ import com.oc.api.passport.PassportManager;
 import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.exception.JsonValidationException;
-import com.oc.api.passport.service.AuthUserDetailsService;
+import com.oc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;

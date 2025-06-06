@@ -13,7 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.oc.api.passport.PassportManager;
-import com.oc.api.passport.service.AuthUserDetailsService;
+import com.oc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 

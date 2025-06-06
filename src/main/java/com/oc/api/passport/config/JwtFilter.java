@@ -14,7 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.exception.AuthenticationException;
-import com.oc.api.passport.service.AuthUserDetailsService;
+import com.oc.api.passport.auth.service.AuthUserDetailsService;
 import com.oc.api.passport.service.JwtService;
 
 import jakarta.servlet.FilterChain;

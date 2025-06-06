@@ -1,7 +1,9 @@
-package com.oc.api.passport.controller;
+package com.oc.api.passport.auth.controller;
 
 import java.util.Collections;
 
+import com.oc.api.passport.auth.service.AuthService;
+import com.oc.api.passport.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
 import com.oc.api.passport.model.RegisterRequest;
-import com.oc.api.passport.service.AuthService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -39,7 +39,7 @@ public class AuthController {
      * @return response
      */
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest userDetails) 
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest userDetails)
             throws AuthenticationException {
         authService.register(userDetails);
         return ResponseEntity.ok("User registered successfully");
@@ -54,7 +54,7 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(
-            @RequestBody UserEntity user, HttpServletResponse response)
+            @RequestBody User user, HttpServletResponse response)
                     throws AuthenticationException {
         authService.verify(user, response);
         return ResponseEntity.ok(Collections.singletonMap("message", "Logged in"));

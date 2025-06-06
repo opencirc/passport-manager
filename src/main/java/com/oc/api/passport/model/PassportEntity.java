@@ -13,7 +13,7 @@ import lombok.ToString;
  * Model for passport_entity table.
  */
 @Entity
-@Table(name = "passport_entity")
+@Table(name = "passport_entit")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

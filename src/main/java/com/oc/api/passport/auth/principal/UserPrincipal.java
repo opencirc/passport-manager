@@ -1,14 +1,13 @@
-package com.oc.api.passport.model;
+package com.oc.api.passport.auth.principal;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 
+import com.oc.api.passport.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import com.oc.api.passport.dto.UserEntity;
 
 public class UserPrincipal implements UserDetails {
 
@@ -49,16 +48,16 @@ public class UserPrincipal implements UserDetails {
 
     /**
      * Injecting UserPrincipal class.
-     * @param userEntity
+     * @param user
      */
-    public UserPrincipal(UserEntity userEntity) {
-        Objects.requireNonNull(userEntity, "UserEntity cannot be null");
-        this.userId = userEntity.getUserId();
-        this.username = userEntity.getUsername();
-        this.email = userEntity.getEmail();
-        this.password = userEntity.getPassword();
-        this.isActive = userEntity.isActive();
-        this.authorities = Collections.singleton(new SimpleGrantedAuthority(userEntity
+    public UserPrincipal(User user) {
+        Objects.requireNonNull(user, "User cannot be null");
+        this.userId = user.getId();
+        this.username = user.getUsername();
+        this.email = user.getEmail();
+        this.password = user.getPassword();
+        this.isActive = user.isActive();
+        this.authorities = Collections.singleton(new SimpleGrantedAuthority(user
                 .getRole()));
     }
 

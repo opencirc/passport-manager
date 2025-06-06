@@ -1,7 +1,10 @@
-package com.oc.api.passport.service;
+package com.oc.api.passport.auth.service;
 
 import java.time.LocalDateTime;
 
+import com.oc.api.passport.auth.principal.UserPrincipal;
+import com.oc.api.passport.model.User;
+import com.oc.api.passport.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,10 +18,8 @@ import org.springframework.stereotype.Service;
 import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.dao.UserRepository;
-import com.oc.api.passport.dto.UserEntity;
 import com.oc.api.passport.exception.AuthenticationException;
 import com.oc.api.passport.model.RegisterRequest;
-import com.oc.api.passport.model.UserPrincipal;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -68,11 +69,11 @@ public class AuthService {
      */
     public void register(RegisterRequest registerUser) throws AuthenticationException {
 
-        UserEntity user = new UserEntity();
+        User user = new User();
 
         user.setUsername(registerUser.getUsername());
         user.setPassword(registerUser.getPassword());
-        user.setRole(registerUser.getRole());
+        user.setRole(User.Role.USER);
         user.setEmail(registerUser.getEmail());
         user.setActive(true);
         user.setCreatedBy("test");
@@ -100,7 +101,7 @@ public class AuthService {
      * @param user details with username, password
      * @param response
      */
-    public void verify(UserEntity user, HttpServletResponse response)
+    public void verify(User user, HttpServletResponse response)
             throws AuthenticationException {
 
         try {
@@ -125,7 +126,7 @@ public class AuthService {
             String refreshToken = jwtService.generateToken(userId,
                     properties.getRefreshTokenExpiryTime());
 
-            userRepository.updateRefreshTokenByUserId(userId, refreshToken);
+            userRepository.updateRefreshTokenById(userId, refreshToken);
             jwtService.generateTokenCookie(response, accessToken,
                     AppConstants.COOKIE_ACCESS_TOKEN,
                     properties.getAccessTokenExpiryTime());
@@ -189,7 +190,7 @@ public class AuthService {
     public void logout(String refreshToken, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
         Long userId = jwtService.extractUserId(refreshToken);
-        UserEntity existingUser = userRepository.findByUserId(userId);
+        User existingUser = userRepository.findById(userId);
         existingUser.setRefreshToken(null);
         userRepository.save(existingUser);
 

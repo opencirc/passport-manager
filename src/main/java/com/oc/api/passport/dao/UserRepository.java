@@ -7,27 +7,19 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.oc.api.passport.dto.UserEntity;
+import com.oc.api.passport.model.User;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
 
     /**
-     * Gets the user details from name.
+     * Fetches a user by name.
      *
      * @param username
      * @return User Entity
      */
-    UserEntity findByUsername(String username);
-
-    /**
-     * Gets the user details from name.
-     *
-     * @param userId
-     * @return User Entity
-     */
-    UserEntity findByUserId(Long userId);
+    User findByUsername(String username);
 
 
     /**
@@ -41,13 +33,13 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     /**
      * Updates the refresh token.
      *
-     * @param userId
+     * @param id
      * @param refreshToken
      */
     @Transactional
     @Modifying
-    @Query("UPDATE UserEntity u SET u.refreshToken = :refreshToken"
-            + " WHERE u.userId = :userId")
-    void updateRefreshTokenByUserId(@Param("userId") Long userId,
-            @Param("refreshToken") String refreshToken);
+    @Query("UPDATE User u SET u.refreshToken = :refreshToken"
+            + " WHERE u.id = :id")
+    void updateRefreshTokenById(@Param("id") Long id,
+                                @Param("refreshToken") String refreshToken);
 }

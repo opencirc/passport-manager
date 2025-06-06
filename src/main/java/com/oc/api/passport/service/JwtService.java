@@ -8,10 +8,12 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
+import com.oc.api.passport.auth.service.AuthUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.oc.api.passport.config.AppProperties;
@@ -19,9 +21,9 @@ import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.dao.JwtConfigRepository;
 import com.oc.api.passport.dao.UserRepository;
 import com.oc.api.passport.model.JwtConfig;
-import com.oc.api.passport.dto.UserEntity;
+import com.oc.api.passport.model.User;
 import com.oc.api.passport.exception.AuthenticationException;
-import com.oc.api.passport.model.UserPrincipal;
+import com.oc.api.passport.auth.principal.UserPrincipal;
 import com.oc.api.passport.util.EncryptionUtil;
 
 import io.jsonwebtoken.Claims;
@@ -221,8 +223,10 @@ public class JwtService {
      * @param token
      * @return user details
      */
-    public UserEntity extractUserFromToken(String token) {
-        return userRepository.findByUserId(extractUserId(token));
+    public User extractUserFromToken(String token) {
+        Optional<User> user = userRepository.findById(extractUserId(token));
+        return user.orElseThrow(
+                () -> new UsernameNotFoundException("Invalid token, user not found"));
     }
 
     /**
@@ -233,7 +237,8 @@ public class JwtService {
     public String generateAccessTokenUsingRefreshToken(String refreshToken) {
         Long userId = extractUserId(refreshToken);
         UserDetails userDetails = authUserDetailsService.loadUserById(userId);
-        UserEntity user = userRepository.findByUserId(userId);
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new UsernameNotFoundException("User not found"));
         if (!validateToken(refreshToken, userDetails)) {
             throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
         }
