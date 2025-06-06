@@ -3,7 +3,6 @@ package com.oc.api.passport.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.oc.api.passport.dto.PassportDatasheetMappingDto;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -70,5 +69,5 @@ public class PassportEntity {
      */
     @OneToMany(mappedBy = "passportEntity",
             cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PassportDatasheetMappingDto> datasheetMappings;
+    private List<PassportEntityDatasheetMapping> datasheetMappings;
 }

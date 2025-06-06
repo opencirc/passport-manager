@@ -17,7 +17,7 @@ public class PassportDatasheetIdDto {
     /**
      * Mapping for Passport entity id.
      */
-    private String peId;
+    private String passportEntityId;
 
     /**
      * Mapping for Datasheet id.

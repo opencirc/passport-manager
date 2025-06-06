@@ -3,7 +3,6 @@ package com.oc.api.passport.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.oc.api.passport.dto.PassportDatasheetMappingDto;
 import com.oc.api.passport.enums.DataDictionary;
 import org.hibernate.annotations.ColumnTransformer;
 
@@ -71,6 +70,6 @@ public class Datasheet {
      * Mapping to Passports.
      */
     @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PassportDatasheetMappingDto> datasheetMappings;
+    private List<PassportEntityDatasheetMapping> datasheetMappings;
 
 }

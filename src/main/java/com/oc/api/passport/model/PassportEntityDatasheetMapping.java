@@ -1,7 +1,5 @@
-package com.oc.api.passport.dto;
+package com.oc.api.passport.model;
 
-import com.oc.api.passport.model.Datasheet;
-import com.oc.api.passport.model.PassportEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,12 +18,12 @@ import lombok.ToString;
  * DTO for Passport Entity Datasheet table.
  */
 @Entity
-@Table(name = "datasheet_mapping")
+@Table(name = "passport_entity_datasheet_mapping")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class PassportDatasheetMappingDto {
+public class PassportEntityDatasheetMapping {
 
     /**
      * Unique id for mapping relation.
@@ -33,7 +31,7 @@ public class PassportDatasheetMappingDto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long mappingId;
+    private Long id;
 
     /**
      * passport entity id.

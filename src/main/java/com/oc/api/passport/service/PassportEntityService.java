@@ -20,11 +20,11 @@ import com.oc.api.passport.adapter.DictionaryAdapter;
 import com.oc.api.passport.adapter.DictionaryAdapterFactory;
 import com.oc.api.passport.constants.AppConstants;
 import com.oc.api.passport.dao.DatasheetRepository;
-import com.oc.api.passport.dao.PassportDatasheetMappingRepository;
+import com.oc.api.passport.dao.PassportEntityDatasheetMappingRepository;
 import com.oc.api.passport.dao.PassportEntityRepository;
 import com.oc.api.passport.dao.PassportEntityTemplateRepository;
 import com.oc.api.passport.model.Datasheet;
-import com.oc.api.passport.dto.PassportDatasheetMappingDto;
+import com.oc.api.passport.model.PassportEntityDatasheetMapping;
 import com.oc.api.passport.model.PassportEntity;
 import com.oc.api.passport.dto.PassportEntityTemplateDto;
 import com.oc.api.passport.exception.JsonValidationException;
@@ -49,10 +49,10 @@ public class PassportEntityService {
     private PassportEntityRepository passportEntityRepository;
 
     /**
-     * Injecting PassportDatasheetMappingRepository class.
+     * Injecting PassportEntityDatasheetMappingRepository class.
      */
     @Autowired
-    private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+    private PassportEntityDatasheetMappingRepository passportEntityDatasheetMappingRepository;
 
     /**
      * Injecting PassportEntityTemplateRepository class.
@@ -130,21 +130,21 @@ public class PassportEntityService {
         datasheet.setCreatedTime(LocalDateTime.now());
         datasheetRepository.save(datasheet);
 
-        PassportDatasheetMappingDto passportDatasheet = new PassportDatasheetMappingDto();
+        PassportEntityDatasheetMapping passportDatasheet = new PassportEntityDatasheetMapping();
         passportDatasheet.setPassportEntity(passportEntity);
         passportDatasheet.setDatasheet(datasheet);
-        passportDatasheetMappingRepository.save(passportDatasheet);
+        passportEntityDatasheetMappingRepository.save(passportDatasheet);
     }
 
     /**
      * Retrieves active passport entity.
      *
-     * @param peId
+     * @param passportEntityId
      * @return passport in json format
      */
-    public JsonNode getActivePassportEntity(String peId)
+    public JsonNode getActivePassportEntity(String passportEntityId)
             throws JsonMappingException, JsonProcessingException {
-        List<Object[]> results = passportEntityRepository.findActivePassportEntity(peId,
+        List<Object[]> results = passportEntityRepository.findActivePassportEntity(passportEntityId,
                 "active");
         if (results.isEmpty()) {
             return null;
@@ -176,14 +176,14 @@ public class PassportEntityService {
     /**
      * Retrieves passport with its children.
      *
-     * @param peId
+     * @param passportEntityId
      * @return list of passports
      */
-    public List<PassportEntityDto> getActivePassportEntitywithChildPE(String peId)
+    public List<PassportEntityDto> getActivePassportEntitywithChildPE(String passportEntityId)
             throws JsonMappingException, JsonProcessingException {
 
         List<Object[]> results = passportEntityRepository
-                .findActivePassportEntityWithDescendant(peId);
+                .findActivePassportEntityWithDescendant(passportEntityId);
 
         List<PassportEntityDto> passportEntityList = new ArrayList<PassportEntityDto>();
 
@@ -217,18 +217,18 @@ public class PassportEntityService {
      * Updates the existing passport.
      *
      * @param templateEntry
-     * @param peId
+     * @param passportEntityId
      * @param ddLibrary
      * @return the status
      * @throws JsonValidationException
      */
-    public String updatePassportEntity(JsonNode templateEntry, String peId,
+    public String updatePassportEntity(JsonNode templateEntry, String passportEntityId,
             String ddLibrary)
             throws NoSuchAlgorithmException, JsonValidationException {
         String message = null;
         if (validateTemplateEntry(templateEntry, ddLibrary)) {
-            if (inactivatePassportEntity(peId) > 0) {
-                persistPassportEntity(templateEntry, true, getParentId(peId));
+            if (inactivatePassportEntity(passportEntityId) > 0) {
+                persistPassportEntity(templateEntry, true, getParentId(passportEntityId));
                 message = "Successfully updated";
             } else {
                 message = "passport is not available to update";
@@ -253,34 +253,34 @@ public class PassportEntityService {
     /**
      * Retrieves parent Id.
      *
-     * @param peId
-     * @return the parent peId
+     * @param passportEntityId
+     * @return the parent passportEntityId
      */
-    private String getParentId(String peId) {
-        return passportEntityRepository.getParentId(peId);
+    private String getParentId(String passportEntityId) {
+        return passportEntityRepository.getParentId(passportEntityId);
     }
 
     /**
      * Deactivates the passport.
      *
-     * @param peId
+     * @param passportEntityId
      * @return the status
      */
-    private int inactivatePassportEntity(String peId) {
-        return passportEntityRepository.updateStatusToInactive(peId);
+    private int inactivatePassportEntity(String passportEntityId) {
+        return passportEntityRepository.updateStatusToInactive(passportEntityId);
     }
 
     /**
      * Creates template from the existing passport.
      *
-     * @param peId
+     * @param passportEntityId
      * @param saveTemplate
      * @param templateName
      * @return the template in json format
      */
-    public JsonNode createTemplateFromExistingPE(String peId, boolean saveTemplate,
+    public JsonNode createTemplateFromExistingPE(String passportEntityId, boolean saveTemplate,
             String templateName) throws JsonMappingException, JsonProcessingException {
-        JsonNode activePE = getActivePassportEntity(peId);
+        JsonNode activePE = getActivePassportEntity(passportEntityId);
         if (activePE == null) {
             return null;
         }
