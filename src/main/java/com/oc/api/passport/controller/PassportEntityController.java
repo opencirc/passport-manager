@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.oc.api.passport.dto.PassportEntityTemplateDto;
+import com.oc.api.passport.model.PassportEntityTemplate;
 import com.oc.api.passport.exception.JsonValidationException;
 import com.oc.api.passport.exception.InvalidInputException;
 import com.oc.api.passport.dto.PassportEntityDto;
@@ -153,7 +153,7 @@ public class PassportEntityController {
      */
     @Operation(summary = "Retrieves the persisted Template")
     @GetMapping("/api/passport-templates")
-    public ResponseEntity<PassportEntityTemplateDto> getPersistedTemplate(
+    public ResponseEntity<PassportEntityTemplate> getPersistedTemplate(
             @Parameter(description = "Name of the Template stored in DB", required = true)
             @RequestParam String templateName)
             throws JsonMappingException, JsonProcessingException {
@@ -168,7 +168,7 @@ public class PassportEntityController {
      */
     @Operation(summary = "Lists all the persisted Template")
     @GetMapping("/api/passport-templates/all")
-    public ResponseEntity<List<PassportEntityTemplateDto>> listPersistedTemplates()
+    public ResponseEntity<List<PassportEntityTemplate>> listPersistedTemplates()
             throws JsonMappingException, JsonProcessingException {
         return ResponseEntity.ok(passportEntityService.listPersistedTemplate());
     }

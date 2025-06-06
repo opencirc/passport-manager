@@ -1,4 +1,4 @@
-package com.oc.api.passport.dto;
+package com.oc.api.passport.model;
 
 import java.time.LocalDateTime;
 
@@ -21,12 +21,12 @@ import lombok.ToString;
  * DTO for Template table.
  */
 @Entity
-@Table(name = "template")
+@Table(name = "passport_entity_template")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class PassportEntityTemplateDto {
+public class PassportEntityTemplate {
 
     /**
      * Unique Id for Template.
@@ -34,14 +34,14 @@ public class PassportEntityTemplateDto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private long templateId;
+    private long id;
 
 
     /**
      * Name of the Template.
      */
     @Column(name = "name")
-    private String templateName;
+    private String name;
 
 
     /**
@@ -49,7 +49,7 @@ public class PassportEntityTemplateDto {
      */
     @Column(name = "template", columnDefinition = "jsonb")
     @ColumnTransformer(write = "?::jsonb")
-    private JsonNode extractedTemplate;
+    private JsonNode template;
 
 
     /**

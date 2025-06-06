@@ -2,10 +2,10 @@ package com.oc.api.passport.dao;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.oc.api.passport.dto.PassportEntityTemplateDto;
+import com.oc.api.passport.model.PassportEntityTemplate;
 
 public interface PassportEntityTemplateRepository
-        extends JpaRepository<PassportEntityTemplateDto, Long> {
+        extends JpaRepository<PassportEntityTemplate, Long> {
 
     /**
      * Retrieves Template by name.
@@ -14,6 +14,6 @@ public interface PassportEntityTemplateRepository
      *
      * @return Templates
      */
-    PassportEntityTemplateDto findByTemplateName(String templateName);
+    PassportEntityTemplate findByTemplateName(String templateName);
 
 }

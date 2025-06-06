@@ -26,7 +26,7 @@ import com.oc.api.passport.dao.PassportEntityTemplateRepository;
 import com.oc.api.passport.model.Datasheet;
 import com.oc.api.passport.model.PassportEntityDatasheetMapping;
 import com.oc.api.passport.model.PassportEntity;
-import com.oc.api.passport.dto.PassportEntityTemplateDto;
+import com.oc.api.passport.model.PassportEntityTemplate;
 import com.oc.api.passport.exception.JsonValidationException;
 import com.oc.api.passport.exception.InvalidInputException;
 import com.oc.api.passport.dto.DatasheetDto;
@@ -331,13 +331,13 @@ public class PassportEntityService {
      * @param templateName
      */
     private void persistDataTemplate(JsonNode template, String templateName) {
-        PassportEntityTemplateDto passportEntityTemplateDto = new
-                PassportEntityTemplateDto();
-        passportEntityTemplateDto.setExtractedTemplate(template);
-        passportEntityTemplateDto.setTemplateName(templateName);
-        passportEntityTemplateDto.setCreatedBy("OCTest");
-        passportEntityTemplateDto.setCreatedTime(LocalDateTime.now());
-        passportEntityTemplateRepository.save(passportEntityTemplateDto);
+        PassportEntityTemplate passportEntityTemplate = new
+                PassportEntityTemplate();
+        passportEntityTemplate.setTemplate(template);
+        passportEntityTemplate.setName(templateName);
+        passportEntityTemplate.setCreatedBy("OCTest");
+        passportEntityTemplate.setCreatedTime(LocalDateTime.now());
+        passportEntityTemplateRepository.save(passportEntityTemplate);
     }
 
     /**
@@ -346,7 +346,7 @@ public class PassportEntityService {
      * @param templateName
      * @return template
      */
-    public PassportEntityTemplateDto getPersistedTemplate(String templateName)
+    public PassportEntityTemplate getPersistedTemplate(String templateName)
             throws JsonMappingException, JsonProcessingException {
         return passportEntityTemplateRepository.findByTemplateName(templateName);
     }
@@ -356,7 +356,7 @@ public class PassportEntityService {
      *
      * @return template
      */
-    public List<PassportEntityTemplateDto> listPersistedTemplate()
+    public List<PassportEntityTemplate> listPersistedTemplate()
             throws JsonMappingException, JsonProcessingException {
         return passportEntityTemplateRepository.findAll();
     }
