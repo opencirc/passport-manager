@@ -11,13 +11,13 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * DataSheet entity.
+ * Datasheet DTO.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class DataSheetDto {
+public class DatasheetDto {
 
     /**
      * Unique Id for Datasheet.

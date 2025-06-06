@@ -22,7 +22,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.oc.api.passport.PassportManager;
 import com.oc.api.passport.config.AppProperties;
-import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.JsonValidationException;
 import com.oc.api.passport.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
@@ -119,7 +119,7 @@ public class TestPassportEntityController {
      * Tests the successful creation of a passport entity with valid JSON input.
      */
     @Test
-    public void testCreatePassportEntitySuccess() throws BsDDJsonValidationException {
+    public void testCreatePassportEntitySuccess() throws JsonValidationException {
         String ddLibrary = "bsdd";
         String jsonBody = """
                                 {
@@ -174,7 +174,7 @@ public class TestPassportEntityController {
      */
     @Test
     public void testCreatePassportEntityErrorEmptyJsonBody()
-            throws BsDDJsonValidationException {
+            throws JsonValidationException {
         String ddLibrary = "bsdd";
         String jsonBody = """
                                 {
@@ -202,7 +202,7 @@ public class TestPassportEntityController {
      */
     @Test
     public void testCreatePassportEntityErrorInvalidJsonBody()
-            throws BsDDJsonValidationException {
+            throws JsonValidationException {
         String ddLibrary = "bsdd";
         String jsonBody = """
                                 {
@@ -227,7 +227,7 @@ public class TestPassportEntityController {
      * Tests the successful update of a passport entity with valid input data.
      */
     @Test
-    public void testUpdatePassportEntitySuccess() throws BsDDJsonValidationException {
+    public void testUpdatePassportEntitySuccess() throws JsonValidationException {
         String passportEntityId = "b33ruul55gzk0idd0kxvggyofmtjfdg8u1ka";
         String jsonBody = """
                                 {

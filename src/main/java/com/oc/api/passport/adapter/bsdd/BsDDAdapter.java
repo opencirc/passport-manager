@@ -1,4 +1,4 @@
-package com.oc.api.passport.adapter;
+package com.oc.api.passport.adapter.bsdd;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.oc.api.passport.adapter.DictionaryAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
-import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.JsonValidationException;
 import com.oc.api.passport.exception.InvalidInputException;
 import com.oc.api.passport.mapping.DictionaryMapping;
 import com.oc.api.passport.service.CacheService;
@@ -111,17 +112,17 @@ public class BsDDAdapter implements DictionaryAdapter {
      *
      * @param uri The class URI.
      * @return The class template as a JsonNode.
-     * @throws BsDDJsonValidationException If the URI is invalid.
+     * @throws JsonValidationException If the URI is invalid.
      * @throws JsonProcessingException
      */
     @Override
     public JsonNode createClassTemplate(String uri, boolean addProperties)
-            throws BsDDJsonValidationException, JsonProcessingException {
+            throws JsonValidationException, JsonProcessingException {
 
         JsonNode classTemplate = getClassTemplate(uri, addProperties);
 
         if (!(classTemplate instanceof ObjectNode)) {
-            throw new BsDDJsonValidationException(
+            throw new JsonValidationException(
                     "Invalid response format for URI: " + uri);
         }
 
@@ -144,7 +145,7 @@ public class BsDDAdapter implements DictionaryAdapter {
                                     });
                             formPropertyTemplate(updatedProperties, propertyMap, "bsDD");
                         } catch (IllegalArgumentException e) {
-                            throw new BsDDJsonValidationException(
+                            throw new JsonValidationException(
                                     "Skipping invalid propertyNode: {}" + propertyNode);
                         }
                     }
@@ -163,14 +164,14 @@ public class BsDDAdapter implements DictionaryAdapter {
      * @param uri The class URI.
      * @param addProperties
      * @return The class template as a JsonNode.
-     * @throws BsDDJsonValidationException If the URI is invalid.
+     * @throws JsonValidationException If the URI is invalid.
      * @throws JsonProcessingException
      */
     private JsonNode getClassTemplate(String uri, boolean addProperties)
-            throws BsDDJsonValidationException, JsonProcessingException {
+            throws JsonValidationException, JsonProcessingException {
 
         if (!validateUri(uri)) {
-            throw new BsDDJsonValidationException("Invalid URI : " + uri);
+            throw new JsonValidationException("Invalid URI : " + uri);
         }
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromHttpUrl(props.getBsDDClassDetailsURL())
@@ -193,18 +194,18 @@ public class BsDDAdapter implements DictionaryAdapter {
                     rootNode = response.getBody();
                     cacheService.storeClassTemplateInCache(url, rootNode);
                 } else {
-                    throw new BsDDJsonValidationException(
+                    throw new JsonValidationException(
                             "Failed to fetch class template. HTTP Status: "
                                     + response.getStatusCode());
                 }
             } catch (RestClientException e) {
-                throw new BsDDJsonValidationException(
+                throw new JsonValidationException(
                         "Error fetching class template: " + e.getMessage(), e);
             }
         }
 
         if (!(rootNode instanceof ObjectNode)) {
-            throw new BsDDJsonValidationException(
+            throw new JsonValidationException(
                     "Unexpected format in class template for URI: " + uri);
         }
 
@@ -222,7 +223,7 @@ public class BsDDAdapter implements DictionaryAdapter {
      */
     @Override
     public JsonNode getPropertyTemplatewithDetails(List<String> uriList)
-            throws BsDDJsonValidationException {
+            throws JsonValidationException {
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();
         template.put("templateName", "");
@@ -231,7 +232,7 @@ public class BsDDAdapter implements DictionaryAdapter {
         for (String uri : uriList) {
             System.out.println(uri);
             if (!validateUri(uri)) {
-                throw new BsDDJsonValidationException("Invalid URI : " + uri);
+                throw new JsonValidationException("Invalid URI : " + uri);
             }
             UriComponentsBuilder uriBuilder = UriComponentsBuilder
                     .fromHttpUrl(props.getBsDDPropertiesWithDetailURL())
@@ -304,11 +305,11 @@ public class BsDDAdapter implements DictionaryAdapter {
      * Validates template entries against allowed values and ranges.
      *
      * @param jsonNode The JSON node containing template data.
-     * @throws BsDDJsonValidationException If validation fails.
+     * @throws JsonValidationException If validation fails.
      */
     @Override
     public void validateTemplateEntry(JsonNode jsonNode)
-            throws BsDDJsonValidationException {
+            throws JsonValidationException {
 
         if (jsonNode == null || jsonNode.isNull()
                 || jsonNode.isObject() && jsonNode.size() == 0) {
@@ -388,7 +389,7 @@ public class BsDDAdapter implements DictionaryAdapter {
         }
 
         if (!errorMessages.isEmpty()) {
-            throw new BsDDJsonValidationException(
+            throw new JsonValidationException(
                     "Validation failed with the following errors : " + "\n\t- "
                             + String.join(",\n\t- ", errorMessages));
         }

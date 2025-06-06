@@ -3,7 +3,8 @@ package com.oc.api.passport.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.oc.api.passport.dto.PassportDataSheetMappingDto;
+import com.oc.api.passport.dto.PassportDatasheetMappingDto;
+import com.oc.api.passport.enums.DataDictionary;
 import org.hibernate.annotations.ColumnTransformer;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -23,7 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * Model for Datasheet table.
+ * Model for datasheet table.
  */
 @Entity
 @Table(name = "datasheet")
@@ -31,7 +32,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class DataSheet {
+public class Datasheet {
 
     /**
      * Unique Id for Datasheet.
@@ -52,7 +53,7 @@ public class DataSheet {
      * Data category (Unique or Generic).
      */
     @Column(name = "type")
-    private Type type;
+    private DataDictionary type;
 
     /**
      * User who created the datasheet.
@@ -70,25 +71,6 @@ public class DataSheet {
      * Mapping to Passports.
      */
     @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PassportDataSheetMappingDto> datasheetMappings;
+    private List<PassportDatasheetMappingDto> datasheetMappings;
 
-    public enum Type {
-        BSDD("bsdd"),
-        LEXICON("lexicon");
-
-        private final String value;
-
-        Type(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        @Override
-        public String toString() {
-            return value;
-        }
-    }
 }

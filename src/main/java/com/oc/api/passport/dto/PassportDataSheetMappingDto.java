@@ -1,6 +1,7 @@
 package com.oc.api.passport.dto;
 
-import com.oc.api.passport.model.DataSheet;
+import com.oc.api.passport.model.Datasheet;
+import com.oc.api.passport.model.PassportEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -24,7 +25,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class PassportDataSheetMappingDto {
+public class PassportDatasheetMappingDto {
 
     /**
      * Unique id for mapping relation.
@@ -39,12 +40,12 @@ public class PassportDataSheetMappingDto {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "passport_entity_id", referencedColumnName = "id")
-    private PassportEntityDto passportEntity;
+    private PassportEntity passportEntity;
 
     /**
      * datasheet id.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "datasheet_id", referencedColumnName = "id")
-    private DataSheet datasheet;
+    private Datasheet datasheet;
 }

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.oc.api.passport.adapter.DictionaryAdapter;
 import com.oc.api.passport.adapter.DictionaryAdapterFactory;
-import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.JsonValidationException;
 
 @Service
 public class TemplateService {
@@ -52,7 +52,7 @@ public class TemplateService {
      * @throws JsonProcessingException
      */
     public JsonNode getClassTemplatewithPropDetails(String uri,
-            String ddLibrary) throws BsDDJsonValidationException,
+            String ddLibrary) throws JsonValidationException,
     JsonProcessingException {
         // Gets adapter instance
         DictionaryAdapter adapter = dictionaryAdapterFactory
@@ -70,7 +70,7 @@ public class TemplateService {
      * @throws JsonProcessingException
      */
     public JsonNode getClassTemplatewithoutPropDetails(String uri, String ddLibrary)
-            throws BsDDJsonValidationException, JsonProcessingException {
+            throws JsonValidationException, JsonProcessingException {
         DictionaryAdapter adapter = dictionaryAdapterFactory
                 .getAdapter(ddLibrary);
         JsonNode classTemplate = adapter.createClassTemplate(uri, false);
@@ -107,7 +107,7 @@ public class TemplateService {
      * @return template with properties in json format
      */
     public JsonNode createTemplateWithProperties(List<String> propertiesUriList,
-            String ddLibrary) throws BsDDJsonValidationException {
+            String ddLibrary) throws JsonValidationException {
         DictionaryAdapter adapter = dictionaryAdapterFactory
                 .getAdapter(ddLibrary);
         return adapter.getPropertyTemplatewithDetails(propertiesUriList);

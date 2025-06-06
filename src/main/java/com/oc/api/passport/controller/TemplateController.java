@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.JsonValidationException;
 import com.oc.api.passport.service.TemplateService;
 import com.oc.api.passport.util.CommonUtil;
 
@@ -58,7 +58,7 @@ public class TemplateController {
      * @param uri
      * @param ddLibrary
      * @return the template with all the relevant properties
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      * @throws JsonProcessingException
      */
     @Operation(summary = "Get class from DD for the requested uri")
@@ -71,7 +71,7 @@ public class TemplateController {
             @RequestParam String uri,
             @Parameter(description = "Name of library", required = true, example = "bsdd")
             @RequestParam String ddLibrary)
-            throws BsDDJsonValidationException, JsonProcessingException {
+            throws JsonValidationException, JsonProcessingException {
         return templateService.getClassTemplatewithPropDetails(uri, ddLibrary);
     }
 
@@ -81,7 +81,7 @@ public class TemplateController {
      * @param uri
      * @param ddLibrary
      * @return the template with all the relevant properties
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      * @throws JsonProcessingException
      */
     @Operation(summary = "Get class from DD for the requested uri")
@@ -94,7 +94,7 @@ public class TemplateController {
             @RequestParam String uri,
             @Parameter(description = "Name of library", required = true, example = "bsdd")
             @RequestParam String ddLibrary)
-            throws BsDDJsonValidationException, JsonProcessingException {
+            throws JsonValidationException, JsonProcessingException {
         return templateService.getClassTemplatewithoutPropDetails(uri, ddLibrary);
     }
 
@@ -104,7 +104,7 @@ public class TemplateController {
      * @param searchText
      * @param ddLibrary
      * @return the template with all the relevant properties
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      */
     @Operation(summary = "Lists all the properties name and its URI matching the text")
     @GetMapping(value = "/api/properties/{searchText}/{ddLibrary}", produces = {
@@ -125,7 +125,7 @@ public class TemplateController {
      * @param propertiesUriList
      * @param ddLibrary
      * @return the template with all the relevant properties
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      */
     @Operation(summary = "Create template with selected properties")
     @PostMapping(value = "/api/template/properties", produces = {
@@ -136,7 +136,7 @@ public class TemplateController {
             @RequestBody List<String> propertiesUriList,
             @Parameter(description = "Name of library", required = true, example = "bsdd")
             @RequestParam String ddLibrary)
-            throws BsDDJsonValidationException {
+            throws JsonValidationException {
         return templateService.createTemplateWithProperties(propertiesUriList,
                 CommonUtil.convertToLowercase(ddLibrary));
 

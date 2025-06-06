@@ -1,25 +1,18 @@
 package com.oc.api.passport.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import com.oc.api.passport.model.Datasheet;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * DTO for Datasheet table.
+ * Passport entity DTO.
  */
-@Entity
-@Table(name = "passport_entity")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,47 +20,19 @@ import lombok.ToString;
 public class PassportEntityDto {
 
     /**
-     * Unique Id for Passport entity.
+     * Unique Id
      */
-    @Id
-    @Column(name = "id")
-    private String passportEntityId;
+    @JsonProperty
+    private String id;
 
     /**
-     * Name of Passport entity.
+     * Name
      */
-    @Column(name = "name")
-    private String passportEntityName;
+    private String name;
 
     /**
-     * Status of Passport entity.
+     * Linked datasheets.
      */
-    @Column(name = "status")
-    private String status;
+    private List<Datasheet> datasheets;
 
-    /**
-     * Id of Parent Passport entity.
-     */
-    @Column(name = "parent_id")
-    private String parentPe;
-
-
-    /**
-     * User who created Passport.
-     */
-    @Column(name = "created_by")
-    private String createdBy;
-
-    /**
-     * Time of passport entity creation.
-     */
-    @Column(name = "created_time", updatable = false)
-    private LocalDateTime createdTime;
-
-    /**
-     * Mapping of Passport entity.
-     */
-    @OneToMany(mappedBy = "passportEntity",
-            cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PassportDataSheetMappingDto> peDatasheetMappings;
 }

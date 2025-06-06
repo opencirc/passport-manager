@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oc.api.passport.adapter.DictionaryAdapter;
 import com.oc.api.passport.adapter.DictionaryAdapterFactory;
 import com.oc.api.passport.controller.TemplateController;
-import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.JsonValidationException;
 
 @ShellComponent
 public class ShellCommandConfig {
@@ -80,7 +80,7 @@ public class ShellCommandConfig {
 
     private String generateProcessedTemplate(String dictionaryType, String uri,
             String type)
-            throws BsDDJsonValidationException, JsonProcessingException {
+            throws JsonValidationException, JsonProcessingException {
         JsonNode response = null;
         if ("class".equalsIgnoreCase(type)) {
             response = templateController.createClassTemplateWithProperties(uri,

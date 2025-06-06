@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.JsonValidationException;
 
 /**
  * Interface of Dictionary Adapter.
@@ -24,10 +24,10 @@ public interface DictionaryAdapter {
      * @param code
      * @param addProperties
      * @return JsonNode
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      */
     JsonNode createClassTemplate(String code, boolean addProperties)
-            throws BsDDJsonValidationException, JsonProcessingException;
+            throws JsonValidationException, JsonProcessingException;
 
 
     /**
@@ -41,18 +41,18 @@ public interface DictionaryAdapter {
      * Retrieves property details for a given list of property URIs.
      * @param properties
      * @return Jsonnode with proeprty details
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      */
     JsonNode getPropertyTemplatewithDetails(List<String> properties)
-            throws BsDDJsonValidationException;
+            throws JsonValidationException;
 
     /**
      * Validates the given JSON template.
      * @param jsonNode
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      */
     void validateTemplateEntry(JsonNode jsonNode)
-            throws BsDDJsonValidationException;
+            throws JsonValidationException;
 
     /**
      * Validates the given URI.

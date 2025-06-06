@@ -16,9 +16,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.oc.api.passport.dto.PassportEntityTemplateDto;
-import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.JsonValidationException;
 import com.oc.api.passport.exception.InvalidInputException;
-import com.oc.api.passport.model.PassportEntity;
+import com.oc.api.passport.dto.PassportEntityDto;
 import com.oc.api.passport.service.PassportEntityService;
 import com.oc.api.passport.util.CommonUtil;
 
@@ -44,7 +44,7 @@ public class PassportEntityController {
      * @param templateEntry
      * @param dictionaryName
      * @return the status
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      * @throws InvalidInputException
      */
     @Operation(summary = "Creates Passport and validates it")
@@ -57,8 +57,8 @@ public class PassportEntityController {
             @RequestBody JsonNode templateEntry,
             @Parameter(description = "Dictionary Name", required = true)
             @RequestParam String dictionaryName)
-                    throws InvalidInputException, BsDDJsonValidationException {
-        return passportEntityService.createTemplateEntry(templateEntry,
+                    throws InvalidInputException, JsonValidationException {
+        return passportEntityService.createPassportEntity(templateEntry,
                 CommonUtil.convertToLowercase(dictionaryName));
 
     }
@@ -88,7 +88,7 @@ public class PassportEntityController {
      */
     @Operation(summary = "Retrieves the PassportEntity and all its descendants")
     @GetMapping("/passports/active/with-children/")
-    public List<PassportEntity> getActivePassportEntitywithChildPE(
+    public List<PassportEntityDto> getActivePassportEntitywithChildPE(
             @Parameter(description = "Id of the Passport Entity", required = true)
             @RequestParam String passportEntityId)
             throws JsonMappingException, JsonProcessingException {
@@ -102,14 +102,14 @@ public class PassportEntityController {
      * @param templateEntry
      * @param ddLibrary
      * @return the status
-     * @throws BsDDJsonValidationException
+     * @throws JsonValidationException
      */
     @Operation(summary = "Update the existing Passport entity")
     @PostMapping(value = "/api/passport/update/", consumes = { "application/json" })
     public String updatePassportEntity(@RequestBody JsonNode templateEntry,
             @Parameter(description = "Id of the Passport Entity", required = true)
     @RequestParam String passportEntityId, @RequestParam String ddLibrary)
-            throws NoSuchAlgorithmException, BsDDJsonValidationException {
+            throws NoSuchAlgorithmException, JsonValidationException {
         return passportEntityService.updatePassportEntity(templateEntry,
                 passportEntityId, ddLibrary);
 

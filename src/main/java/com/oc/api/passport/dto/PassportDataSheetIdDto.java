@@ -12,7 +12,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class PassportDataSheetIdDto {
+public class PassportDatasheetIdDto {
 
     /**
      * Mapping for Passport entity id.

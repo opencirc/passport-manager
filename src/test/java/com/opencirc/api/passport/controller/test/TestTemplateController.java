@@ -29,7 +29,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.oc.api.passport.PassportManager;
 import com.oc.api.passport.config.AppProperties;
 import com.oc.api.passport.constants.AppConstants;
-import com.oc.api.passport.exception.BsDDJsonValidationException;
+import com.oc.api.passport.exception.JsonValidationException;
 import com.oc.api.passport.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
@@ -129,7 +129,7 @@ public class TestTemplateController {
      * returned when the bsDD API is called with valid parameters.
      */
     @Test
-    public void testFetchBsddData() throws BsDDJsonValidationException {
+    public void testFetchBsddData() throws JsonValidationException {
         String bsddUrl = "https://identifier.buildingsmart.org/uri/molio/cciconstruction"
                 + "/1.0/class/A-A__";
         String ddLibrary = "bsdd";

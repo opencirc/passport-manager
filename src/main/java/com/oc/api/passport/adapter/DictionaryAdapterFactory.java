@@ -1,5 +1,6 @@
 package com.oc.api.passport.adapter;
 
+import com.oc.api.passport.adapter.bsdd.BsDDAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.oc.api.passport.exception.InvalidInputException;
