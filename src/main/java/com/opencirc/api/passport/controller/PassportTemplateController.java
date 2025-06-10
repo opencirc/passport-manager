@@ -40,7 +40,7 @@ public class PassportTemplateController {
             "application/json" })
     public ResponseEntity<PassportTemplateDto> createPassportTemplateFromPassport(
             @Parameter(description = "Id of the Passport", required = true)
-            @RequestParam String passportId,
+            @PathVariable String passportId,
             @Parameter(description = "Set to true if extracted template needs to persisted")
             @RequestParam(required = false) boolean dryRun,
             @Parameter(description = "Provide name to extracted"

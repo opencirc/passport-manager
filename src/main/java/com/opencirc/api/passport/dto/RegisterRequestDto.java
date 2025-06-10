@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.dto;
 
+import com.opencirc.api.passport.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,5 +30,5 @@ public class RegisterRequestDto {
     /**
      * Email.
      */
-    private String role;
+    private User.Role role;
 }
