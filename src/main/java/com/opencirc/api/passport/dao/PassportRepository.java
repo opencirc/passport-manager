@@ -59,7 +59,7 @@ public interface PassportRepository
             JOIN datasheet ds ON pdm.datasheet_id = ds.id
             WHERE pt.status = 'active'
             """, nativeQuery = true)
-    List<Object[]> findActivePassportWithDescendant(
+    Optional<List<Passport>> findActivePassportWithDescendant(
             @Param("id") String id);
 
     /**

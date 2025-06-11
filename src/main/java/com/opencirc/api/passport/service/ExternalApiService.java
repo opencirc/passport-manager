@@ -174,7 +174,6 @@ public class ExternalApiService {
 
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();
-        template.put("templateName", "");
         template.put("dataCategory", "");
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {

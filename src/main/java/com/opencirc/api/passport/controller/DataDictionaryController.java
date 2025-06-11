@@ -3,25 +3,30 @@ package com.opencirc.api.passport.controller;
 import java.util.List;
 import java.util.Map;
 
-import com.opencirc.api.passport.enums.DataDictionary;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  *
  */
 @RestController
-@Tag(name = "Templates", description = "Operations related to templates")
+@Tag(name = "Data Dictionary", description = "Operations related to templates from Data Dictionary")
 public class DataDictionaryController {
 
     /**
@@ -33,7 +38,7 @@ public class DataDictionaryController {
     /**
      * Returns list of classes fetched from bsDD.
      *
-     * @param dictionary
+     * @param dictionaryName
      * @param query
      *
      * @return list of class and its details
@@ -44,41 +49,41 @@ public class DataDictionaryController {
     public List<Map<String, String>> searchClass(
             @Parameter(description = "The dictionary",
                     required = true)
-            @PathVariable String dictionary,
+            @PathVariable String dictionaryName,
             @Parameter(description = "The text to search for",
                     required = true)
             @PathVariable String query) {
-        return dataDictionaryService.searchClassesByText(DataDictionary.valueOf(dictionary), query);
+        return dataDictionaryService.searchClassesByText(DataDictionary.valueOf(dictionaryName), query);
     }
 
     /**
      * Returns list of classes fetched from bsDD.
      *
-     * @param dictionary
+     * @param dictionaryName
      * @param classUri
      * @param withProperties
      * @return the template with all the relevant properties
      */
     @Operation(summary = "Get class from DD for the requested uri")
-    @GetMapping(value = "/api/data-dictionary/{dictionary}/class/{classUri}/", produces = {
+    @PostMapping(value = "/api/data-dictionary/{dictionary}/class", produces = {
             "application/json" })
     public JsonNode getClass(
             @Parameter(description = "Name of dictionary", required = true, example = "bsdd", in = ParameterIn.PATH)
-            @PathVariable String dictionary,
+            @PathVariable String dictionaryName,
             @Parameter(description = "URI for the classification",
             example = "https://identifier.buildingsmart.org/uri/"
                     + "molio/cciconstruction/1.0/class/A-A__")
-            @PathVariable String classUri,
+            @RequestBody String classUri,
             @Parameter(description = "Whether to return the class with properties", example = "bsdd", in = ParameterIn.QUERY)
             @RequestParam Boolean withProperties)
             throws JsonValidationException, JsonProcessingException {
-        return dataDictionaryService.createClassTemplate(DataDictionary.valueOf(dictionary), classUri, withProperties);
+        return dataDictionaryService.createClassTemplate(DataDictionary.valueOf(dictionaryName), classUri, withProperties);
     }
 
     /**
      * Returns list of properties fetched from bsDD.
      *
-     * @param dictionary
+     * @param dictionaryName
      * @param query
      * @return the template with all the relevant properties
      */
@@ -88,11 +93,11 @@ public class DataDictionaryController {
     public List<Map<String, String>> listProperties(
             @Parameter(description = "The dictionary",
                     required = true, example = "bsdd")
-            @PathVariable String dictionary,
+            @PathVariable String dictionaryName,
             @Parameter(description = "The text to search for",
                     required = true)
             @PathVariable String query) {
-        return dataDictionaryService.listProperties(DataDictionary.valueOf(dictionary), query);
+        return dataDictionaryService.listProperties(DataDictionary.fromValue(dictionaryName), query);
 
     }
 
@@ -100,21 +105,21 @@ public class DataDictionaryController {
      * Create template with selected properties.
      *
      * @TODO this must be changed
-     * @param dictionary
+     * @param dictionaryName
      * @param propertiesUriList
      * @return the template with all the relevant properties
      */
     @Operation(summary = "Create template with selected properties")
-    @PostMapping(value = "/api/template/properties", produces = {
+    @PostMapping(value = "/api/template/properties/{dictionary}", produces = {
             "application/json" }, consumes = { "application/json" })
     public JsonNode createTemplateWithProperties(
             @Parameter(description = "Name of library", required = true, example = "bsdd")
-            @PathVariable String dictionary,
+            @PathVariable String dictionaryName,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description =
             "List of Property URI", required = true)
             @RequestBody List<String> propertiesUriList)
             throws JsonValidationException {
-        return dataDictionaryService.createTemplateWithProperties(DataDictionary.valueOf(dictionary), propertiesUriList);
+        return dataDictionaryService.createTemplateWithProperties(DataDictionary.fromValue(dictionaryName), propertiesUriList);
 
     }
 

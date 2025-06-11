@@ -1,13 +1,27 @@
 package com.opencirc.api.passport.service;
 
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dao.PassportTemplateRepository;
+import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.InvalidInputException;
@@ -15,14 +29,8 @@ import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
-import io.github.thibaultmeyer.cuid.CUID;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import io.github.thibaultmeyer.cuid.CUID;
 
 @Service
 public class PassportService {
@@ -64,10 +72,11 @@ public class PassportService {
      * @param datasheetData
      * @return Passport DTO from passport
      */
-    public PassportDto createPassportUsingDictionary(DataDictionary dictionary, JsonNode datasheetData)
+    public PassportDto createPassportUsingDictionary(DataDictionary dictionary, CreatePassportRequestDto data)
             throws InvalidInputException {
+        JsonNode dataSheetData = data.getDataSheetData();
         try {
-            validatePassportData(dictionary, datasheetData);
+            validatePassportData(dictionary, dataSheetData);
         } catch (JsonValidationException e) {
             throw new HttpServerErrorException(HttpStatusCode.valueOf(422), e.getMessage());
         }
@@ -77,21 +86,18 @@ public class PassportService {
 
         Passport rawPassport = new Passport();
         rawPassport.setId(cuid.toString());
-        // @TODO this is wrong, if the passport has a name, it should not be hidden
-        // in the JSON data, it should be provided along with strongly structured/typed metadata
-        rawPassport.setName(datasheetData.get("templateName").asText());
+
+        rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
-        rawPassport.setCreatedBy("OCTest"); // Update this code when auth is
-                                               // implemented
+        rawPassport.setCreatedBy(data.getCreatedBy()); 
         rawPassport.setCreatedTime(LocalDateTime.now());
         Passport passport = passportRepository.save(rawPassport);
 
         Datasheet datasheet = new Datasheet();
-        datasheet.setData(datasheetData);
-        datasheet.setDictionary(dictionary);
-        datasheet.setData(datasheetData);
-        datasheet.setCreatedBy("OCTest");
-        datasheet.setCreatedTime(LocalDateTime.now());
+        datasheet.setData(dataSheetData);
+        datasheet.setDataCategory(null);
+        datasheet.setCreatedBy(data.getCreatedBy());
+        datasheet.setCreatedTime(data.getCreatedTime());
         datasheetRepository.save(datasheet);
 
         PassportDatasheetMapping passportDatasheet = new PassportDatasheetMapping();
@@ -111,12 +117,34 @@ public class PassportService {
     public PassportDto getPassport(String id, boolean includeChildren)
             throws JsonProcessingException {
         Optional<Passport> optionalPassport = passportRepository.findPassport(id);
-        if (optionalPassport.isEmpty() || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
-            throw new HttpServerErrorException(HttpStatusCode.valueOf(404), "No active passport found");
+        if (optionalPassport.isEmpty()
+                || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
+            throw new HttpServerErrorException(HttpStatusCode.valueOf(404),
+                    "No active passport found");
         }
 
-        // @TODO implement includeChildren
-        return PassportDto.from(optionalPassport.get());
+         return PassportDto.from(optionalPassport.get());
+    }
+    
+    /**
+     * Retrieves active passport.
+     *
+     * @param id
+     * @return Passport DTO from passport
+     */
+    public List<PassportDto> getPassportWithChildren(String id)
+            throws JsonProcessingException {
+
+            Optional<List<Passport>> optionalPassportList = passportRepository.findActivePassportWithDescendant(id);
+
+            if (optionalPassportList.isEmpty() || optionalPassportList.get().isEmpty()) {
+                throw new HttpServerErrorException(HttpStatus.NOT_FOUND, "No active passports found with descendants");
+            }
+
+            return optionalPassportList.get().stream()
+                    .map(PassportDto::from)
+                    .collect(Collectors.toList());
+
     }
 
     /**
@@ -129,4 +157,9 @@ public class PassportService {
             throws JsonValidationException {
         dictionaryAdapterFactory.getAdapter(dictionary).validatePassportData(passportData);
     }
+    
+
+
+
+
 }

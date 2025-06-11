@@ -41,9 +41,11 @@ public class Datasheet {
     /**
      * Data category (Unique or Generic).
      */
-    @Column(name = "dictionary")
+    @Column(name = "dataCategory")
     @Enumerated(EnumType.STRING)
-    private DataDictionary dictionary;
+    private DataCategory dataCategory;
+    
+
 
     /**
      * User who created the datasheet.
@@ -62,5 +64,25 @@ public class Datasheet {
      */
     @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PassportDatasheetMapping> datasheetMappings;
+    
+    public enum DataCategory {
+        GENERIC("generic"),
+        UNIQUE("unique");
+
+        private final String value;
+
+        DataCategory(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
 
 }

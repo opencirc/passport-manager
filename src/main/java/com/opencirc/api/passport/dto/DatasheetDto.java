@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-
-import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.Datasheet.DataCategory;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,7 +37,8 @@ public class DatasheetDto {
      * Data category (Unique or Generic).
      */
     @JsonProperty
-    private DataDictionary dictionary;
+    private DataCategory dataCategory;
+    
 
     /**
      * User who created the datasheet.
@@ -55,7 +56,7 @@ public class DatasheetDto {
         DatasheetDto datasheetDto = new DatasheetDto();
         datasheetDto.id = datasheet.getId();
         datasheetDto.data = datasheet.getData();
-        datasheetDto.dictionary = datasheet.getDictionary();
+        datasheetDto.dataCategory = datasheet.getDataCategory();
         datasheetDto.createdBy = datasheet.getCreatedBy();
         datasheetDto.createdTime = datasheet.getCreatedTime();
         return datasheetDto;

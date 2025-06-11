@@ -226,7 +226,6 @@ public class BsDDAdapter implements DictionaryAdapter {
             throws JsonValidationException {
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();
-        template.put("templateName", "");
         template.put("dataCategory", "");
 
         for (String uri : uriList) {
