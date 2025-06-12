@@ -21,14 +21,11 @@ public interface PassportRepository
      *
      * @return passports
      */
-    @Query(value = "SELECT pe.id as passportId, pe.name as peName, "
-            + "ds.id as datasheetId, ds.template_entry as templateEntry,"
-            + "ds.data_category as dataCategory FROM Passport pe "
-            + "JOIN datasheet_mapping pdm ON pe.id = pdm.passport_id "
-            + "JOIN datasheet ds ON pdm.datasheet_id = ds.id "
-            + "WHERE pe.id = :id "
-            + "AND pe.status = :status", nativeQuery = true)
-    Optional<Passport> findPassport(@Param("id") String id);
+    @Query("SELECT p FROM Passport p " +
+            "LEFT JOIN FETCH p.datasheetMappings dm " +
+            "LEFT JOIN FETCH dm.datasheet " +
+            "WHERE p.id = :id AND p.status = :status")
+    Optional<Passport> findPassport(@Param("id") String id, @Param("status") Passport.Status status);
 
     /**
      * Retrieves passport with its children.
@@ -40,23 +37,23 @@ public interface PassportRepository
     @Query(value = """
             WITH RECURSIVE PassportTree AS (
                 SELECT pe.id, pe.name, pe.status, pe.parent_id
-                FROM Passport pe
+                FROM passports pe
                 WHERE pe.id = :id
 
                 UNION ALL
 
                 SELECT child.id, child.name, child.status, child.parent_id
-                FROM Passport child
+                FROM passports child
                 INNER JOIN PassportTree parent ON child.parent_id = parent.id
             )
             SELECT pt.id AS passportId,
                    pt.name AS passportName,
                    ds.id AS datasheetId,
-                   ds.template_entry AS templateEntry
+                   ds.data AS data,
                    ds.data_category AS dataCategory
             FROM PassportTree pt
-            JOIN datasheet_mapping pdm ON pt.id = pdm.passport_id
-            JOIN datasheet ds ON pdm.datasheet_id = ds.id
+            JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
+            JOIN datasheets ds ON pdm.datasheet_id = ds.id
             WHERE pt.status = 'active'
             """, nativeQuery = true)
     Optional<List<Passport>> findActivePassportWithDescendant(

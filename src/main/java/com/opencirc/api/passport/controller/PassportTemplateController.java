@@ -47,7 +47,7 @@ public class PassportTemplateController {
                     + "template for future retrieval")
             @RequestBody(required = false) String templateName) throws JsonProcessingException {
         return ResponseEntity.ok(passportTemplateService.createTemplateFromPassport(
-                passportId, dryRun, templateName));
+                passportId, dryRun));
     }
 
 

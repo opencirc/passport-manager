@@ -49,16 +49,16 @@ public class PassportController {
      */
     @Operation(summary = "Creates Passport and validates it")
     @PostMapping(value = "/api/passport-entity/dictionary/{dictionary}/", produces = {
-            "application/text" }, consumes = { "application/json" })
+            "application/json" }, consumes = { "application/json" })
     public ResponseEntity<PassportDto> createPassportUsingDictionary(
             @io.swagger.v3.oas.annotations.parameters.RequestBody
-            (description = "JSON template retrieved from external APIs, "
+            (description = "    JSON template retrieved from external APIs, "
                     + "populated with actual data to create the Passport")
             @RequestBody CreatePassportRequestDto data,
             @Parameter(description = "Dictionary", required = true, in = ParameterIn.PATH)
-            @PathVariable String dictionaryName) // @TODO this should be a DataDictionary
+            @PathVariable("dictionary") String dictionaryName)
                     throws InvalidInputException, JsonValidationException {
-        return ResponseEntity.ok(passportService.createPassportUsingDictionary(DataDictionary.valueOf(dictionaryName), data));
+        return ResponseEntity.ok(passportService.createPassportUsingDictionary(DataDictionary.fromValue(dictionaryName), data));
     }
 
     /**

@@ -1,8 +1,20 @@
 package com.opencirc.api.passport.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
@@ -11,13 +23,6 @@ import com.opencirc.api.passport.dao.PassportTemplateRepository;
 import com.opencirc.api.passport.dto.PassportTemplateDto;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PassportTemplateService {
@@ -60,14 +65,13 @@ public class PassportTemplateService {
      * @param templateName
      * @return the template in json format
      */
-    public PassportTemplateDto createTemplateFromPassport(String passportId, boolean dryRun,
-                                                     String templateName) throws JsonMappingException, JsonProcessingException {
+    public PassportTemplateDto createTemplateFromPassport(String passportId, boolean dryRun) throws JsonMappingException, JsonProcessingException {
         Optional<Passport> passport = passportRepository.findPassport(passportId);
         if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.ACTIVE) {
             throw new HttpServerErrorException(HttpStatusCode.valueOf(404), "Active passport found");
         }
 
-        PassportTemplate rawExtractedTemplate = generateTemplateFromPassport(passport.get(), templateName);
+        PassportTemplate rawExtractedTemplate = generateTemplateFromPassport(passport.get());
         PassportTemplate extractedTemplate = dryRun ? rawExtractedTemplate : passportTemplateRepository.save(rawExtractedTemplate);
         return PassportTemplateDto.from(extractedTemplate);
     }
@@ -78,9 +82,41 @@ public class PassportTemplateService {
      * @param passport
      * @return the template in JSON format
      */
-    private PassportTemplate generateTemplateFromPassport(Passport passport, String name) {
+    private PassportTemplate generateTemplateFromPassport(Passport passport) {
         PassportTemplate template = new PassportTemplate();
-        // @TODO this method should be reimplemented
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+        rootNode.put("templateName", "");  
+        rootNode.put("dataCategory", "");
+
+        ArrayNode propertiesNode = mapper.createArrayNode();
+        JsonNode datasheetsNode = mapper.valueToTree(passport.getDatasheetMappings());
+
+        if (datasheetsNode.isArray()) {
+            for (JsonNode datasheet : datasheetsNode) {
+                if ("unique".equalsIgnoreCase(datasheet.path("dataCategory").asText())) {
+                    continue;
+                }
+
+                JsonNode propertiesArray = datasheet.get("properties");
+                if (propertiesArray != null && propertiesArray.isArray()) {
+                    for (JsonNode property : propertiesArray) {
+                        if (property.has("actualValue")) {
+                            ((ObjectNode) property).put("actualValue", "");
+                        }
+                    }
+                    propertiesNode.addAll((ArrayNode) propertiesArray);
+                }
+            }
+        }
+
+        rootNode.set("properties", propertiesNode);
+        template = PassportTemplate.builder()
+                .name(null)
+                .template(rootNode)
+                .createdBy(passport.getCreatedBy())
+                .createdTime(LocalDateTime.now())
+                .build();
         return template;
     }
 

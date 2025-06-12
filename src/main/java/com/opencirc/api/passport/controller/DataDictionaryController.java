@@ -49,11 +49,11 @@ public class DataDictionaryController {
     public List<Map<String, String>> searchClass(
             @Parameter(description = "The dictionary",
                     required = true)
-            @PathVariable String dictionaryName,
+            @PathVariable("dictionary") String dictionaryName,
             @Parameter(description = "The text to search for",
                     required = true)
             @PathVariable String query) {
-        return dataDictionaryService.searchClassesByText(DataDictionary.valueOf(dictionaryName), query);
+        return dataDictionaryService.searchClassesByText(DataDictionary.fromValue(dictionaryName), query);
     }
 
     /**
@@ -69,7 +69,7 @@ public class DataDictionaryController {
             "application/json" })
     public JsonNode getClass(
             @Parameter(description = "Name of dictionary", required = true, example = "bsdd", in = ParameterIn.PATH)
-            @PathVariable String dictionaryName,
+            @PathVariable("dictionary") String dictionaryName,
             @Parameter(description = "URI for the classification",
             example = "https://identifier.buildingsmart.org/uri/"
                     + "molio/cciconstruction/1.0/class/A-A__")
@@ -77,7 +77,7 @@ public class DataDictionaryController {
             @Parameter(description = "Whether to return the class with properties", example = "bsdd", in = ParameterIn.QUERY)
             @RequestParam Boolean withProperties)
             throws JsonValidationException, JsonProcessingException {
-        return dataDictionaryService.createClassTemplate(DataDictionary.valueOf(dictionaryName), classUri, withProperties);
+        return dataDictionaryService.createClassTemplate(DataDictionary.fromValue(dictionaryName), classUri, withProperties);
     }
 
     /**
@@ -93,7 +93,7 @@ public class DataDictionaryController {
     public List<Map<String, String>> listProperties(
             @Parameter(description = "The dictionary",
                     required = true, example = "bsdd")
-            @PathVariable String dictionaryName,
+            @PathVariable("dictionary") String dictionaryName,
             @Parameter(description = "The text to search for",
                     required = true)
             @PathVariable String query) {
@@ -114,7 +114,7 @@ public class DataDictionaryController {
             "application/json" }, consumes = { "application/json" })
     public JsonNode createTemplateWithProperties(
             @Parameter(description = "Name of library", required = true, example = "bsdd")
-            @PathVariable String dictionaryName,
+            @PathVariable("dictionary") String dictionaryName,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description =
             "List of Property URI", required = true)
             @RequestBody List<String> propertiesUriList)

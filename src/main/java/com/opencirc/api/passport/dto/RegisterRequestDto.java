@@ -1,5 +1,9 @@
 package com.opencirc.api.passport.dto;
 
+import java.time.LocalDateTime;
+
+import org.springframework.cglib.core.Local;
+
 import com.opencirc.api.passport.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,7 +32,17 @@ public class RegisterRequestDto {
     private String password;
 
     /**
-     * Email.
+     * Role.
      */
     private User.Role role;
+    
+    /**
+     * Created by.
+     */
+    private String createdBy;
+    
+    /**
+     * Created time.
+     */
+    private LocalDateTime createdTime;
 }

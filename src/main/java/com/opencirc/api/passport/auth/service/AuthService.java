@@ -74,11 +74,11 @@ public class AuthService {
 
         user.setUsername(registerUser.getUsername());
         user.setPassword(registerUser.getPassword());
-        user.setRole(User.Role.USER);
+        user.setRole(registerUser.getRole());
         user.setEmail(registerUser.getEmail());
         user.setActive(true);
-        user.setCreatedBy("test");
-        user.setCreatedTime(LocalDateTime.now());
+        user.setCreatedBy(registerUser.getCreatedBy());
+        user.setCreatedTime(registerUser.getCreatedTime());
 
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new AuthenticationException(AppConstants.ERR_USERNAME_EXISTS);

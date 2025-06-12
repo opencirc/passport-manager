@@ -79,9 +79,11 @@ public class PassportDto {
         dto.setCreatedBy(passport.getCreatedBy());
         dto.setCreatedTime(passport.getCreatedTime());
 
-        dto.setDatasheets(passport.getDatasheetMappings().stream()
-            .map((datasheetMapping) -> DatasheetDto.from(datasheetMapping.getDatasheet()))
-            .collect(Collectors.toList()));
+        if (passport.getDatasheetMappings() != null) {
+            dto.setDatasheets(passport.getDatasheetMappings().stream()
+                .map(mapping -> DatasheetDto.from(mapping.getDatasheet()))
+                .collect(Collectors.toList()));
+        }
 
         return dto;
     }

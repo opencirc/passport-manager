@@ -1,7 +1,7 @@
 package com.opencirc.api.passport.service;
 
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,7 +14,6 @@ import org.springframework.web.client.HttpServerErrorException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.DatasheetRepository;
@@ -98,13 +97,16 @@ public class PassportService {
         datasheet.setDataCategory(null);
         datasheet.setCreatedBy(data.getCreatedBy());
         datasheet.setCreatedTime(data.getCreatedTime());
-        datasheetRepository.save(datasheet);
+        datasheet = datasheetRepository.save(datasheet);
 
         PassportDatasheetMapping passportDatasheet = new PassportDatasheetMapping();
         passportDatasheet.setPassport(rawPassport);
         passportDatasheet.setDatasheet(datasheet);
-        passportDatasheetMappingRepository.save(passportDatasheet);
-
+        PassportDatasheetMapping passportDatasheetMapping = passportDatasheetMappingRepository.save(passportDatasheet);
+        passport.setDatasheetMappings(new ArrayList<>());
+        passport.getDatasheetMappings().add(passportDatasheetMapping);
+        
+        
         return PassportDto.from(passport);
     }
 
@@ -116,7 +118,8 @@ public class PassportService {
      */
     public PassportDto getPassport(String id, boolean includeChildren)
             throws JsonProcessingException {
-        Optional<Passport> optionalPassport = passportRepository.findPassport(id);
+        
+        Optional<Passport> optionalPassport = passportRepository.findPassport(id, Passport.Status.ACTIVE);
         if (optionalPassport.isEmpty()
                 || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
             throw new HttpServerErrorException(HttpStatusCode.valueOf(404),
