@@ -1,17 +1,19 @@
 package com.opencirc.api.passport.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.Passport;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -86,5 +88,52 @@ public class PassportDto {
         }
 
         return dto;
+    }
+    
+    public static PassportDto from(Object[] result) {
+        PassportDto dto = new PassportDto();
+
+        dto.setId((String) result[0]);
+        dto.setName((String) result[1]);
+        dto.setStatus(Passport.Status.valueOf((String) result[5]));
+        
+
+        dto.setCreatedBy((String) result[7]);  
+        dto.setCreatedTime(((java.sql.Timestamp) result[8]).toLocalDateTime());
+
+
+        List<DatasheetDto> datasheets = new ArrayList<>();
+
+        DatasheetDto datasheetDto = new DatasheetDto();
+        datasheetDto.setId((Long) result[2]);
+        datasheetDto.setDataCategory(null); 
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonData = (String) result[3];
+            if (jsonData != null) {
+                JsonNode jsonNode = mapper.readTree(jsonData);
+                datasheetDto.setData(jsonNode);
+            }
+        } catch (JsonProcessingException e) {
+            datasheetDto.setData(null);
+        }
+
+        if (result[4] != null) {
+            String categoryStr = ((String) result[4]).toUpperCase();
+            try {
+                datasheetDto.setDataCategory(Datasheet.DataCategory.valueOf(categoryStr));
+            } catch (IllegalArgumentException e) {
+                datasheetDto.setDataCategory(null);
+            }
+        } else {
+            datasheetDto.setDataCategory(null);
+        }
+
+        datasheets.add(datasheetDto);
+        dto.setDatasheets(datasheets);
+
+        return dto;
+
     }
 }

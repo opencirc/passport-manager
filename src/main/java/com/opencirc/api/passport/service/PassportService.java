@@ -2,9 +2,10 @@ package com.opencirc.api.passport.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -138,17 +139,37 @@ public class PassportService {
     public List<PassportDto> getPassportWithChildren(String id)
             throws JsonProcessingException {
 
-            Optional<List<Passport>> optionalPassportList = passportRepository.findActivePassportWithDescendant(id);
+        Optional<List<Object[]>> optionalPassportList = passportRepository.findActivePassportWithDescendant(id);
 
             if (optionalPassportList.isEmpty() || optionalPassportList.get().isEmpty()) {
                 throw new HttpServerErrorException(HttpStatus.NOT_FOUND, "No active passports found with descendants");
             }
+            List<Object[]> rows = optionalPassportList.get();
 
-            return optionalPassportList.get().stream()
-                    .map(PassportDto::from)
-                    .collect(Collectors.toList());
+            List<PassportDto> passportDtos = new ArrayList<>();
+            Map<String, PassportDto> dtoById = new HashMap<>();
+
+            for (Object[] row : rows) {
+                PassportDto dto = PassportDto.from(row);
+                passportDtos.add(dto);
+                dtoById.put(dto.getId(), dto);
+            }
+
+            for (int i = 0; i < rows.size(); i++) {
+                Object[] row = rows.get(i);
+                String parentId = (String) row[6];
+                if (parentId != null) {
+                    PassportDto childDto = passportDtos.get(i);
+                    PassportDto parentDto = dtoById.get(parentId);
+                    childDto.setParent(parentDto);
+                }
+            }
+
+            return passportDtos;
 
     }
+    
+ 
 
     /**
      * Validate the passport, throw if there is an error

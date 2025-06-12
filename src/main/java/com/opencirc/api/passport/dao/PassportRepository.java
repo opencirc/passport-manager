@@ -36,13 +36,13 @@ public interface PassportRepository
      */
     @Query(value = """
             WITH RECURSIVE PassportTree AS (
-                SELECT pe.id, pe.name, pe.status, pe.parent_id
+                SELECT pe.id, pe.name, pe.status, pe.parent_id, pe.created_by, pe.created_time
                 FROM passports pe
                 WHERE pe.id = :id
 
                 UNION ALL
 
-                SELECT child.id, child.name, child.status, child.parent_id
+                SELECT child.id, child.name, child.status, child.parent_id, child.created_by, child.created_time
                 FROM passports child
                 INNER JOIN PassportTree parent ON child.parent_id = parent.id
             )
@@ -50,13 +50,17 @@ public interface PassportRepository
                    pt.name AS passportName,
                    ds.id AS datasheetId,
                    ds.data AS data,
-                   ds.data_category AS dataCategory
+                   ds.data_category AS dataCategory,
+                   pt.status AS status,
+                   pt.parent_id AS parentId,
+                   pt.created_by AS createdBy,
+                   pt.created_time AS createdTime
             FROM PassportTree pt
             JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
             JOIN datasheets ds ON pdm.datasheet_id = ds.id
-            WHERE pt.status = 'active'
+            WHERE pt.status = 'ACTIVE'
             """, nativeQuery = true)
-    Optional<List<Passport>> findActivePassportWithDescendant(
+    Optional<List<Object[]>> findActivePassportWithDescendant(
             @Param("id") String id);
 
     /**
