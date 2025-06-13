@@ -24,12 +24,26 @@ public class CreatePassportRequestDto {
      * Formed Template in JSON format.
      */
     @JsonProperty
-    private JsonNode dataSheetData;
-    
+    private JsonNode datasheetData;
+
+    /**
+     * Data Category (Generic/Unique).
+     */
+    private String dataCategory;
+
+    /**
+     * Name of the passport.
+     */
     private String passportName;
-    
+
+    /**
+     * Created By.
+     */
     private String createdBy;
-    
+
+    /**
+     * Time of creation.
+     */
     private LocalDateTime createdTime;
-    
+
 }

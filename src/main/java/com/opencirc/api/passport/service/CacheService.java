@@ -54,9 +54,8 @@ public class CacheService {
      * @param searchText
      * @return list of data
      */
-    public List<Map<String, String>> searchProperties(DataDictionary dictionary, String searchText) {
-
-        // (dictionary);
+    public List<Map<String, String>> searchProperties(DataDictionary dictionary,
+            String searchText) {
 
         List<Map<String, String>> propertyList = new ArrayList<>();
         String pattern = "(?i).*" + searchText + ".*";

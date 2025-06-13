@@ -3,7 +3,6 @@ package com.opencirc.api.passport.model;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.util.JsonNodeConverter;
 
 import jakarta.persistence.Column;

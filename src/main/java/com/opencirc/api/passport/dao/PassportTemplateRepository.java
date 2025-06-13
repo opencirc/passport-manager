@@ -5,5 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PassportTemplateRepository
         extends JpaRepository<PassportTemplate, Long> {
+
+    /**
+     * Finds the template by id.
+     *
+     * @param id
+     * @return passport template
+     */
     PassportTemplate findFirstById(long id);
 }

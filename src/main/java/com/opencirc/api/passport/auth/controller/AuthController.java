@@ -35,7 +35,7 @@ public class AuthController {
     /**
      * Endpoint to register new user.
      *
-     * @param user details with username, email, password
+     * @param userDetails with username, email, password
      * @return response
      */
     @PostMapping("/register")

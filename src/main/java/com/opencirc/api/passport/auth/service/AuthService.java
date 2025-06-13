@@ -1,10 +1,5 @@
 package com.opencirc.api.passport.auth.service;
 
-import java.time.LocalDateTime;
-
-import com.opencirc.api.passport.auth.principal.UserPrincipal;
-import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,11 +11,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.dto.RegisterRequestDto;
+import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.service.JwtService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -191,7 +189,8 @@ public class AuthService {
     public void logout(String refreshToken, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
         Long userId = jwtService.extractUserId(refreshToken);
-        User existingUser = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User existingUser = userRepository.findById(userId).orElseThrow(()
+                -> new UsernameNotFoundException("User not found"));
         existingUser.setRefreshToken(null);
         userRepository.save(existingUser);
 

@@ -210,9 +210,9 @@ public class BsDDAdapter implements DictionaryAdapter {
         }
 
         ObjectNode rootObject = (ObjectNode) rootNode;
-        rootObject.put(AppConstants.TEMPLATE_NAME, "");
-        rootObject.put(AppConstants.DATA_CATEGORY_FIELD, "");
-        return rootObject;
+    //    rootObject.put(AppConstants.TEMPLATE_NAME, "");
+     //   rootObject.put(AppConstants.DATA_CATEGORY_FIELD, "");
+        return rootNode;
     }
 
     /**
@@ -226,7 +226,7 @@ public class BsDDAdapter implements DictionaryAdapter {
             throws JsonValidationException {
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();
-        template.put("dataCategory", "");
+      //  template.put("dataCategory", "");
 
         for (String uri : uriList) {
             System.out.println(uri);

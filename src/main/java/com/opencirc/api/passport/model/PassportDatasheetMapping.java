@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -38,6 +40,7 @@ public class PassportDatasheetMapping {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "passport_id", referencedColumnName = "id")
+    @JsonBackReference
     private Passport passport;
 
     /**

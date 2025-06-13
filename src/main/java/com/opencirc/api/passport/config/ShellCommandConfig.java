@@ -44,7 +44,8 @@ public class ShellCommandConfig {
      * @param dataDictionaryController
      */
     @Autowired
-    public ShellCommandConfig(ObjectMapper objectMapper, DataDictionaryController dataDictionaryController) {
+    public ShellCommandConfig(ObjectMapper objectMapper,
+            DataDictionaryController dataDictionaryController) {
         this.objectMapper = objectMapper;
         this.dataDictionaryController = dataDictionaryController;
     }
@@ -69,9 +70,11 @@ public class ShellCommandConfig {
             }
 
             if (raw) {
-                return generateRawTemplate(DataDictionary.valueOf(dictionary.toUpperCase()), uri, type);
+                return generateRawTemplate(DataDictionary
+                        .valueOf(dictionary.toUpperCase()), uri, type);
             } else {
-                return generateProcessedTemplate(DataDictionary.valueOf(dictionary.toUpperCase()), uri, type);
+                return generateProcessedTemplate(DataDictionary
+                        .valueOf(dictionary.toUpperCase()), uri, type);
             }
         } catch (Exception e) {
             return "Error fetching template: " + e.getMessage();
@@ -83,11 +86,13 @@ public class ShellCommandConfig {
             throws JsonValidationException, JsonProcessingException {
         JsonNode response = null;
         if ("class".equalsIgnoreCase(type)) {
-            response = dataDictionaryController.getClass(dictionary.getValue(), uri, true);
+            response = dataDictionaryController.getClass(dictionary.getValue(),
+                    uri, true);
         } else if ("property".equalsIgnoreCase(type)) {
             List<String> uriList = new ArrayList<String>();
             uriList.add(uri);
-            response = dataDictionaryController.createTemplateWithProperties(dictionary.getValue(), uriList);
+            response = dataDictionaryController
+                    .createTemplateWithProperties(dictionary.getValue(), uriList);
         }
         return formatJsonResponse(response);
     }

@@ -133,7 +133,7 @@ public class ExternalApiService {
             rootObject = (ObjectNode) rootNode;
 
             // Add new field at class level
-            rootObject.put("dataCategory", "");
+       //     rootObject.put("dataCategory", "");
 
             ArrayNode classProperties = (ArrayNode) rootObject
                     .get("classProperties");
@@ -174,7 +174,7 @@ public class ExternalApiService {
 
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();
-        template.put("dataCategory", "");
+    //    template.put("dataCategory", "");
 
         for (Map.Entry<String, String> entry : properties.entrySet()) {
 

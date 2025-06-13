@@ -9,4 +9,13 @@ public class InvalidInputException extends RuntimeException {
     public InvalidInputException(String message) {
         super(message);
     }
+
+    /**
+     * JsonValidationException with message and cause.
+     * @param message
+     * @param cause
+     */
+    public InvalidInputException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

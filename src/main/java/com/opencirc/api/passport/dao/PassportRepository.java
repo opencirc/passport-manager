@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.model.PassportDatasheetResultMap;
 
 public interface PassportRepository
         extends JpaRepository<Passport, String> {
@@ -18,14 +19,15 @@ public interface PassportRepository
      * Retrieves passport.
      *
      * @param id
-     *
+     * @param status
      * @return passports
      */
-    @Query("SELECT p FROM Passport p " +
-            "LEFT JOIN FETCH p.datasheetMappings dm " +
-            "LEFT JOIN FETCH dm.datasheet " +
-            "WHERE p.id = :id AND p.status = :status")
-    Optional<Passport> findPassport(@Param("id") String id, @Param("status") Passport.Status status);
+    @Query("SELECT p FROM Passport p "
+            + "LEFT JOIN FETCH p.datasheetMappings dm "
+            + "LEFT JOIN FETCH dm.datasheet "
+            + "WHERE p.id = :id AND p.status = :status")
+    Optional<Passport> findPassport(@Param("id") String id,
+            @Param("status") Passport.Status status);
 
     /**
      * Retrieves passport with its children.
@@ -36,13 +38,15 @@ public interface PassportRepository
      */
     @Query(value = """
             WITH RECURSIVE PassportTree AS (
-                SELECT pe.id, pe.name, pe.status, pe.parent_id, pe.created_by, pe.created_time
+                SELECT pe.id, pe.name, pe.status, pe.parent_id, pe.created_by,
+                pe.created_time
                 FROM passports pe
                 WHERE pe.id = :id
 
                 UNION ALL
 
-                SELECT child.id, child.name, child.status, child.parent_id, child.created_by, child.created_time
+                SELECT child.id, child.name, child.status, child.parent_id,
+                child.created_by, child.created_time
                 FROM passports child
                 INNER JOIN PassportTree parent ON child.parent_id = parent.id
             )
@@ -60,7 +64,7 @@ public interface PassportRepository
             JOIN datasheets ds ON pdm.datasheet_id = ds.id
             WHERE pt.status = 'ACTIVE'
             """, nativeQuery = true)
-    Optional<List<Object[]>> findActivePassportWithDescendant(
+    Optional<List<PassportDatasheetResultMap>> findActivePassportDescendant(
             @Param("id") String id);
 
     /**

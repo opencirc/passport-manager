@@ -2,7 +2,18 @@ package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.enums.DataDictionary;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,10 +52,16 @@ public class Datasheet {
     /**
      * Data category (Unique or Generic).
      */
-    @Column(name = "dataCategory")
+    @Column(name = "data_category")
     @Enumerated(EnumType.STRING)
     private DataCategory dataCategory;
-    
+
+    /**
+     * Name of the data dictionary from which template is fetched.
+     */
+    @Column(name = "data_dictionary")
+    @Enumerated(EnumType.STRING)
+    private DataDictionary dataDictionary;
 
 
     /**
@@ -64,25 +81,55 @@ public class Datasheet {
      */
     @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PassportDatasheetMapping> datasheetMappings;
-    
+
+    /**
+     * Enum representing the category of a data.
+     */
     public enum DataCategory {
+
+        /**
+         * Generic datasheet.
+         */
         GENERIC("generic"),
+
+        /**
+         * Unique datasheet.
+         */
         UNIQUE("unique");
 
+        /**
+         * Data category value in string.
+         */
         private final String value;
 
-        DataCategory(String value) {
-            this.value = value;
+        /**
+         * Constructs a DataCategory enum with the specified string value.
+         *
+         * @param category the string representation of the category
+         */
+        DataCategory(String category) {
+            this.value = category;
         }
 
+        /**
+         * Gets the string value of the data category.
+         *
+         * @return the data category as a string
+         */
         public String getValue() {
             return value;
         }
 
+        /**
+         * Returns the string representation of the data category.
+         *
+         * @return the data category as a string
+         */
         @Override
         public String toString() {
             return value;
         }
     }
+
 
 }

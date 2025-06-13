@@ -2,7 +2,14 @@ package com.opencirc.api.passport.model;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -75,23 +82,53 @@ public class User {
     @Column(name = "created_time", updatable = false)
     private LocalDateTime createdTime;
 
+    /**
+     * Enum representing the roles.
+     */
     public enum Role {
+
+        /**
+         * Administrator role.
+         */
         ADMIN("admin"),
+
+        /**
+         * Standard user role.
+         */
         USER("user");
 
+        /**
+         * Role represented in STring.
+         */
         private final String value;
 
+        /**
+         * Constructs a Role enum with the specified string value.
+         *
+         * @param value
+         */
         Role(String value) {
             this.value = value;
         }
 
+        /**
+         * Returns the string value of the role.
+         *
+         * @return the role
+         */
         public String getValue() {
             return value;
         }
 
+        /**
+         * Returns the string representation of the role.
+         *
+         * @return the role as a string
+         */
         @Override
         public String toString() {
             return value;
         }
     }
+
 }
