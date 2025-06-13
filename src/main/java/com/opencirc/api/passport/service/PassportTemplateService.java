@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +21,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dao.PassportTemplateRepository;
 import com.opencirc.api.passport.dto.PassportTemplateDto;
+import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import com.opencirc.api.passport.model.PassportTemplate;
 
 @Service
@@ -49,7 +52,7 @@ public class PassportTemplateService {
      * @return the template in json format
      */
     public PassportTemplateDto createTemplateFromPassport(String passportId,
-            boolean dryRun) throws JsonMappingException, JsonProcessingException {
+            boolean dryRun, String templateName, String userName) throws JsonMappingException, JsonProcessingException {
         Optional<Passport> passport = passportRepository.findPassport(passportId,
                 Passport.Status.ACTIVE);
         if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.ACTIVE) {
@@ -58,7 +61,7 @@ public class PassportTemplateService {
         }
 
         PassportTemplate rawExtractedTemplate = generateTemplateFromPassport(
-                passport.get());
+                passport.get(), templateName, userName);
         PassportTemplate extractedTemplate = dryRun ? rawExtractedTemplate
                 : passportTemplateRepository.save(rawExtractedTemplate);
         return PassportTemplateDto.from(extractedTemplate);
@@ -70,38 +73,45 @@ public class PassportTemplateService {
      * @param passport
      * @return the template in JSON format
      */
-    private PassportTemplate generateTemplateFromPassport(Passport passport) {
+    private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName, String userName) {
         PassportTemplate template = new PassportTemplate();
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
         ArrayNode propertiesNode = mapper.createArrayNode();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        JsonNode datasheetsNode = mapper.valueToTree(passport.getDatasheetMappings());
-
-        if (datasheetsNode.isArray()) {
-            for (JsonNode datasheet : datasheetsNode) {
-                if ("unique".equalsIgnoreCase(datasheet.path("dataCategory").asText())) {
-                    continue;
-                }
-
-                JsonNode propertiesArray = datasheet.get("properties");
-                if (propertiesArray != null && propertiesArray.isArray()) {
-                    for (JsonNode property : propertiesArray) {
-                        if (property.has("actualValue")) {
-                            ((ObjectNode) property).put("actualValue", "");
-                        }
+        
+        for(PassportDatasheetMapping passportDatasheetMapping : passport.getDatasheetMappings()) {
+            Datasheet datasheet = passportDatasheetMapping.getDatasheet();
+            
+            if (datasheet.getDataCategory() == Datasheet.DataCategory.UNIQUE) {
+                continue;
+            }
+            
+            JsonNode dataNode = datasheet.getData();
+            JsonNode propertiesArray = null;
+            
+            if (dataNode.has("properties") && dataNode.get("properties").isArray()) {
+                propertiesArray = dataNode.get("properties");
+            } else if (dataNode.has("classProperties") && dataNode.get("classProperties").isArray()) {
+                propertiesArray = dataNode.get("classProperties");
+            }
+            
+            if (propertiesArray != null) {
+                for (JsonNode property : propertiesArray) {
+                    if (property.has("actualValue")) {
+                        ((ObjectNode) property).put("actualValue", "");
                     }
-                    propertiesNode.addAll((ArrayNode) propertiesArray);
                 }
+                propertiesNode.addAll((ArrayNode) propertiesArray);
             }
         }
-
+        
         rootNode.set("properties", propertiesNode);
+        
+        
         template = PassportTemplate.builder()
-                .name(null)
+                .name(templateName)
                 .template(rootNode)
-                .createdBy(passport.getCreatedBy())
+                .createdBy(userName)
                 .createdTime(LocalDateTime.now())
                 .build();
         return template;
