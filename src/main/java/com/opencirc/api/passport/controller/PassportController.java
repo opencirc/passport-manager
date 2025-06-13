@@ -50,7 +50,7 @@ public class PassportController {
             "application/json" }, consumes = { "application/json" })
     public ResponseEntity<PassportDto> createPassportUsingDictionary(
             @io.swagger.v3.oas.annotations.parameters.RequestBody
-            (description = "    JSON template retrieved from external APIs, "
+            (description = "JSON template retrieved from external APIs, "
                     + "populated with actual data to create the Passport")
             @RequestBody CreatePassportRequestDto data,
             @Parameter(description = "Dictionary", required = true, in = ParameterIn.PATH)
