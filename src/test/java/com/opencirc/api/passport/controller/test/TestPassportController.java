@@ -1,41 +1,68 @@
 package com.opencirc.api.passport.controller.test;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
-import com.opencirc.api.passport.config.AppProperties;
-import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
+import com.opencirc.api.passport.dao.DatasheetRepository;
+import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
+import com.opencirc.api.passport.dao.PassportRepository;
+import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
+import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
+import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.Datasheet.DataCategory;
+import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.model.PassportDatasheetMapping;
+import com.opencirc.api.passport.service.PassportService;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import jakarta.servlet.http.Cookie;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 classes = PassportManager.class)
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class TestPassportController {
 
     /**
@@ -56,17 +83,21 @@ public class TestPassportController {
     @MockBean
     private AuthenticationManager authenticationManager;
 
-    /**
-     * RestTemplate bean.
-     */
+    
     @Autowired
-    private RestTemplate restTemplate;
+    private MockMvc mockMvc;
 
-    /**
-     * AppProperties bean.
-     */
-    @Autowired
-    private AppProperties props;
+    @MockBean
+    private PassportRepository passportRepository; 
+    
+    @MockBean
+    private DatasheetRepository datasheetRepository; 
+    
+    @MockBean
+    private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+    
+    @SpyBean
+    private PassportService passportService;
 
     /**
      * JWT token.
@@ -98,8 +129,6 @@ public class TestPassportController {
 
         generateMockJwtToken();
 
-        BsddMockStubHelper.stubGetClassApiResponse();
-
     }
 
     private void generateMockJwtToken() {
@@ -117,10 +146,12 @@ public class TestPassportController {
 
     /**
      * Tests the successful creation of a passport with valid JSON input.
+     * @throws JsonProcessingException 
+     * @throws JsonMappingException 
      */
     @Test
-    public void testCreatePassportSuccess() throws JsonValidationException {
-        String ddLibrary = "bsdd";
+    public void testCreatePassportSuccess() throws JsonValidationException, JsonMappingException, JsonProcessingException {
+        String dictionary = "bsdd";
         String jsonBody = """
                                 {
                     "classType": "Class",
@@ -129,8 +160,7 @@ public class TestPassportController {
                         "IfcSpace"
                     ],
                     "parentClassReference": {
-                        "uri": "https://identifier.buildingsmart.org/uri/molio/
-                        cciconstruction/1.0/class/uocs",
+                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/uocs",
                         "name": "Use of Construction Spaces",
                         "code": "uocs"
                     },
@@ -138,34 +168,70 @@ public class TestPassportController {
                         {
                             "dataType": "Boolean",
                             "name": "Handicap Accessible",
-                            "uri": "https://identifier.buildingsmart.org/uri/molio/
-                            cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/
-                            buildingsmart/ifc/4.3/prop/HandicapAccessible",
+                            "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
                             "actualValue": "true"
                         }
                     ],
-                    "definition": "space designed for human dwelling
-                    and related activities",
+                    "definition": "space designed for human dwelling and related activities",
                     "name": "Space for human dwelling",
-                    "uri": "https://identifier.buildingsmart.org/uri/molio/
-                    cciconstruction/1.0/class/A-A__",
+                    "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
                     "status": "Active",
                     "templateName": "testTemplate",
                     "dataCategory": "Unique"
                 }
                                 """;
-        BsddMockStubHelper.stubGetClassApiResponse();
+        ObjectMapper objectMapper = new ObjectMapper();
+        CreatePassportRequestDto createPassportRequest = new CreatePassportRequestDto();
+        createPassportRequest.setCreatedTime(LocalDateTime.now());
+        createPassportRequest.setDataCategory(DataCategory.GENERIC.getValue());
+        createPassportRequest.setDatasheetData(objectMapper.readTree(jsonBody));
+        createPassportRequest.setPassportName("Dwelling Space");
+        createPassportRequest.setCreatedBy("Test");
 
-        Response response = RestAssured.given().log().all()
-                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
-                .body(jsonBody).queryParam("dictionaryName", ddLibrary).when()
-                .post("/api/create-passport").then()
-                .statusCode(TestConstants.STATUS_SUCCESS).contentType("application/text")
-                .log().all().extract().response();
+        Passport mockPassport = new Passport();
+        mockPassport.setId("mock-passport-id");
+        mockPassport.setName("Dwelling Space");
+        mockPassport.setCreatedBy("Test");
+        mockPassport.setCreatedTime(LocalDateTime.now());
+        mockPassport.setStatus(Passport.Status.ACTIVE);
 
-        String responseBody = response.getBody().asString();
-        assertTrue(responseBody.equalsIgnoreCase("Data saved successfully"));
+        Datasheet mockDatasheet = new Datasheet();
+        mockDatasheet.setId(1);
+        mockDatasheet.setCreatedBy("Test");
+        mockDatasheet.setCreatedTime(LocalDateTime.now());
 
+        PassportDatasheetMapping mockMapping = new PassportDatasheetMapping();
+        mockMapping.setId(123L);
+        mockMapping.setPassport(mockPassport);
+        mockMapping.setDatasheet(mockDatasheet);
+
+        Mockito.when(passportRepository.save(Mockito.any(Passport.class)))
+               .thenReturn(mockPassport);
+
+        Mockito.when(datasheetRepository.save(Mockito.any(Datasheet.class)))
+               .thenReturn(mockDatasheet);
+
+        Mockito.when(passportDatasheetMappingRepository.save(Mockito.any(PassportDatasheetMapping.class)))
+               .thenReturn(mockMapping);
+
+        // Call the API
+        Response response = RestAssured.given()
+                .log().all()
+                .cookie("access_token", jwtToken)
+                .contentType(ContentType.JSON)
+                .body(createPassportRequest)
+                .pathParam("dictionary", dictionary)
+                .when()
+                .post("/api/passport-entity/dictionary/{dictionary}/")
+                .then()
+                .statusCode(HttpStatus.SC_SUCCESS)
+                .contentType(ContentType.JSON)
+                .log().all()
+                .extract().response();
+
+        // Assertions
+        response.then()
+            .body("name", equalTo("Dwelling Space"));
     }
 
     /**
@@ -175,20 +241,24 @@ public class TestPassportController {
     @Test
     public void testCreatePassportErrorEmptyJsonBody()
             throws JsonValidationException {
-        String ddLibrary = "bsdd";
-        String jsonBody = """
-                                {
+        String dictionary = "bsdd";
+        CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
+        requestDto.setCreatedTime(LocalDateTime.now());
+        requestDto.setCreatedBy("Test");
+        requestDto.setPassportName("Empty Passport");
 
-                 }
-                                """;
-        BsddMockStubHelper.stubGetClassApiResponse();
-
-        Response response = RestAssured.given().log().all()
-                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
-                .body(jsonBody).queryParam("dictionaryName", ddLibrary).when()
-                .post("/api/create-passport").then()
+        Response response = RestAssured.given()
+                .log().all()
+                .cookie("access_token", jwtToken)
+                .contentType(ContentType.JSON)
+                .body(requestDto)
+                .pathParam("dictionary", dictionary)
+                .when()
+                .post("/api/passport-entity/dictionary/{dictionary}/")
+                .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .log().all().extract().response();
+                .log().all()
+                .extract().response();
 
         String responseBody = response.getBody().asString();
         assertTrue(responseBody.contains("Input JSON node is null"));
@@ -199,155 +269,135 @@ public class TestPassportController {
     /**
      * Tests the behaviour of the createPassport method when an invalid
      * JSON body is provided.
+     * @throws JsonProcessingException 
+     * @throws JsonMappingException 
      */
     @Test
     public void testCreatePassportErrorInvalidJsonBody()
-            throws JsonValidationException {
-        String ddLibrary = "bsdd";
-        String jsonBody = """
-                                {
-                    "ABCDFWEREWRHIH":"ABCDFWEREWRHIH"
-                 }
-                                """;
-        BsddMockStubHelper.stubGetClassApiResponse();
+            throws JsonValidationException, JsonMappingException, JsonProcessingException {
+        String dictionary = "bsdd";
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode invalidNode = objectMapper.readTree("""
+            {
+                "ABCDFWEREWRHIH": "ABCDFWEREWRHIH"
+            }
+        """);
+        
+        CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
+        requestDto.setCreatedTime(LocalDateTime.now());
+        requestDto.setCreatedBy("Test");
+        requestDto.setPassportName("Invalid Passport");
+        requestDto.setDataCategory(DataCategory.GENERIC.getValue());
+        requestDto.setDatasheetData(invalidNode);
+        
 
-        Response response = RestAssured.given().log().all()
-                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
-                .body(jsonBody).queryParam("dictionaryName", ddLibrary).when()
-                .post("/api/create-passport").then()
+        Response response = RestAssured.given()
+                .log().all()
+                .cookie("access_token", jwtToken)
+                .contentType(ContentType.JSON)
+                .body(requestDto)
+                .pathParam("dictionary", dictionary)
+                .when()
+                .post("/api/passport-entity/dictionary/{dictionary}/")
+                .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .log().all().extract().response();
+                .log().all()
+                .extract().response();
 
         String responseBody = response.getBody().asString();
         assertTrue(responseBody.contains("Invalid Template"));
 
     }
-
-    /**
-     * Tests the successful update of a passport with valid input data.
-     */
+    
+    
     @Test
-    public void testUpdatePassportSuccess() throws JsonValidationException {
-        String passportId = "b33ruul55gzk0idd0kxvggyofmtjfdg8u1ka";
-        String jsonBody = """
-                                {
-                    "classType": "Class",
-                    "referenceCode": "A-A__",
-                    "relatedIfcEntityNames": [
-                        "IfcSpace"
-                    ],
-                    "parentClassReference": {
-                        "uri": "https://identifier.buildingsmart.org/uri/molio/
-                        cciconstruction/1.0/class/uocs",
-                        "name": "Use of Construction Spaces",
-                        "code": "uocs"
-                    },
-                    "classProperties": [
-                        {
-                            "dataType": "String",
-                            "name": "Handicap Accessible",
-                            "uri": "https://identifier.buildingsmart.org/uri/molio/
-                            cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/
-                            buildingsmart/ifc/4.3/prop/HandicapAccessible",
-                            "actualValue": "true"
-                        }
-                    ],
-                    "definition": "space designed for human dwelling and
-                    related activities",
-                    "name": "Space for human dwelling",
-                    "uri": "https://identifier.buildingsmart.org/uri/molio/
-                    cciconstruction/1.0/class/A-A__",
-                    "status": "Active",
-                    "templateName": "testTemplate",
-                    "dataCategory": "Unique"
-                }
-                                """;
-        BsddMockStubHelper.stubGetClassApiResponse();
+    public void testGetPassportSuccess() throws Exception {
 
-        Response response = RestAssured.given().log().all()
-                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
-                .body(jsonBody)
-                .queryParam("ddLibrary", "bsdd")
-                .queryParam("passportId", passportId).when()
-                .post("/api/passport/update/").then()
-                .statusCode(TestConstants.STATUS_SUCCESS).contentType("application/text")
-                .log().all().extract().response();
+        String passportId = "oqj4p875porh0vpuqj1vob2jqgym4b706oe9";
 
-        String responseBody = response.getBody().asString();
-        assertTrue(responseBody.equalsIgnoreCase("Successfully updated"));
+        Passport passport = new Passport();
+        passport.setId(passportId);
+        passport.setStatus(Passport.Status.ACTIVE);
+        passport.setName("Dwelling Space");
+        PassportDatasheetMapping dataSheetMapping = new PassportDatasheetMapping();
+        Datasheet datasheet = new Datasheet();
+        datasheet.setData(getDataSheetData());
+        dataSheetMapping.setDatasheet(datasheet);
+        dataSheetMapping.setPassport(passport);
+        dataSheetMapping.setId(1l);
+        passport.setDatasheetMappings(List.of(dataSheetMapping));
+
+        Mockito.when(passportRepository.findPassport(passportId, Passport.Status.ACTIVE))
+                .thenReturn(Optional.of(passport));
+
+        MvcResult result = mockMvc
+                .perform(MockMvcRequestBuilders.get("/api/passport/{id}/", passportId)
+                        .cookie(new Cookie("access_token", jwtToken))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(passportId))
+                .andExpect(jsonPath("$.name").value("Dwelling Space")).andReturn(); 
+
+        String responseBody = result.getResponse().getContentAsString();
+        System.out.println("Response JSON:\n" + responseBody);
 
     }
 
-    /**
-     * Tests the update operation when the specified passport is not found.
-     */
+    
     @Test
-    public void testUpdatePassportNotFound() {
-        String invalidPassportId = "123543534534";
-        String jsonBody = """
-                                {
-                    "classType": "Class",
-                    "referenceCode": "A-A__",
-                    "relatedIfcEntityNames": [
-                        "IfcSpace"
-                    ],
-                    "parentClassReference": {
-                        "uri": "https://identifier.buildingsmart.org/uri/molio/
-                        cciconstruction/1.0/class/uocs",
-                        "name": "Use of Construction Spaces",
-                        "code": "uocs"
-                    },
-                    "classProperties": [
-                        {
-                            "dataType": "String",
-                            "name": "Handicap Accessible",
-                            "uri": "https://identifier.buildingsmart.org/uri/molio/
-                            cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/
-                            buildingsmart/ifc/4.3/prop/HandicapAccessible",
-                            "actualValue": "true"
-                        }
-                    ],
-                    "definition": "space designed for human dwelling and related
-                    activities",
-                    "name": "Space for human dwelling",
-                    "uri": "https://identifier.buildingsmart.org/uri/
-                    molio/cciconstruction/1.0/class/A-A__",
-                    "status": "Active",
-                    "templateName": "testTemplate",
-                    "dataCategory": "Unique"
-                }
-                                """;
+    public void testGetPassportChildrenSuccess() throws Exception {
 
-        Response response = RestAssured.given().log().all()
-                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
-                .body(jsonBody)
-                .queryParam("ddLibrary", "bsdd")
-                .queryParam("passportId", invalidPassportId).when()
-                .post("/api/passport/update/").then()
-                .statusCode(TestConstants.STATUS_SUCCESS).contentType("application/text")
-                .log().all().extract().response();
+        String passportId = "oqj4p875porh0vpuqj1vob2jqgymchildren";
+        
+        List<PassportDatasheetResultMapDto> stubData = BsddMockStubHelper.createPassportChildrenStubData();
+        Mockito.when(passportRepository.findActivePassportDescendants(passportId))
+               .thenReturn(Optional.of(stubData));
+        
+        MvcResult result = mockMvc
+                .perform(MockMvcRequestBuilders.get("/api/passport/{id}/children", passportId)
+                        .cookie(new Cookie("access_token", jwtToken))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(passportId))
+                .andExpect(jsonPath("$[1].parent.id").value(passportId))
+                .andReturn(); 
 
-        assertEquals("passport is not available to update",
-                response.getBody().asString());
+        String responseBody = result.getResponse().getContentAsString();
+        System.out.println("Response JSON:\n" + responseBody);
+
     }
+    
+    
+    private JsonNode getDataSheetData() throws JsonMappingException, JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonBody = """
+                {
+            "id": 7,
+            "data": {
+                "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
+                "code": "A-A__",
+                "name": "Space for human dwelling",
+                "status": "Active",
+                "classType": "Class",
+                "classProperties": [
+                    {
+                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+                        "code": "HandicapAccessible",
+                        "name": "Handicap Accessible",
+                        "status": "Active",
+                        "dataType": "Boolean",
+                        "definition": "Indication that this object is designed to be accessible by the handicapped.",
+                        "actualValue": ""
+                    }
+                ]
+            },
+            "dataCategory": null,
+            "dataDictionary": null,
+            "createdBy": "abc@example.com",
+            "createdTime": "2025-06-10T12:00:00"
+        }
+                """;
 
-    /**
-     * Tests the update operation for a passport using invalid JSON input.
-     */
-    @Test
-    public void testUpdatePassportInvalidJson() {
-        String invalidJson = "{ \"classType\": \"sdas\" }";
-        String passportId = "b33ruul55gzk0idd0kxvggyofmtjfdg8u1ka";
+        return objectMapper.readTree(jsonBody);
 
-        Response response = RestAssured.given().log().all()
-                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
-                .body(invalidJson)
-                .queryParam("ddLibrary", "bsdd")
-                .queryParam("passportId", passportId).when()
-                .post("/api/passport/update/").then()
-                .statusCode(400)
-                .log().all().extract().response();
-        System.out.println(response.getBody().asString());
-        assertTrue(response.getBody().asString().contains("Invalid Template"));
     }
 }
