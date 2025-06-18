@@ -84,9 +84,19 @@ public class TestAuthController {
     @Test
     public void testLoginWithWrongCredentials() {
 
-        Response response = given().contentType(ContentType.JSON).body(
-                "{\"username\": \"user1d\", \"password\": \"wrongpassword\"}")
-                .when().post("/api/auth/login");
-        response.then().statusCode(TestConstants.STATUS_UNAUTHORIZED);
+        String invalidCredentials = """
+                {
+                    "username": "user1d",
+                    "password": "wrongpassword"
+                }
+                """;
+
+            given()
+                .contentType(ContentType.JSON)
+                .body(invalidCredentials)
+            .when()
+                .post("/api/auth/login")
+            .then()
+                .statusCode(TestConstants.STATUS_UNAUTHORIZED); 
     }
 }

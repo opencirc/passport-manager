@@ -1,6 +1,9 @@
 package com.opencirc.api.passport.model;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+
+import com.opencirc.api.passport.model.Passport.Status;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -128,6 +131,21 @@ public class User {
         @Override
         public String toString() {
             return value;
+        }
+        
+        /**
+         * Parses a string value to its corresponding enum.
+         *
+         * @param value the string value to convert
+         * @return the corresponding role
+         * @throws IllegalArgumentException
+         */
+        public static Role fromValue(String value) {
+            return Arrays.stream(Role.values())
+                    .filter(role -> role.value.equalsIgnoreCase(value))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Invalid Status: " + value));
         }
     }
 

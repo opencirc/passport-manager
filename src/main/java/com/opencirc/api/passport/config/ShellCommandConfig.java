@@ -3,8 +3,6 @@ package com.opencirc.api.passport.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.opencirc.api.passport.controller.DataDictionaryController;
-import com.opencirc.api.passport.enums.DataDictionary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
@@ -15,6 +13,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
+import com.opencirc.api.passport.controller.DataDictionaryController;
+import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.TemplateType;
 import com.opencirc.api.passport.exception.JsonValidationException;
 
 @ShellComponent
@@ -70,11 +71,9 @@ public class ShellCommandConfig {
             }
 
             if (raw) {
-                return generateRawTemplate(DataDictionary
-                        .valueOf(dictionary.toUpperCase()), uri, type);
+                return generateRawTemplate(DataDictionary.fromValue(dictionary), uri, type);
             } else {
-                return generateProcessedTemplate(DataDictionary
-                        .valueOf(dictionary.toUpperCase()), uri, type);
+                return generateProcessedTemplate(DataDictionary.fromValue(dictionary), uri, type);
             }
         } catch (Exception e) {
             return "Error fetching template: " + e.getMessage();
@@ -84,11 +83,11 @@ public class ShellCommandConfig {
     private String generateProcessedTemplate(DataDictionary dictionary, String uri,
             String type)
             throws JsonValidationException, JsonProcessingException {
-        JsonNode response = null;
-        if ("class".equalsIgnoreCase(type)) {
+        Object response = null;
+        if (type.equalsIgnoreCase(TemplateType.CLASS.getValue())) {
             response = dataDictionaryController.getClass(dictionary.getValue(),
                     uri, true);
-        } else if ("property".equalsIgnoreCase(type)) {
+        } else if (type.equalsIgnoreCase(TemplateType.PROPERTY.getValue())) {
             List<String> uriList = new ArrayList<String>();
             uriList.add(uri);
             response = dataDictionaryController
@@ -99,14 +98,14 @@ public class ShellCommandConfig {
 
     private String generateRawTemplate(DataDictionary dictionary, String uri, String type)
             throws JsonProcessingException {
-        DictionaryAdapter adapter = dictionaryAdapterFactory
+        DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
         return formatJsonResponse(adapter.fetchRawTemplate(uri, type));
     }
 
 
 
-    private String formatJsonResponse(JsonNode response) throws JsonProcessingException {
+    private String formatJsonResponse(Object response) throws JsonProcessingException {
         return objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValueAsString(response);
     }

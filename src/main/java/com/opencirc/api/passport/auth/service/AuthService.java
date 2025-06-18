@@ -72,10 +72,8 @@ public class AuthService {
 
         user.setUsername(registerUser.getUsername());
         user.setPassword(registerUser.getPassword());
-        user.setRole(registerUser.getRole());
         user.setEmail(registerUser.getEmail());
         user.setActive(true);
-        user.setCreatedBy(registerUser.getCreatedBy());
         user.setCreatedTime(registerUser.getCreatedTime());
 
         if (userRepository.existsByUsername(user.getUsername())) {

@@ -71,12 +71,9 @@ public class PassportController {
     public ResponseEntity<PassportDto> getPassport(
             @Parameter(description = "Id of the Passport", required = true,
             in = ParameterIn.PATH)
-            @PathVariable String id,
-            @Parameter(description = "Whether to return the children",
-            required = false, in = ParameterIn.QUERY)
-            @RequestParam Boolean includeChildren)
+            @PathVariable String id)
             throws JsonProcessingException {
-        return ResponseEntity.ok(passportService.getPassport(id, includeChildren));
+        return ResponseEntity.ok(passportService.getPassport(id));
     }
 
     /**

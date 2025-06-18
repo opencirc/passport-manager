@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.opencirc.api.passport.model.Passport;
 
@@ -43,6 +44,7 @@ public class PassportDto {
      * Id of Parent Passport.
      */
     @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private PassportDto parent;
 
 

@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,15 +20,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
-import com.opencirc.api.passport.exception.JsonValidationException;
+import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.exception.InvalidInputException;
+import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.mapping.DictionaryMapping;
 import com.opencirc.api.passport.service.CacheService;
 
 @Service
-public class BsDDAdapter implements DictionaryAdapter {
+public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
 
     /**
      * Injecting Restemplate.
@@ -116,25 +117,16 @@ public class BsDDAdapter implements DictionaryAdapter {
      * @throws JsonProcessingException
      */
     @Override
-    public JsonNode createClassTemplate(String uri, boolean addProperties)
+    public BsddClassTemplateDto createClassTemplate(String uri, boolean addProperties)
             throws JsonValidationException, JsonProcessingException {
 
-        JsonNode classTemplate = getClassTemplate(uri, addProperties);
+        BsddClassTemplateDto classTemplateDto  = getClassTemplate(uri, addProperties);
 
-        if (!(classTemplate instanceof ObjectNode)) {
-            throw new JsonValidationException(
-                    "Invalid response format for URI: " + uri);
-        }
-
-        ObjectNode rootObject = (ObjectNode) classTemplate;
-
-        if (addProperties) {
-            JsonNode classPropertiesNode = rootObject
-                    .get(AppConstants.BSDD_FIELD_CLASSPROPERTIES);
-
-            if (classPropertiesNode != null && classPropertiesNode.isArray()) {
-                ArrayNode classProperties = (ArrayNode) classPropertiesNode;
-                ArrayNode updatedProperties = objectMapper.createArrayNode();
+        if (addProperties && classTemplateDto.getClassProperties() != null
+                && classTemplateDto.getClassProperties().isArray()) {
+            
+            ArrayNode classProperties = (ArrayNode) classTemplateDto.getClassProperties();
+            ArrayNode updatedProperties = objectMapper.createArrayNode();
 
                 for (JsonNode propertyNode : classProperties) {
                     if (propertyNode.isObject()) {
@@ -150,12 +142,10 @@ public class BsDDAdapter implements DictionaryAdapter {
                         }
                     }
                 }
-                rootObject.set(AppConstants.BSDD_FIELD_CLASSPROPERTIES,
-                        updatedProperties);
+                classTemplateDto.setClassProperties(updatedProperties);
             }
-        }
 
-        return rootObject;
+        return classTemplateDto;
     }
 
     /**
@@ -167,7 +157,7 @@ public class BsDDAdapter implements DictionaryAdapter {
      * @throws JsonValidationException If the URI is invalid.
      * @throws JsonProcessingException
      */
-    private JsonNode getClassTemplate(String uri, boolean addProperties)
+    private BsddClassTemplateDto getClassTemplate(String uri, boolean addProperties)
             throws JsonValidationException, JsonProcessingException {
 
         if (!validateUri(uri)) {
@@ -184,15 +174,15 @@ public class BsDDAdapter implements DictionaryAdapter {
         String url = uriBuilder.toUriString();
 
         // Check data from Redis cache
-        JsonNode rootNode = cacheService.getClassTemplateFromCache(url);
-        if (rootNode == null) {
+        BsddClassTemplateDto classTemplateDto = cacheService.getClassTemplateFromCache(url, BsddClassTemplateDto.class);
+        if (classTemplateDto == null) {
             try {
-                ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
-                        JsonNode.class);
+                ResponseEntity<BsddClassTemplateDto> response = restTemplate.getForEntity(url,
+                        BsddClassTemplateDto.class);
                 if (response.getStatusCode().is2xxSuccessful()
                         && response.getBody() != null) {
-                    rootNode = response.getBody();
-                    cacheService.storeClassTemplateInCache(url, rootNode);
+                    classTemplateDto = response.getBody();
+                    cacheService.storeClassTemplateInCache(url, classTemplateDto);
                 } else {
                     throw new JsonValidationException(
                             "Failed to fetch class template. HTTP Status: "
@@ -204,15 +194,7 @@ public class BsDDAdapter implements DictionaryAdapter {
             }
         }
 
-        if (!(rootNode instanceof ObjectNode)) {
-            throw new JsonValidationException(
-                    "Unexpected format in class template for URI: " + uri);
-        }
-
-        ObjectNode rootObject = (ObjectNode) rootNode;
-    //    rootObject.put(AppConstants.TEMPLATE_NAME, "");
-     //   rootObject.put(AppConstants.DATA_CATEGORY_FIELD, "");
-        return rootNode;
+        return classTemplateDto;
     }
 
     /**
@@ -226,7 +208,6 @@ public class BsDDAdapter implements DictionaryAdapter {
             throws JsonValidationException {
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();
-      //  template.put("dataCategory", "");
 
         for (String uri : uriList) {
             System.out.println(uri);

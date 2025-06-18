@@ -21,6 +21,7 @@ import lombok.ToString;
 import org.hibernate.annotations.ColumnTransformer;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -128,6 +129,21 @@ public class Datasheet {
         @Override
         public String toString() {
             return value;
+        }
+        
+        /**
+         * Parses a string value to its corresponding enum.
+         *
+         * @param value the string value to convert
+         * @return the corresponding data category enum
+         * @throws IllegalArgumentException
+         */
+        public static DataCategory fromValue(String value) {
+            return Arrays.stream(DataCategory.values())
+                    .filter(category -> category.value.equalsIgnoreCase(value))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Invalid category: " + value));
         }
     }
 

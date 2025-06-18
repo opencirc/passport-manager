@@ -3,7 +3,6 @@ package com.opencirc.api.passport.service;
 import java.util.List;
 import java.util.Map;
 
-import com.opencirc.api.passport.enums.DataDictionary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
+import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.JsonValidationException;
 
 @Service
@@ -37,7 +37,7 @@ public class DataDictionaryService {
      */
     public List<Map<String, String>> searchClassesByText(DataDictionary dictionary,
             String text) {
-        DictionaryAdapter adapter = dictionaryAdapterFactory
+        DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
         List<Map<String, String>> classMap = adapter.listClass(text);
       //  cacheService.storePropertiesInRedis(dictionary, classMap);
@@ -53,14 +53,12 @@ public class DataDictionaryService {
      * @return class with properties in json format
      * @throws JsonProcessingException
      */
-    public JsonNode createClassTemplate(DataDictionary dictionary, String uri,
+    public <T> T createClassTemplate(DataDictionary dictionary, String uri,
             boolean withProperties) throws JsonValidationException,
     JsonProcessingException {
-        // Gets adapter instance
-        DictionaryAdapter adapter = dictionaryAdapterFactory
+        DictionaryAdapter<T> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
-        JsonNode classTemplate = adapter.createClassTemplate(uri, withProperties);
-        return classTemplate;
+        return adapter.createClassTemplate(uri, withProperties);
     }
 
     /**
@@ -95,7 +93,7 @@ public class DataDictionaryService {
      */
     public JsonNode createTemplateWithProperties(DataDictionary dictionary,
             List<String> propertiesUriList) throws JsonValidationException {
-        DictionaryAdapter adapter = dictionaryAdapterFactory
+        DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
         return adapter.getPropertyTemplatewithDetails(propertiesUriList);
 

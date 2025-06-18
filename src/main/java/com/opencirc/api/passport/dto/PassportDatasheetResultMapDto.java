@@ -1,11 +1,11 @@
-package com.opencirc.api.passport.model;
+package com.opencirc.api.passport.dto;
 
 import java.sql.Timestamp;
 
 /**
  * Interface to map the result set to passportDto.
  */
-public interface PassportDatasheetResultMap {
+public interface PassportDatasheetResultMapDto {
 
     /**
      * @return the ID of the passport

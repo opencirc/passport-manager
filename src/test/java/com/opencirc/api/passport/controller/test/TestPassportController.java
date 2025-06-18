@@ -98,7 +98,7 @@ public class TestPassportController {
 
         generateMockJwtToken();
 
-        BsddMockStubHelper.stubBsddApiResponse();
+        BsddMockStubHelper.stubGetClassApiResponse();
 
     }
 
@@ -154,7 +154,7 @@ public class TestPassportController {
                     "dataCategory": "Unique"
                 }
                                 """;
-        BsddMockStubHelper.stubBsddApiResponse();
+        BsddMockStubHelper.stubGetClassApiResponse();
 
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
@@ -181,7 +181,7 @@ public class TestPassportController {
 
                  }
                                 """;
-        BsddMockStubHelper.stubBsddApiResponse();
+        BsddMockStubHelper.stubGetClassApiResponse();
 
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
@@ -209,7 +209,7 @@ public class TestPassportController {
                     "ABCDFWEREWRHIH":"ABCDFWEREWRHIH"
                  }
                                 """;
-        BsddMockStubHelper.stubBsddApiResponse();
+        BsddMockStubHelper.stubGetClassApiResponse();
 
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
@@ -262,7 +262,7 @@ public class TestPassportController {
                     "dataCategory": "Unique"
                 }
                                 """;
-        BsddMockStubHelper.stubBsddApiResponse();
+        BsddMockStubHelper.stubGetClassApiResponse();
 
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)

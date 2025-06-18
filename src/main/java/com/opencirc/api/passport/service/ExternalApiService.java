@@ -133,8 +133,7 @@ public class ExternalApiService {
             rootObject = (ObjectNode) rootNode;
 
             // Add new field at class level
-       //     rootObject.put("dataCategory", "");
-
+     
             ArrayNode classProperties = (ArrayNode) rootObject
                     .get("classProperties");
             for (JsonNode propertyNode : classProperties) {
@@ -142,7 +141,6 @@ public class ExternalApiService {
                     ObjectNode propertyObject = (ObjectNode) propertyNode;
 
                     propertyObject.put("actualValue", "");
-                    // propertyObject.put("Data Category", "");
                 }
             }
 

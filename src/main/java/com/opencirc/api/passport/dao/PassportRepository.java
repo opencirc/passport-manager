@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetResultMap;
 
 public interface PassportRepository
         extends JpaRepository<Passport, String> {
@@ -64,7 +64,7 @@ public interface PassportRepository
             JOIN datasheets ds ON pdm.datasheet_id = ds.id
             WHERE pt.status = 'ACTIVE'
             """, nativeQuery = true)
-    Optional<List<PassportDatasheetResultMap>> findActivePassportDescendant(
+    Optional<List<PassportDatasheetResultMapDto>> findActivePassportDescendants(
             @Param("id") String id);
 
     /**

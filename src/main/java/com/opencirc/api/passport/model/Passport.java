@@ -1,9 +1,11 @@
 package com.opencirc.api.passport.model;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.opencirc.api.passport.model.Datasheet.DataCategory;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -123,6 +125,21 @@ public class Passport {
         @Override
         public String toString() {
             return value;
+        }
+        
+        /**
+         * Parses a string value to its corresponding enum.
+         *
+         * @param value the string value to convert
+         * @return the corresponding Status enum
+         * @throws IllegalArgumentException
+         */
+        public static Status fromValue(String value) {
+            return Arrays.stream(Status.values())
+                    .filter(category -> category.value.equalsIgnoreCase(value))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Invalid Status: " + value));
         }
     }
 

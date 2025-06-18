@@ -70,7 +70,7 @@ public class DataDictionaryController {
     @Operation(summary = "Get class from DD for the requested uri")
     @PostMapping(value = "/api/data-dictionary/{dictionary}/class", produces = {
             "application/json" })
-    public JsonNode getClass(
+    public Object getClass(
             @Parameter(description = "Name of dictionary", required = true,
             example = "bsdd", in = ParameterIn.PATH)
             @PathVariable("dictionary") String dictionaryName,
@@ -117,7 +117,7 @@ public class DataDictionaryController {
      * @return the template with all the relevant properties
      */
     @Operation(summary = "Create template with selected properties")
-    @PostMapping(value = "/api/template/properties/{dictionary}", produces = {
+    @PostMapping(value = "/api/data-dictionary/properties/{dictionary}", produces = {
             "application/json" }, consumes = { "application/json" })
     public JsonNode createTemplateWithProperties(
             @Parameter(description = "Name of library", required = true, example = "bsdd")

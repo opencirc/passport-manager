@@ -23,6 +23,7 @@ import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
+import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.InvalidInputException;
@@ -31,7 +32,6 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
-import com.opencirc.api.passport.model.PassportDatasheetResultMap;
 
 import io.github.thibaultmeyer.cuid.CUID;
 
@@ -95,7 +95,7 @@ public class PassportService {
 
         Datasheet datasheet = new Datasheet();
         datasheet.setData(datasheetData);
-        datasheet.setDataCategory(Datasheet.DataCategory.valueOf(data.getDataCategory()));
+        datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
         datasheet.setDataDictionary(dictionary);
         datasheet.setCreatedBy(data.getCreatedBy());
         datasheet.setCreatedTime(data.getCreatedTime());
@@ -116,10 +116,9 @@ public class PassportService {
      * Retrieves passport.
      *
      * @param id
-     * @param includeChildren
      * @return Passport DTO from passport
      */
-    public PassportDto getPassport(String id, boolean includeChildren)
+    public PassportDto getPassport(String id)
             throws JsonProcessingException {
 
         Optional<Passport> optionalPassport = passportRepository
@@ -142,10 +141,10 @@ public class PassportService {
      */
     public List<PassportDto> getPassportChildren(String id)
             throws JsonProcessingException {
-        Optional<List<PassportDatasheetResultMap>> optionalPassportList =
-                passportRepository.findActivePassportDescendant(id);
+        Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
+                passportRepository.findActivePassportDescendants(id);
 
-        List<PassportDatasheetResultMap> resultRows = optionalPassportList
+        List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
                 .orElse(Collections.emptyList());
 
         if (resultRows.isEmpty()) {
@@ -157,14 +156,14 @@ public class PassportService {
         ObjectMapper objectMapper = new ObjectMapper();
 
 
-        for (PassportDatasheetResultMap row : resultRows) {
+        for (PassportDatasheetResultMapDto row : resultRows) {
             String passportId = row.getPassportId();
 
             PassportDto passportDto = dtoById.computeIfAbsent(passportId, key -> {
                 PassportDto dto = new PassportDto();
                 dto.setId(passportId);
                 dto.setName(row.getPassportName());
-                dto.setStatus(Passport.Status.valueOf(row.getStatus()));
+                dto.setStatus(Passport.Status.fromValue(row.getStatus()));
                 dto.setCreatedBy(row.getCreatedBy());
                 dto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
                 dto.setDatasheets(new ArrayList<>());
@@ -180,7 +179,7 @@ public class PassportService {
                     datasheetDto.setId(row.getDatasheetId());
                     datasheetDto.setData(objectMapper.readTree(row.getData()));
                     if (row.getDataCategory() != null) {
-                        datasheetDto.setDataCategory(DataCategory.valueOf(row
+                        datasheetDto.setDataCategory(DataCategory.fromValue(row
                                 .getDataCategory()));
                     } else {
                         datasheetDto.setDataCategory(null);
@@ -200,7 +199,7 @@ public class PassportService {
             }
         }
 
-        for (PassportDatasheetResultMap row : resultRows) {
+        for (PassportDatasheetResultMapDto row : resultRows) {
             String passportId = row.getPassportId();
             String parentId = row.getParentId();
 

@@ -2,16 +2,19 @@ package com.opencirc.api.passport.controller.test;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -27,11 +30,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
+import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
-import com.opencirc.api.passport.exception.JsonValidationException;
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
+import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 
@@ -43,7 +46,7 @@ import io.restassured.response.Response;
 classes = PassportManager.class)
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
-public class TestTemplateController {
+public class TestDataDictionaryController {
 
     /**
      * Assigns random port number in which application runs.
@@ -67,6 +70,7 @@ public class TestTemplateController {
      * RestTemplate bean.
      */
     @Autowired
+    @Qualifier("testRestTemplate")
     private RestTemplate restTemplate;
 
     /**
@@ -105,8 +109,6 @@ public class TestTemplateController {
 
         generateMockJwtToken();
 
-        BsddMockStubHelper.stubBsddApiResponse();
-
     }
 
     private void generateMockJwtToken() {
@@ -121,6 +123,33 @@ public class TestTemplateController {
         }
 
     }
+    
+    @Test
+    public void testSearchClass_Success() {
+        String dictionary = "bsdd";
+        String query = "EC004131";
+
+        BsddMockStubHelper.stubSearchClassApiResponse();
+
+        Response response = RestAssured.given().log().all()
+                .cookie("access_token", jwtToken)
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/api/data-dictionary/{dictionary}/class/search/{query}", dictionary, query)
+                .then()
+                .statusCode(TestConstants.STATUS_SUCCESS)
+                .contentType(ContentType.JSON)
+                .log().all()
+                .extract().response();
+
+        List<Map<String, String>> classList = response.jsonPath().getList("$");
+        assertFalse(classList.isEmpty());
+        assertEquals("Storage container for hazardous material", classList.get(0).get("name"));
+        assertEquals("EC004131", classList.get(0).get("code"));
+        assertEquals("https://identifier.buildingsmart.org/uri/etim/etim/8.0/class/EC004131", classList.get(0).get("uri"));
+    }
+
+    
 
     /**
      * Tests the functionality of fetching data from the bsDD API.
@@ -129,72 +158,106 @@ public class TestTemplateController {
      * returned when the bsDD API is called with valid parameters.
      */
     @Test
-    public void testFetchBsddData() throws JsonValidationException {
-        String bsddUrl = "https://identifier.buildingsmart.org/uri/molio/cciconstruction"
-                + "/1.0/class/A-A__";
-        String ddLibrary = "bsdd";
-        BsddMockStubHelper.stubBsddApiResponse();
-
+    public void testGetClassWithProperties_Success() throws JsonValidationException {
+        String classUri = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__";
+        String dictionary = "bsdd";
+        boolean withProperties = true;
+        BsddMockStubHelper.stubGetClassApiResponse();
+       
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
-                .queryParam("uri", bsddUrl).queryParam("ddLibrary", ddLibrary).when()
-                .get("/api/template/class-with-props/").then()
-                .statusCode(TestConstants.STATUS_SUCCESS).contentType(ContentType.JSON)
-                .log().all().extract().response();
+                .queryParam("withProperties", withProperties)
+                .body(classUri)
+                .when()
+                .post("/api/data-dictionary/{dictionary}/class", dictionary)
+                .then()
+                .statusCode(TestConstants.STATUS_SUCCESS)
+                .contentType(ContentType.JSON)
+                .log().all()
+                .extract().response();
 
         String json = response.getBody().asString();
+        System.out.println(json);
         assertTrue(json.contains("\"name\":\"Use of Construction Spaces\""));
-        assertTrue(json.contains("\"status\":\"Active\""));
-        assertTrue(json.contains("\"dataCategory\":\"\""));
-        assertTrue(json.contains("\"templateName\":\"\""));
     }
-
     /**
-     * Tests the creation of a template inlcluding properties.
+     * Error scenario to test with invalid input URL.
      */
     @Test
-    public void testStub() {
+    public void testGetClassWithProperties_JsonValidationException() {
+        String classUri = "invaliuri";
+        String dictionary = "bsdd";
+        boolean withProperties = false;
 
-        String queryParamUrl = "https://identifier.buildingsmart.org/uri/molio/"
-                + "cciconstruction/1.0/class/A-A__";
+        Response response = RestAssured.given().log().all()
+                .cookie("access_token", jwtToken)
+                .contentType(ContentType.JSON)
+                .queryParam("withProperties", withProperties)
+                .body("\"" + classUri + "\"")
+                .when()
+                .post("/api/data-dictionary/{dictionary}/class", dictionary)
+                .then()
+                .contentType(ContentType.JSON)
+                .log().all()
+                .extract().response();
 
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder
-                .fromHttpUrl(props.getBsDDClassDetailsURL())
-                .queryParam(AppConstants.URI, queryParamUrl)
-                .queryParam(AppConstants.QP_BSDD_INCLUDECLASSPROP, true);
-        String url = uriBuilder.toUriString();
-        ResponseEntity<JsonNode> responseEntity = restTemplate.getForEntity(url,
-                JsonNode.class);
-
-        JsonNode jsonResponse = responseEntity.getBody();
-        System.out.println(jsonResponse);
-        assertNotNull(jsonResponse);
-        assertEquals("A-A__", jsonResponse.get("referenceCode").asText());
-        assertEquals("Space for human dwelling", jsonResponse.get("name").asText());
-        assertEquals("Active", jsonResponse.get("status").asText());
+        String json = response.getBody().asString();
+        System.out.println(json);
+        assertTrue(json.contains("Internal Server Error")); 
     }
+    
+    @Test
+    public void testListProperties_Success() {
+        String dictionary = "bsdd";
+        String query = "temperature";
 
+        BsddMockStubHelper.stubListPropertiesApiResponse();
 
+        Response response = RestAssured.given().log().all()
+                .cookie("access_token", jwtToken)
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/api/data-dictionary/{dictionary}/property/search/{query}", dictionary, query)
+                .then()
+                .statusCode(TestConstants.STATUS_SUCCESS)
+                .contentType(ContentType.JSON)
+                .log().all()
+                .extract().response();
+
+        String json = response.getBody().asString();
+        System.out.println(json);
+        
+    }
+    
     /**
      * Tests the creation of a template including properties.
      */
     @Test
     public void testCreateTemplateWithProperties() {
-        List<String> propertiesUriList = new ArrayList<String>();
-        propertiesUriList.add("https://identifier.buildingsmart.org/uri/etim/etim/10.0/"
-                + "prop/EF000008");
-        String ddLibrary = "bsdd";
-        BsddMockStubHelper.stubBsddApiResponse();
+        
+        List<String> propertiesUriList = new ArrayList<>();
+        propertiesUriList.add("https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008");
+        String dictionary = "bsdd";
+        
+        BsddMockStubHelper.stubGetPropertiesApiResponse();
 
         Response response = RestAssured.given().log().all()
-                .cookie("access_token", jwtToken).contentType(ContentType.JSON)
+                .cookie("access_token", jwtToken)
+                .contentType(ContentType.JSON)
                 .body(propertiesUriList)
-                .queryParam("ddLibrary", ddLibrary).when()
-                .post("/api/createTemplateWithProperties/").then()
-                .statusCode(TestConstants.STATUS_SUCCESS).contentType(ContentType.JSON)
-                .log().all().extract().response();
+                .when()
+                .post("/api/data-dictionary/properties/{dictionary}", dictionary)
+                .then()
+                .statusCode(TestConstants.STATUS_SUCCESS)
+                .contentType(ContentType.JSON)
+                .log().all()
+                .extract().response();
 
         String json = response.getBody().asString();
         System.out.println(json);
+        
+        assertTrue(json.contains("https://identifier.buildingsmart.org/uri/etim/etim/10.0"));
+        
+        
     }
 }

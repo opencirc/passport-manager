@@ -30,18 +30,5 @@ public class RegisterRequestDto {
      */
     private String password;
 
-    /**
-     * Role.
-     */
-    private User.Role role;
-
-    /**
-     * Created by.
-     */
-    private String createdBy;
-
-    /**
-     * Created time.
-     */
     private LocalDateTime createdTime;
 }

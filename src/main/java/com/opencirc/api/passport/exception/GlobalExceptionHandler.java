@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         } else if (ex.getMessage().contains(AppConstants.ERR_INVALID_CREDENTIALS)) {
             ErrorResponse errorResponse = new ErrorResponse("Invalid Credentials ",
                     ex.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         } else {
             ErrorResponse errorResponse = new ErrorResponse("Authentication Error",
                     ex.getMessage());

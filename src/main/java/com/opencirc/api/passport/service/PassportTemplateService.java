@@ -1,7 +1,6 @@
 package com.opencirc.api.passport.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,10 +13,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dao.PassportTemplateRepository;
 import com.opencirc.api.passport.dto.PassportTemplateDto;
@@ -25,6 +23,7 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import com.opencirc.api.passport.model.PassportTemplate;
+import com.opencirc.api.passport.util.CommonUtil;
 
 @Service
 public class PassportTemplateService {
@@ -42,6 +41,12 @@ public class PassportTemplateService {
      */
     @Autowired
     private PassportTemplateRepository passportTemplateRepository;
+    
+    /**
+     * Injecting UserContext class.
+     */
+    @Autowired
+    private UserContext userContext;
 
 
     /**
@@ -52,7 +57,7 @@ public class PassportTemplateService {
      * @return the template in json format
      */
     public PassportTemplateDto createTemplateFromPassport(String passportId,
-            boolean dryRun, String templateName, String userName) throws JsonMappingException, JsonProcessingException {
+            boolean dryRun, String templateName) throws JsonMappingException, JsonProcessingException {
         Optional<Passport> passport = passportRepository.findPassport(passportId,
                 Passport.Status.ACTIVE);
         if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.ACTIVE) {
@@ -61,7 +66,7 @@ public class PassportTemplateService {
         }
 
         PassportTemplate rawExtractedTemplate = generateTemplateFromPassport(
-                passport.get(), templateName, userName);
+                passport.get(), templateName);
         PassportTemplate extractedTemplate = dryRun ? rawExtractedTemplate
                 : passportTemplateRepository.save(rawExtractedTemplate);
         return PassportTemplateDto.from(extractedTemplate);
@@ -73,7 +78,7 @@ public class PassportTemplateService {
      * @param passport
      * @return the template in JSON format
      */
-    private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName, String userName) {
+    private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName) {
         PassportTemplate template = new PassportTemplate();
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
@@ -106,8 +111,9 @@ public class PassportTemplateService {
         }
         
         rootNode.set("properties", propertiesNode);
-        
-        
+        String userName = userContext.getCurrentUsername();
+       
+        System.out.println("UserName : "+userName);
         template = PassportTemplate.builder()
                 .name(templateName)
                 .template(rootNode)
