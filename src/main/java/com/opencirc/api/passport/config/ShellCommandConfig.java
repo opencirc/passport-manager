@@ -9,7 +9,6 @@ import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
@@ -71,9 +70,11 @@ public class ShellCommandConfig {
             }
 
             if (raw) {
-                return generateRawTemplate(DataDictionary.fromValue(dictionary), uri, type);
+                return generateRawTemplate(DataDictionary
+                        .fromValue(dictionary), uri, type);
             } else {
-                return generateProcessedTemplate(DataDictionary.fromValue(dictionary), uri, type);
+                return generateProcessedTemplate(DataDictionary
+                        .fromValue(dictionary), uri, type);
             }
         } catch (Exception e) {
             return "Error fetching template: " + e.getMessage();
@@ -84,10 +85,10 @@ public class ShellCommandConfig {
             String type)
             throws JsonValidationException, JsonProcessingException {
         Object response = null;
-        if (type.equalsIgnoreCase(TemplateType.CLASS.getValue())) {
+        if (TemplateType.CLASS.getValue().equalsIgnoreCase(type)) {
             response = dataDictionaryController.getClass(dictionary.getValue(),
                     uri, true);
-        } else if (type.equalsIgnoreCase(TemplateType.PROPERTY.getValue())) {
+        } else if (TemplateType.PROPERTY.getValue().equalsIgnoreCase(type)) {
             List<String> uriList = new ArrayList<String>();
             uriList.add(uri);
             response = dataDictionaryController

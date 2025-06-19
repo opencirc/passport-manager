@@ -49,6 +49,7 @@ public class DataDictionaryService {
      *
      * @param dictionary
      * @param uri
+     * @param <T> The specific dictionary type
      * @param withProperties
      * @return class with properties in json format
      * @throws JsonProcessingException

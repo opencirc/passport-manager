@@ -3,11 +3,17 @@ package com.opencirc.api.passport.helper.test;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.opencirc.api.passport.constants.test.TestConstants;
+import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 
 
 public class BsddMockStubHelper {
@@ -174,5 +180,90 @@ public class BsddMockStubHelper {
 
     
 
+    
+    public static class TestPassportDatasheetResultMapDto implements PassportDatasheetResultMapDto {
+
+        private final String passportId;
+        private final String passportName;
+        private final String status;
+        private final String parentId;
+        private final Integer datasheetId;
+        private final String data;
+        private final String dataDictionary;
+        private final String dataCategory;
+        private final String createdBy;
+        private final Timestamp createdTime;
+
+        public TestPassportDatasheetResultMapDto(String passportId, String passportName,
+            String status, String parentId, Integer datasheetId, String data,
+            String dataDictionary, String dataCategory, String createdBy, Timestamp createdTime) {
+            this.passportId = passportId;
+            this.passportName = passportName;
+            this.status = status;
+            this.parentId = parentId;
+            this.datasheetId = datasheetId;
+            this.data = data;
+            this.dataDictionary = dataDictionary;
+            this.dataCategory = dataCategory;
+            this.createdBy = createdBy;
+            this.createdTime = createdTime;
+        }
+
+        public String getPassportId() { return passportId; }
+        public String getPassportName() { return passportName; }
+        public String getStatus() { return status; }
+        public String getParentId() { return parentId; }
+        public Integer getDatasheetId() { return datasheetId; }
+        public String getData() { return data; }
+        public String getDataDictionary() { return dataDictionary; }
+        public String getDataCategory() { return dataCategory; }
+        public String getCreatedBy() { return createdBy; }
+        public Timestamp getCreatedTime() { return createdTime; }
+    }
+
+    
+    public static List<PassportDatasheetResultMapDto> createPassportChildrenStubData() {
+        String datasheetJson = """
+            {
+              "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
+              "code": "A-A__",
+              "name": "Space for human dwelling",
+              "status": "Active",
+              "classType": "Class",
+              "classProperties": [
+                {
+                  "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+                  "code": "HandicapAccessible",
+                  "name": "Handicap Accessible",
+                  "status": "Active",
+                  "dataType": "Boolean",
+                  "definition": "Indication that this object is designed to be accessible by the handicapped.",
+                  "actualValue": ""
+                }
+              ]
+            }
+            """;
+
+        Timestamp timestamp = Timestamp.valueOf("2025-06-10 12:00:00");
+
+        List<PassportDatasheetResultMapDto> stubData = new ArrayList<>();
+
+        stubData.add(new TestPassportDatasheetResultMapDto(
+            "oqj4p875porh0vpuqj1vob2jqgymchildren", "Parent Passport", "active", null,
+            1, datasheetJson, null, null, "parent@example.com", timestamp
+        ));
+
+        stubData.add(new TestPassportDatasheetResultMapDto(
+            "oqj4p875porh0vpuqj1vob2jqgymchild001", "Child Passport 1", "active", "oqj4p875porh0vpuqj1vob2jqgymchildren",
+            2, datasheetJson, null, null, "child1@example.com", timestamp
+        ));
+
+        stubData.add(new TestPassportDatasheetResultMapDto(
+            "oqj4p875porh0vpuqj1vob2jqgymchild002", "Child Passport 2", "active", "oqj4p875porh0vpuqj1vob2jqgymchildren",
+            3, datasheetJson, null, null, "child2@example.com", timestamp
+        ));
+
+        return stubData;
+    }
     
 }

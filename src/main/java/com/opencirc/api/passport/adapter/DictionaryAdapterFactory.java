@@ -16,8 +16,15 @@ import com.opencirc.api.passport.enums.DataDictionary;
 @Component
 public class DictionaryAdapterFactory {
 
+    /**
+     * Map that has all the map name and its instances.
+     */
     private final Map<DataDictionary, DictionaryAdapter<?>> adapterMap;
 
+    /**
+     * Instantiates DictionaryAdapterFactory.
+     * @param adapters
+     */
     public DictionaryAdapterFactory(List<DictionaryAdapter<?>> adapters) {
         adapterMap = new HashMap<>();
         adapterMap.put(DataDictionary.BSDD,
@@ -29,7 +36,8 @@ public class DictionaryAdapterFactory {
      * Returns the appropriate instance based on the given dictionary name.
      *
      * @param dictionary The dictionary library
-     * @return The corresponding implementation.
+     * @param <T> The specific dictionary type
+     * @return The corresponding dictionary instance.
      * @throws IllegalArgumentException
      */
     @SuppressWarnings("unchecked")
@@ -44,7 +52,8 @@ public class DictionaryAdapterFactory {
 
     private <T extends DictionaryAdapter<?>> T findAdapter(
             List<DictionaryAdapter<?>> adapters, Class<T> genericClass) {
-        return adapters.stream().filter(genericClass::isInstance).map(genericClass::cast).findFirst()
+        return adapters.stream().filter(genericClass::isInstance)
+                .map(genericClass::cast).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Adapter not found: " + genericClass.getSimpleName()));
     }

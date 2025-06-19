@@ -106,6 +106,7 @@ public class PassportService {
         passportDatasheet.setDatasheet(datasheet);
         PassportDatasheetMapping passportDatasheetMapping =
                 passportDatasheetMappingRepository.save(passportDatasheet);
+        //Set up the data sheet mapping details in the return value of the Passport DTO
         passport.setDatasheetMappings(new ArrayList<>());
         passport.getDatasheetMappings().add(passportDatasheetMapping);
 

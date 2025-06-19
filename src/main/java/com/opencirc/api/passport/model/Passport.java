@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.opencirc.api.passport.model.Datasheet.DataCategory;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -126,7 +125,7 @@ public class Passport {
         public String toString() {
             return value;
         }
-        
+
         /**
          * Parses a string value to its corresponding enum.
          *

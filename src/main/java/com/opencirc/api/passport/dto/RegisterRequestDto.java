@@ -2,8 +2,6 @@ package com.opencirc.api.passport.dto;
 
 import java.time.LocalDateTime;
 
-import com.opencirc.api.passport.model.User;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,5 +28,8 @@ public class RegisterRequestDto {
      */
     private String password;
 
+    /**
+     * created time.
+     */
     private LocalDateTime createdTime;
 }

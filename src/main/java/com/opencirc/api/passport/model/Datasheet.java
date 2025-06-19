@@ -130,7 +130,7 @@ public class Datasheet {
         public String toString() {
             return value;
         }
-        
+
         /**
          * Parses a string value to its corresponding enum.
          *

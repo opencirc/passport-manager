@@ -3,8 +3,6 @@ package com.opencirc.api.passport.model;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
-import com.opencirc.api.passport.model.Passport.Status;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -132,7 +130,7 @@ public class User {
         public String toString() {
             return value;
         }
-        
+
         /**
          * Parses a string value to its corresponding enum.
          *

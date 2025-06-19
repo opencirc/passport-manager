@@ -25,7 +25,7 @@ public enum TemplateType {
     /**
      * Constructor.
      *
-     * @param type 
+     * @param type
      */
     TemplateType(String type) {
         this.value = type;

@@ -1,7 +1,9 @@
 package com.opencirc.api.passport.service;
 
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +15,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.PassportRepository;
@@ -23,7 +24,6 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import com.opencirc.api.passport.model.PassportTemplate;
-import com.opencirc.api.passport.util.CommonUtil;
 
 @Service
 public class PassportTemplateService {
@@ -41,7 +41,7 @@ public class PassportTemplateService {
      */
     @Autowired
     private PassportTemplateRepository passportTemplateRepository;
-    
+
     /**
      * Injecting UserContext class.
      */
@@ -54,10 +54,12 @@ public class PassportTemplateService {
      *
      * @param passportId
      * @param dryRun
+     * @param templateName
      * @return the template in json format
      */
     public PassportTemplateDto createTemplateFromPassport(String passportId,
-            boolean dryRun, String templateName) throws JsonMappingException, JsonProcessingException {
+            boolean dryRun, String templateName)
+            throws JsonMappingException, JsonProcessingException {
         Optional<Passport> passport = passportRepository.findPassport(passportId,
                 Passport.Status.ACTIVE);
         if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.ACTIVE) {
@@ -76,53 +78,56 @@ public class PassportTemplateService {
      * Extracts template from the existing passport.
      *
      * @param passport
+     * @param templateName
      * @return the template in JSON format
      */
-    private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName) {
+    private PassportTemplate generateTemplateFromPassport(Passport passport,
+            String templateName) {
         PassportTemplate template = new PassportTemplate();
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
-        ArrayNode propertiesNode = mapper.createArrayNode();
-        
-        for(PassportDatasheetMapping passportDatasheetMapping : passport.getDatasheetMappings()) {
+
+        for (PassportDatasheetMapping passportDatasheetMapping : passport
+                .getDatasheetMappings()) {
             Datasheet datasheet = passportDatasheetMapping.getDatasheet();
-            
             if (datasheet.getDataCategory() == Datasheet.DataCategory.UNIQUE) {
                 continue;
             }
-            
             JsonNode dataNode = datasheet.getData();
-            JsonNode propertiesArray = null;
-            
-            if (dataNode.has("properties") && dataNode.get("properties").isArray()) {
-                propertiesArray = dataNode.get("properties");
-            } else if (dataNode.has("classProperties") && dataNode.get("classProperties").isArray()) {
-                propertiesArray = dataNode.get("classProperties");
-            }
-            
-            if (propertiesArray != null) {
-                for (JsonNode property : propertiesArray) {
-                    if (property.has("actualValue")) {
-                        ((ObjectNode) property).put("actualValue", "");
-                    }
-                }
-                propertiesNode.addAll((ArrayNode) propertiesArray);
-            }
+            JsonNode newDataNode = dataNode.deepCopy();
+            clearActualValues(newDataNode);
+            rootNode = (ObjectNode) newDataNode;
+
         }
-        
-        rootNode.set("properties", propertiesNode);
         String userName = userContext.getCurrentUsername();
-       
-        System.out.println("UserName : "+userName);
-        template = PassportTemplate.builder()
-                .name(templateName)
-                .template(rootNode)
-                .createdBy(userName)
-                .createdTime(LocalDateTime.now())
-                .build();
+        template = PassportTemplate.builder().name(templateName).template(rootNode)
+                .createdBy(userName).createdTime(LocalDateTime.now()).build();
         return template;
     }
 
+    /**
+     * Clears the value from the passport to make it as template.
+     *
+     * @param node - passport json
+     */
+    private void clearActualValues(JsonNode node) {
+        if (node.isObject()) {
+            ObjectNode objectNode = (ObjectNode) node;
+            Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                if ("actualValue".equals(entry.getKey())) {
+                    objectNode.put("actualValue", "");
+                } else {
+                    clearActualValues(entry.getValue());
+                }
+            }
+        } else if (node.isArray()) {
+            for (JsonNode item : node) {
+                clearActualValues(item);
+            }
+        }
+    }
     /**
      * Retrieves the template from database.
      *

@@ -51,7 +51,7 @@ public class PassportTemplateController {
             @RequestParam(required = false) boolean dryRun,
             @Parameter(description = "Provide name to extracted"
                     + "template for future retrieval")
-            @RequestBody(required = false) String templateName) throws
+            @RequestBody String templateName) throws
     JsonProcessingException {
         return ResponseEntity.ok(passportTemplateService.createTemplateFromPassport(
                 passportId, dryRun, templateName));

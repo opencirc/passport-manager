@@ -124,7 +124,7 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
 
         if (addProperties && classTemplateDto.getClassProperties() != null
                 && classTemplateDto.getClassProperties().isArray()) {
-            
+
             ArrayNode classProperties = (ArrayNode) classTemplateDto.getClassProperties();
             ArrayNode updatedProperties = objectMapper.createArrayNode();
 
@@ -174,11 +174,12 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
         String url = uriBuilder.toUriString();
 
         // Check data from Redis cache
-        BsddClassTemplateDto classTemplateDto = cacheService.getClassTemplateFromCache(url, BsddClassTemplateDto.class);
+        BsddClassTemplateDto classTemplateDto = cacheService
+                .getClassTemplateFromCache(url, BsddClassTemplateDto.class);
         if (classTemplateDto == null) {
             try {
-                ResponseEntity<BsddClassTemplateDto> response = restTemplate.getForEntity(url,
-                        BsddClassTemplateDto.class);
+                ResponseEntity<BsddClassTemplateDto> response = restTemplate.getForEntity(
+                        url, BsddClassTemplateDto.class);
                 if (response.getStatusCode().is2xxSuccessful()
                         && response.getBody() != null) {
                     classTemplateDto = response.getBody();

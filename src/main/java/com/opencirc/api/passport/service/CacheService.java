@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.enums.DataDictionary;
 
@@ -150,6 +149,8 @@ public class CacheService {
      * Retrieves the cached class template.
      *
      * @param uri
+     * @param <T> The specific dictionary type
+     * @param valueType
      * @return the template
      */
     public <T> T getClassTemplateFromCache(String uri, Class<T> valueType) {

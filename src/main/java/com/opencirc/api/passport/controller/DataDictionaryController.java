@@ -111,7 +111,6 @@ public class DataDictionaryController {
     /**
      * Create template with selected properties.
      *
-     * @TODO this must be changed
      * @param dictionaryName
      * @param propertiesUriList
      * @return the template with all the relevant properties
