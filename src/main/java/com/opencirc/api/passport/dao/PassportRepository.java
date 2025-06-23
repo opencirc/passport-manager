@@ -13,7 +13,7 @@ import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.model.Passport;
 
 public interface PassportRepository
-        extends JpaRepository<Passport, Long> {
+        extends JpaRepository<Passport, String> {
 
     /**
      * Retrieves passport.

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -283,7 +284,7 @@ public class TestPassportController {
         datasheet.setData(generateDatasheetData());
         datasheetMapping.setDatasheet(datasheet);
         datasheetMapping.setPassport(passport);
-        datasheetMapping.setId(1L);
+        datasheetMapping.setId(UUID.fromString("cd4d3ec2-0c8a-45bf-888f-81fdbd9eaa37"));
         passport.setDatasheetMappings(List.of(datasheetMapping));
 
         Response response = RestAssured.given()
@@ -358,7 +359,7 @@ public class TestPassportController {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonBody = """
                 {
-            "id": 7,
+            "id": "c98fbb40-5c9e-4daf-a2ae-961b1aa75adb",
             "data": {
                 "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
                 "code": "A-A__",

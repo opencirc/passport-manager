@@ -33,6 +33,7 @@ import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
+import com.opencirc.api.passport.service.CacheService;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -68,6 +69,7 @@ public class TestDataDictionaryController {
     @Autowired
     @Qualifier("testRestTemplate")
     private RestTemplate restTemplate;
+
 
     /**
      * JWT token.
@@ -211,7 +213,7 @@ public class TestDataDictionaryController {
         String dictionary = "bsdd";
         String query = "temperature";
         BsddMockStubHelper.stubListPropertiesApiResponse();
-
+        
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken)
                 .contentType(ContentType.JSON)

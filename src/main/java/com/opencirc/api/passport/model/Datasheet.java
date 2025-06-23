@@ -23,6 +23,7 @@ import org.hibernate.annotations.ColumnTransformer;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Model for datasheet table.
@@ -40,8 +41,8 @@ public class Datasheet {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
     /**
      * Template information in JSON format.

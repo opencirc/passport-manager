@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.hibernate.annotations.ColumnTransformer;
 
@@ -35,8 +36,8 @@ public class PassportTemplate {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
 
     /**

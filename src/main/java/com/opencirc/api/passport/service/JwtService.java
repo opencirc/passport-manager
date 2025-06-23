@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
@@ -223,8 +224,8 @@ public class JwtService {
      * @return user details
      */
     public User extractUserFromToken(String token) {
-        Optional<User> user = userRepository.findById(Long
-                .valueOf(extractUserId(extractUserId(token))));
+        Optional<User> user = userRepository.findById(UUID
+                .fromString(extractUserId(extractUserId(token))));
         return user.orElseThrow(
                 () -> new UsernameNotFoundException("Invalid token, user not found"));
     }
@@ -237,7 +238,8 @@ public class JwtService {
     public String generateAccessTokenUsingRefreshToken(String refreshToken) {
         String userId = extractUserId(refreshToken);
         UserDetails userDetails = authUserDetailsService.loadUserById(userId);
-        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
+        User user = userRepository.findById(UUID
+                .fromString(userId)).orElseThrow(
                 () -> new UsernameNotFoundException("User not found"));
         if (!validateToken(refreshToken, userDetails)) {
             throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);

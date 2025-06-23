@@ -3,6 +3,8 @@ package com.opencirc.api.passport.helper.test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.util.UUID;
+
 import com.opencirc.api.passport.model.User;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -25,7 +27,7 @@ public class MockAuthenticationTestHelper {
             AuthenticationManager authenticationManager) {
 
         User mockUser = new User();
-        mockUser.setId(1l);
+        mockUser.setId(UUID.fromString("87510a3c-4357-47bc-80a1-9ed02285fbae"));
         mockUser.setUsername(TestConstants.TEST_USERNAME_1);
         mockUser.setPassword("user1password");
         mockUser.setEmail("user1@example.com");

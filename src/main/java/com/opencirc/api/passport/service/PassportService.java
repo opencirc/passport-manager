@@ -150,7 +150,7 @@ public class PassportService {
 
         if (resultRows.isEmpty()) {
             throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passports found with Children");
+                    "No active passports found with children");
         }
 
         Map<String, PassportDto> dtoById = new LinkedHashMap<>();

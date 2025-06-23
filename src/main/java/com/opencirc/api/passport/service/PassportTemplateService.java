@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -135,8 +136,9 @@ public class PassportTemplateService {
      * @return template
      */
     public PassportTemplateDto getPassportTemplate(String id) {
+        UUID uuid = UUID.fromString(id); 
         return PassportTemplateDto.from(passportTemplateRepository
-                .findFirstById(Long.valueOf(id)));
+                .findFirstById(uuid));
     }
 
     /**

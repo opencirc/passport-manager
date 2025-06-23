@@ -71,17 +71,9 @@ public class DataDictionaryService {
      */
     public List<Map<String, String>> listProperties(DataDictionary dictionary,
             String text) {
-        List<Map<String, String>> properties = cacheService
-                .searchProperties(dictionary, text);
-        if (properties == null || properties.isEmpty()) {
-            DictionaryAdapter<?> adapter = dictionaryAdapterFactory
+        DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                     .getAdapter(dictionary);
-            properties = adapter.listProperties(text);
-            if (properties != null && !properties.isEmpty()) {
-                cacheService.storePropertiesInRedis(dictionary, properties);
-            }
-        }
-        return properties;
+        return adapter.listProperties(text);
     }
 
     /**

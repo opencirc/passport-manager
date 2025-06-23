@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.auth.service;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -125,7 +127,8 @@ public class AuthService {
             String refreshToken = jwtService.generateToken(userId,
                     properties.getRefreshTokenExpiryTime());
 
-            userRepository.updateRefreshTokenById(Long.valueOf(userId), refreshToken);
+            userRepository.updateRefreshTokenById(UUID
+                    .fromString(userId), refreshToken);
             jwtService.generateTokenCookie(response, accessToken,
                     AppConstants.COOKIE_ACCESS_TOKEN,
                     properties.getAccessTokenExpiryTime());
@@ -189,7 +192,8 @@ public class AuthService {
     public void logout(String refreshToken, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
         String userId = jwtService.extractUserId(refreshToken);
-        User existingUser = userRepository.findById(Long.valueOf(userId)).orElseThrow(()
+        User existingUser = userRepository.findById(UUID
+                .fromString(userId)).orElseThrow(()
                 -> new UsernameNotFoundException("User not found"));
         existingUser.setRefreshToken(null);
         userRepository.save(existingUser);
