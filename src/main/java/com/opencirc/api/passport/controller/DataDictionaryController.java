@@ -79,7 +79,7 @@ public class DataDictionaryController {
                     + "molio/cciconstruction/1.0/class/A-A__")
             @RequestBody String classUri,
             @Parameter(description = "Whether to return the class with properties",
-            example = "bsdd", in = ParameterIn.QUERY)
+            in = ParameterIn.QUERY)
             @RequestParam Boolean withProperties)
             throws JsonValidationException, JsonProcessingException {
         return dataDictionaryService.createClassTemplate(DataDictionary

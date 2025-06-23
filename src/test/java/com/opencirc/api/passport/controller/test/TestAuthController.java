@@ -97,6 +97,6 @@ public class TestAuthController {
             .when()
                 .post("/api/auth/login")
             .then()
-                .statusCode(TestConstants.STATUS_UNAUTHORIZED); 
+                .statusCode(TestConstants.STATUS_UNAUTHORIZED);
     }
 }

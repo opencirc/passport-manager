@@ -44,8 +44,8 @@ public class AuthUserDetailsService implements UserDetailsService {
      * @param userId User's unique identifier
      * @return User details
      */
-    public UserDetails loadUserById(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
+    public UserDetails loadUserById(String userId) {
+        Optional<User> userOptional = userRepository.findById(Long.valueOf(userId));
         User user = userOptional.orElseThrow(
                 () -> new UsernameNotFoundException("User not found : " + userId));
 

@@ -18,6 +18,7 @@ import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.RegisterRequestDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.service.JwtService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -73,6 +74,7 @@ public class AuthService {
         user.setUsername(registerUser.getUsername());
         user.setPassword(registerUser.getPassword());
         user.setEmail(registerUser.getEmail());
+        user.setRole(Role.USER);
         user.setActive(true);
         user.setCreatedTime(registerUser.getCreatedTime());
 
@@ -116,14 +118,14 @@ public class AuthService {
             }
 
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            Long userId = userPrincipal.getUserId();
+            String userId = userPrincipal.getUserId();
 
             String accessToken = jwtService.generateToken(userId,
                     properties.getAccessTokenExpiryTime());
             String refreshToken = jwtService.generateToken(userId,
                     properties.getRefreshTokenExpiryTime());
 
-            userRepository.updateRefreshTokenById(userId, refreshToken);
+            userRepository.updateRefreshTokenById(Long.valueOf(userId), refreshToken);
             jwtService.generateTokenCookie(response, accessToken,
                     AppConstants.COOKIE_ACCESS_TOKEN,
                     properties.getAccessTokenExpiryTime());
@@ -168,7 +170,7 @@ public class AuthService {
      */
     public boolean validateToken(String token) {
         try {
-            Long userId = jwtService.extractUserId(token);
+            String userId = jwtService.extractUserId(token);
             UserDetails userDetails = authUserDetailsService.loadUserById(userId);
 
             return jwtService.validateToken(token, userDetails);
@@ -186,13 +188,13 @@ public class AuthService {
      */
     public void logout(String refreshToken, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
-        Long userId = jwtService.extractUserId(refreshToken);
-        User existingUser = userRepository.findById(userId).orElseThrow(()
+        String userId = jwtService.extractUserId(refreshToken);
+        User existingUser = userRepository.findById(Long.valueOf(userId)).orElseThrow(()
                 -> new UsernameNotFoundException("User not found"));
         existingUser.setRefreshToken(null);
         userRepository.save(existingUser);
 
-        // Remove the JWT cookies (access_token, refresh_token)
+        // Removing the JWT cookies (access_token, refresh_token)
         jwtService.generateTokenCookie(response, "",
                 AppConstants.COOKIE_ACCESS_TOKEN, 0);
         jwtService.generateTokenCookie(response, "",

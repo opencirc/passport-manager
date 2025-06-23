@@ -26,7 +26,7 @@ public class DatasheetDto {
      * Unique Id for Datasheet.
      */
     @JsonProperty
-    private long id;
+    private String id;
 
     /**
      * Template information in JSON format.
@@ -65,7 +65,7 @@ public class DatasheetDto {
      */
     public static DatasheetDto from(Datasheet datasheet) {
         DatasheetDto datasheetDto = new DatasheetDto();
-        datasheetDto.id = datasheet.getId();
+        datasheetDto.id = String.valueOf(datasheet.getId());
         datasheetDto.data = datasheet.getData();
         datasheetDto.dataCategory = datasheet.getDataCategory();
         datasheetDto.dataDictionary = datasheet.getDataDictionary();

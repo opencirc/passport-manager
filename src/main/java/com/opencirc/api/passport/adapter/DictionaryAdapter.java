@@ -9,6 +9,7 @@ import com.opencirc.api.passport.exception.JsonValidationException;
 
 /**
  * Interface of Dictionary Adapter.
+ * @param <T> the type of dictionary used by the adapter
  */
 public interface DictionaryAdapter<T> {
 
@@ -43,7 +44,7 @@ public interface DictionaryAdapter<T> {
      * @return Jsonnode with proeprty details
      * @throws JsonValidationException
      */
-    JsonNode getPropertyTemplatewithDetails(List<String> properties)
+    JsonNode getPropertyTemplateWithDetails(List<String> properties)
             throws JsonValidationException;
 
     /**

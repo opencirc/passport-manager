@@ -12,5 +12,5 @@ public interface PassportTemplateRepository
      * @param id
      * @return passport template
      */
-    PassportTemplate findFirstById(long id);
+    PassportTemplate findFirstById(Long id);
 }

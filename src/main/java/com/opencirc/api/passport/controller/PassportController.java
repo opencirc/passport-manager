@@ -80,7 +80,7 @@ public class PassportController {
      * @return the passport in json
      * @throws JsonValidationException
      */
-    @Operation(summary = "Retrieves the Passport")
+    @Operation(summary = "Get Passport and its children for the given ID")
     @GetMapping("/api/passport/{id}/children")
     public ResponseEntity<List<PassportDto>> getPassportChildren(
             @Parameter(description = "Id of the Passport",

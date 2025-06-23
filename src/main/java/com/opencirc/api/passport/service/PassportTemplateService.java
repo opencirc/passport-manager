@@ -134,8 +134,9 @@ public class PassportTemplateService {
      * @param id
      * @return template
      */
-    public PassportTemplateDto getPassportTemplate(Long id) {
-        return PassportTemplateDto.from(passportTemplateRepository.findFirstById(id));
+    public PassportTemplateDto getPassportTemplate(String id) {
+        return PassportTemplateDto.from(passportTemplateRepository
+                .findFirstById(Long.valueOf(id)));
     }
 
     /**

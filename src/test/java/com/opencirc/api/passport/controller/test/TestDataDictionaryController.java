@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.controller.test;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,11 +24,11 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.client.RestTemplate;
 
+import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
@@ -69,15 +70,10 @@ public class TestDataDictionaryController {
     private RestTemplate restTemplate;
 
     /**
-     * AppProperties bean.
-     */
-    @Autowired
-    private AppProperties props;
-
-    /**
      * JWT token.
      */
     private String jwtToken = null;
+
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
@@ -118,9 +114,14 @@ public class TestDataDictionaryController {
         }
 
     }
-    
+
+
+    /**
+     * Tests the class search API endpoint to ensure it returns the expected class
+     * information when a valid dictionary and class code query are provided.
+     */
     @Test
-    public void testSearchClass_Success() {
+    public void shouldReturnMatchingClassWhenSearchQueryIsValid() {
         String dictionary = "bsdd";
         String query = "EC004131";
 
@@ -144,7 +145,7 @@ public class TestDataDictionaryController {
         assertEquals("https://identifier.buildingsmart.org/uri/etim/etim/8.0/class/EC004131", classList.get(0).get("uri"));
     }
 
-    
+
 
     /**
      * Tests the functionality of fetching data from the bsDD API.
@@ -153,12 +154,12 @@ public class TestDataDictionaryController {
      * returned when the bsDD API is called with valid parameters.
      */
     @Test
-    public void testGetClassWithProperties_Success() throws JsonValidationException {
+    public void shouldReturnClassWithPropertiesWhenUriIsValid() throws JsonValidationException {
         String classUri = "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__";
         String dictionary = "bsdd";
         boolean withProperties = true;
         BsddMockStubHelper.stubGetClassApiResponse();
-       
+
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
                 .queryParam("withProperties", withProperties)
@@ -172,14 +173,13 @@ public class TestDataDictionaryController {
                 .extract().response();
 
         String json = response.getBody().asString();
-        System.out.println(json);
         assertTrue(json.contains("\"name\":\"Use of Construction Spaces\""));
     }
     /**
      * Error scenario to test with invalid input URL.
      */
     @Test
-    public void testGetClassWithProperties_JsonValidationException() {
+    public void shouldReturnErrorWhenClassUriIsInvalid() {
         String classUri = "invaliuri";
         String dictionary = "bsdd";
         boolean withProperties = false;
@@ -197,15 +197,19 @@ public class TestDataDictionaryController {
                 .extract().response();
 
         String json = response.getBody().asString();
-        System.out.println(json);
-        assertTrue(json.contains("Internal Server Error")); 
+        assertTrue(json.contains("Internal Server Error"));
     }
-    
+
+
+
+    /**
+     * Tests the property search API endpoint to ensure it returns matching
+     * properties when provided with a valid dictionary and query string.
+     */
     @Test
-    public void testListProperties_Success() {
+    public void shouldReturnMatchingPropertiesWhenQueryIsValid() {
         String dictionary = "bsdd";
         String query = "temperature";
-
         BsddMockStubHelper.stubListPropertiesApiResponse();
 
         Response response = RestAssured.given().log().all()
@@ -219,21 +223,28 @@ public class TestDataDictionaryController {
                 .log().all()
                 .extract().response();
 
-        String json = response.getBody().asString();
-        System.out.println(json);
-        
+        response.then()
+        .statusCode(HttpStatus.SC_SUCCESS)
+        .contentType(ContentType.JSON)
+        .body("[0].code", equalTo("ApplicationTemperature"))
+        .body("[0].name", equalTo("ApplicationTemperature"))
+        .body("[0].uri", equalTo("https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/ApplicationTemperature"))
+        .body("[1].code", equalTo("ActivationTemperature"))
+        .body("[1].name", equalTo("Activation Temperature"))
+        .body("[1].uri", equalTo("https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/ActivationTemperature"));
+
     }
-    
+
     /**
      * Tests the creation of a template including properties.
      */
     @Test
-    public void testCreateTemplateWithProperties() {
-        
+    public void shouldCreateTemplateWhenValidPropertiesUriAreGiven() {
+
         List<String> propertiesUriList = new ArrayList<>();
         propertiesUriList.add("https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008");
         String dictionary = "bsdd";
-        
+
         BsddMockStubHelper.stubGetPropertiesApiResponse();
 
         Response response = RestAssured.given().log().all()
@@ -248,11 +259,18 @@ public class TestDataDictionaryController {
                 .log().all()
                 .extract().response();
 
-        String json = response.getBody().asString();
-        System.out.println(json);
-        
-        assertTrue(json.contains("https://identifier.buildingsmart.org/uri/etim/etim/10.0"));
-        
-        
+        response.then()
+        .statusCode(TestConstants.STATUS_SUCCESS)
+        .contentType(ContentType.JSON)
+        .body("properties[0].code", equalTo("EF000008"))
+        .body("properties[0].name", equalTo("Width"))
+        .body("properties[0].uri", equalTo(
+                "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008"))
+        .body("properties[0].dataType", equalTo("Real"))
+        .body("properties[0].propertyValueKind", equalTo("Single"))
+        .body("properties[0].status", equalTo("Active"));
+
+
+
     }
 }

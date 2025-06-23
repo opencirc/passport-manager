@@ -112,7 +112,6 @@ public class JwtService {
             String rawKey = EncryptionUtil.generateSecureKey();
             String encryptedKey = EncryptionUtil.encrypt(rawKey,
                     appProperties.getEncryptionKey());
-           // storeEncryptedSecretKeyInProperties(encryptedKey);
             this.secretKey = rawKey;
             jwtConfigRepository.saveConfig(encryptedKey);
 
@@ -128,7 +127,7 @@ public class JwtService {
      * @param expiryMinutes
      * @return token
      */
-    public String generateToken(Long userId, int expiryMinutes) {
+    public String generateToken(String userId, int expiryMinutes) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         return Jwts.builder().claims(claims)
@@ -163,8 +162,8 @@ public class JwtService {
      * @param token JWT token
      * @return User ID
      */
-    public Long extractUserId(String token) {
-        return extractClaim(token, claims -> claims.get("userId", Long.class));
+    public String extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", String.class));
     }
 
     /**
@@ -202,7 +201,7 @@ public class JwtService {
         }
 
         UserPrincipal userPrincipal = (UserPrincipal) userDetails;
-        final Long userIdFromToken = extractUserId(token);
+        final String userIdFromToken = extractUserId(token);
 
         return (userIdFromToken.equals(userPrincipal.getUserId())
                 && !isTokenExpired(token));
@@ -224,7 +223,8 @@ public class JwtService {
      * @return user details
      */
     public User extractUserFromToken(String token) {
-        Optional<User> user = userRepository.findById(extractUserId(token));
+        Optional<User> user = userRepository.findById(Long
+                .valueOf(extractUserId(extractUserId(token))));
         return user.orElseThrow(
                 () -> new UsernameNotFoundException("Invalid token, user not found"));
     }
@@ -235,9 +235,9 @@ public class JwtService {
      * @return access Token
      */
     public String generateAccessTokenUsingRefreshToken(String refreshToken) {
-        Long userId = extractUserId(refreshToken);
+        String userId = extractUserId(refreshToken);
         UserDetails userDetails = authUserDetailsService.loadUserById(userId);
-        User user = userRepository.findById(userId).orElseThrow(
+        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
                 () -> new UsernameNotFoundException("User not found"));
         if (!validateToken(refreshToken, userDetails)) {
             throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);

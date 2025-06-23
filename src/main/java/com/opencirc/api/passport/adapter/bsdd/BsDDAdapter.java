@@ -205,13 +205,12 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
      * @return property template in json format
      */
     @Override
-    public JsonNode getPropertyTemplatewithDetails(List<String> uriList)
+    public JsonNode getPropertyTemplateWithDetails(List<String> uriList)
             throws JsonValidationException {
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();
 
         for (String uri : uriList) {
-            System.out.println(uri);
             if (!validateUri(uri)) {
                 throw new JsonValidationException("Invalid URI : " + uri);
             }
@@ -261,7 +260,6 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
                 .queryParam(AppConstants.QP_BSDD_TYPEFILTER, "Property")
                 .queryParam("IncludeSearchDescriptions", "false")
                 .queryParam("Offset", 0);
-        // .queryParam(AppConstants.QP_BSDD_LIMIT, 20)
         String url = uriBuilder.build(false).toUriString();
 
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
@@ -298,7 +296,6 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
         }
 
         ArrayNode properties = null;
-        System.out.println(jsonNode.toString());
         try {
             if (jsonNode.has("classType")
                     && "Class".equals(jsonNode.path("classType").asText())) {

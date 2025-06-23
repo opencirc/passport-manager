@@ -13,7 +13,7 @@ import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.model.Passport;
 
 public interface PassportRepository
-        extends JpaRepository<Passport, String> {
+        extends JpaRepository<Passport, Long> {
 
     /**
      * Retrieves passport.
@@ -64,7 +64,7 @@ public interface PassportRepository
             JOIN datasheets ds ON pdm.datasheet_id = ds.id
             WHERE pt.status = 'ACTIVE'
             """, nativeQuery = true)
-    Optional<List<PassportDatasheetResultMapDto>> findActivePassportDescendants(
+    Optional<List<PassportDatasheetResultMapDto>> findActivePassportChildren(
             @Param("id") String id);
 
     /**

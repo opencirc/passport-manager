@@ -24,7 +24,7 @@ public class PassportTemplateDto {
      * Unique Id.
      */
     @JsonProperty
-    private Long id;
+    private String id;
 
     /**
      * Name of the Template.
@@ -59,7 +59,7 @@ public class PassportTemplateDto {
      */
     public static PassportTemplateDto from(PassportTemplate passportTemplate) {
         PassportTemplateDto dto = new PassportTemplateDto();
-        dto.setId(passportTemplate.getId());
+        dto.setId(String.valueOf(dto.getId()));
         dto.setName(passportTemplate.getName());
         dto.setTemplate(passportTemplate.getTemplate());
         dto.setCreatedBy(passportTemplate.getCreatedBy());

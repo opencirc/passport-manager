@@ -46,9 +46,9 @@ public class PassportTemplateController {
     public ResponseEntity<PassportTemplateDto> createPassportTemplateFromPassport(
             @Parameter(description = "Id of the Passport", required = true)
             @PathVariable String passportId,
-            @Parameter(description = "Set to true if extracted template needs"
-                    + "to persisted")
-            @RequestParam(required = false) boolean dryRun,
+            @Parameter(description = "Set to true if extracted template does not need"
+                    + "to be persisted")
+            @RequestParam boolean dryRun,
             @Parameter(description = "Provide name to extracted"
                     + "template for future retrieval")
             @RequestBody String templateName) throws
@@ -67,7 +67,7 @@ public class PassportTemplateController {
     @GetMapping("/api/passport-template/{id}/")
     public ResponseEntity<PassportTemplateDto> getPersistedTemplate(
             @Parameter(description = "Name of the Template stored in DB", required = true)
-            @PathVariable Long id)
+            @PathVariable String id)
             throws JsonMappingException, JsonProcessingException {
         return ResponseEntity
                 .ok(passportTemplateService.getPassportTemplate(id));

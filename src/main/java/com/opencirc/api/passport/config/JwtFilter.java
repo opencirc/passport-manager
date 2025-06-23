@@ -76,7 +76,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        Long userId = extractUserIdFromToken(accessToken, response);
+        String userId = extractUserIdFromToken(accessToken, response);
         if (userId == null) {
             return;
         }
@@ -132,7 +132,7 @@ public class JwtFilter extends OncePerRequestFilter {
      * @param response
      * @return userId
      */
-    private Long extractUserIdFromToken(String token, HttpServletResponse response)
+    private String extractUserIdFromToken(String token, HttpServletResponse response)
             throws IOException {
         try {
             return jwtService.extractUserId(token);
@@ -151,7 +151,7 @@ public class JwtFilter extends OncePerRequestFilter {
      * @param userId
      */
     private void authenticateUser(HttpServletRequest request,
-            HttpServletResponse response, String accessToken, Long userId)
+            HttpServletResponse response, String accessToken, String userId)
             throws IOException {
         try {
             AuthUserDetailsService authUserDetailsService = context

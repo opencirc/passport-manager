@@ -30,7 +30,7 @@ public interface PassportDatasheetResultMapDto {
     /**
      * @return the ID of the associated datasheet
      */
-    Integer getDatasheetId();
+    String getDatasheetId();
 
     /**
      * @return the JSON data of the datasheet as a string

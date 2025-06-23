@@ -28,7 +28,6 @@ public class CompanyHashService {
     @Autowired
     public CompanyHashService(CompanyConfig companyConfiguration) {
         this.companyConfig = companyConfiguration;
-        // computeAndStoreHash(); // Compute hash on startup
     }
 
     /**
@@ -36,7 +35,7 @@ public class CompanyHashService {
      */
     public void computeAndStoreHash() {
         try {
-            String base = companyConfig.getName(); // +companyconfig.getanyprop();
+            String base = companyConfig.getName();
             MessageDigest digest = MessageDigest.getInstance(AppConstants.SHA_256);
             byte[] hashBytes = digest
                     .digest(base.getBytes(StandardCharsets.UTF_8));
@@ -50,7 +49,6 @@ public class CompanyHashService {
                 hexString.append(hex);
             }
             this.companyHash = hexString.toString();
-            // ocConfigRepository.saveConfig(companyHash);
 
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Error computing hash", e);

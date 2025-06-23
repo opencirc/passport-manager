@@ -25,7 +25,7 @@ public class MockAuthenticationTestHelper {
             AuthenticationManager authenticationManager) {
 
         User mockUser = new User();
-        mockUser.setId(1L);
+        mockUser.setId(1l);
         mockUser.setUsername(TestConstants.TEST_USERNAME_1);
         mockUser.setPassword("user1password");
         mockUser.setEmail("user1@example.com");
@@ -38,9 +38,9 @@ public class MockAuthenticationTestHelper {
                 new UsernamePasswordAuthenticationToken(
                 mockUserPrincipal, null, mockUserPrincipal.getAuthorities());
 
-        when(authUserDetailsService.loadUserById(1L)).thenReturn(mockUserPrincipal);
+        when(authUserDetailsService.loadUserById("1")).thenReturn(mockUserPrincipal);
 
-        when(authUserDetailsService.loadUserById(999L))
+        when(authUserDetailsService.loadUserById("999"))
                 .thenThrow(new UsernameNotFoundException("User not found"));
 
         when(authenticationManager.authenticate(any())).thenAnswer(invocation -> {

@@ -40,7 +40,7 @@ public class DataDictionaryService {
         DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
         List<Map<String, String>> classMap = adapter.listClass(text);
-      //  cacheService.storePropertiesInRedis(dictionary, classMap);
+        cacheService.storePropertiesInRedis(dictionary, classMap);
         return classMap;
     }
 
@@ -73,9 +73,8 @@ public class DataDictionaryService {
             String text) {
         List<Map<String, String>> properties = cacheService
                 .searchProperties(dictionary, text);
-        System.out.println(properties.toString());
         if (properties == null || properties.isEmpty()) {
-            DictionaryAdapter adapter = dictionaryAdapterFactory
+            DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                     .getAdapter(dictionary);
             properties = adapter.listProperties(text);
             if (properties != null && !properties.isEmpty()) {
@@ -96,7 +95,7 @@ public class DataDictionaryService {
             List<String> propertiesUriList) throws JsonValidationException {
         DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
-        return adapter.getPropertyTemplatewithDetails(propertiesUriList);
+        return adapter.getPropertyTemplateWithDetails(propertiesUriList);
 
     }
 

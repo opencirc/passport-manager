@@ -13,7 +13,6 @@ public class TestConfig {
 
     /**
      * RestTemplate Bean.
-     * 
      * @param builder
      * @return restTemplate
      */

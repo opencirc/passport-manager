@@ -143,14 +143,14 @@ public class PassportService {
     public List<PassportDto> getPassportChildren(String id)
             throws JsonProcessingException {
         Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
-                passportRepository.findActivePassportDescendants(id);
+                passportRepository.findActivePassportChildren(id);
 
         List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
                 .orElse(Collections.emptyList());
 
         if (resultRows.isEmpty()) {
             throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passports found with descendants");
+                    "No active passports found with Children");
         }
 
         Map<String, PassportDto> dtoById = new LinkedHashMap<>();

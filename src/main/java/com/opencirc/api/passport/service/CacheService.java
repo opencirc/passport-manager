@@ -100,7 +100,6 @@ public class CacheService {
     public String getUriFomCode(DataDictionary dictionary, String code) {
 
         String pattern = "^" + dictionary + "#[^#]*#" + code + "$";
-        System.out.println(redisTemplate.keys("*"));
         Set<String> keys = redisTemplate.keys(dictionary + "#*#" + code);
         String uri = null;
         for (String key : keys) {

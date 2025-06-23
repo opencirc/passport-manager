@@ -95,7 +95,7 @@ public class AuthController {
         }
 
         try {
-            String newAccessToken = authService.refreshToken(refreshToken, response);
+            authService.refreshToken(refreshToken, response);
             return ResponseEntity.ok(Collections.singletonMap("message",
                     "Token refreshed"));
         } catch (AuthenticationException e) {
