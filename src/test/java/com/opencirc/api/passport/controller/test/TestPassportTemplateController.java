@@ -118,7 +118,7 @@ public class TestPassportTemplateController {
      *
      */
     @Test
-    public void shouldCreateTemplateFromPassportSuccessfully() throws Exception {
+    public void shouldGenerateTemplateFromPassportSuccessfullyWithoutSaving() throws Exception {
         String templateName = "testtemplate";
         boolean dryRun = true;
 

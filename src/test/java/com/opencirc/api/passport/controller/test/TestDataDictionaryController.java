@@ -174,8 +174,11 @@ public class TestDataDictionaryController {
                 .log().all()
                 .extract().response();
 
-        String json = response.getBody().asString();
-        assertTrue(json.contains("\"name\":\"Use of Construction Spaces\""));
+        response.then().body("name", equalTo("Space for human dwelling"))
+                .body("classProperties[0].name", equalTo("Handicap Accessible"))
+                .body("classProperties[0].dataType", equalTo("Boolean"))
+                .body("status", equalTo("Active"))
+                .body("parentClassReference.code", equalTo("uocs"));
     }
     /**
      * Error scenario to test with invalid input URL.
@@ -194,12 +197,13 @@ public class TestDataDictionaryController {
                 .when()
                 .post("/api/data-dictionary/{dictionary}/class", dictionary)
                 .then()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .contentType(ContentType.JSON)
                 .log().all()
                 .extract().response();
+        
+        assertTrue(response.getBody().asString().contains("Invalid URI"));
 
-        String json = response.getBody().asString();
-        assertTrue(json.contains("Internal Server Error"));
     }
 
 
@@ -254,7 +258,7 @@ public class TestDataDictionaryController {
                 .contentType(ContentType.JSON)
                 .body(propertiesUriList)
                 .when()
-                .post("/api/data-dictionary/properties/{dictionary}", dictionary)
+                .post("/api/data-dictionary/{dictionary}/properties", dictionary)
                 .then()
                 .statusCode(TestConstants.STATUS_SUCCESS)
                 .contentType(ContentType.JSON)

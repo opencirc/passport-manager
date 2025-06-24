@@ -1,7 +1,5 @@
 package com.opencirc.api.passport.auth.controller;
 
-import java.util.Collections;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -100,7 +98,8 @@ public class AuthController {
             return ResponseEntity.ok(new StatusResponseDto("Token refreshed"));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new StatusResponseDto("Error refreshing token: " + e.getMessage()));
+                    .body(new StatusResponseDto("Error refreshing token: "
+            + e.getMessage()));
         }
     }
 
@@ -120,7 +119,8 @@ public class AuthController {
             return ResponseEntity.ok(new StatusResponseDto("Logged out"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new StatusResponseDto("Error while logging out " + e.getMessage()));
+                    .body(new StatusResponseDto("Error while logging out "
+            + e.getMessage()));
         }
 
     }

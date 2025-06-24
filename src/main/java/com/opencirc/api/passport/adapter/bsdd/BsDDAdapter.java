@@ -161,7 +161,7 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
             throws JsonValidationException, JsonProcessingException {
 
         if (!validateUri(uri)) {
-            throw new JsonValidationException("Invalid URI : " + uri);
+            throw new InvalidInputException("Invalid URI : " + uri);
         }
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromHttpUrl(props.getBsDDClassDetailsURL())

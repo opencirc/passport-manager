@@ -10,7 +10,7 @@ public class StatusResponseDto {
      * The message of the response.
      */
     private String message;
-    
+
     /**
      * Instantiates StatusResponseDto.
      *

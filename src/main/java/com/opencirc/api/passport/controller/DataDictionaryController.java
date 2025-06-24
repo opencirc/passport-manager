@@ -116,7 +116,7 @@ public class DataDictionaryController {
      * @return the template with all the relevant properties
      */
     @Operation(summary = "Create template with selected properties")
-    @PostMapping(value = "/api/data-dictionary/properties/{dictionary}", produces = {
+    @PostMapping(value = "/api/data-dictionary/{dictionary}/properties", produces = {
             "application/json" }, consumes = { "application/json" })
     public JsonNode createTemplateWithProperties(
             @Parameter(description = "Name of library", required = true, example = "bsdd")

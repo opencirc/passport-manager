@@ -51,7 +51,14 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse("Invalid Input", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
-    
+
+
+    /**
+     * Handler for Resource not found exception.
+     *
+     * @param ex - invalid input exception
+     * @return response
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex) {
         ErrorResponse errorResponse = new ErrorResponse("Not Found", ex.getMessage());

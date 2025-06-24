@@ -137,7 +137,7 @@ public class PassportService {
      * Retrieves passport and its children for the given id.
      *
      * @param id
-     * @return Passport DTO from passport
+     * @return a list of {@link PassportDto} objects
      * @throws JsonProcessingException
      */
     public List<PassportDto> getPassportChildren(String id)
