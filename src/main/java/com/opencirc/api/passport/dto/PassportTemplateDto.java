@@ -59,7 +59,7 @@ public class PassportTemplateDto {
      */
     public static PassportTemplateDto from(PassportTemplate passportTemplate) {
         PassportTemplateDto dto = new PassportTemplateDto();
-        dto.setId(dto.getId());
+        dto.setId(String.valueOf(passportTemplate.getId()));
         dto.setName(passportTemplate.getName());
         dto.setTemplate(passportTemplate.getTemplate());
         dto.setCreatedBy(passportTemplate.getCreatedBy());

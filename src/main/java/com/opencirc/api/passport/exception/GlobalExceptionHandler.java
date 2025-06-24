@@ -51,6 +51,12 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse("Invalid Input", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+    
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex) {
+        ErrorResponse errorResponse = new ErrorResponse("Not Found", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
 
     /**
      * Handler for All other exception.
@@ -61,7 +67,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse("Internal Server Error",
-                "An unexpected error occurred");
+                ex.getMessage());
         return new ResponseEntity<>(errorResponse,
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }

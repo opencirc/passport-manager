@@ -3,7 +3,12 @@ package com.opencirc.api.passport.exception;
 public class InvalidInputException extends RuntimeException {
 
     /**
-     * JsonValidationException with message.
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * InvalidInputException with message.
      * @param message
      */
     public InvalidInputException(String message) {
@@ -11,7 +16,7 @@ public class InvalidInputException extends RuntimeException {
     }
 
     /**
-     * JsonValidationException with message and cause.
+     * InvalidInputException with message and cause.
      * @param message
      * @param cause
      */

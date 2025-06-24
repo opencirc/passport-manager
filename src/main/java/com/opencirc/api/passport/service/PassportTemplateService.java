@@ -8,9 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -21,6 +19,7 @@ import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dao.PassportTemplateRepository;
 import com.opencirc.api.passport.dto.PassportTemplateDto;
+import com.opencirc.api.passport.exception.ResourceNotFoundException;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
@@ -64,8 +63,7 @@ public class PassportTemplateService {
         Optional<Passport> passport = passportRepository.findPassport(passportId,
                 Passport.Status.ACTIVE);
         if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.ACTIVE) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "Active passport found");
+            throw new ResourceNotFoundException("Active passport not found");
         }
 
         PassportTemplate rawExtractedTemplate = generateTemplateFromPassport(
@@ -136,9 +134,14 @@ public class PassportTemplateService {
      * @return template
      */
     public PassportTemplateDto getPassportTemplate(String id) {
-        UUID uuid = UUID.fromString(id); 
-        return PassportTemplateDto.from(passportTemplateRepository
-                .findFirstById(uuid));
+        UUID uuid = UUID.fromString(id);
+        PassportTemplate template = passportTemplateRepository.findFirstById(uuid);
+
+        if (template == null) {
+            throw new ResourceNotFoundException(
+                    "Passport template not found for ID: " + id);
+        }
+        return PassportTemplateDto.from(template);
     }
 
     /**
@@ -147,8 +150,15 @@ public class PassportTemplateService {
      * @return template
      */
     public List<PassportTemplateDto> getAllPassportTemplates() {
-        return passportTemplateRepository.findAll().stream().map(PassportTemplateDto
-                ::from).toList();
+        List<PassportTemplate> templates = passportTemplateRepository.findAll();
+
+        if (templates.isEmpty()) {
+            throw new ResourceNotFoundException("No passport templates found");
+        }
+
+        return templates.stream()
+                .map(PassportTemplateDto::from)
+                .toList();
     }
 
 }

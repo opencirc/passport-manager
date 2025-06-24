@@ -25,14 +25,14 @@ public class MockAuthenticationTestHelper {
      */
     public void mockUserDetailsDB(AuthUserDetailsService authUserDetailsService,
             AuthenticationManager authenticationManager) {
-
+        UUID existingUserId = UUID.fromString("87510a3c-4357-47bc-80a1-9ed02285fbae");
         User mockUser = new User();
-        mockUser.setId(UUID.fromString("87510a3c-4357-47bc-80a1-9ed02285fbae"));
+        mockUser.setId(existingUserId);
         mockUser.setUsername(TestConstants.TEST_USERNAME_1);
         mockUser.setPassword("user1password");
         mockUser.setEmail("user1@example.com");
         mockUser.setActive(true);
-        mockUser.setRole(User.Role.ADMIN);
+        mockUser.setRole(User.Role.USER);
 
         UserPrincipal mockUserPrincipal = new UserPrincipal(mockUser);
 
@@ -40,7 +40,7 @@ public class MockAuthenticationTestHelper {
                 new UsernamePasswordAuthenticationToken(
                 mockUserPrincipal, null, mockUserPrincipal.getAuthorities());
 
-        when(authUserDetailsService.loadUserById("1")).thenReturn(mockUserPrincipal);
+        when(authUserDetailsService.loadUserById("87510a3c-4357-47bc-80a1-9ed02285fbae")).thenReturn(mockUserPrincipal);
 
         when(authUserDetailsService.loadUserById("999"))
                 .thenThrow(new UsernameNotFoundException("User not found"));
