@@ -19,7 +19,7 @@ public class UserPrincipal implements UserDetails {
     /**
      * User Id.
      */
-    private final Long userId;
+    private final String userId;
 
     /**
      * User name.
@@ -52,7 +52,7 @@ public class UserPrincipal implements UserDetails {
      */
     public UserPrincipal(User user) {
         Objects.requireNonNull(user, "User cannot be null");
-        this.userId = user.getId();
+        this.userId = String.valueOf(user.getId());
         this.username = user.getUsername();
         this.email = user.getEmail();
         this.password = user.getPassword();
@@ -84,7 +84,7 @@ public class UserPrincipal implements UserDetails {
      * method to get userId.
      * @return userId
      */
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 

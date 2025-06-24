@@ -88,8 +88,6 @@ public class SecurityConfig {
                                 properties.getLoginUrl(), "/swagger-ui/**",
                                 "/v3/api-docs/**")
                         .permitAll().anyRequest().authenticated())
-                // .formLogin(Customizer.withDefaults()) // remove comment this
-                // to test api in browser
                 .httpBasic().disable()
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

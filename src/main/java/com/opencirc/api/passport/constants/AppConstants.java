@@ -78,7 +78,6 @@ public final class AppConstants {
      */
     public static final String REFRESH_TOKEN = "refreshToken";
 
-    // Error message
     /**
      * Error message for users already exists.
      */

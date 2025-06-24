@@ -3,7 +3,6 @@ package com.opencirc.api.passport.service;
 import java.util.List;
 import java.util.Map;
 
-import com.opencirc.api.passport.enums.DataDictionary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
+import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.JsonValidationException;
 
 @Service
@@ -35,11 +35,12 @@ public class DataDictionaryService {
      * @param text
      * @return class Details
      */
-    public List<Map<String, String>> searchClassesByText(DataDictionary dictionary, String text) {
-        DictionaryAdapter adapter = dictionaryAdapterFactory
+    public List<Map<String, String>> searchClassesByText(DataDictionary dictionary,
+            String text) {
+        DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
         List<Map<String, String>> classMap = adapter.listClass(text);
-      //  cacheService.storePropertiesInRedis(dictionary, classMap);
+        cacheService.storePropertiesInRedis(dictionary, classMap);
         return classMap;
     }
 
@@ -48,16 +49,17 @@ public class DataDictionaryService {
      *
      * @param dictionary
      * @param uri
+     * @param <T> The specific dictionary type
+     * @param withProperties
      * @return class with properties in json format
      * @throws JsonProcessingException
      */
-    public JsonNode createClassTemplate(DataDictionary dictionary, String uri, boolean withProperties) throws JsonValidationException,
+    public <T> T createClassTemplate(DataDictionary dictionary, String uri,
+            boolean withProperties) throws JsonValidationException,
     JsonProcessingException {
-        // Gets adapter instance
-        DictionaryAdapter adapter = dictionaryAdapterFactory
+        DictionaryAdapter<T> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
-        JsonNode classTemplate = adapter.createClassTemplate(uri, withProperties);
-        return classTemplate;
+        return adapter.createClassTemplate(uri, withProperties);
     }
 
     /**
@@ -67,19 +69,11 @@ public class DataDictionaryService {
      * @param text
      * @return properties in json format
      */
-    public List<Map<String, String>> listProperties(DataDictionary dictionary, String text) {
-        List<Map<String, String>> properties = cacheService
-                .searchProperties(dictionary, text);
-        System.out.println(properties.toString());
-        if (properties == null || properties.isEmpty()) {
-            DictionaryAdapter adapter = dictionaryAdapterFactory
+    public List<Map<String, String>> listProperties(DataDictionary dictionary,
+            String text) {
+        DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                     .getAdapter(dictionary);
-            properties = adapter.listProperties(text);
-            if (properties != null && !properties.isEmpty()) {
-                cacheService.storePropertiesInRedis(dictionary, properties);
-            }
-        }
-        return properties;
+        return adapter.listProperties(text);
     }
 
     /**
@@ -89,10 +83,11 @@ public class DataDictionaryService {
      * @param propertiesUriList
      * @return template with properties in json format
      */
-    public JsonNode createTemplateWithProperties(DataDictionary dictionary, List<String> propertiesUriList) throws JsonValidationException {
-        DictionaryAdapter adapter = dictionaryAdapterFactory
+    public JsonNode createTemplateWithProperties(DataDictionary dictionary,
+            List<String> propertiesUriList) throws JsonValidationException {
+        DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
-        return adapter.getPropertyTemplatewithDetails(propertiesUriList);
+        return adapter.getPropertyTemplateWithDetails(propertiesUriList);
 
     }
 

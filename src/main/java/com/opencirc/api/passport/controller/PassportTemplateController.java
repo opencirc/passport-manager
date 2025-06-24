@@ -1,19 +1,24 @@
 package com.opencirc.api.passport.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.PassportTemplateDto;
-import com.opencirc.api.passport.model.PassportTemplate;
 import com.opencirc.api.passport.service.PassportTemplateService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Endpoint for operations related to passport.
@@ -41,11 +46,13 @@ public class PassportTemplateController {
     public ResponseEntity<PassportTemplateDto> createPassportTemplateFromPassport(
             @Parameter(description = "Id of the Passport", required = true)
             @PathVariable String passportId,
-            @Parameter(description = "Set to true if extracted template needs to persisted")
-            @RequestParam(required = false) boolean dryRun,
+            @Parameter(description = "Set to true if extracted template does not need"
+                    + "to be persisted")
+            @RequestParam boolean dryRun,
             @Parameter(description = "Provide name to extracted"
                     + "template for future retrieval")
-            @RequestBody(required = false) String templateName) throws JsonProcessingException {
+            @RequestBody String templateName) throws
+    JsonProcessingException {
         return ResponseEntity.ok(passportTemplateService.createTemplateFromPassport(
                 passportId, dryRun, templateName));
     }
@@ -60,7 +67,7 @@ public class PassportTemplateController {
     @GetMapping("/api/passport-template/{id}/")
     public ResponseEntity<PassportTemplateDto> getPersistedTemplate(
             @Parameter(description = "Name of the Template stored in DB", required = true)
-            @PathVariable Long id)
+            @PathVariable String id)
             throws JsonMappingException, JsonProcessingException {
         return ResponseEntity
                 .ok(passportTemplateService.getPassportTemplate(id));

@@ -1,9 +1,5 @@
 package com.opencirc.api.passport.auth.controller;
 
-import java.util.Collections;
-
-import com.opencirc.api.passport.auth.service.AuthService;
-import com.opencirc.api.passport.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.auth.service.AuthService;
 import com.opencirc.api.passport.dto.RegisterRequestDto;
+import com.opencirc.api.passport.dto.StatusResponseDto;
+import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.model.User;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -35,14 +34,14 @@ public class AuthController {
     /**
      * Endpoint to register new user.
      *
-     * @param user details with username, email, password
+     * @param userDetails with username, email, password
      * @return response
      */
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequestDto userDetails)
             throws AuthenticationException {
         authService.register(userDetails);
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity.ok(new StatusResponseDto("User registered successfully"));
     }
 
     /**
@@ -57,7 +56,7 @@ public class AuthController {
             @RequestBody User user, HttpServletResponse response)
                     throws AuthenticationException {
         authService.verify(user, response);
-        return ResponseEntity.ok(Collections.singletonMap("message", "Logged in"));
+        return ResponseEntity.ok(new StatusResponseDto("Logged in"));
     }
 
     /**
@@ -72,10 +71,10 @@ public class AuthController {
     required = false) String token, HttpServletResponse response) {
         if (token == null || !authService.validateToken(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Not authenticated");
+                    .body(new StatusResponseDto("Not authenticated"));
         }
 
-        return ResponseEntity.ok(Collections.singletonMap("message", "Authenticated"));
+        return ResponseEntity.ok(new StatusResponseDto("Authenticated"));
     }
 
     /**
@@ -91,16 +90,16 @@ public class AuthController {
             response) throws AuthenticationException {
         if (refreshToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Refresh token missing");
+                    .body(new StatusResponseDto("Refresh token missing"));
         }
 
         try {
-            String newAccessToken = authService.refreshToken(refreshToken, response);
-            return ResponseEntity.ok(Collections.singletonMap("message",
-                    "Token refreshed"));
+            authService.refreshToken(refreshToken, response);
+            return ResponseEntity.ok(new StatusResponseDto("Token refreshed"));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Error refreshing token: " + e.getMessage());
+                    .body(new StatusResponseDto("Error refreshing token: "
+            + e.getMessage()));
         }
     }
 
@@ -117,10 +116,11 @@ public class AuthController {
             HttpServletResponse response) throws AuthenticationException {
         try {
             authService.logout(refreshToken, response);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Logged out"));
+            return ResponseEntity.ok(new StatusResponseDto("Logged out"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Error while logging out " + e.getMessage());
+                    .body(new StatusResponseDto("Error while logging out "
+            + e.getMessage()));
         }
 
     }

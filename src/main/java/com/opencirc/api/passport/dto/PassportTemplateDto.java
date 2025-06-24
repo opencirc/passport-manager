@@ -21,10 +21,10 @@ import java.time.LocalDateTime;
 public class PassportTemplateDto {
 
     /**
-     * Unique Id
+     * Unique Id.
      */
     @JsonProperty
-    private Long id;
+    private String id;
 
     /**
      * Name of the Template.
@@ -38,16 +38,28 @@ public class PassportTemplateDto {
     @JsonProperty
     private JsonNode template;
 
+    /**
+     * Created by.
+     */
     @JsonProperty
     private String createdBy;
 
+    /**
+     * Time of creation.
+     */
     @JsonProperty
     @Column(name = "created_time", updatable = false)
     private LocalDateTime createdTime;
 
+    /**
+     * Sets the passportTemplateDto from PassportTemplate.
+     *
+     * @param passportTemplate
+     * @return the instance of passportTemplateDto
+     */
     public static PassportTemplateDto from(PassportTemplate passportTemplate) {
         PassportTemplateDto dto = new PassportTemplateDto();
-        dto.setId(passportTemplate.getId());
+        dto.setId(String.valueOf(passportTemplate.getId()));
         dto.setName(passportTemplate.getName());
         dto.setTemplate(passportTemplate.getTemplate());
         dto.setCreatedBy(passportTemplate.getCreatedBy());

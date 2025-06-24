@@ -9,8 +9,9 @@ import com.opencirc.api.passport.exception.JsonValidationException;
 
 /**
  * Interface of Dictionary Adapter.
+ * @param <T> the type of dictionary used by the adapter
  */
-public interface DictionaryAdapter {
+public interface DictionaryAdapter<T> {
 
     /**
      * Retrieves a list of classes matching the given search text.
@@ -26,7 +27,7 @@ public interface DictionaryAdapter {
      * @return JsonNode
      * @throws JsonValidationException
      */
-    JsonNode createClassTemplate(String code, boolean addProperties)
+    T createClassTemplate(String code, boolean addProperties)
             throws JsonValidationException, JsonProcessingException;
 
 
@@ -43,7 +44,7 @@ public interface DictionaryAdapter {
      * @return Jsonnode with proeprty details
      * @throws JsonValidationException
      */
-    JsonNode getPropertyTemplatewithDetails(List<String> properties)
+    JsonNode getPropertyTemplateWithDetails(List<String> properties)
             throws JsonValidationException;
 
     /**

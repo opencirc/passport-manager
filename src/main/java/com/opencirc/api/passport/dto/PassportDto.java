@@ -4,14 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Passport;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,7 +23,7 @@ import lombok.ToString;
 public class PassportDto {
 
     /**
-     * Unique Id
+     * Unique Id.
      */
     @JsonProperty
     private String id;
@@ -36,53 +32,60 @@ public class PassportDto {
      * Name of Passport.
      */
     @JsonProperty
-    public String name;
+    private String name;
 
     /**
      * Status of Passport.
      */
     @JsonProperty
-    public Passport.Status status;
+    private Passport.Status status;
 
     /**
      * Id of Parent Passport.
      */
     @JsonProperty
-    public PassportDto parent;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private PassportDto parent;
 
 
     /**
      * User who created Passport.
      */
     @JsonProperty
-    public String createdBy;
+    private String createdBy;
 
     /**
      * Time of passport creation.
      */
     @JsonProperty
-    public LocalDateTime createdTime;
+    private LocalDateTime createdTime;
 
     /**
      * Linked datasheets.
      */
-    public List<DatasheetDto> datasheets;
+    private List<DatasheetDto> datasheets;
 
+    /**
+     * Setting up values from Passport to Passport Dto.
+     * @param passport
+     * @return passportDto
+     */
     public static PassportDto from(Passport passport) {
         PassportDto dto = new PassportDto();
         dto.setId(passport.getId());
         dto.setName(passport.getName());
         dto.setStatus(passport.getStatus());
 
-        // @TODO add parent to DTO if it exists
-
         dto.setCreatedBy(passport.getCreatedBy());
         dto.setCreatedTime(passport.getCreatedTime());
 
-        dto.setDatasheets(passport.getDatasheetMappings().stream()
-            .map((datasheetMapping) -> DatasheetDto.from(datasheetMapping.getDatasheet()))
-            .collect(Collectors.toList()));
+        if (passport.getDatasheetMappings() != null) {
+            dto.setDatasheets(passport.getDatasheetMappings().stream()
+                    .map(mapping -> DatasheetDto.from(mapping.getDatasheet()))
+                    .collect(Collectors.toList()));
+        }
 
         return dto;
     }
+
 }

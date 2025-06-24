@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.model.Passport;
 
 public interface PassportRepository
@@ -18,17 +19,15 @@ public interface PassportRepository
      * Retrieves passport.
      *
      * @param id
-     *
+     * @param status
      * @return passports
      */
-    @Query(value = "SELECT pe.id as passportId, pe.name as peName, "
-            + "ds.id as datasheetId, ds.template_entry as templateEntry,"
-            + "ds.data_category as dataCategory FROM Passport pe "
-            + "JOIN datasheet_mapping pdm ON pe.id = pdm.passport_id "
-            + "JOIN datasheet ds ON pdm.datasheet_id = ds.id "
-            + "WHERE pe.id = :id "
-            + "AND pe.status = :status", nativeQuery = true)
-    Optional<Passport> findPassport(@Param("id") String id);
+    @Query("SELECT p FROM Passport p "
+            + "LEFT JOIN FETCH p.datasheetMappings dm "
+            + "LEFT JOIN FETCH dm.datasheet "
+            + "WHERE p.id = :id AND p.status = :status")
+    Optional<Passport> findPassport(@Param("id") String id,
+            @Param("status") Passport.Status status);
 
     /**
      * Retrieves passport with its children.
@@ -39,27 +38,33 @@ public interface PassportRepository
      */
     @Query(value = """
             WITH RECURSIVE PassportTree AS (
-                SELECT pe.id, pe.name, pe.status, pe.parent_id
-                FROM Passport pe
+                SELECT pe.id, pe.name, pe.status, pe.parent_id, pe.created_by,
+                pe.created_time
+                FROM passports pe
                 WHERE pe.id = :id
 
                 UNION ALL
 
-                SELECT child.id, child.name, child.status, child.parent_id
-                FROM Passport child
+                SELECT child.id, child.name, child.status, child.parent_id,
+                child.created_by, child.created_time
+                FROM passports child
                 INNER JOIN PassportTree parent ON child.parent_id = parent.id
             )
             SELECT pt.id AS passportId,
                    pt.name AS passportName,
                    ds.id AS datasheetId,
-                   ds.template_entry AS templateEntry
-                   ds.data_category AS dataCategory
+                   ds.data AS data,
+                   ds.data_category AS dataCategory,
+                   pt.status AS status,
+                   pt.parent_id AS parentId,
+                   pt.created_by AS createdBy,
+                   pt.created_time AS createdTime
             FROM PassportTree pt
-            JOIN datasheet_mapping pdm ON pt.id = pdm.passport_id
-            JOIN datasheet ds ON pdm.datasheet_id = ds.id
-            WHERE pt.status = 'active'
+            JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
+            JOIN datasheets ds ON pdm.datasheet_id = ds.id
+            WHERE pt.status = 'ACTIVE'
             """, nativeQuery = true)
-    List<Object[]> findActivePassportWithDescendant(
+    Optional<List<PassportDatasheetResultMapDto>> findActivePassportChildren(
             @Param("id") String id);
 
     /**

@@ -9,14 +9,14 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.opencirc.api.passport.enums.DataDictionary;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencirc.api.passport.enums.DataDictionary;
 
 @Service
 public class CacheService {
@@ -54,9 +54,8 @@ public class CacheService {
      * @param searchText
      * @return list of data
      */
-    public List<Map<String, String>> searchProperties(DataDictionary dictionary, String searchText) {
-
-        // (dictionary);
+    public List<Map<String, String>> searchProperties(DataDictionary dictionary,
+            String searchText) {
 
         List<Map<String, String>> propertyList = new ArrayList<>();
         String pattern = "(?i).*" + searchText + ".*";
@@ -101,7 +100,6 @@ public class CacheService {
     public String getUriFomCode(DataDictionary dictionary, String code) {
 
         String pattern = "^" + dictionary + "#[^#]*#" + code + "$";
-        System.out.println(redisTemplate.keys("*"));
         Set<String> keys = redisTemplate.keys(dictionary + "#*#" + code);
         String uri = null;
         for (String key : keys) {
@@ -139,7 +137,7 @@ public class CacheService {
      * @param uri
      * @param template
      */
-    public void storeClassTemplateInCache(String uri, JsonNode template)
+    public void storeClassTemplateInCache(String uri, Object template)
             throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(template);
@@ -150,16 +148,22 @@ public class CacheService {
      * Retrieves the cached class template.
      *
      * @param uri
+     * @param <T> The specific dictionary type
+     * @param valueType
      * @return the template
      */
-    public JsonNode getClassTemplateFromCache(String uri) {
-        String json = (String) redisTemplate.opsForValue().get(uri);
-        if (json == null) {
-            return null;
-        }
-        ObjectMapper mapper = new ObjectMapper();
+    public <T> T getClassTemplateFromCache(String uri, Class<T> valueType) {
         try {
-            return mapper.readTree(json);
+            String json = (String) redisTemplate.opsForValue().get(uri);
+            if (json == null) {
+                return null;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(json, valueType);
+        } catch (RedisConnectionFailureException e) {
+            System.err.println("Redis is not available: " + e.getMessage());
+            throw new RuntimeException("Redis connection failed", e);
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse JSON", e);
         }

@@ -1,10 +1,7 @@
 package com.opencirc.api.passport.auth.service;
 
-import java.time.LocalDateTime;
+import java.util.UUID;
 
-import com.opencirc.api.passport.auth.principal.UserPrincipal;
-import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,11 +13,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.dto.RegisterRequestDto;
+import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.model.User.Role;
+import com.opencirc.api.passport.service.JwtService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -74,11 +75,10 @@ public class AuthService {
 
         user.setUsername(registerUser.getUsername());
         user.setPassword(registerUser.getPassword());
-        user.setRole(User.Role.USER);
         user.setEmail(registerUser.getEmail());
+        user.setRole(Role.USER);
         user.setActive(true);
-        user.setCreatedBy("test");
-        user.setCreatedTime(LocalDateTime.now());
+        user.setCreatedTime(registerUser.getCreatedTime());
 
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new AuthenticationException(AppConstants.ERR_USERNAME_EXISTS);
@@ -120,14 +120,15 @@ public class AuthService {
             }
 
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            Long userId = userPrincipal.getUserId();
+            String userId = userPrincipal.getUserId();
 
             String accessToken = jwtService.generateToken(userId,
                     properties.getAccessTokenExpiryTime());
             String refreshToken = jwtService.generateToken(userId,
                     properties.getRefreshTokenExpiryTime());
 
-            userRepository.updateRefreshTokenById(userId, refreshToken);
+            userRepository.updateRefreshTokenById(UUID
+                    .fromString(userId), refreshToken);
             jwtService.generateTokenCookie(response, accessToken,
                     AppConstants.COOKIE_ACCESS_TOKEN,
                     properties.getAccessTokenExpiryTime());
@@ -172,7 +173,7 @@ public class AuthService {
      */
     public boolean validateToken(String token) {
         try {
-            Long userId = jwtService.extractUserId(token);
+            String userId = jwtService.extractUserId(token);
             UserDetails userDetails = authUserDetailsService.loadUserById(userId);
 
             return jwtService.validateToken(token, userDetails);
@@ -190,12 +191,14 @@ public class AuthService {
      */
     public void logout(String refreshToken, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
-        Long userId = jwtService.extractUserId(refreshToken);
-        User existingUser = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        String userId = jwtService.extractUserId(refreshToken);
+        User existingUser = userRepository.findById(UUID
+                .fromString(userId)).orElseThrow(()
+                -> new UsernameNotFoundException("User not found"));
         existingUser.setRefreshToken(null);
         userRepository.save(existingUser);
 
-        // Remove the JWT cookies (access_token, refresh_token)
+        // Removing the JWT cookies (access_token, refresh_token)
         jwtService.generateTokenCookie(response, "",
                 AppConstants.COOKIE_ACCESS_TOKEN, 0);
         jwtService.generateTokenCookie(response, "",

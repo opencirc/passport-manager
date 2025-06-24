@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.util;
 
-
 public final class CommonUtil {
 
     /**

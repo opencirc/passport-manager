@@ -4,9 +4,10 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.Datasheet.DataCategory;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ public class DatasheetDto {
      * Unique Id for Datasheet.
      */
     @JsonProperty
-    private long id;
+    private String id;
 
     /**
      * Template information in JSON format.
@@ -37,7 +38,13 @@ public class DatasheetDto {
      * Data category (Unique or Generic).
      */
     @JsonProperty
-    private DataDictionary dictionary;
+    private DataCategory dataCategory;
+
+    /**
+     * Name of the data dictionary from which template is fetched.
+     */
+    @JsonProperty
+    private DataDictionary dataDictionary;
 
     /**
      * User who created the datasheet.
@@ -51,11 +58,17 @@ public class DatasheetDto {
     @JsonProperty
     private LocalDateTime createdTime;
 
+    /**
+     * Maps the Datasheet values to dto.
+     * @param datasheet
+     * @return datasheetDto
+     */
     public static DatasheetDto from(Datasheet datasheet) {
         DatasheetDto datasheetDto = new DatasheetDto();
-        datasheetDto.id = datasheet.getId();
+        datasheetDto.id = String.valueOf(datasheet.getId());
         datasheetDto.data = datasheet.getData();
-        datasheetDto.dictionary = datasheet.getDictionary();
+        datasheetDto.dataCategory = datasheet.getDataCategory();
+        datasheetDto.dataDictionary = datasheet.getDataDictionary();
         datasheetDto.createdBy = datasheet.getCreatedBy();
         datasheetDto.createdTime = datasheet.getCreatedTime();
         return datasheetDto;

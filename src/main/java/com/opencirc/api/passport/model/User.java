@@ -1,8 +1,17 @@
 package com.opencirc.api.passport.model;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.UUID;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,7 +33,8 @@ public class User {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
     /**
      * Name of the user.
@@ -75,23 +85,68 @@ public class User {
     @Column(name = "created_time", updatable = false)
     private LocalDateTime createdTime;
 
+    /**
+     * Enum representing the roles.
+     */
     public enum Role {
+
+        /**
+         * Administrator role.
+         */
         ADMIN("admin"),
+
+        /**
+         * Standard user role.
+         */
         USER("user");
 
+        /**
+         * Role represented in STring.
+         */
         private final String value;
 
+        /**
+         * Constructs a Role enum with the specified string value.
+         *
+         * @param value
+         */
         Role(String value) {
             this.value = value;
         }
 
+        /**
+         * Returns the string value of the role.
+         *
+         * @return the role
+         */
         public String getValue() {
             return value;
         }
 
+        /**
+         * Returns the string representation of the role.
+         *
+         * @return the role as a string
+         */
         @Override
         public String toString() {
             return value;
         }
+
+        /**
+         * Parses a string value to its corresponding enum.
+         *
+         * @param value the string value to convert
+         * @return the corresponding role
+         * @throws IllegalArgumentException
+         */
+        public static Role fromValue(String value) {
+            return Arrays.stream(Role.values())
+                    .filter(role -> role.value.equalsIgnoreCase(value))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Invalid Status: " + value));
+        }
     }
+
 }

@@ -1,41 +1,60 @@
 package com.opencirc.api.passport.adapter;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
 import com.opencirc.api.passport.adapter.bsdd.BsDDAdapter;
 import com.opencirc.api.passport.enums.DataDictionary;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import com.opencirc.api.passport.exception.InvalidInputException;
-
 
 /**
- * Factory class for providing the appropriate implementation
- * based on the specified dictionary library.
+ * Factory class for providing the appropriate implementation based on the
+ * specified dictionary library.
  */
 @Component
 public class DictionaryAdapterFactory {
 
     /**
-     * Injecting BsDDAdapter.
+     * Map that has all the map name and its instances.
      */
-    @Autowired
-    private BsDDAdapter bsddAdapter;
+    private final Map<DataDictionary, DictionaryAdapter<?>> adapterMap;
+
+    /**
+     * Instantiates DictionaryAdapterFactory.
+     * @param adapters
+     */
+    public DictionaryAdapterFactory(List<DictionaryAdapter<?>> adapters) {
+        adapterMap = new HashMap<>();
+        adapterMap.put(DataDictionary.BSDD,
+                findAdapter(adapters, BsDDAdapter.class));
+
+    }
 
     /**
      * Returns the appropriate instance based on the given dictionary name.
      *
-     * @param dictionary The dictionary library (e.g., "bsdd", "define").
-     * @return The corresponding implementation.
+     * @param dictionary The dictionary library
+     * @param <T> The specific dictionary type
+     * @return The corresponding dictionary instance.
      * @throws IllegalArgumentException
      */
-    public DictionaryAdapter getAdapter(DataDictionary dictionary)
-           throws InvalidInputException {
-        switch (dictionary) {
-            case DataDictionary.BSDD:
-                return bsddAdapter;
-
-            default:
-                throw new InvalidInputException("Invalid dictionary name: " + dictionary);
-
+    @SuppressWarnings("unchecked")
+    public <T> DictionaryAdapter<T> getAdapter(DataDictionary dictionary) {
+        DictionaryAdapter<?> adapter = adapterMap.get(dictionary);
+        if (adapter == null) {
+            throw new UnsupportedOperationException(
+                    "No adapter found for dictionary: " + dictionary);
         }
+        return (DictionaryAdapter<T>) adapter;
+    }
+
+    private <T extends DictionaryAdapter<?>> T findAdapter(
+            List<DictionaryAdapter<?>> adapters, Class<T> genericClass) {
+        return adapters.stream().filter(genericClass::isInstance)
+                .map(genericClass::cast).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Adapter not found: " + genericClass.getSimpleName()));
     }
 }

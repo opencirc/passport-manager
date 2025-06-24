@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.auth.service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.model.User;
@@ -44,8 +45,9 @@ public class AuthUserDetailsService implements UserDetailsService {
      * @param userId User's unique identifier
      * @return User details
      */
-    public UserDetails loadUserById(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
+    public UserDetails loadUserById(String userId) {
+        Optional<User> userOptional = userRepository.findById(UUID
+                .fromString(userId));
         User user = userOptional.orElseThrow(
                 () -> new UsernameNotFoundException("User not found : " + userId));
 

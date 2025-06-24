@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.dao;
 
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.opencirc.api.passport.model.User;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, UUID> {
 
 
     /**
@@ -40,6 +42,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.refreshToken = :refreshToken"
             + " WHERE u.id = :id")
-    void updateRefreshTokenById(@Param("id") Long id,
+    void updateRefreshTokenById(@Param("id") UUID id,
                                 @Param("refreshToken") String refreshToken);
 }

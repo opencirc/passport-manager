@@ -1,22 +1,27 @@
 package com.opencirc.api.passport.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.PassportService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Endpoint for operations related to passport.
@@ -34,23 +39,24 @@ public class PassportController {
     /**
      * Endpoint to create a passport.
      * @param data
-     * @param dictionary
+     * @param dictionaryName
      * @return the status
      * @throws JsonValidationException
      * @throws InvalidInputException
      */
     @Operation(summary = "Creates Passport and validates it")
     @PostMapping(value = "/api/passport-entity/dictionary/{dictionary}/", produces = {
-            "application/text" }, consumes = { "application/json" })
+            "application/json" }, consumes = { "application/json" })
     public ResponseEntity<PassportDto> createPassportUsingDictionary(
             @io.swagger.v3.oas.annotations.parameters.RequestBody
             (description = "JSON template retrieved from external APIs, "
                     + "populated with actual data to create the Passport")
-            @RequestBody JsonNode data,
+            @RequestBody CreatePassportRequestDto data,
             @Parameter(description = "Dictionary", required = true, in = ParameterIn.PATH)
-            @PathVariable String dictionary) // @TODO this should be a DataDictionary
+            @PathVariable("dictionary") String dictionaryName)
                     throws InvalidInputException, JsonValidationException {
-        return ResponseEntity.ok(passportService.createPassportUsingDictionary(DataDictionary.valueOf(dictionary), data));
+        return ResponseEntity.ok(passportService.createPassportUsingDictionary(
+                DataDictionary.fromValue(dictionaryName), data));
     }
 
     /**
@@ -61,11 +67,27 @@ public class PassportController {
     @Operation(summary = "Retrieves the Passport")
     @GetMapping("/api/passport/{id}/")
     public ResponseEntity<PassportDto> getPassport(
-            @Parameter(description = "Id of the Passport", required = true, in = ParameterIn.PATH)
-            @PathVariable String id,
-            @Parameter(description = "Whether to return the children", required = false, in = ParameterIn.QUERY)
-            @RequestParam Boolean includeChildren)
+            @Parameter(description = "Id of the Passport", required = true,
+            in = ParameterIn.PATH)
+            @PathVariable String id)
             throws JsonProcessingException {
-        return ResponseEntity.ok(passportService.getPassport(id, includeChildren));
+        return ResponseEntity.ok(passportService.getPassport(id));
     }
+
+    /**
+     * Endpoint to fetch the children of the specified passport.
+     * @param id
+     * @return the passport in json
+     * @throws JsonValidationException
+     */
+    @Operation(summary = "Get Passport and its children for the given ID")
+    @GetMapping("/api/passport/{id}/children")
+    public ResponseEntity<List<PassportDto>> getPassportChildren(
+            @Parameter(description = "Id of the Passport",
+            required = true, in = ParameterIn.PATH) @PathVariable String id)
+            throws JsonProcessingException, JsonValidationException {
+        return ResponseEntity.ok(passportService.getPassportChildren(id));
+    }
+
+
 }

@@ -76,11 +76,9 @@ public class ExternalApiService {
                 .queryParam("TypeFilter", "Property")
                 .queryParam("limit", AppConstants.NUM_TWENTY);
         String url = uriBuilder.toUriString();
-        System.out.println(url);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
                 JsonNode.class);
         JsonNode responseBody = response.getBody();
-        System.out.println(response);
         List<Map<String, String>> propertyList = new ArrayList<>();
 
         if (responseBody != null && responseBody.has("properties")
@@ -131,10 +129,6 @@ public class ExternalApiService {
 
         if (rootNode.isObject()) {
             rootObject = (ObjectNode) rootNode;
-
-            // Add new field at class level
-            rootObject.put("dataCategory", "");
-
             ArrayNode classProperties = (ArrayNode) rootObject
                     .get("classProperties");
             for (JsonNode propertyNode : classProperties) {
@@ -142,20 +136,15 @@ public class ExternalApiService {
                     ObjectNode propertyObject = (ObjectNode) propertyNode;
 
                     propertyObject.put("actualValue", "");
-                    // propertyObject.put("Data Category", "");
                 }
             }
 
-            String modifiedJsonString = null;
             try {
-                modifiedJsonString = objectMapper
-                        .writerWithDefaultPrettyPrinter()
+            objectMapper.writerWithDefaultPrettyPrinter()
                         .writeValueAsString(rootObject);
             } catch (JsonProcessingException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            System.out.println(modifiedJsonString);
         }
 
         return rootObject;
@@ -174,9 +163,6 @@ public class ExternalApiService {
 
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();
-        template.put("templateName", "");
-        template.put("dataCategory", "");
-
         for (Map.Entry<String, String> entry : properties.entrySet()) {
 
             String uri = entry.getValue();
@@ -187,11 +173,9 @@ public class ExternalApiService {
             String url = uriBuilder.toUriString();
             Map<String, Object> response = restTemplate.getForObject(url,
                     Map.class);
-            System.out.println(response.toString());
             formPropertyTemplate(propertiesArray, response, dataDictionaryName);
         }
         template.set("properties", propertiesArray);
-        System.out.println(template.toPrettyString());
         return template;
 
     }
@@ -205,9 +189,6 @@ public class ExternalApiService {
     private void formPropertyTemplate(ArrayNode propertiesArray,
             Map<String, Object> response, String dataDictionaryName) {
         Map<String, String> mappedPropTemplate = new HashMap<String, String>();
-
-        // mappedPropTemplate = dictionaryMapping.mapDDFieldtoOC(response,
-        // dataDictionaryName);
         ObjectNode propertyTemplateNode = objectMapper
                 .valueToTree(mappedPropTemplate);
         propertiesArray.add(propertyTemplateNode);

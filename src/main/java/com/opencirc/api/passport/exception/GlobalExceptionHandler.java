@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         } else if (ex.getMessage().contains(AppConstants.ERR_INVALID_CREDENTIALS)) {
             ErrorResponse errorResponse = new ErrorResponse("Invalid Credentials ",
                     ex.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         } else {
             ErrorResponse errorResponse = new ErrorResponse("Authentication Error",
                     ex.getMessage());
@@ -52,6 +52,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+
+    /**
+     * Handler for Resource not found exception.
+     *
+     * @param ex - resource not found exception
+     * @return response
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex) {
+        ErrorResponse errorResponse = new ErrorResponse("Not Found", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
     /**
      * Handler for All other exception.
      *
@@ -61,9 +74,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse("Internal Server Error",
-                "An unexpected error occurred");
+                ex.getMessage());
         return new ResponseEntity<>(errorResponse,
-                HttpStatus.INTERNAL_SERVER_ERROR); // 500
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public static class ErrorResponse {
