@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
     /**
      * Handler for Resource not found exception.
      *
-     * @param ex - invalid input exception
+     * @param ex - resource not found exception
      * @return response
      */
     @ExceptionHandler(ResourceNotFoundException.class)
