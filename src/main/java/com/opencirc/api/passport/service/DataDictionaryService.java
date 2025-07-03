@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -83,7 +83,7 @@ public class DataDictionaryService {
      * @param propertiesUriList
      * @return template with properties in json format
      */
-    public JsonNode createTemplateWithProperties(DataDictionary dictionary,
+    public ObjectNode createTemplateWithProperties(DataDictionary dictionary,
             List<String> propertiesUriList) throws JsonValidationException {
         DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);

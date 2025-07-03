@@ -205,7 +205,7 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
      * @return property template in json format
      */
     @Override
-    public JsonNode getPropertyTemplateWithDetails(List<String> uriList)
+    public ObjectNode getPropertyTemplateWithDetails(List<String> uriList)
             throws JsonValidationException {
         ObjectNode template = objectMapper.createObjectNode();
         ArrayNode propertiesArray = objectMapper.createArrayNode();

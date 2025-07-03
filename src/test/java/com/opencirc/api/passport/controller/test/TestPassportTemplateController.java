@@ -127,7 +127,7 @@ public class TestPassportTemplateController {
         Response response = RestAssured.given().log().all()
                 .cookie("access_token", jwtToken).contentType(ContentType.JSON)
                 .queryParam("dryRun", dryRun).pathParam("passportId", passportId)
-                .body(templateName).when().post("/api/passport-template/{passportId}/")
+                .body(templateName).when().post("/api/passport-template/{passportId}")
                 .then().statusCode(HttpStatus.SC_OK)
                 .contentType(ContentType.JSON).log().all()
                 .extract().response();
@@ -152,7 +152,7 @@ public class TestPassportTemplateController {
                 .contentType(ContentType.JSON).queryParam("dryRun", dryRun)
                 .body(templateName)
                 .pathParam("passportId", passportId).when()
-                .post("/api/passport-template/{passportId}/")
+                .post("/api/passport-template/{passportId}")
                 .then()
                 .statusCode(HttpStatus.SC_NOT_FOUND)
                 .extract().response();
@@ -173,7 +173,7 @@ public class TestPassportTemplateController {
                 .contentType(ContentType.JSON)
                 .pathParam("id", templateId)
                 .when()
-                .get("/api/passport-template/{id}/")
+                .get("/api/passport-template/{id}")
                 .then()
                 .statusCode(HttpStatus.SC_OK)
                 .contentType(ContentType.JSON)
@@ -198,7 +198,7 @@ public class TestPassportTemplateController {
                 .cookie("access_token", jwtToken)
                 .contentType(ContentType.JSON)
                 .pathParam("id", templateId).when()
-                .get("/api/passport-template/{id}/")
+                .get("/api/passport-template/{id}")
                 .then()
                 .statusCode(HttpStatus.SC_NOT_FOUND)
                 .log().all().extract().response();

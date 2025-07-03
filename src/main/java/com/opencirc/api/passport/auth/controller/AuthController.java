@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.opencirc.api.passport.auth.service.AuthService;
-import com.opencirc.api.passport.dto.RegisterRequestDto;
+import com.opencirc.api.passport.dto.RegisterUserDto;
 import com.opencirc.api.passport.dto.StatusResponseDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.model.User;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -38,7 +40,7 @@ public class AuthController {
      * @return response
      */
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequestDto userDetails)
+    public ResponseEntity<?> registerUser(@RequestBody RegisterUserDto userDetails)
             throws AuthenticationException {
         authService.register(userDetails);
         return ResponseEntity.ok(new StatusResponseDto("User registered successfully"));
@@ -62,13 +64,23 @@ public class AuthController {
     /**
      * Verifies the status of authentication.
      *
-     * @param token - JWT access token
-     * @param response
+     * @param request
      * @return response
      */
     @GetMapping("/status")
-    public ResponseEntity<?> checkAuth(@CookieValue(name = "access_token",
-    required = false) String token, HttpServletResponse response) {
+    public ResponseEntity<StatusResponseDto> checkAuth(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        String token = null;
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("access_token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
         if (token == null || !authService.validateToken(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new StatusResponseDto("Not authenticated"));
@@ -76,6 +88,7 @@ public class AuthController {
 
         return ResponseEntity.ok(new StatusResponseDto("Authenticated"));
     }
+
 
     /**
      * Endpoint to refresh expired token.

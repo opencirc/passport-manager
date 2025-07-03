@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.exception.JsonValidationException;
 
 /**
@@ -44,7 +45,7 @@ public interface DictionaryAdapter<T> {
      * @return Jsonnode with proeprty details
      * @throws JsonValidationException
      */
-    JsonNode getPropertyTemplateWithDetails(List<String> properties)
+    ObjectNode getPropertyTemplateWithDetails(List<String> properties)
             throws JsonValidationException;
 
     /**

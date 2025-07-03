@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
@@ -60,7 +60,8 @@ public class DataDictionaryController {
     }
 
     /**
-     * Returns list of classes fetched from bsDD.
+     * Returns Class Template with or without properties from the data dictionary
+     * using the provided URI.
      *
      * @param dictionaryName
      * @param classUri
@@ -118,7 +119,7 @@ public class DataDictionaryController {
     @Operation(summary = "Create template with selected properties")
     @PostMapping(value = "/api/data-dictionary/{dictionary}/properties", produces = {
             "application/json" }, consumes = { "application/json" })
-    public JsonNode createTemplateWithProperties(
+    public ObjectNode createTemplateWithProperties(
             @Parameter(description = "Name of library", required = true, example = "bsdd")
             @PathVariable("dictionary") String dictionaryName,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description =
