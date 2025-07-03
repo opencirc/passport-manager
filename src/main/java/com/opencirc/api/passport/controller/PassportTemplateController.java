@@ -41,7 +41,7 @@ public class PassportTemplateController {
      * @return the template
      */
     @Operation(summary = "Create a template from the existing passport")
-    @PostMapping(value = "/api/passport-template/{passportId}/", produces = {
+    @PostMapping(value = "/api/passport-template/{passportId}", produces = {
             "application/json" })
     public ResponseEntity<PassportTemplateDto> createPassportTemplateFromPassport(
             @Parameter(description = "Id of the Passport", required = true)
@@ -64,7 +64,7 @@ public class PassportTemplateController {
      * @return the template
      */
     @Operation(summary = "Retrieves the persisted Template")
-    @GetMapping("/api/passport-template/{id}/")
+    @GetMapping("/api/passport-template/{id}")
     public ResponseEntity<PassportTemplateDto> getPersistedTemplate(
             @Parameter(description = "Name of the Template stored in DB", required = true)
             @PathVariable String id)

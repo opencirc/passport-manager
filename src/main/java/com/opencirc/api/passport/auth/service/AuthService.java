@@ -17,7 +17,7 @@ import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.dto.RegisterRequestDto;
+import com.opencirc.api.passport.dto.RegisterUserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
@@ -69,7 +69,7 @@ public class AuthService {
      *
      * @param registerUser with username, email, password
      */
-    public void register(RegisterRequestDto registerUser) throws AuthenticationException {
+    public void register(RegisterUserDto registerUser) throws AuthenticationException {
 
         User user = new User();
 

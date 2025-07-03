@@ -45,7 +45,7 @@ public class PassportController {
      * @throws InvalidInputException
      */
     @Operation(summary = "Creates Passport and validates it")
-    @PostMapping(value = "/api/passport-entity/dictionary/{dictionary}/", produces = {
+    @PostMapping(value = "/api/passport/dictionary/{dictionary}", produces = {
             "application/json" }, consumes = { "application/json" })
     public ResponseEntity<PassportDto> createPassportUsingDictionary(
             @io.swagger.v3.oas.annotations.parameters.RequestBody
@@ -65,7 +65,7 @@ public class PassportController {
      * @return the passport in json
      */
     @Operation(summary = "Retrieves the Passport")
-    @GetMapping("/api/passport/{id}/")
+    @GetMapping("/api/passport/{id}")
     public ResponseEntity<PassportDto> getPassport(
             @Parameter(description = "Id of the Passport", required = true,
             in = ParameterIn.PATH)

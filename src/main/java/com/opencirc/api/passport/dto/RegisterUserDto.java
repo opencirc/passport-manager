@@ -11,7 +11,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class RegisterRequestDto {
+public class RegisterUserDto {
 
     /**
      * Username.
