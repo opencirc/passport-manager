@@ -108,7 +108,7 @@ public class AuthService {
      * @param response
      * @return userDto the instance of UserDto
      */
-    public UserDto verify(LoginRequestDto loginRequest, HttpServletResponse response)
+    public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response)
             throws AuthenticationException {
         if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
             throw new AuthenticationException("Username or password must not be null");

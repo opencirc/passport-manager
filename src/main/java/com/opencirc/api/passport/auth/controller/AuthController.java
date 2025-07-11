@@ -58,7 +58,7 @@ public class AuthController {
     public ResponseEntity<UserDto> login(
             @RequestBody LoginRequestDto loginRequest, HttpServletResponse response)
                     throws AuthenticationException {
-        UserDto userDto = authService.verify(loginRequest, response);
+        UserDto userDto = authService.login(loginRequest, response);
         return ResponseEntity.ok(userDto);
     }
 
