@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.opencirc.api.passport.auth.service.AuthService;
+import com.opencirc.api.passport.dto.LoginRequestDto;
 import com.opencirc.api.passport.dto.RegisterUserDto;
 import com.opencirc.api.passport.dto.StatusResponseDto;
+import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
-import com.opencirc.api.passport.model.User;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,16 +50,16 @@ public class AuthController {
     /**
      * Endpoint to Login.
      *
-     * @param user details with username, password
+     * @param loginRequest details with username, password
      * @param response
      * @return response with JWT token (access and refresh tokens)
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody User user, HttpServletResponse response)
+    public ResponseEntity<UserDto> login(
+            @RequestBody LoginRequestDto loginRequest, HttpServletResponse response)
                     throws AuthenticationException {
-        authService.verify(user, response);
-        return ResponseEntity.ok(new StatusResponseDto("Logged in"));
+        UserDto userDto = authService.verify(loginRequest, response);
+        return ResponseEntity.ok(userDto);
     }
 
     /**
@@ -89,6 +90,18 @@ public class AuthController {
         return ResponseEntity.ok(new StatusResponseDto("Authenticated"));
     }
 
+
+    /**
+     * Returns the currently authenticated user.
+     *
+     * @param request HTTP servlet request
+     * @return UserDto if authenticated, or null
+     */
+    @GetMapping("/current-user")
+    public ResponseEntity<UserDto> getCurrentUser(HttpServletRequest request) {
+        UserDto userDto = authService.getCurrentUser(request);
+        return ResponseEntity.ok(userDto);
+    }
 
     /**
      * Endpoint to refresh expired token.

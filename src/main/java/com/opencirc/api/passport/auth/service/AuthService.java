@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.auth.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +18,16 @@ import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.UserRepository;
+import com.opencirc.api.passport.dto.LoginRequestDto;
 import com.opencirc.api.passport.dto.RegisterUserDto;
+import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.service.JwtService;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Service
@@ -99,24 +104,23 @@ public class AuthService {
     /**
      * Login and verifies the user.
      *
-     * @param user details with username, password
+     * @param loginRequest details with username, password
      * @param response
+     * @return userDto the instance of UserDto
      */
-    public void verify(User user, HttpServletResponse response)
+    public UserDto verify(LoginRequestDto loginRequest, HttpServletResponse response)
             throws AuthenticationException {
+        if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
+            throw new AuthenticationException("Username or password must not be null");
+        }
 
         try {
-            if (user.getUsername() == null || (user.getPassword() == null)) {
-                throw new AuthenticationException("Not authenticated."
-                        + " Username or Password is null");
-            }
-
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(user.getUsername(),
-                            user.getPassword()));
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
+                            loginRequest.getPassword()));
+
             if (!authentication.isAuthenticated()) {
-                throw new AuthenticationException(
-                        AppConstants.ERR_INVALID_CREDENTIALS);
+                throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
             }
 
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
@@ -127,21 +131,22 @@ public class AuthService {
             String refreshToken = jwtService.generateToken(userId,
                     properties.getRefreshTokenExpiryTime());
 
-            userRepository.updateRefreshTokenById(UUID
-                    .fromString(userId), refreshToken);
+            userRepository.updateRefreshTokenById(UUID.fromString(userId), refreshToken);
+
             jwtService.generateTokenCookie(response, accessToken,
                     AppConstants.COOKIE_ACCESS_TOKEN,
                     properties.getAccessTokenExpiryTime());
             jwtService.generateTokenCookie(response, refreshToken,
                     AppConstants.COOKIE_REFRESH_TOKEN,
                     properties.getRefreshTokenExpiryTime());
-        } catch (BadCredentialsException bce) {
-            throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
-        } catch (Exception e) {
-            throw new AuthenticationException("Error during login: " + e.getMessage());
-        }
 
+            return UserDto.from(userPrincipal);
+
+        } catch (BadCredentialsException ex) {
+            throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
+        }
     }
+
 
     /**
      * Refreshes the expired token.
@@ -203,5 +208,34 @@ public class AuthService {
                 AppConstants.COOKIE_ACCESS_TOKEN, 0);
         jwtService.generateTokenCookie(response, "",
                 AppConstants.COOKIE_REFRESH_TOKEN, 0);
+    }
+
+    /**
+     * Gets the details of current logged in user.
+     *
+     * @param request - Http servlet request
+     * @return the instance of UserDto or null
+     */
+    public UserDto getCurrentUser(HttpServletRequest request) {
+
+        String token = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("access_token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token == null || !validateToken(token)) {
+            return null;
+        }
+
+        String userId = jwtService.extractUserId(token);
+        Optional<User> user = userRepository.findById(UUID.fromString(userId));
+        return user.map(UserDto::from).orElse(null);
+
     }
 }
