@@ -89,5 +89,16 @@ public class PassportController {
         return ResponseEntity.ok(passportService.getPassportChildren(id));
     }
 
+    /**
+     * Endpoint to fetch all the root passports.
+     * @return the passports without parent
+     * @throws JsonValidationException
+     */
+    @Operation(summary = "Get all the root passports available")
+    @GetMapping("/api/passport/root/all")
+    public ResponseEntity<List<PassportDto>> getRootPassports()
+            throws JsonProcessingException, JsonValidationException {
+        return ResponseEntity.ok(passportService.getRootPassports());
+    }
 
 }

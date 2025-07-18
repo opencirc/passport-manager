@@ -228,8 +228,21 @@ public class PassportService {
         .validatePassportData(passportData);
     }
 
+    /**
+     * Retrieves all the root passports.
+     *
+     * @return Passport DTO list from passport
+     */
+    public List<PassportDto> getRootPassports() {
+        List<Passport> passports = passportRepository
+                .getRootPassports();
+        if (passports == null || passports.isEmpty()) {
+            throw new HttpServerErrorException(HttpStatus.NOT_FOUND, "No active passport found");
+        }
 
+        return PassportDto.from(passports);
 
+    }
 
 
 }

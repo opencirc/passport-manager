@@ -89,4 +89,15 @@ public interface PassportRepository
     @Query("Select p.parentId from Passport p "
             + "WHERE p.id = :id")
     String getParentId(@Param("id") String id);
+    
+    
+    /**
+     * Retrieves passports without parent.
+     * @return passports
+     */
+    @Query("SELECT p FROM Passport p "
+            + "LEFT JOIN FETCH p.datasheetMappings dm "
+            + "LEFT JOIN FETCH dm.datasheet "
+            + "WHERE p.status = 'ACTIVE' AND p.parentId IS NULL ")
+    List<Passport> getRootPassports();
 }
