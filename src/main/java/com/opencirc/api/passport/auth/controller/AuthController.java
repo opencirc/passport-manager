@@ -97,7 +97,7 @@ public class AuthController {
      * @param request HTTP servlet request
      * @return UserDto if authenticated, or null
      */
-    @GetMapping("/current-user")
+    @GetMapping("/currentUser")
     public ResponseEntity<UserDto> getCurrentUser(HttpServletRequest request) {
         UserDto userDto = authService.getCurrentUser(request);
         return ResponseEntity.ok(userDto);
