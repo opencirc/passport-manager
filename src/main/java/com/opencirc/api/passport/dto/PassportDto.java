@@ -87,15 +87,4 @@ public class PassportDto {
         return dto;
     }
     
-    /**
-     * Setting up values from PassportList to Passport Dto.
-     * @param passports list
-     * @return list of passportDto
-     */
-    public static List<PassportDto> from(List<Passport> passports) {
-        return passports.stream()
-            .map(PassportDto::from)
-            .collect(Collectors.toList());
-    }
-
 }

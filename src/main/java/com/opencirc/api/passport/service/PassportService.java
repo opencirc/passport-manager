@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -240,7 +241,9 @@ public class PassportService {
             throw new HttpServerErrorException(HttpStatus.NOT_FOUND, "No active passport found");
         }
 
-        return PassportDto.from(passports);
+        return passports.stream()
+                .map(PassportDto::from)
+                .collect(Collectors.toList());
 
     }
 
