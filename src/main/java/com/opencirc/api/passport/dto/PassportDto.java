@@ -75,7 +75,6 @@ public class PassportDto {
         dto.setId(passport.getId());
         dto.setName(passport.getName());
         dto.setStatus(passport.getStatus());
-
         dto.setCreatedBy(passport.getCreatedBy());
         dto.setCreatedTime(passport.getCreatedTime());
 
@@ -87,5 +86,5 @@ public class PassportDto {
 
         return dto;
     }
-
+    
 }

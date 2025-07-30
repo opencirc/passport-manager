@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -228,8 +229,23 @@ public class PassportService {
         .validatePassportData(passportData);
     }
 
+    /**
+     * Retrieves all the root passports.
+     *
+     * @return Passport DTO list from passport
+     */
+    public List<PassportDto> getRootPassports() {
+        List<Passport> passports = passportRepository
+                .getRootPassports();
+        if (passports == null || passports.isEmpty()) {
+            throw new HttpServerErrorException(HttpStatus.NOT_FOUND, "No active passport found");
+        }
 
+        return passports.stream()
+                .map(PassportDto::from)
+                .collect(Collectors.toList());
 
+    }
 
 
 }
