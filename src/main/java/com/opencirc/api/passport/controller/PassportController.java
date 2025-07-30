@@ -96,8 +96,7 @@ public class PassportController {
      */
     @Operation(summary = "Get all the root passports available")
     @GetMapping("/api/passport/root/all")
-    public ResponseEntity<List<PassportDto>> getRootPassports()
-            throws JsonProcessingException, JsonValidationException {
+    public ResponseEntity<List<PassportDto>> getRootPassports() {
         return ResponseEntity.ok(passportService.getRootPassports());
     }
 
