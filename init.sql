@@ -31,7 +31,7 @@ INSERT INTO users (
     created_time
 )
 VALUES (
-    gen_random_uuid(),
+    uuid_generate_v4(),
     'admin',
     'admin@example.com',
     '$2a$12$BqyteIToCJLPd40zkR8n8ez9Snps/xDJtlYR0REyf2nHOF2RDWXeW',
@@ -53,7 +53,7 @@ INSERT INTO users (
     created_time
 )
 VALUES (
-    gen_random_uuid(),
+    uuid_generate_v4(),
     'user',
     'user@example.com',
     '$2a$12$5L/MrVN02bFWtTGM7wIihOhZGtRj6oqgfuAOx8JQX9Frajvw2rjyG',
