@@ -83,7 +83,7 @@ INSERT INTO public.datasheets (
     created_time
 ) VALUES (
     '123e4567-e89b-12d3-a456-426614174000',
-    '{
+    $${
         "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/B-B__",
         "name": "Mechanical Room",
         "status": "Active",
@@ -106,12 +106,12 @@ INSERT INTO public.datasheets (
             "name": "Mechanical Spaces"
         },
         "relatedIfcEntityNames": ["IfcSpace"]
-    }'::jsonb,
+    }$$::jsonb,
     'GENERIC',
     'BSDD',
     'admin@example.com',
-    '2025-07-30 10:15:00.000000'
-);
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
 
 
 
@@ -143,8 +143,8 @@ INSERT INTO public.passports (
     'ACTIVE',
     null,
     'admin@example.com',
-    '2025-07-30 10:20:00.000000'
-);
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
 
 
 CREATE TABLE IF NOT EXISTS public.passport_datasheet_mappings (
@@ -172,7 +172,7 @@ INSERT INTO public.passport_datasheet_mappings (
     '987e6543-21cb-43ba-88ef-665b1b99fa21',
     'cmdr1hy54000007ld3ah5fz39',
     '123e4567-e89b-12d3-a456-426614174000'
-);
+) ON CONFLICT (id) DO NOTHING;
 
 
 CREATE TABLE IF NOT EXISTS public.passport_templates (
