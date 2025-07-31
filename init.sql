@@ -74,6 +74,47 @@ CREATE TABLE IF NOT EXISTS public.datasheets (
     created_time TIMESTAMP(6) WITHOUT TIME ZONE
 );
 
+INSERT INTO public.datasheets (
+    id,
+    data,
+    data_category,
+    data_dictionary,
+    created_by,
+    created_time
+) VALUES (
+    '123e4567-e89b-12d3-a456-426614174000',
+    '{
+        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/B-B__",
+        "name": "Mechanical Room",
+        "status": "Active",
+        "classType": "Class",
+        "definition": "space designed for mechanical systems and components",
+        "dataCategory": "Generic",
+        "templateName": "mechanicalTemplate",
+        "referenceCode": "B-B__",
+        "classProperties": [
+            {
+                "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/B-B__/prop/Pset_SpaceMechanical/uri/buildingsmart/ifc/4.3/prop/VentilationRequired",
+                "name": "Ventilation Required",
+                "dataType": "Boolean",
+                "actualValue": "true"
+            }
+        ],
+        "parentClassReference": {
+            "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/mechanical",
+            "code": "mechanical",
+            "name": "Mechanical Spaces"
+        },
+        "relatedIfcEntityNames": ["IfcSpace"]
+    }'::jsonb,
+    'GENERIC',
+    'BSDD',
+    'admin@example.com',
+    '2025-07-30 10:15:00.000000'
+);
+
+
+
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'passport_status') THEN
         CREATE TYPE passport_status AS ENUM ('ACTIVE', 'INACTIVE');
@@ -89,6 +130,21 @@ CREATE TABLE IF NOT EXISTS public.passports (
     created_time TIMESTAMP(6) WITHOUT TIME ZONE
 );
 
+INSERT INTO public.passports (
+    id,
+    name,
+    status,
+    parent_id,
+    created_by,
+    created_time
+) VALUES (
+    'cmdr1hy54000007ld3ah5fz39',
+    'Test Passport',
+    'ACTIVE',
+    null,
+    'admin@example.com',
+    '2025-07-30 10:20:00.000000'
+);
 
 
 CREATE TABLE IF NOT EXISTS public.passport_datasheet_mappings (
@@ -107,6 +163,16 @@ CREATE TABLE IF NOT EXISTS public.passport_datasheet_mappings (
         ON DELETE CASCADE
 );
 
+
+INSERT INTO public.passport_datasheet_mappings (
+    id,
+    passport_id,
+    datasheet_id
+) VALUES (
+    '987e6543-21cb-43ba-88ef-665b1b99fa21',
+    'cmdr1hy54000007ld3ah5fz39',
+    '123e4567-e89b-12d3-a456-426614174000'
+);
 
 
 CREATE TABLE IF NOT EXISTS public.passport_templates (
