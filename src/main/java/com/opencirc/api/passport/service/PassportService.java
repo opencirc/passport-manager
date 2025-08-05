@@ -215,7 +215,27 @@ public class PassportService {
         return new ArrayList<>(dtoById.values());
     }
 
+    /**
+     * Retrieves the immedidate children of the given passport id.
+     *
+     * @param id
+     * @return Passport DTO from passport
+     */
+    public List<PassportDto> getPassportImmedidateChildren(String id)
+            throws JsonProcessingException {
 
+        Optional<List<Passport>> optionalPassport = passportRepository
+                .getPassportImmediateChildren(id);
+
+        if (optionalPassport.isEmpty()) {
+            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
+                    "No active passports found with children");
+        }
+
+        return optionalPassport.get().stream().map(PassportDto::from)
+                .collect(Collectors.toList());
+
+    }
 
     /**
      * Validate the passport, throw if there is an error.
@@ -238,7 +258,8 @@ public class PassportService {
         List<Passport> passports = passportRepository
                 .getRootPassports();
         if (passports == null || passports.isEmpty()) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND, "No active passport found");
+            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
+                    "No active passport found");
         }
 
         return passports.stream()
@@ -246,6 +267,4 @@ public class PassportService {
                 .collect(Collectors.toList());
 
     }
-
-
 }

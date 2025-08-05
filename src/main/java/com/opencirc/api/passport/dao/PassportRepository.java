@@ -68,6 +68,22 @@ public interface PassportRepository
             @Param("id") String id);
 
     /**
+     * Retrieves immediate children of the passport.
+     *
+     * @param id
+     *
+     * @return passport's immediate children
+     */
+    @Query("SELECT p "
+            + "FROM Passport p "
+            + "LEFT JOIN p.datasheetMappings dm "
+            + "LEFT JOIN dm.datasheet ds "
+            + "WHERE p.parentId = :id AND p.status = 'ACTIVE'")
+    Optional<List<Passport>> getPassportImmediateChildren(
+            @Param("id") String id);
+
+
+    /**
      * Deactivates the passport.
      *
      * @param id
@@ -89,8 +105,7 @@ public interface PassportRepository
     @Query("Select p.parentId from Passport p "
             + "WHERE p.id = :id")
     String getParentId(@Param("id") String id);
-    
-    
+
     /**
      * Retrieves passports without parent.
      * @return passports

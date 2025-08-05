@@ -90,6 +90,21 @@ public class PassportController {
     }
 
     /**
+     * Endpoint to fetch the children of the specified passport.
+     * @param id
+     * @return the passport in json
+     * @throws JsonValidationException
+     */
+    @Operation(summary = "Get passport's immediate children for the given ID")
+    @GetMapping("/api/passport/{id}/immediate-children")
+    public ResponseEntity<List<PassportDto>>  getPassportImmediateChildren(
+            @Parameter(description = "Id of the Passport",
+            required = true, in = ParameterIn.PATH) @PathVariable String id)
+            throws JsonProcessingException, JsonValidationException {
+        return ResponseEntity.ok(passportService.getPassportImmedidateChildren(id));
+    }
+
+    /**
      * Endpoint to fetch all the root passports.
      * @return the passports without parent
      * @throws JsonValidationException
