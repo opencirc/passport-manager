@@ -101,7 +101,7 @@ public class PassportController {
             @Parameter(description = "Id of the Passport",
             required = true, in = ParameterIn.PATH) @PathVariable String id)
             throws JsonProcessingException, JsonValidationException {
-        return ResponseEntity.ok(passportService.getPassportImmedidateChildren(id));
+        return ResponseEntity.ok(passportService.getPassportImmediateChildren(id));
     }
 
     /**

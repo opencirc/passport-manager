@@ -71,6 +71,11 @@ public class PassportDto {
      * @return passportDto
      */
     public static PassportDto from(Passport passport) {
+        
+        if (passport == null) {
+            return null;
+        }
+        
         PassportDto dto = new PassportDto();
         dto.setId(passport.getId());
         dto.setName(passport.getName());
@@ -80,6 +85,7 @@ public class PassportDto {
 
         if (passport.getDatasheetMappings() != null) {
             dto.setDatasheets(passport.getDatasheetMappings().stream()
+                    .filter(mapping -> mapping != null && mapping.getDatasheet() != null)
                     .map(mapping -> DatasheetDto.from(mapping.getDatasheet()))
                     .collect(Collectors.toList()));
         }

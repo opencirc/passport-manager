@@ -29,6 +29,7 @@ import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
+import com.opencirc.api.passport.exception.ResourceNotFoundException;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.Passport;
@@ -123,15 +124,14 @@ public class PassportService {
     public PassportDto getPassport(String id)
             throws JsonProcessingException {
 
-        Optional<Passport> optionalPassport = passportRepository
-                .findPassport(id, Passport.Status.ACTIVE);
+        Optional<Passport> optionalPassport = passportRepository.findPassport(id,
+                Passport.Status.ACTIVE);
         if (optionalPassport.isEmpty()
                 || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passport found");
+            throw new ResourceNotFoundException("No active passport found");
         }
 
-         return PassportDto.from(optionalPassport.get());
+        return PassportDto.from(optionalPassport.get());
     }
 
     /**
@@ -150,8 +150,7 @@ public class PassportService {
                 .orElse(Collections.emptyList());
 
         if (resultRows.isEmpty()) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passports found with children");
+            throw new ResourceNotFoundException("No active passports found with children");
         }
 
         Map<String, PassportDto> dtoById = new LinkedHashMap<>();
@@ -221,19 +220,17 @@ public class PassportService {
      * @param id
      * @return Passport DTO from passport
      */
-    public List<PassportDto> getPassportImmedidateChildren(String id)
+    public List<PassportDto> getPassportImmediateChildren(String id)
             throws JsonProcessingException {
 
-        Optional<List<Passport>> optionalPassport = passportRepository
+        Optional<List<Passport>> optionalPassports = passportRepository
                 .getPassportImmediateChildren(id);
-
-        if (optionalPassport.isEmpty()) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passports found with children");
-        }
-
-        return optionalPassport.get().stream().map(PassportDto::from)
-                .collect(Collectors.toList());
+        
+        return optionalPassports
+                .map(passports -> passports.stream()
+                        .map(PassportDto::from)
+                        .collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
 
     }
 
@@ -257,10 +254,6 @@ public class PassportService {
     public List<PassportDto> getRootPassports() {
         List<Passport> passports = passportRepository
                 .getRootPassports();
-        if (passports == null || passports.isEmpty()) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passport found");
-        }
 
         return passports.stream()
                 .map(PassportDto::from)
