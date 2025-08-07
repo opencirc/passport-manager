@@ -41,10 +41,10 @@ public class PassportTemplateController {
      * @return the template
      */
     @Operation(summary = "Create a template from the existing passport")
-    @PostMapping(value = "/api/passport-template/{passportId}", produces = {
+    @PostMapping(value = "/api/passportTemplate/{passportId}", produces = {
             "application/json" })
-    public ResponseEntity<PassportTemplateDto> createPassportTemplateFromPassport(
-            @Parameter(description = "Id of the Passport", required = true)
+    public ResponseEntity<PassportTemplateDto> createTemplateFromPassport(
+            @Parameter(description = "ID of the passport", required = true)
             @PathVariable String passportId,
             @Parameter(description = "Set to true if extracted template does not need"
                     + "to be persisted")
@@ -63,24 +63,24 @@ public class PassportTemplateController {
      * @param id
      * @return the template
      */
-    @Operation(summary = "Retrieves the persisted Template")
-    @GetMapping("/api/passport-template/{id}")
-    public ResponseEntity<PassportTemplateDto> getPersistedTemplate(
-            @Parameter(description = "Name of the Template stored in DB", required = true)
-            @PathVariable String id)
+    @Operation(summary = "Retrieves the requested passport template")
+    @GetMapping("/api/passportTemplate/{templateId}")
+    public ResponseEntity<PassportTemplateDto> getTemplate(
+            @Parameter(description = "Passport template ID", required = true)
+            @PathVariable String templateId)
             throws JsonMappingException, JsonProcessingException {
         return ResponseEntity
-                .ok(passportTemplateService.getPassportTemplate(id));
+                .ok(passportTemplateService.getPassportTemplate(templateId));
     }
 
 
     /**
-     * Endpoint to list template from database.
+     * Endpoint to list template from database
      * @return the template
      */
-    @Operation(summary = "Lists all the persisted Template")
-    @GetMapping("/api/passport-templates/all")
-    public ResponseEntity<List<PassportTemplateDto>> getPassportTemplates()
+    @Operation(summary = "Lists all the persisted passport templates")
+    @GetMapping("/api/passportTemplate/all")
+    public ResponseEntity<List<PassportTemplateDto>> getAllTemplates()
             throws JsonMappingException, JsonProcessingException {
         return ResponseEntity.ok(passportTemplateService.getAllPassportTemplates());
     }

@@ -26,8 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  *
  */
 @RestController
-@Tag(name = "Data Dictionary", description = "Operations related to templates"
-        + " from Data Dictionary")
+@Tag(name = "Data Dictionary", description = "Operations related to template from Data Dictionary")
 public class DataDictionaryController {
 
     /**
@@ -44,7 +43,7 @@ public class DataDictionaryController {
      *
      * @return list of class and its details
      */
-    @GetMapping(value = "/api/data-dictionary/{dictionary}/class/search/{query}",
+    @GetMapping(value = "/api/dataDictionary/{dictionary}/class/search/{query}",
             produces = {
             "application/json" })
     @Operation(summary = "Get list of classes for the query text")
@@ -69,7 +68,7 @@ public class DataDictionaryController {
      * @return the template with all the relevant properties
      */
     @Operation(summary = "Get class from DD for the requested uri")
-    @PostMapping(value = "/api/data-dictionary/{dictionary}/class", produces = {
+    @PostMapping(value = "/api/dataDictionary/{dictionary}/class", produces = {
             "application/json" })
     public Object getClass(
             @Parameter(description = "Name of dictionary", required = true,
@@ -95,7 +94,7 @@ public class DataDictionaryController {
      * @return the template with all the relevant properties
      */
     @Operation(summary = "Lists all the properties name and its URI matching the text")
-    @GetMapping(value = "/api/data-dictionary/{dictionary}/property/search/{query}",
+    @GetMapping(value = "/api/dataDictionary/{dictionary}/property/search/{query}",
     produces = {"application/json" })
     public List<Map<String, String>> listProperties(
             @Parameter(description = "The dictionary",
@@ -117,7 +116,7 @@ public class DataDictionaryController {
      * @return the template with all the relevant properties
      */
     @Operation(summary = "Create template with selected properties")
-    @PostMapping(value = "/api/data-dictionary/{dictionary}/properties", produces = {
+    @PostMapping(value = "/api/dataDictionary/{dictionary}/properties", produces = {
             "application/json" }, consumes = { "application/json" })
     public ObjectNode createTemplateWithProperties(
             @Parameter(description = "Name of library", required = true, example = "bsdd")
