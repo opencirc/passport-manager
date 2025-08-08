@@ -128,7 +128,7 @@ public class PassportService {
         if (optionalPassport.isEmpty()
                 || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
             throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passport found");
+                    "No active passport founds");
         }
 
          return PassportDto.from(optionalPassport.get());
