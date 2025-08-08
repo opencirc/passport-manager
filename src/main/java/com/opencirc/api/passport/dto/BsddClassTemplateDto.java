@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.dto;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -66,7 +67,7 @@ public class BsddClassTemplateDto {
      * UTC date when this class became active.
      */
     @JsonProperty("activationDateUtc")
-    private ZonedDateTime activationDateUtc;
+    private LocalDateTime activationDateUtc;
 
     /**
      * Code of the class.

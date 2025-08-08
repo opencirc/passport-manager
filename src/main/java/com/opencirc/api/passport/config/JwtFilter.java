@@ -59,33 +59,37 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String accessToken = extractTokenFromCookies(request, "access_token");
-        String refreshToken = extractTokenFromCookies(request, "refresh_token");
+        try {
+            String accessToken = extractTokenFromCookies(request, "access_token");
+            String refreshToken = extractTokenFromCookies(request, "refresh_token");
 
-        if (accessToken == null && refreshToken != null) {
-            accessToken = handleRefreshToken(response, refreshToken);
+            if (accessToken == null && refreshToken != null) {
+                accessToken = handleRefreshToken(response, refreshToken);
+                if (accessToken == null) {
+                    sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                            "Invalid refresh token");
+                    return;
+                }
+            }
+
             if (accessToken == null) {
-                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        "Invalid refresh token");
+                filterChain.doFilter(request, response);
                 return;
             }
-        }
 
-        if (accessToken == null) {
+            String userId = extractUserIdFromToken(accessToken, response);
+            if (userId == null) {
+                return;
+            }
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                authenticateUser(request, response, accessToken, userId);
+            }
+
             filterChain.doFilter(request, response);
-            return;
+        } catch (Exception e) {
+            System.out.println("Exception caused " +e.getMessage());
         }
-
-        String userId = extractUserIdFromToken(accessToken, response);
-        if (userId == null) {
-            return;
-        }
-
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            authenticateUser(request, response, accessToken, userId);
-        }
-
-        filterChain.doFilter(request, response);
     }
 
     /**

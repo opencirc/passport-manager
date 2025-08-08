@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opencirc.api.passport.enums.DataDictionary;
 
 @Service
@@ -140,6 +141,7 @@ public class CacheService {
     public void storeClassTemplateInCache(String uri, Object template)
             throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
         String json = mapper.writeValueAsString(template);
         redisTemplate.opsForValue().set(uri, json);
     }
@@ -160,6 +162,7 @@ public class CacheService {
             }
 
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
             return mapper.readValue(json, valueType);
         } catch (RedisConnectionFailureException e) {
             System.err.println("Redis is not available: " + e.getMessage());

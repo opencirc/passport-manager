@@ -44,6 +44,10 @@
 			<version>42.2.23</version>
 		</dependency>
 		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
 			<version>6.6.1.Final</version>
@@ -177,7 +181,7 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-        <!-- Spring Boot Plugin -->
+			<!-- Spring Boot Plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

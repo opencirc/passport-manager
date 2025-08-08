@@ -225,7 +225,8 @@ public class AuthService {
                 if ("access_token".equals(cookie.getName())) {
                     token = cookie.getValue();
                     break;
-                }
+                } 
+                System.out.println(cookie.getName());
             }
         }
 

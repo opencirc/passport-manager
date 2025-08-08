@@ -130,5 +130,9 @@ public class DataDictionaryController {
 
     }
 
+    @GetMapping(value = "/api/clear")
+    public void clearCache() {
+        dataDictionaryService.clearCache();
+    }
 
 }
