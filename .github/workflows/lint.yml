@@ -6,7 +6,7 @@ on:
     branches:
       - "main"
 jobs:
-  lint-and-check-formatting:
+  lint:
     name: Lint and check formatting
     uses: ./.github/workflows/lint-jobs.yml
     with:
