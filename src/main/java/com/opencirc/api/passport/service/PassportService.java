@@ -80,11 +80,11 @@ public class PassportService {
 
         Passport rawPassport = new Passport();
         rawPassport.setId(cuid.toString());
-
         rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
         rawPassport.setCreatedBy(data.getCreatedBy());
         rawPassport.setCreatedTime(LocalDateTime.now());
+        rawPassport.setParentId(data.getParentId());
         Passport passport = passportRepository.save(rawPassport);
 
         Datasheet datasheet = new Datasheet();
