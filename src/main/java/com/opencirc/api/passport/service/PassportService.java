@@ -125,8 +125,7 @@ public class PassportService {
 
         Optional<Passport> optionalPassport = passportRepository
                 .findPassport(passportId, Passport.Status.ACTIVE);
-        if (optionalPassport.isEmpty()
-                || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
+        if (optionalPassport.isEmpty()) {
             throw new ResourceNotFoundException("Could not find passport with ID "
                 + passportId);
         }
