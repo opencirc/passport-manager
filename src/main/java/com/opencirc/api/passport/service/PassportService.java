@@ -27,7 +27,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -121,8 +127,8 @@ public class PassportService {
                 .findPassport(passportId, Passport.Status.ACTIVE);
         if (optionalPassport.isEmpty()
                 || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "Could not find passport with ID " + passportId);
+            throw new ResourceNotFoundException("Could not find passport with ID "
+                + passportId);
         }
 
         return PassportDto.from(optionalPassport.get());
@@ -144,7 +150,7 @@ public class PassportService {
                 .orElse(Collections.emptyList());
 
         if (resultRows.isEmpty()) {
-            throw new ResourceNotFoundException("No active passports found with children");
+            throw new ResourceNotFoundException("No active passport found for id " + id);
         }
 
         Map<String, PassportDto> dtoById = new LinkedHashMap<>();
@@ -167,7 +173,7 @@ public class PassportService {
 
             if (row.getDatasheetId() != null) {
                 boolean alreadyExists = passportDto.getDatasheets().stream()
-                        .anyMatch(ds -> ds.getId() == row.getDatasheetId());
+                        .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
 
                 if (!alreadyExists) {
                     DatasheetDto datasheetDto = new DatasheetDto();
@@ -208,7 +214,7 @@ public class PassportService {
     }
 
     /**
-     * Retrieves the passports with the given parent ID
+     * Retrieves the passports with the given parent ID.
      *
      * @param passportId
      * @return a list of {@link PassportDto} objects
@@ -223,48 +229,42 @@ public class PassportService {
                 .orElse(Collections.emptyList());
 
         ObjectMapper objectMapper = new ObjectMapper();
-        List<PassportDto> passportDtoList = new ArrayList<>();
-        Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
+        Map<String, PassportDto> dtoById = new LinkedHashMap<>();
 
         for (PassportDatasheetResultMapDto row : resultRows) {
-            PassportDto passportDto = new PassportDto();
-            passportDto.setId(row.getPassportId());
-            passportDto.setName(row.getPassportName());
-            passportDto.setStatus(Passport.Status.fromValue(row.getStatus()));
-            passportDto.setCreatedBy(row.getCreatedBy());
-            passportDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
-            passportDto.setDatasheets(new ArrayList<>());
+            PassportDto passportDto = dtoById.computeIfAbsent(row.getPassportId(),
+                    key -> {
+                PassportDto dto = new PassportDto();
+                dto.setId(row.getPassportId());
+                dto.setName(row.getPassportName());
+                dto.setStatus(Passport.Status.fromValue(row.getStatus()));
+                dto.setCreatedBy(row.getCreatedBy());
+                dto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
+                dto.setDatasheets(new ArrayList<>());
+                return dto;
+            });
 
             if (row.getDatasheetId() != null) {
-                if (!datasheetDtoMap.containsKey(row.getDatasheetId())) {
+                boolean exists = passportDto.getDatasheets().stream()
+                    .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
+                if (!exists) {
                     DatasheetDto datasheetDto = new DatasheetDto();
                     datasheetDto.setId(row.getDatasheetId());
                     datasheetDto.setData(objectMapper.readTree(row.getData()));
-                    if (row.getDataCategory() != null) {
-                        datasheetDto.setDataCategory(DataCategory.fromValue(row
-                                .getDataCategory()));
-                    } else {
-                        datasheetDto.setDataCategory(null);
-                    }
-
-                    if (row.getDataDictionary() != null) {
-                        datasheetDto.setDataDictionary(DataDictionary
-                                .valueOf(row.getDataDictionary()));
-                    } else {
-                        datasheetDto.setDataDictionary(null);
-                    }
+                    datasheetDto.setDataCategory(row.getDataCategory() != null
+                            ? DataCategory.fromValue(row.getDataCategory())
+                            : null);
+                    datasheetDto.setDataDictionary(row.getDataDictionary() != null
+                            ? DataDictionary.valueOf(row.getDataDictionary())
+                            : null);
                     datasheetDto.setCreatedBy(row.getCreatedBy());
                     datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
-                    datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
+                    passportDto.getDatasheets().add(datasheetDto);
                 }
-
-                passportDto.getDatasheets().add(datasheetDtoMap.get(row.getDatasheetId()));
             }
-
-            passportDtoList.add(passportDto);
         }
 
-        return passportDtoList;
+        return new ArrayList<>(dtoById.values());
     }
 
 
@@ -289,7 +289,8 @@ public class PassportService {
         List<Passport> passports = passportRepository
                 .getRootPassports();
         if (passports == null) {
-            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not retrieve root passports");
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Could not retrieve root passports");
         }
 
         return passports.stream()
