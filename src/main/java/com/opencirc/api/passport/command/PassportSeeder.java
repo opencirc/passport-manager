@@ -4,16 +4,21 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.service.DataDictionaryService;
 import com.opencirc.api.passport.service.PassportService;
@@ -67,6 +72,11 @@ public class PassportSeeder {
      * The data dictionary used for seeding passport templates.
      */
     private final DataDictionary dictionary = DataDictionary.BSDD;
+    
+    /**
+     * Cache the class templates.
+     */
+    private final Map<String, JsonNode> templateCache = new ConcurrentHashMap<>();
 
     /**
      * List of URIs representing classes in the data dictionary.
@@ -162,10 +172,19 @@ public class PassportSeeder {
             return;
         }
 
-        Object template = dataDictionaryService.createClassTemplate(dictionary, uri,
-                true);
+        JsonNode templateNode = templateCache.computeIfAbsent(uri, k -> {
+            Object t = null;
+            try {
+                t = dataDictionaryService.createClassTemplate(dictionary, k, true);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            } catch (JsonValidationException e) {
+                e.printStackTrace();
+            }
+            return objectMapper.valueToTree(t);
+        }).deepCopy();
         JsonNode datasheetData = filterAndFillProperties(
-                objectMapper.valueToTree(template));
+                objectMapper.valueToTree(templateNode));
 
         CreatePassportRequestDto request = new CreatePassportRequestDto();
         request.setDatasheetData(datasheetData);
@@ -201,19 +220,21 @@ public class PassportSeeder {
         List<JsonNode> props = new ArrayList<>();
         template.get("classProperties").forEach(props::add);
 
-        List<JsonNode> selectedProps = props.stream().limit(PROPERTIES_TO_SELECT)
+        List<JsonNode> selectedProperties = props.stream().limit(PROPERTIES_TO_SELECT)
                 .toList();
 
         ObjectNode objectNode = (ObjectNode) template;
-        objectNode.putArray("classProperties").removeAll().addAll(selectedProps);
+        ArrayNode newProperty = objectMapper.createArrayNode();
+        selectedProperties.forEach(newProperty::add);
+        objectNode.set("classProperties", newProperty);
 
-        for (JsonNode propertyNode : selectedProps) {
+        for (JsonNode propertyNode : selectedProperties) {
             ObjectNode propObj = (ObjectNode) propertyNode;
             if (propertyNode.has("allowedValues")
                     && propertyNode.get("allowedValues").isArray()
                     && propertyNode.get("allowedValues").size() > 0) {
-                String allowedValue = propertyNode.get("allowedValues").get(0)
-                        .get("value").asText();
+                JsonNode first = propertyNode.get("allowedValues").get(0);
+                String allowedValue = first.has("value") ? first.get("value").asText() : first.asText();
                 propObj.put("actualValue", allowedValue);
             } else if (propertyNode.has("dataType")) {
                 String dataType = propertyNode.get("dataType").asText().toLowerCase();
