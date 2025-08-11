@@ -214,6 +214,7 @@ public class PassportService {
 
     /**
      * Retrieves the passports with the given parent ID.
+     * Returns an empty list if the passport exists but has no immediate children.
      *
      * @param passportId
      * @return a list of {@link PassportDto} objects
@@ -245,11 +246,13 @@ public class PassportService {
 
             if (row.getDatasheetId() != null) {
                 boolean exists = passportDto.getDatasheets().stream()
-                    .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
+                        .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
                 if (!exists) {
                     DatasheetDto datasheetDto = new DatasheetDto();
                     datasheetDto.setId(row.getDatasheetId());
-                    datasheetDto.setData(objectMapper.readTree(row.getData()));
+                    if (row.getData() != null) {
+                        datasheetDto.setData(objectMapper.readTree(row.getData()));
+                    }
                     datasheetDto.setDataCategory(row.getDataCategory() != null
                             ? DataCategory.fromValue(row.getDataCategory())
                             : null);
