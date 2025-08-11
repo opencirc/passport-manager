@@ -8,9 +8,6 @@ on:
 permissions:
   contents: read
 
-env:
-  CHECKSTYLE_VERSION: '10.25.0'
-
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}-${{ inputs.environment }}"
   cancel-in-progress: true
@@ -29,13 +26,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 'Find changed Java files'
-        id: changed-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            **.java
-
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
@@ -43,5 +33,4 @@ jobs:
           distribution: 'temurin'
 
       - name: 'Run Checkstyle'
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: mvn checkstyle:check
