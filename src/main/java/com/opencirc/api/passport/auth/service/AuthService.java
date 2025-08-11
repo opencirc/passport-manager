@@ -1,19 +1,5 @@
 package com.opencirc.api.passport.auth.service;
 
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
@@ -25,217 +11,164 @@ import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.service.JwtService;
-
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    /**
-     * Injecting UserRepository class.
-     */
-    @Autowired
-    private UserRepository userRepository;
+  private final BCryptPasswordEncoder bcryptPasswordEncoder = new BCryptPasswordEncoder(12);
 
-    /**
-     * Injecting Properties class.
-     */
-    @Autowired
-    private AppProperties properties;
+  @Autowired private UserRepository userRepository;
 
-    /**
-     * Instantiating BCryptPasswordEncoder class.
-     */
-    private BCryptPasswordEncoder bCryptPasswordEncoder =
-            new BCryptPasswordEncoder(AppConstants.NUM_TWELVE);
+  @Autowired private AppProperties properties;
 
-    /**
-     * Injecting AuthenticationManager class.
-     */
-    @Autowired
-    private AuthenticationManager authenticationManager;
+  @Autowired private AuthenticationManager authenticationManager;
 
-    /**
-     * Injecting JwtService class.
-     */
-    @Autowired
-    private JwtService jwtService;
+  @Autowired private JwtService jwtService;
 
-    /**
-     * Injecting AuthUserDetailsService class.
-     */
-    @Autowired
-    private AuthUserDetailsService authUserDetailsService;
+  @Autowired private AuthUserDetailsService authUserDetailsService;
 
-    /**
-     * Register new user.
-     *
-     * @param registerUser with username, email, password
-     */
-    public void register(RegisterUserDto registerUser) throws AuthenticationException {
+  /** Create a new user with the provided information. */
+  public User register(RegisterUserDto registerUser) throws AuthenticationException {
 
-        User user = new User();
+    User user = new User();
 
-        user.setUsername(registerUser.getUsername());
-        user.setPassword(registerUser.getPassword());
-        user.setEmail(registerUser.getEmail());
-        user.setRole(Role.USER);
-        user.setActive(true);
-        user.setCreatedTime(registerUser.getCreatedTime());
+    user.setUsername(registerUser.getUsername());
+    user.setPassword(registerUser.getPassword());
+    user.setEmail(registerUser.getEmail());
+    user.setRole(Role.USER);
+    user.setActive(true);
+    user.setCreatedTime(registerUser.getCreatedTime());
 
-        if (userRepository.existsByUsername(user.getUsername())) {
-            throw new AuthenticationException(AppConstants.ERR_USERNAME_EXISTS);
-        }
-
-        String encodedPassword = bCryptPasswordEncoder
-                .encode(user.getPassword());
-        user.setPassword(encodedPassword);
-
-        try {
-            userRepository.save(user);
-        } catch (Exception e) {
-            throw new AuthenticationException("Error during user registration: "
-        + e.getMessage());
-        }
+    if (userRepository.existsByUsername(user.getUsername())) {
+      throw new AuthenticationException(AppConstants.ERR_USERNAME_EXISTS);
     }
 
-    /**
-     * Login and verifies the user.
-     *
-     * @param loginRequest details with username, password
-     * @param response
-     * @return userDto the instance of UserDto
-     */
-    public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response)
-            throws AuthenticationException {
-        if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
-            throw new AuthenticationException("Username or password must not be null");
-        }
+    String encodedPassword = bcryptPasswordEncoder.encode(user.getPassword());
+    user.setPassword(encodedPassword);
 
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
-                            loginRequest.getPassword()));
+    return userRepository.save(user);
+  }
 
-            if (!authentication.isAuthenticated()) {
-                throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
-            }
-
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String userId = userPrincipal.getUserId();
-
-            String accessToken = jwtService.generateToken(userId,
-                    properties.getAccessTokenExpiryTime());
-            String refreshToken = jwtService.generateToken(userId,
-                    properties.getRefreshTokenExpiryTime());
-
-            userRepository.updateRefreshTokenById(UUID.fromString(userId), refreshToken);
-
-            jwtService.generateTokenCookie(response, accessToken,
-                    AppConstants.COOKIE_ACCESS_TOKEN,
-                    properties.getAccessTokenExpiryTime());
-            jwtService.generateTokenCookie(response, refreshToken,
-                    AppConstants.COOKIE_REFRESH_TOKEN,
-                    properties.getRefreshTokenExpiryTime());
-
-            return UserDto.from(userPrincipal);
-
-        } catch (BadCredentialsException ex) {
-            throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
-        }
+  /** Uses the login information in the login request to authenticate the user. */
+  public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response)
+      throws AuthenticationException {
+    if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
+      throw new AuthenticationException("Username or password must not be null");
     }
 
+    try {
+      Authentication authentication =
+          authenticationManager.authenticate(
+              new UsernamePasswordAuthenticationToken(
+                  loginRequest.getUsername(), loginRequest.getPassword()));
 
-    /**
-     * Refreshes the expired token.
-     *
-     * @param refreshToken - Existing JWT refresh token
-     * @param response
-     * @return JWT token (new access token)
-     */
-    public String refreshToken(String refreshToken, HttpServletResponse response)
-            throws AuthenticationException {
-        try {
-            String newAccessToken = jwtService
-                    .generateAccessTokenUsingRefreshToken(refreshToken);
-            jwtService.generateTokenCookie(response, newAccessToken,
-                    AppConstants.COOKIE_ACCESS_TOKEN,
-                    properties.getAccessTokenExpiryTime());
-            return newAccessToken;
-        } catch (Exception e) {
-            throw new AuthenticationException(
-                    "Error refreshing token: " + e.getMessage());
+      if (!authentication.isAuthenticated()) {
+        throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
+      }
+
+      UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+      String userId = userPrincipal.getUserId();
+
+      String accessToken = jwtService.generateToken(userId, properties.getAccessTokenExpiryTime());
+      String refreshToken =
+          jwtService.generateToken(userId, properties.getRefreshTokenExpiryTime());
+
+      userRepository.updateRefreshTokenById(UUID.fromString(userId), refreshToken);
+
+      jwtService.generateTokenCookie(
+          response,
+          accessToken,
+          AppConstants.COOKIE_ACCESS_TOKEN,
+          properties.getAccessTokenExpiryTime());
+      jwtService.generateTokenCookie(
+          response,
+          refreshToken,
+          AppConstants.COOKIE_REFRESH_TOKEN,
+          properties.getRefreshTokenExpiryTime());
+
+      return UserDto.from(userPrincipal);
+
+    } catch (BadCredentialsException ex) {
+      throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
+    }
+  }
+
+  /** Refreshes the expired token. */
+  public void refreshToken(String refreshToken, HttpServletResponse response)
+      throws AuthenticationException {
+    String newAccessToken = jwtService.generateAccessTokenUsingRefreshToken(refreshToken);
+    jwtService.generateTokenCookie(
+        response,
+        newAccessToken,
+        AppConstants.COOKIE_ACCESS_TOKEN,
+        properties.getAccessTokenExpiryTime());
+  }
+
+  /**
+   * Validates the provided JWT token.
+   */
+  public boolean validateToken(String token) {
+    String userId = jwtService.extractUserId(token);
+    UserDetails userDetails = authUserDetailsService.loadUserById(userId);
+
+    return jwtService.validateToken(token, userDetails);
+  }
+
+  /**
+   * Logs the user out by clearing the security context and removing the JWT cookies.
+   */
+  public void logout(String refreshToken, HttpServletResponse response) {
+    SecurityContextHolder.clearContext();
+    String userId = jwtService.extractUserId(refreshToken);
+    User existingUser =
+        userRepository
+            .findById(UUID.fromString(userId))
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    existingUser.setRefreshToken(null);
+    userRepository.save(existingUser);
+
+    // Removing the JWT cookies (access_token, refresh_token)
+    jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_ACCESS_TOKEN, 0);
+    jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_REFRESH_TOKEN, 0);
+  }
+
+  /**
+   * Gets the details of the currently logged-in user, identified by the ID in the JWT token.
+   */
+  public UserDto getCurrentUser(HttpServletRequest request) {
+
+    String token = null;
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if ("access_token".equals(cookie.getName())) {
+          token = cookie.getValue();
+          break;
         }
+      }
     }
 
-    /**
-     * Validates the token.
-     *
-     * @param token - JWT token
-     * @return result whether the token is valid or not
-     */
-    public boolean validateToken(String token) {
-        try {
-            String userId = jwtService.extractUserId(token);
-            UserDetails userDetails = authUserDetailsService.loadUserById(userId);
-
-            return jwtService.validateToken(token, userDetails);
-        } catch (Exception e) {
-            throw new AuthenticationException("Error validating token: "
-        + e.getMessage());
-        }
+    if (token == null || !validateToken(token)) {
+      return null;
     }
 
-    /**
-     * Logs out the user.
-     *
-     * @param refreshToken - JWT refresh token
-     * @param response
-     */
-    public void logout(String refreshToken, HttpServletResponse response) {
-        SecurityContextHolder.clearContext();
-        String userId = jwtService.extractUserId(refreshToken);
-        User existingUser = userRepository.findById(UUID
-                .fromString(userId)).orElseThrow(()
-                -> new UsernameNotFoundException("User not found"));
-        existingUser.setRefreshToken(null);
-        userRepository.save(existingUser);
-
-        // Removing the JWT cookies (access_token, refresh_token)
-        jwtService.generateTokenCookie(response, "",
-                AppConstants.COOKIE_ACCESS_TOKEN, 0);
-        jwtService.generateTokenCookie(response, "",
-                AppConstants.COOKIE_REFRESH_TOKEN, 0);
-    }
-
-    /**
-     * Gets the details of current logged in user.
-     *
-     * @param request - Http servlet request
-     * @return the instance of UserDto or null
-     */
-    public UserDto getCurrentUser(HttpServletRequest request) {
-
-        String token = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("access_token".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
-        if (token == null || !validateToken(token)) {
-            return null;
-        }
-
-        String userId = jwtService.extractUserId(token);
-        Optional<User> user = userRepository.findById(UUID.fromString(userId));
-        return user.map(UserDto::from).orElse(null);
-
-    }
+    String userId = jwtService.extractUserId(token);
+    Optional<User> user = userRepository.findById(UUID.fromString(userId));
+    return user.map(UserDto::from).orElse(null);
+  }
 }

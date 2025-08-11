@@ -2,58 +2,62 @@ package com.opencirc.api.passport.dto;
 
 import java.sql.Timestamp;
 
-/**
- * Interface to map the result set to passportDto.
- */
+/** Interface to map the result set to passportDto. */
 public interface PassportDatasheetResultMapDto {
 
-    /**
-     * @return the ID of the passport
-     */
-    String getPassportId();
+  /**
+   * The ID of the passport.
+   */
+  String passportId();
 
-    /**
-     * @return the name of the passport
-     */
-    String getPassportName();
+  /**
+   * The name of the passport.
+   */
+  String passportName();
 
-    /**
-     * @return the status of the passport
-     */
-    String getStatus();
+  /**
+   * The status of the passport.
+   *
+   * @see com.opencirc.api.passport.model.Passport.Status for possible values
+   */
+  String status();
 
-    /**
-     * @return the parent ID of the passport (if any)
-     */
-    String getParentId();
+  /**
+   * The ID of the parent passport, if any.
+   */
+  String parentId();
 
-    /**
-     * @return the ID of the associated datasheet
-     */
-    String getDatasheetId();
+  /**
+   * The ID of the associated datasheet.
+   */
+  String datasheetId();
 
-    /**
-     * @return the JSON data of the datasheet as a string
-     */
-    String getData();
+  /**
+   * The datasheet data as a JSON string.
+   */
+  String data();
 
-    /**
-     * @return the data dictionary type (e.g., BSDD or Lexicon)
-     */
-    String getDataDictionary();
+  /**
+   * The data dictionary type.
+   *
+   * @see com.opencirc.api.passport.enums.DataDictionary for possible values
+   */
+  String dataDictionary();
 
-    /**
-     * @return the category of the datasheet (e.g., UNIQUE or GENERIC)
-     */
-    String getDataCategory();
+  /**
+   * The category of the datasheet.
+   *
+   * @see com.opencirc.api.passport.model.Datasheet.DataCategory for possible values
+   */
+  String dataCategory();
 
-    /**
-     * @return the user who created the passport or datasheet
-     */
-    String getCreatedBy();
+  /**
+   * The ID of the user who created the passport.
+   */
+  String createdBy();
 
-    /**
-     * @return the creation timestamp
-     */
-    Timestamp getCreatedTime();
+  /**
+   * The creation timestamp.
+   */
+  Timestamp createdTime();
 }

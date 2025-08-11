@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+        "-//Puppy Crawl//DTD Suppressions 1.0//EN"
+        "http://www.puppycrawl.com/dtds/suppressions_1_0.dtd">
+
+<!-- There should not be any suppressions at all, but while we clean up the code we add some to be able to run other stringent checks! -->
+<suppressions>
+    <suppress checks="NonEmptyAtclauseDescription" files="."/>
+    <suppress checks="MissingJavadocType" files="."/>
+</suppressions>

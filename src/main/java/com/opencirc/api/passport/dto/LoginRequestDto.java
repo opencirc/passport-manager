@@ -11,15 +11,9 @@ import lombok.ToString;
 @ToString
 public class LoginRequestDto {
 
-    /**
-     * Username.
-     */
-    private String username;
+  /** Username. */
+  private String username;
 
-
-    /**
-     * password.
-     */
-    private String password;
-
+  /** password. */
+  private String password;
 }

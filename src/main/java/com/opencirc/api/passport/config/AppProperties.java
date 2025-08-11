@@ -1,11 +1,10 @@
 package com.opencirc.api.passport.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
-import lombok.Getter;
-import lombok.Setter;
 
 @Component
 @ConfigurationProperties(prefix = "app")
@@ -13,74 +12,48 @@ import lombok.Setter;
 @Setter
 public class AppProperties {
 
-    /**
-     * URL for searching class in BsDD.
-     */
-    @Value("${bsDD.class.searchText.url}")
-    private String bsDDClassSearchTextURL;
+  @Value("${bsdd.class.searchText.url}")
+  private String bsddClassSearchTextUrl;
 
-    /**
-     * URL for fetching class details in BsDD.
-     */
-    @Value("${bsDD.classDetails.url}")
-    private String bsDDClassDetailsURL;
+  @Value("${bsdd.classDetails.url}")
+  private String bsddClassDetailsUrl;
 
-    /**
-     * URL for fetching properties with detail BsDD.
-     */
-    @Value("${bsDD.propertiesWithDetail.url}")
-    private String bsDDPropertiesWithDetailURL;
+  @Value("${bsdd.propertiesWithDetail.url}")
+  private String bsddPropertiesWithDetailUrl;
 
-    /**
-     * URL for text based search in bsdd.
-     */
-    @Value("${bsDD.textSearch.url}")
-    private String bsDDTextSearchURL;
+  @Value("${bsdd.textSearch.url}")
+  private String bsddTextSearchUrl;
 
-    /**
-     * Access token expiration time.
-     */
-    @Value("${jwt.access.token.expiration.time}")
-    private String accessTokenExpiryTime;
+  @Value("${jwt.access.token.expiration.time}")
+  private String accessTokenExpiryTime;
 
-    /**
-     * Refresh token expiration time.
-     */
-    @Value("${jwt.refresh.token.expiration.time}")
-    private String refreshTokenExpiryTime;
+  @Value("${jwt.refresh.token.expiration.time}")
+  private String refreshTokenExpiryTime;
 
-    /**
-     * URL for register.
-     */
-    @Value("${auth.register.url}")
-    private String registerUrl;
+  @Value("${auth.register.url}")
+  private String registerUrl;
 
-    /**
-     * URL for login.
-     */
-    @Value("${auth.login.url}")
-    private String loginUrl;
+  @Value("${auth.login.url}")
+  private String loginUrl;
 
-    /**
-     * URL for encryptionKey.
-     */
-    @Value("${secret.encryption.key}")
-    private String encryptionKey;
+  @Value("${secret.encryption.key}")
+  private String encryptionKey;
 
-    /**
-     * Getter for refresh token.
-     * @return refresh token expiry time
-     */
-    public int getRefreshTokenExpiryTime() {
-        return Integer.parseInt(refreshTokenExpiryTime);
-    }
+  /**
+   * Getter for refresh token.
+   *
+   * @return refresh token expiry time
+   */
+  public int getRefreshTokenExpiryTime() {
+    return Integer.parseInt(refreshTokenExpiryTime);
+  }
 
-    /**
-     * Getter for access token.
-     * @return access token expiry time
-     */
-    public int getAccessTokenExpiryTime() {
-        return Integer.parseInt(accessTokenExpiryTime);
-    }
-
+  /**
+   * Getter for access token.
+   *
+   * @return access token expiry time
+   */
+  public int getAccessTokenExpiryTime() {
+    return Integer.parseInt(accessTokenExpiryTime);
+  }
 }

@@ -159,15 +159,45 @@
             </plugin>
 
             <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                    <java>
+                        <!-- Use the Google Java Format engine to comply with google_checks.xml -->
+                        <googleJavaFormat>
+                            <version>1.22.0</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                        <!-- Also fix imports consistently -->
+                        <removeUnusedImports />
+                        <importOrder>com,org,javax,jakarta,java,javafx,|,#</importOrder>
+                        <!-- Optional: format only changed files on CI/dev -->
+                        <!-- <ratchetFrom>origin/main</ratchetFrom> -->
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.6.0</version>
                 <configuration>
                     <includes>**/*.java</includes>
-                    <violationSeverity>error</violationSeverity>
+                    <violationSeverity>warning</violationSeverity>
                     <failOnViolation>true</failOnViolation>
                     <failsOnError>true</failsOnError>
                     <configLocation>google_checks.xml</configLocation>
+                    <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
                 </configuration>
                 <executions>
                     <execution>
