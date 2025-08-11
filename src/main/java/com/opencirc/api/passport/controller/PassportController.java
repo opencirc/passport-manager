@@ -2,6 +2,9 @@ package com.opencirc.api.passport.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,32 +64,47 @@ public class PassportController {
 
     /**
      * Endpoint to fetch the passport.
-     * @param id
+     * @param passportId
      * @return the passport in json
      */
     @Operation(summary = "Retrieves the Passport")
-    @GetMapping("/api/passport/{id}")
+    @GetMapping("/api/passport/{passportId}")
     public ResponseEntity<PassportDto> getPassport(
-            @Parameter(description = "Id of the Passport", required = true,
+            @Parameter(description = "ID of the Passport", required = true,
             in = ParameterIn.PATH)
-            @PathVariable String id)
+            @PathVariable String passportId)
             throws JsonProcessingException {
-        return ResponseEntity.ok(passportService.getPassport(id));
+        return ResponseEntity.ok(passportService.getPassport(passportId));
     }
 
     /**
-     * Endpoint to fetch the children of the specified passport.
-     * @param id
-     * @return the passport in json
+     * Endpoint to fetch the specified passport and its descendants.
+     * @param passportId
+     * @return the passport as JSON
      * @throws JsonValidationException
      */
     @Operation(summary = "Get Passport and its children for the given ID")
-    @GetMapping("/api/passport/{id}/children")
-    public ResponseEntity<List<PassportDto>> getPassportChildren(
-            @Parameter(description = "Id of the Passport",
-            required = true, in = ParameterIn.PATH) @PathVariable String id)
+    @GetMapping("/api/passport/{passportId}/children")
+    public ResponseEntity<List<PassportDto>> getWithChildren(
+            @Parameter(description = "ID of the Passport",
+            required = true, in = ParameterIn.PATH) @PathVariable String passportId)
             throws JsonProcessingException, JsonValidationException {
-        return ResponseEntity.ok(passportService.getPassportChildren(id));
+        return ResponseEntity.ok(passportService.getPassportChildren(passportId));
+    }
+
+    /**
+     * Endpoint to fetch the immediate children of the specified passport.
+     * @param passportId
+     * @return the passport as JSON
+     * @throws JsonValidationException
+     */
+    @Operation(summary = "Get all passports with the given parent ID")
+    @GetMapping("/api/passport/{passportId}/immediateChildren")
+    public ResponseEntity<List<PassportDto>> getImmediateChildren(
+            @Parameter(description = "ID of the Passport",
+                    required = true, in = ParameterIn.PATH) @PathVariable String passportId)
+            throws JsonProcessingException, JsonValidationException {
+        return ResponseEntity.ok(passportService.getImmediateChildren(passportId));
     }
 
     /**
@@ -110,7 +128,7 @@ public class PassportController {
      * @throws JsonValidationException
      */
     @Operation(summary = "Get all the root passports available")
-    @GetMapping("/api/passport/root/all")
+    @GetMapping("/api/passport")
     public ResponseEntity<List<PassportDto>> getRootPassports() {
         return ResponseEntity.ok(passportService.getRootPassports());
     }

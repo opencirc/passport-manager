@@ -30,18 +30,18 @@ public interface PassportRepository
             @Param("status") Passport.Status status);
 
     /**
-     * Retrieves passport with its children.
+     * Retrieves a passport with its descendants.
      *
-     * @param id
+     * @param passportId
      *
-     * @return passports and its children
+     * @return the passport with its descendants
      */
     @Query(value = """
             WITH RECURSIVE PassportTree AS (
                 SELECT pe.id, pe.name, pe.status, pe.parent_id, pe.created_by,
                 pe.created_time
                 FROM passports pe
-                WHERE pe.id = :id
+                WHERE pe.id = :passport_id
 
                 UNION ALL
 
@@ -60,12 +60,37 @@ public interface PassportRepository
                    pt.created_by AS createdBy,
                    pt.created_time AS createdTime
             FROM PassportTree pt
-            JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
-            JOIN datasheets ds ON pdm.datasheet_id = ds.id
+            LEFT JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
+            LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
             WHERE pt.status = 'ACTIVE'
             """, nativeQuery = true)
-    Optional<List<PassportDatasheetResultMapDto>> findActivePassportChildren(
-            @Param("id") String id);
+    Optional<List<PassportDatasheetResultMapDto>> findPassportWithDescendants(
+            @Param("passport_id") String passportId);
+
+    /**
+     * Retrieves the immediate children of a passport.
+     *
+     * @param passportId
+     *
+     * @return the passports whose parent_id matches the given passport id
+     */
+    @Query(value = """
+            SELECT p.id AS passportId,
+                   p.name AS passportName,
+                   ds.id AS datasheetId,
+                   ds.data AS data,
+                   ds.data_category AS dataCategory,
+                   p.status AS status,
+                   p.parent_id AS parentId,
+                   p.created_by AS createdBy,
+                   p.created_time AS createdTime
+            FROM passports p
+            LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
+            LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
+            WHERE p.parent_id = :passport_id AND p.status = 'ACTIVE'
+            """, nativeQuery = true)
+    Optional<List<PassportDatasheetResultMapDto>> findImmediateChildren(
+            @Param("passport_id") String passportId);
 
     /**
      * Retrieves immediate children of the passport.
@@ -86,25 +111,25 @@ public interface PassportRepository
     /**
      * Deactivates the passport.
      *
-     * @param id
+     * @param passportId
      *
      * @return status
      */
     @Modifying
     @Transactional
     @Query("UPDATE Passport p SET p.status = 'inactive'"
-            + "WHERE p.id = :id")
-    int updateStatusToInactive(@Param("id") String id);
+            + "WHERE p.id = :passport_id")
+    int updateStatusToInactive(@Param("passport_id") String passportId);
 
     /**
      * Retrieves the parentId.
-     * @param id
+     * @param passportId
      * @return status
      */
     @Transactional
     @Query("Select p.parentId from Passport p "
-            + "WHERE p.id = :id")
-    String getParentId(@Param("id") String id);
+            + "WHERE p.id = :passport_id")
+    String getParentId(@Param("passport_id") String passportId);
 
     /**
      * Retrieves passports without parent.
