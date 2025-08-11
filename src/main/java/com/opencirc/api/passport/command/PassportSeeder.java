@@ -173,15 +173,15 @@ public class PassportSeeder {
         }
 
         JsonNode templateNode = templateCache.computeIfAbsent(uri, k -> {
-            Object t = null;
+            Object template = null;
             try {
-                t = dataDictionaryService.createClassTemplate(dictionary, k, true);
+                template = dataDictionaryService.createClassTemplate(dictionary, k, true);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             } catch (JsonValidationException e) {
                 e.printStackTrace();
             }
-            return objectMapper.valueToTree(t);
+            return objectMapper.valueToTree(template);
         }).deepCopy();
         JsonNode datasheetData = filterAndFillProperties(
                 objectMapper.valueToTree(templateNode));
