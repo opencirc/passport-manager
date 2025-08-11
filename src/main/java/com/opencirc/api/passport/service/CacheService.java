@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.RedisConnectionFailureException;
@@ -42,13 +41,13 @@ public class CacheService {
 
     /**
      * Initialising CacheService bean.
-     * @param redisTemplate
-     * @param objectMapper
+     * @param redisTemplateParam
+     * @param objectMapperParam
      */
-    public CacheService(RedisTemplate<String, Object> redisTemplate,
-            ObjectMapper objectMapper) {
-        this.redisTemplate = redisTemplate;
-        this.objectMapper = objectMapper;
+    public CacheService(RedisTemplate<String, Object> redisTemplateParam,
+            ObjectMapper objectMapperParam) {
+        this.redisTemplate = redisTemplateParam;
+        this.objectMapper = objectMapperParam;
     }
 
     /**
@@ -82,29 +81,36 @@ public class CacheService {
             String searchText) {
 
         List<Map<String, String>> propertyList = new ArrayList<>();
-        String pattern = "(?i).*" + java.util.regex.Pattern.quote(searchText) + ".*";
+        String dictionaryValue = dictionary.getValue();
+        Pattern nameMatch = Pattern.compile("(?i).*" + Pattern.quote(searchText) + ".*");
+        ScanOptions scanOptions = ScanOptions.scanOptions().match(dictionaryValue + "#*")
+                .count(AppConstants.NUM_HUNDRED).build();
 
-        Set<String> keys = redisTemplate.keys(dictionary.getValue() + "#*");
+        redisTemplate.execute((RedisConnection connection) -> {
+            try (Cursor<byte[]> cursor = connection.scan(scanOptions)) {
+                while (cursor.hasNext()) {
+                    String key = new String(cursor.next(), StandardCharsets.UTF_8);
 
-        if (keys != null) {
-            propertyList = keys.stream().filter(
-                    key -> key.toLowerCase().startsWith(dictionary.getValue() + "#"))
-                    .filter(key -> {
-                        String[] parts = key.split("#", AppConstants.NUM_THREE);
-                        return parts.length == AppConstants.NUM_THREE
-                                && Pattern.matches(pattern, parts[1]);
-                    }).map(key -> {
-                        Map<String, String> property = new HashMap<>();
-                        String uri = (String) redisTemplate.opsForValue().get(key);
-                        String[] parts = key.split("#", AppConstants.NUM_THREE);
-                        if (parts.length == AppConstants.NUM_THREE) {
-                            property.put("name", parts[1]);
-                            property.put("code", parts[2]);
-                            property.put("uri", uri);
-                        }
-                        return property;
-                    }).collect(Collectors.toList());
-        }
+                    if (!key.startsWith(dictionaryValue + "#")) {
+                        continue;
+                    }
+                    String[] parts = key.split("#", AppConstants.NUM_THREE);
+                    if (parts.length != AppConstants.NUM_THREE) {
+                        continue;
+                    }
+                    if (!nameMatch.matcher(parts[1]).matches()) {
+                        continue;
+                    }
+                    String uri = (String) redisTemplate.opsForValue().get(key);
+                    Map<String, String> property = new HashMap<>();
+                    property.put("name", parts[1]);
+                    property.put("code", parts[2]);
+                    property.put("uri", uri);
+                    propertyList.add(property);
+                }
+            }
+            return null;
+        });
 
         return propertyList;
     }

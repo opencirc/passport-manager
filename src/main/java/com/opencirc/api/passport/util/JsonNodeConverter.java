@@ -24,7 +24,6 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
      * Initialising JsonNodeConverter.
      * @param objectMapper
      */
-    @Autowired
     public JsonNodeConverter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
