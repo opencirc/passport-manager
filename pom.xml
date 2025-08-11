@@ -151,6 +151,7 @@
 
     <build>
         <plugins>
+            <!-- Keep a single Spring Boot Maven Plugin with your configuration -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -163,6 +164,7 @@
                     </excludes>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -181,11 +183,6 @@
                         <version>10.21.4</version>
                     </dependency>
                 </dependencies>
-            </plugin>
-            <!-- Spring Boot Plugin -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

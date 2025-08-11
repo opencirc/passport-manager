@@ -36,4 +36,4 @@ jobs:
           distribution: 'temurin'
 
       - name: 'Run Checkstyle'
-        run: mvn checkstyle:check
+        run: mvn --no-transfer-progress checkstyle:check
