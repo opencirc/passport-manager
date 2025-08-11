@@ -268,17 +268,6 @@ public class PassportService {
     }
 
 
-        Optional<List<Passport>> optionalPassports = passportRepository
-                .getPassportImmediateChildren(id);
-        
-        return optionalPassports
-                .map(passports -> passports.stream()
-                        .map(PassportDto::from)
-                        .collect(Collectors.toList()))
-                .orElse(Collections.emptyList());
-
-    }
-
     /**
      * Validate the passport, throw if there is an error.
      *
