@@ -11,21 +11,19 @@
     </parent>
     <groupId>com.opencirc.api</groupId>
     <artifactId>PassportManager</artifactId>
-    <name>PassportGenerator</name>
-    <description>Spring Boot</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
+    <name>OpenCirc passport manager</name>
+    <description>OpenCirc passport manager</description>
+    <url>https://opencirc.org</url>
     <developers>
-        <developer/>
+        <developer>
+            <name>Andrés Angulo</name>
+            <email>andres@opencirc.org</email>
+        </developer>
+        <developer>
+            <name>Mahalakshmi Elangovan</name>
+            <email>maha@opencirc.org</email>
+        </developer>
     </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
     <properties>
         <java.version>21</java.version>
     </properties>
@@ -47,11 +45,6 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>2.17.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>6.6.1.Final</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -79,7 +72,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20210307</version>
+            <version>20250517</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -176,6 +169,15 @@
                     <failsOnError>true</failsOnError>
                     <configLocation>google_checks.xml</configLocation>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle-verify</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <dependencies>
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
