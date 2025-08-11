@@ -1,7 +1,6 @@
 package com.opencirc.api.passport.dto;
 
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -145,7 +144,7 @@ public class BsddClassTemplateDto {
      * Version date.
      */
     @JsonProperty("versionDateUtc")
-    private ZonedDateTime versionDateUtc;
+    private OffsetDateTime versionDateUtc;
 
 
     /**

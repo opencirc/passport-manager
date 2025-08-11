@@ -147,6 +147,11 @@ public final class AppConstants {
      * number 1000.
      */
     public static final int NUM_THOUSAND = 1000;
+    
+    /**
+     * number 100.
+     */
+    public static final int NUM_HUNDRED = 100;
 
     /**
      * hexString.

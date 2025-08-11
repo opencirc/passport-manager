@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,14 +12,21 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.enums.DataDictionary;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class CacheService {
 
     /**
@@ -26,12 +34,22 @@ public class CacheService {
      */
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-    
+
     /**
      * Injecting ObjectMapper bean.
      */
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
+
+    /**
+     * Initialising CacheService bean.
+     * @param redisTemplate
+     * @param objectMapper
+     */
+    public CacheService(RedisTemplate<String, Object> redisTemplate,
+            ObjectMapper objectMapper) {
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Saves the data to cache.
@@ -66,27 +84,22 @@ public class CacheService {
         List<Map<String, String>> propertyList = new ArrayList<>();
         String pattern = "(?i).*" + java.util.regex.Pattern.quote(searchText) + ".*";
 
-        Set<String> keys = redisTemplate
-                .keys(dictionary.getValue() + "#*");
+        Set<String> keys = redisTemplate.keys(dictionary.getValue() + "#*");
 
         if (keys != null) {
-            propertyList = keys.stream()
-                    .filter(key -> key.toLowerCase()
-                            .startsWith(dictionary.getValue() + "#"))
+            propertyList = keys.stream().filter(
+                    key -> key.toLowerCase().startsWith(dictionary.getValue() + "#"))
                     .filter(key -> {
-                        String[] parts = key.split("#");
-                        return parts.length > 1
+                        String[] parts = key.split("#", AppConstants.NUM_THREE);
+                        return parts.length == AppConstants.NUM_THREE
                                 && Pattern.matches(pattern, parts[1]);
                     }).map(key -> {
                         Map<String, String> property = new HashMap<>();
-                        String uri = (String) redisTemplate.opsForValue()
-                                .get(key);
-                        String[] parts = key.split("#");
-                        if (parts.length > 1) {
-                            String name = parts[1];
-                            String code = parts[2];
-                            property.put("name", name);
-                            property.put("code", code);
+                        String uri = (String) redisTemplate.opsForValue().get(key);
+                        String[] parts = key.split("#", AppConstants.NUM_THREE);
+                        if (parts.length == AppConstants.NUM_THREE) {
+                            property.put("name", parts[1]);
+                            property.put("code", parts[2]);
                             property.put("uri", uri);
                         }
                         return property;
@@ -107,20 +120,25 @@ public class CacheService {
         String dict = dictionary.toString();
         String quotedDict = java.util.regex.Pattern.quote(dict);
         String quotedCode = java.util.regex.Pattern.quote(code);
-        String pattern = "^" + quotedDict + "#[^#]*#" + quotedCode + "$";
+        String regexPattern = "^" + quotedDict + "#[^#]*#" + quotedCode + "$";
 
-        Set<String> keys = redisTemplate.keys(dict + "#*#" + code);
-        if (keys == null || keys.isEmpty()) {
-            return null;
-        }
+        ScanOptions scanOptions = ScanOptions.scanOptions().match(dict + "#*#")
+                .count(AppConstants.NUM_HUNDRED)
+                .build();
 
-        for (String key : keys) {
-            if (key.matches(pattern)) {
-                return (String) redisTemplate.opsForValue().get(key);
+        return redisTemplate.execute((RedisConnection connection) -> {
+            try (Cursor<byte[]> cursor = connection.scan(scanOptions)) {
+                while (cursor.hasNext()) {
+                    String key = new String(cursor.next(), StandardCharsets.UTF_8);
+                    if (key.matches(regexPattern)) {
+                        return (String) redisTemplate.opsForValue().get(key);
+                    }
+                }
             }
-        }
-        return null;
+            return null;
+        });
     }
+
 
     /**
      * Stores properties  in cache.
@@ -135,7 +153,7 @@ public class CacheService {
             String code = property.get("code");
             String uri = property.get("uri");
 
-            String redisKey = dictionary + "#" + name + "#" + code;
+            String redisKey = dictionary.getValue() + "#" + name + "#" + code;
 
             redisTemplate.opsForValue().set(redisKey, uri);
         });
@@ -170,7 +188,7 @@ public class CacheService {
 
             return objectMapper.readValue(json, valueType);
         } catch (RedisConnectionFailureException e) {
-            System.err.println("Redis is not available: " + e.getMessage());
+            log.error("Redis is not available: {}", e.getMessage(), e);
             throw new RuntimeException("Redis connection failed", e);
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse JSON", e);
@@ -179,67 +197,6 @@ public class CacheService {
     }
 
 
-    /**
-     * Loads cache with test data.
-     *
-     * @param dictionary
-     */
-    public void populateCacheWithTestData(DataDictionary dictionary) {
-        setTestDataInCache(dictionary);
-
-    }
-
-    /**
-     * Populates cache with test data.
-     *
-     * @param dictionary
-     */
-    private void setTestDataInCache(DataDictionary dictionary) {
-        clearCache();
-
-        Map<String, String> sampleProperties = new HashMap<>();
-        sampleProperties.put(
-                dictionary + "#EN 318_0b205c05-881f-44f3-83ca-568927baacfe",
-                "https://identifier.buildingsmart.org/uri/cei-bois.org/wood/1.0.0/prop/"
-                + "0b205c05-881f-44f3-83ca-568927baacfe");
-        sampleProperties.put(dictionary
-                + "#abrasion resistance class according"
-                + "EN 14322_0b53e2f7-ddbd-4d5a-8eeb-5755267778fb",
-                "https://identifier.buildingsmart.org/uri/cei-bois.org/wood/1.0.0/prop/"
-                + "0b53e2f7-ddbd-4d5a-8eeb-5755267778fb");
-        sampleProperties.put(
-                dictionary + "#EN 338_0b44b46f-03ac-42c4-a500-408d5d175c0f",
-                "https://identifier.buildingsmart.org/uri/cei-bois.org/wood/1.0.0/prop/"
-                + "0b44b46f-03ac-42c4-a500-408d5d175c0f");
-        sampleProperties.put(dictionary
-                + "#spanLength-EN 1533_06917584-7982-4c67-8bb0-086a1433d4e8",
-                "https://identifier.buildingsmart.org/uri/cei-bois.org/wood/1.0.0/prop/"
-                + "06917584-7982-4c67-8bb0-086a1433d4e8");
-        sampleProperties.put(dictionary
-                + "#characteristic racking strength-"
-                + "EN 594_06678d85-f8e2-4579-8ef4-d2599a2802e5",
-                "https://identifier.buildingsmart.org/uri/cei-bois.org/wood/1.0.0/prop/"
-                + "06678d85-f8e2-4579-8ef4-d2599a2802e5");
-        sampleProperties.put(dictionary
-                + "#grading of strips and square edged-EN "
-                + "975-1_056f35d7-f741-402f-9006-07ca3286b2c4",
-                "https://identifier.buildingsmart.org/uri/cei-bois.org/wood"
-                + "/1.0.0/prop/056f35d7-f741-402f-9006-07ca3286b2c4");
-        sampleProperties.put(dictionary
-                + "#sound absorption coefficient-ISO 354_074cd12f-61b5-468b-"
-                + "98f4-728804d2cce6",
-                "https://identifier.buildingsmart.org/uri/cei-bois.org/wood/1.0.0/prop/"
-                + "074cd12f-61b5-468b-98f4-728804d2cce6");
-        sampleProperties.put(
-                dictionary
-                        + "#ISO 9001_1b9871dc-fe79-4b25-92f5-c127165e84e8",
-                "https://identifier.buildingsmart.org/uri/cei-bois.org/wood/1.0.0/"
-                + "prop/1b9871dc-fe79-4b25-92f5-c127165e84e8");
-
-        sampleProperties.forEach((key, uri) -> {
-            redisTemplate.opsForValue().set(key, uri);
-        });
-    }
 
     /**
      * Clears the data from cache.

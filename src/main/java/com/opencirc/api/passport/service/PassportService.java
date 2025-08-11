@@ -62,7 +62,7 @@ public class PassportService {
      */
     @Autowired
     private ObjectMapper objectMapper;
-    
+
     /**
      * Injecting DictionaryAdapterFactory class.
      */
@@ -176,7 +176,8 @@ public class PassportService {
 
             if (row.getDatasheetId() != null) {
                 boolean alreadyExists = passportDto.getDatasheets().stream()
-                        .anyMatch(ds -> ds.getId() == row.getDatasheetId());
+                        .anyMatch(ds -> java.util.Objects.equals(ds.getId(),
+                                row.getDatasheetId()));
 
                 if (!alreadyExists) {
                     DatasheetDto datasheetDto = new DatasheetDto();
@@ -240,7 +241,8 @@ public class PassportService {
         List<Passport> passports = passportRepository
                 .getRootPassports();
         if (passports == null || passports.isEmpty()) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND, "No active passport found");
+            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
+                    "No active passport found");
         }
 
         return passports.stream()
