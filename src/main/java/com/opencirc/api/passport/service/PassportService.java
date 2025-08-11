@@ -1,19 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,8 +19,15 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
-
 import io.github.thibaultmeyer.cuid.CUID;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PassportService {
@@ -122,18 +115,18 @@ public class PassportService {
     /**
      * Retrieves passport.
      *
-     * @param id
+     * @param passportId
      * @return Passport DTO from passport
      */
-    public PassportDto getPassport(String id)
+    public PassportDto getPassport(String passportId)
             throws JsonProcessingException {
 
         Optional<Passport> optionalPassport = passportRepository
-                .findPassport(id, Passport.Status.ACTIVE);
+                .findPassport(passportId, Passport.Status.ACTIVE);
         if (optionalPassport.isEmpty()
                 || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
             throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passport found");
+                    "Could not find passport with ID " + passportId);
         }
 
          return PassportDto.from(optionalPassport.get());
@@ -149,7 +142,7 @@ public class PassportService {
     public List<PassportDto> getPassportChildren(String id)
             throws JsonProcessingException {
         Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
-                passportRepository.findActivePassportChildren(id);
+                passportRepository.findPassportWithDescendants(id);
 
         List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
                 .orElse(Collections.emptyList());
@@ -207,7 +200,6 @@ public class PassportService {
         for (PassportDatasheetResultMapDto row : resultRows) {
             String passportId = row.getPassportId();
             String parentId = row.getParentId();
-
             if (parentId != null && dtoById.containsKey(parentId)) {
                 PassportDto child = dtoById.get(passportId);
                 PassportDto parent = dtoById.get(parentId);
@@ -216,6 +208,66 @@ public class PassportService {
         }
 
         return new ArrayList<>(dtoById.values());
+    }
+
+    /**
+     * Retrieves the passports with the given parent ID
+     *
+     * @param passportId
+     * @return a list of {@link PassportDto} objects
+     * @throws JsonProcessingException
+     */
+    public List<PassportDto> getImmediateChildren(String passportId)
+            throws JsonProcessingException {
+        Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
+                passportRepository.findImmediateChildren(passportId);
+
+        List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
+                .orElse(Collections.emptyList());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<PassportDto> passportDtoList = new ArrayList<>();
+        Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
+
+        for (PassportDatasheetResultMapDto row : resultRows) {
+            PassportDto passportDto = new PassportDto();
+            passportDto.setId(row.getPassportId());
+            passportDto.setName(row.getPassportName());
+            passportDto.setStatus(Passport.Status.fromValue(row.getStatus()));
+            passportDto.setCreatedBy(row.getCreatedBy());
+            passportDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
+            passportDto.setDatasheets(new ArrayList<>());
+
+            if (row.getDatasheetId() != null) {
+                if (!datasheetDtoMap.containsKey(row.getDatasheetId())) {
+                    DatasheetDto datasheetDto = new DatasheetDto();
+                    datasheetDto.setId(row.getDatasheetId());
+                    datasheetDto.setData(objectMapper.readTree(row.getData()));
+                    if (row.getDataCategory() != null) {
+                        datasheetDto.setDataCategory(DataCategory.fromValue(row
+                                .getDataCategory()));
+                    } else {
+                        datasheetDto.setDataCategory(null);
+                    }
+
+                    if (row.getDataDictionary() != null) {
+                        datasheetDto.setDataDictionary(DataDictionary
+                                .valueOf(row.getDataDictionary()));
+                    } else {
+                        datasheetDto.setDataDictionary(null);
+                    }
+                    datasheetDto.setCreatedBy(row.getCreatedBy());
+                    datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
+                    datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
+                }
+
+                passportDto.getDatasheets().add(datasheetDtoMap.get(row.getDatasheetId()));
+            }
+
+            passportDtoList.add(passportDto);
+        }
+
+        return passportDtoList;
     }
 
 
@@ -243,8 +295,8 @@ public class PassportService {
         if (passports == null || passports.isEmpty()) {
             throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
                     "No active passport found");
-        }
 
+        }
         return passports.stream()
                 .map(PassportDto::from)
                 .collect(Collectors.toList());
