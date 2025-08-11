@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.util;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,9 +13,10 @@ import jakarta.persistence.Converter;
 public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
 
     /**
-     * Injecting ObjectMapper class.
+     * Injecting ObjectMapper bean.
      */
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * Converts as column to fit in table.
@@ -25,7 +28,7 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
     public String convertToDatabaseColumn(JsonNode attribute) {
         try {
             return attribute != null
-                    ? OBJECT_MAPPER.writeValueAsString(attribute)
+                    ? objectMapper.writeValueAsString(attribute)
                     : null;
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException(
@@ -42,7 +45,7 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
     @Override
     public JsonNode convertToEntityAttribute(String dbData) {
         try {
-            return dbData != null ? OBJECT_MAPPER.readTree(dbData) : null;
+            return dbData != null ? objectMapper.readTree(dbData) : null;
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException(
                     "Error converting String to JsonNode", e);

@@ -47,6 +47,12 @@ public class PassportTemplateService {
      */
     @Autowired
     private UserContext userContext;
+    
+    /**
+     * Injecting ObjectMapper bean.
+     */
+    @Autowired
+    private ObjectMapper objectMapper;
 
 
     /**
@@ -83,8 +89,7 @@ public class PassportTemplateService {
     private PassportTemplate generateTemplateFromPassport(Passport passport,
             String templateName) {
         PassportTemplate template = new PassportTemplate();
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = mapper.createObjectNode();
+        ObjectNode rootNode = objectMapper.createObjectNode();
 
         for (PassportDatasheetMapping passportDatasheetMapping : passport
                 .getDatasheetMappings()) {

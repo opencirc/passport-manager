@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opencirc.api.passport.enums.DataDictionary;
 
 @Service
@@ -27,6 +26,12 @@ public class CacheService {
      */
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    
+    /**
+     * Injecting ObjectMapper bean.
+     */
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * Saves the data to cache.
@@ -59,7 +64,7 @@ public class CacheService {
             String searchText) {
 
         List<Map<String, String>> propertyList = new ArrayList<>();
-        String pattern = "(?i).*" + searchText + ".*";
+        String pattern = "(?i).*" + java.util.regex.Pattern.quote(searchText) + ".*";
 
         Set<String> keys = redisTemplate
                 .keys(dictionary.getValue() + "#*");
@@ -81,7 +86,7 @@ public class CacheService {
                             String name = parts[1];
                             String code = parts[2];
                             property.put("name", name);
-                            property.put("name", code);
+                            property.put("code", code);
                             property.put("uri", uri);
                         }
                         return property;
@@ -98,19 +103,23 @@ public class CacheService {
      * @param code
      * @return uri
      */
-    public String getUriFomCode(DataDictionary dictionary, String code) {
+    public String getUriFromCode(DataDictionary dictionary, String code) {
+        String dict = dictionary.toString();
+        String quotedDict = java.util.regex.Pattern.quote(dict);
+        String quotedCode = java.util.regex.Pattern.quote(code);
+        String pattern = "^" + quotedDict + "#[^#]*#" + quotedCode + "$";
 
-        String pattern = "^" + dictionary + "#[^#]*#" + code + "$";
-        Set<String> keys = redisTemplate.keys(dictionary + "#*#" + code);
-        String uri = null;
-        for (String key : keys) {
-            if (key.matches(pattern)) {
-                uri = (String) redisTemplate.opsForValue().get(key);
-            }
+        Set<String> keys = redisTemplate.keys(dict + "#*#" + code);
+        if (keys == null || keys.isEmpty()) {
+            return null;
         }
 
-        return uri;
-
+        for (String key : keys) {
+            if (key.matches(pattern)) {
+                return (String) redisTemplate.opsForValue().get(key);
+            }
+        }
+        return null;
     }
 
     /**
@@ -140,9 +149,7 @@ public class CacheService {
      */
     public void storeClassTemplateInCache(String uri, Object template)
             throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        String json = mapper.writeValueAsString(template);
+        String json = objectMapper.writeValueAsString(template);
         redisTemplate.opsForValue().set(uri, json);
     }
 
@@ -161,9 +168,7 @@ public class CacheService {
                 return null;
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-            return mapper.readValue(json, valueType);
+            return objectMapper.readValue(json, valueType);
         } catch (RedisConnectionFailureException e) {
             System.err.println("Redis is not available: " + e.getMessage());
             throw new RuntimeException("Redis connection failed", e);

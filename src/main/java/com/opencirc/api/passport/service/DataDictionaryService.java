@@ -99,7 +99,7 @@ public class DataDictionaryService {
      * @return URI of the property
      */
     private String fetchUriForProperty(String code, DataDictionary dictionary) {
-        String uri = cacheService.getUriFomCode(dictionary, code);
+        String uri = cacheService.getUriFromCode(dictionary, code);
 
         if (uri == null) {
             List<Map<String, String>> properties = listProperties(dictionary, code

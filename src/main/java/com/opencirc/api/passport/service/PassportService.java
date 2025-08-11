@@ -57,7 +57,12 @@ public class PassportService {
     @Autowired
     private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
 
-
+    /**
+     * Injecting ObjectMapper bean.
+     */
+    @Autowired
+    private ObjectMapper objectMapper;
+    
     /**
      * Injecting DictionaryAdapterFactory class.
      */
@@ -155,9 +160,6 @@ public class PassportService {
         }
 
         Map<String, PassportDto> dtoById = new LinkedHashMap<>();
-        ObjectMapper objectMapper = new ObjectMapper();
-
-
         for (PassportDatasheetResultMapDto row : resultRows) {
             String passportId = row.getPassportId();
 
