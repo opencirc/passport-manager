@@ -1,0 +1,47 @@
+name: Lint and check formatting
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+permissions:
+  contents: read
+
+env:
+  CHECKSTYLE_VERSION: '10.25.0'
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-${{ inputs.environment }}"
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: "read"
+      id-token: "write"
+      pull-requests: "write"
+      checks: "write"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 'Find changed Java files'
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **.java
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: 'Run Checkstyle'
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: mvn checkstyle:check
