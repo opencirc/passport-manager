@@ -80,7 +80,7 @@ public class AppProperties {
     private String childrenPerLevel;
 
     /**
-     * Number of child passports to create at each level.
+     * Number of properties to select from the template.
      */
     @Value("${seed.passport.properties-count-to-select}")
     private String propertyCountToSelect;
@@ -112,15 +112,26 @@ public class AppProperties {
      * @return Maximum level of the passports to be created
      */
     public int getMaximumLevel() {
-        return Integer.parseInt(maximumLevel);
+        try {
+            return Integer.parseInt(maximumLevel);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid configuration for"
+                    + " seed.passport.max-level", e);
+        }
     }
+
 
     /**
      * Getter for childrenPerLevel.
      * @return Number of children for each passport
      */
     public int getChildrenPerLevel() {
-        return Integer.parseInt(childrenPerLevel);
+        try {
+            return Integer.parseInt(childrenPerLevel);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid configuration for "
+                    + "seed.passport.children-per-level", e);
+        }
     }
 
     /**
@@ -128,7 +139,12 @@ public class AppProperties {
      * @return the number of properties to have in the template
      */
     public int getPropertyCountToSelect() {
-        return Integer.parseInt(propertyCountToSelect);
+        try {
+            return Integer.parseInt(propertyCountToSelect);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid configuration for "
+                    + "seed.passport.properties-count-to-select", e);
+        }
     }
 
 }

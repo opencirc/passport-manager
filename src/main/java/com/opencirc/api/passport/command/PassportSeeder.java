@@ -252,7 +252,8 @@ public class PassportSeeder {
                 case "real" -> propertyObject.put("actualValue", RANDOM.nextDouble());
                 case "integer" -> propertyObject.put("actualValue", RANDOM.nextInt(50));
                 case "datetime" -> propertyObject.put("actualValue",
-                        LocalDateTime.now().minusHours(RANDOM.nextInt(200)).toString());
+                        LocalDateTime.now().minusHours(RANDOM.nextInt(200))
+                        .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME));
                 default -> propertyObject.put("actualValue", "testData");
                 }
             }
