@@ -85,10 +85,6 @@ public class PassportService {
         rawPassport.setCreatedTime(LocalDateTime.now());
         String parentId = data.getParentId();
         if (parentId != null && !parentId.isBlank()) {
-            if (parentId.equals(rawPassport.getId())) {
-                throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "A passport cannot be its own parent");
-            }
             boolean parentExists = passportRepository.existsById(parentId);
             if (!parentExists) {
                 throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY,
