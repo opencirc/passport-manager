@@ -181,13 +181,13 @@ public class PassportSeeder {
             return;
         }
 
-        JsonNode templateNode = templateCache.computeIfAbsent(uri, k -> {
+        JsonNode templateNode = templateCache.computeIfAbsent(uri, currentUri -> {
             Object template = null;
             try {
                 template = dataDictionaryService
-                        .createClassTemplate(dictionary, k, true);
+                        .createClassTemplate(dictionary, currentUri, true);
             } catch (JsonProcessingException | JsonValidationException e) {
-                throw new RuntimeException("Failed to create template for URI: " + k, e);
+                throw new RuntimeException("Failed to create template for URI: " + currentUri, e);
             }
             return objectMapper.valueToTree(template);
         }).deepCopy();
@@ -204,10 +204,10 @@ public class PassportSeeder {
         PassportDto createdPassport = passportService
                 .createPassportUsingDictionary(dictionary, request);
 
-        for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
-            int nextUriIndex = (uriIndex + i + 1) % uriList.size();
+        for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
+            int nextUriIndex = (uriIndex + index + 1) % uriList.size();
             String nextUri = uriList.get(nextUriIndex);
-            createPassportRecursive(level + 1, nameSuffix + "." + (i + 1), nextUri,
+            createPassportRecursive(level + 1, nameSuffix + "." + (index + 1), nextUri,
                     nextUriIndex, createdPassport.getId(), userId);
         }
     }
@@ -236,24 +236,24 @@ public class PassportSeeder {
         objectNode.set("classProperties", newProperty);
 
         for (JsonNode propertyNode : selectedProperties) {
-            ObjectNode propObj = (ObjectNode) propertyNode;
+            ObjectNode propertyObject = (ObjectNode) propertyNode;
             if (propertyNode.has("allowedValues")
                     && propertyNode.get("allowedValues").isArray()
                     && propertyNode.get("allowedValues").size() > 0) {
                 JsonNode first = propertyNode.get("allowedValues").get(0);
                 String allowedValue = first.has("value") ? first
                         .get("value").asText() : first.asText();
-                propObj.put("actualValue", allowedValue);
+                propertyObject.put("actualValue", allowedValue);
             } else if (propertyNode.has("dataType")) {
                 String dataType = propertyNode.get("dataType").asText().toLowerCase();
                 switch (dataType) {
-                case "boolean" -> propObj.put("actualValue", RANDOM.nextBoolean());
-                case "string" -> propObj.put("actualValue", "testData");
-                case "real" -> propObj.put("actualValue", RANDOM.nextDouble());
-                case "integer" -> propObj.put("actualValue", RANDOM.nextInt(50));
-                case "datetime" -> propObj.put("actualValue",
+                case "boolean" -> propertyObject.put("actualValue", RANDOM.nextBoolean());
+                case "string" -> propertyObject.put("actualValue", "testData");
+                case "real" -> propertyObject.put("actualValue", RANDOM.nextDouble());
+                case "integer" -> propertyObject.put("actualValue", RANDOM.nextInt(50));
+                case "datetime" -> propertyObject.put("actualValue",
                         LocalDateTime.now().minusHours(RANDOM.nextInt(200)).toString());
-                default -> propObj.put("actualValue", "testData");
+                default -> propertyObject.put("actualValue", "testData");
                 }
             }
         }
