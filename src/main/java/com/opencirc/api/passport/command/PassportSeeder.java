@@ -2,13 +2,11 @@ package com.opencirc.api.passport.command;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,16 +36,14 @@ import lombok.extern.slf4j.Slf4j;
 public class PassportSeeder {
 
     /**
-     * Injecting Properties class.
+     * Application properties class.
      */
-    @Autowired
     private AppProperties appProperties;
 
     /**
-     * Injecting UserRepository.
+     * Service to get user details.
      */
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     /**
      * Service to retrieve data dictionary templates.
@@ -80,52 +76,6 @@ public class PassportSeeder {
     private final Map<String, JsonNode> templateCache = new ConcurrentHashMap<>();
 
     /**
-     * List of URIs representing classes in the data dictionary.
-     */
-    private final List<String> uriList = Arrays.asList(
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000001",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000007",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000017",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000019",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000008",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000022",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000023",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000009",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000024",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000025",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000026",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000005",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000010",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000028",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000029",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000030",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000011",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000032",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000033",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000034",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000012",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000036",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000037",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000038",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000006",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000013",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000040",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000041",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000014",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000042",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000044",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000045",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000016",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000046",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000047",
-            "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000038"
-
-    );
-
-    /**
      * Constructor-based dependency injection.
      *
      * @param dataDictionaryServiceParam
@@ -133,11 +83,15 @@ public class PassportSeeder {
      * @param objectMapperParam
      */
     public PassportSeeder(DataDictionaryService dataDictionaryServiceParam,
-            PassportService passportServiceParam, ObjectMapper objectMapperParam) {
+            PassportService passportServiceParam, ObjectMapper objectMapperParam,
+            AppProperties appPropertiesParam, UserRepository userRepositoryParam) {
         this.dataDictionaryService = dataDictionaryServiceParam;
         this.passportService = passportServiceParam;
         this.objectMapper = objectMapperParam;
+        this.appProperties = appPropertiesParam;
+        this.userRepository = userRepositoryParam;
     }
+    
 
     /**
      * Seeds sample passports recursively using the predefined URI list.
@@ -150,10 +104,13 @@ public class PassportSeeder {
             //Will be updated when task (Remove username from OpenCirc) is implemented
             User user = userRepository.findByUsername("user@test.com");
             if (user == null) {
-                throw new IllegalStateException("Seed user 'user@test.com' not found.");
+                throw new IllegalStateException(
+                        "Cannot run PASSPORT seeder without seed user. " +
+                        "Run USER seeder first or use ALL."
+                    );
             }
             for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
-                String uri = uriList.get(index % uriList.size());
+                String uri = appProperties.getUriList().get(index % appProperties.getUriList().size());
                 createPassportRecursive(1, String.valueOf(index + 1), uri, index, null,
                         String.valueOf(user.getId()));
             }
@@ -200,14 +157,15 @@ public class PassportSeeder {
         request.setDataCategory(DataCategory.GENERIC.getValue());
         request.setPassportName("Passport" + nameSuffix);
         request.setCreatedBy(userId);
+        request.setParentId(parentId); //This error will be cleared when this branch is merged
         request.setCreatedTime(LocalDateTime.now());
 
         PassportDto createdPassport = passportService
                 .createPassportUsingDictionary(dictionary, request);
 
         for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
-            int nextUriIndex = (uriIndex + index + 1) % uriList.size();
-            String nextUri = uriList.get(nextUriIndex);
+            int nextUriIndex = (uriIndex + index + 1) % appProperties.getUriList().size();
+            String nextUri = appProperties.getUriList().get(nextUriIndex);
             createPassportRecursive(level + 1, nameSuffix + "." + (index + 1), nextUri,
                     nextUriIndex, createdPassport.getId(), userId);
         }
@@ -242,20 +200,26 @@ public class PassportSeeder {
                     && propertyNode.get("allowedValues").isArray()
                     && propertyNode.get("allowedValues").size() > 0) {
                 JsonNode first = propertyNode.get("allowedValues").get(0);
-                String allowedValue = first.has("value") ? first
-                        .get("value").asText() : first.asText();
+                String allowedValue = first.has("value") ? first.get("value").asText()
+                        : first.asText();
                 propertyObject.put("actualValue", allowedValue);
             } else if (propertyNode.has("dataType")) {
                 String dataType = propertyNode.get("dataType").asText().toLowerCase();
                 switch (dataType) {
-                case "boolean" -> propertyObject.put("actualValue", RANDOM.nextBoolean());
+                case "boolean" -> propertyObject.put("actualValue",
+                        RANDOM.nextBoolean());
                 case "string" -> propertyObject.put("actualValue", "testData");
                 case "real" -> propertyObject.put("actualValue", RANDOM.nextDouble());
                 case "integer" -> propertyObject.put("actualValue", RANDOM.nextInt(50));
                 case "datetime" -> propertyObject.put("actualValue",
-                        LocalDateTime.now().minusHours(RANDOM.nextInt(200))
-                        .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-                default -> propertyObject.put("actualValue", "testData");
+                        LocalDateTime.now().minusHours(RANDOM.nextInt(200)).format(
+                                java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                default -> {
+                    log.debug(
+                            "Unknown data type '{}' for property, using "
+                            + "default test data", dataType);
+                    propertyObject.put("actualValue", "testData");
+                }
                 }
             }
         }

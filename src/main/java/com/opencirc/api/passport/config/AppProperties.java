@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -90,6 +92,12 @@ public class AppProperties {
      */
     @Value("${seed.user.default-password}")
     private String defaultSeedPassword;
+
+    /**
+     * Uri list of passport seed.
+     */
+    @Value("${seed.passport.uris}")
+    private List<String> uriList;
 
     /**
      * Getter for refresh token.
