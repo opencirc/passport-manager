@@ -47,17 +47,17 @@ CREATE TABLE IF NOT EXISTS public.passport_templates (
     created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS passport_logs
+CREATE TABLE IF NOT EXISTS public.passport_logs
 (
     id SERIAL PRIMARY KEY,
     passport_id VARCHAR(100) NOT NULL,
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (passport_id) REFERENCES passports(id)
+    FOREIGN KEY (passport_id) REFERENCES public.passports(id)
 );
 
-CREATE TABLE IF NOT EXISTS passport_lifecycles
+CREATE TABLE IF NOT EXISTS public.passport_lifecycles
 (
     id SERIAL PRIMARY KEY,
     passport_id VARCHAR(100) NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS passport_lifecycles
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP  DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (passport_id) REFERENCES passports(id)
+    FOREIGN KEY (passport_id) REFERENCES public.passports(id)
 );
 
 CREATE TABLE IF NOT EXISTS public.jwt_configs
