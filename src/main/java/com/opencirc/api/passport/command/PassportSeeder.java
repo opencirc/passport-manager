@@ -101,8 +101,13 @@ public class PassportSeeder {
     public void seed() {
         try {
 
-            //Will be updated when task (Remove username from OpenCirc) is implemented
-            User user = userRepository.findByUsername("user@test.com");
+            User user = userRepository.findAll()
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException(
+                            "No users found in the database. "
+                            + "Please seed users before running passport seeding."));
+            
             if (user == null) {
                 throw new IllegalStateException(
                         "Cannot run PASSPORT seeder without seed user. " +
@@ -163,6 +168,11 @@ public class PassportSeeder {
         PassportDto createdPassport = passportService
                 .createPassportUsingDictionary(dictionary, request);
 
+        if (appProperties.getUriList().isEmpty()) {
+            throw new IllegalStateException("URI list cannot be empty "
+                    + "for passport seeding");
+        }
+        
         for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
             int nextUriIndex = (uriIndex + index + 1) % appProperties.getUriList().size();
             String nextUri = appProperties.getUriList().get(nextUriIndex);
