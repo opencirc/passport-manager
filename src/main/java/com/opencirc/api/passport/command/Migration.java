@@ -34,12 +34,19 @@ public class Migration {
      */
     @Command(command = "run", description = "Run database migrations")
     public void run() {
-        Flyway flyway = Flyway.configure()
-                .dataSource(databaseUrl, databaseUsername, databasePassword)
-                .locations("classpath:db/migration")
-                .load();
+        try {
+            log.info("Starting database migration...");
+            Flyway flyway = Flyway.configure()
+                    .dataSource(databaseUrl, databaseUsername, databasePassword)
+                    .locations("classpath:db/migration").load();
 
-        flyway.migrate();
+            var result = flyway.migrate();
+            log.info("Migration completed successfully. {} migrations executed",
+                    result.migrationsExecuted);
+        } catch (Exception e) {
+            log.error("Migration failed", e);
+            throw e;
+        }
     }
 }
 

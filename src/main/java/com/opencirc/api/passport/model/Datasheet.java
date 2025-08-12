@@ -40,7 +40,8 @@ public class Datasheet {
      * Unique Id for Datasheet.
      */
     @Id
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
     @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 

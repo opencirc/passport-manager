@@ -19,7 +19,7 @@ public final class MigrationUtils {
      * Loads the SQL script path from application.properties in the classpath.
      *
      * @return the relative path to the SQL script file
-     * @throws IOException
+     * @throws IOException if the properties file cannot be read
      * @throws IllegalStateException
      */
     public static String loadScriptPathFromProperties() throws IOException {
@@ -66,6 +66,12 @@ public final class MigrationUtils {
             }
 
             if (c == '\'' && !inDollarQuote) {
+                if (inSingleQuote && (index + 1) < sql.length()
+                        && sql.charAt(index + 1) == '\'') {
+                    current.append("''");
+                    index++;
+                    continue;
+                }
                 inSingleQuote = !inSingleQuote;
             }
 

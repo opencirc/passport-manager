@@ -35,6 +35,7 @@ public class PassportTemplate {
      */
     @Id
     @GeneratedValue(generator = "UUID")
+    @org.hibernate.annotations.UuidGenerator
     @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
