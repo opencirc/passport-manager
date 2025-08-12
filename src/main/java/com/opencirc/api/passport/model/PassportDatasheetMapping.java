@@ -2,6 +2,8 @@ package com.opencirc.api.passport.model;
 
 import java.util.UUID;
 
+import org.hibernate.annotations.UuidGenerator;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
@@ -32,8 +34,8 @@ public class PassportDatasheetMapping {
      * Unique id for mapping relation.
      */
     @Id
-    @GeneratedValue(generator = "UUID")
-    @org.hibernate.annotations.UuidGenerator
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 

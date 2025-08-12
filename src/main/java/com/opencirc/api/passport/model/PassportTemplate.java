@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.UuidGenerator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -34,8 +35,8 @@ public class PassportTemplate {
      * Unique Id for Template.
      */
     @Id
-    @GeneratedValue(generator = "UUID")
-    @org.hibernate.annotations.UuidGenerator
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 

@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.hibernate.annotations.UuidGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,8 +33,8 @@ public class User {
      * Unique Id for user.
      */
     @Id
-    @GeneratedValue(generator = "UUID")
-    @org.hibernate.annotations.UuidGenerator
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 

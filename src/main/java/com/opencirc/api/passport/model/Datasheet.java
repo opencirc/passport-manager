@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.UuidGenerator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -41,7 +42,7 @@ public class Datasheet {
      */
     @Id
     @GeneratedValue
-    @org.hibernate.annotations.UuidGenerator
+    @UuidGenerator
     @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
