@@ -37,6 +37,11 @@ public class CreatePassportRequestDto {
     private String passportName;
 
     /**
+     * Parent Id of the passport.
+     */
+    private String parentId;
+
+    /**
      * Created By.
      */
     private String createdBy;
