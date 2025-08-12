@@ -38,7 +38,7 @@ public class PassportSeeder {
     /**
      * Application properties class.
      */
-    private AppProperties appProperties;
+    private final AppProperties appProperties;
 
     /**
      * Service to get user details.
@@ -81,6 +81,8 @@ public class PassportSeeder {
      * @param dataDictionaryServiceParam
      * @param passportServiceParam
      * @param objectMapperParam
+     * @param appPropertiesParam
+     * @param userRepositoryParam
      */
     public PassportSeeder(DataDictionaryService dataDictionaryServiceParam,
             PassportService passportServiceParam, ObjectMapper objectMapperParam,
@@ -108,11 +110,9 @@ public class PassportSeeder {
                             "No users found in the database. "
                             + "Please seed users before running passport seeding."));
             
-            if (user == null) {
-                throw new IllegalStateException(
-                        "Cannot run PASSPORT seeder without seed user. " +
-                        "Run USER seeder first or use ALL."
-                    );
+            List<String> uris = appProperties.getUriList();
+            if (uris == null || uris.isEmpty()) {
+                throw new IllegalStateException("URI list cannot be empty for passport seeding");
             }
             for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
                 String uri = appProperties.getUriList().get(index % appProperties.getUriList().size());
@@ -135,10 +135,9 @@ public class PassportSeeder {
      * @param uriIndex
      * @param parentId
      * @param userId
-     * @throws Exception if passport creation fails.
      */
     private void createPassportRecursive(int level, String nameSuffix, String uri,
-            int uriIndex, String parentId, String userId) throws Exception {
+            int uriIndex, String parentId, String userId) {
         if (level > appProperties.getMaximumLevel()) {
             return;
         }
@@ -154,8 +153,7 @@ public class PassportSeeder {
             }
             return objectMapper.valueToTree(template);
         }).deepCopy();
-        JsonNode datasheetData = filterAndFillProperties(
-                objectMapper.valueToTree(templateNode));
+        JsonNode datasheetData = filterAndFillProperties(templateNode);
 
         CreatePassportRequestDto request = new CreatePassportRequestDto();
         request.setDatasheetData(datasheetData);
@@ -168,11 +166,6 @@ public class PassportSeeder {
         PassportDto createdPassport = passportService
                 .createPassportUsingDictionary(dictionary, request);
 
-        if (appProperties.getUriList().isEmpty()) {
-            throw new IllegalStateException("URI list cannot be empty "
-                    + "for passport seeding");
-        }
-        
         for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
             int nextUriIndex = (uriIndex + index + 1) % appProperties.getUriList().size();
             String nextUri = appProperties.getUriList().get(nextUriIndex);
@@ -189,6 +182,10 @@ public class PassportSeeder {
      * @return Modified JSON node with restricted and populated properties.
      */
     private JsonNode filterAndFillProperties(JsonNode template) {
+        if (!template.isObject()) {
+            log.warn("Template node is not an object; skipping property filtering");
+            return template;
+        }
         if (!template.has("classProperties")) {
             return template;
         }
@@ -196,13 +193,13 @@ public class PassportSeeder {
         List<JsonNode> props = new ArrayList<>();
         template.get("classProperties").forEach(props::add);
 
-        List<JsonNode> selectedProperties = props.stream().limit(appProperties
-                .getPropertyCountToSelect()).toList();
+        List<JsonNode> selectedProperties = props.stream()
+                .limit(appProperties.getPropertyCountToSelect()).toList();
 
         ObjectNode objectNode = (ObjectNode) template;
-        ArrayNode newProperty = objectMapper.createArrayNode();
-        selectedProperties.forEach(newProperty::add);
-        objectNode.set("classProperties", newProperty);
+        ArrayNode newProperties = objectMapper.createArrayNode();
+        selectedProperties.forEach(newProperties::add);
+        objectNode.set("classProperties", newProperties);
 
         for (JsonNode propertyNode : selectedProperties) {
             ObjectNode propertyObject = (ObjectNode) propertyNode;
@@ -216,8 +213,7 @@ public class PassportSeeder {
             } else if (propertyNode.has("dataType")) {
                 String dataType = propertyNode.get("dataType").asText().toLowerCase();
                 switch (dataType) {
-                case "boolean" -> propertyObject.put("actualValue",
-                        RANDOM.nextBoolean());
+                case "boolean" -> propertyObject.put("actualValue", RANDOM.nextBoolean());
                 case "string" -> propertyObject.put("actualValue", "testData");
                 case "real" -> propertyObject.put("actualValue", RANDOM.nextDouble());
                 case "integer" -> propertyObject.put("actualValue", RANDOM.nextInt(50));
@@ -225,8 +221,7 @@ public class PassportSeeder {
                         LocalDateTime.now().minusHours(RANDOM.nextInt(200)).format(
                                 java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME));
                 default -> {
-                    log.debug(
-                            "Unknown data type '{}' for property, using "
+                    log.debug("Unknown data type '{}' for property, using "
                             + "default test data", dataType);
                     propertyObject.put("actualValue", "testData");
                 }
