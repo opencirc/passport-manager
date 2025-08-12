@@ -184,10 +184,11 @@ public class PassportSeeder {
         JsonNode templateNode = templateCache.computeIfAbsent(uri, currentUri -> {
             Object template = null;
             try {
-                template = dataDictionaryService
-                        .createClassTemplate(dictionary, currentUri, true);
+                template = dataDictionaryService.createClassTemplate(dictionary,
+                        currentUri, true);
             } catch (JsonProcessingException | JsonValidationException e) {
-                throw new RuntimeException("Failed to create template for URI: " + currentUri, e);
+                throw new RuntimeException(
+                        "Failed to create template for URI: " + currentUri, e);
             }
             return objectMapper.valueToTree(template);
         }).deepCopy();
