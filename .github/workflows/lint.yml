@@ -1,0 +1,19 @@
+name: Lint (staging)
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  lint:
+    name: Lint and check formatting
+    uses: ./.github/workflows/lint-jobs.yml
+    with:
+      environment: staging
+    secrets: inherit
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      id-token: write
