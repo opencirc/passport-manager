@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,11 +16,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.opencirc.api.passport.config.AppProperties;
+import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
+import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.DataDictionaryService;
 import com.opencirc.api.passport.service.PassportService;
 
@@ -34,19 +38,16 @@ import lombok.extern.slf4j.Slf4j;
 public class PassportSeeder {
 
     /**
-     * Maximum depth of passport hierarchy to create.
+     * Injecting Properties class.
      */
-    private static final int MAX_LEVEL = 5;
+    @Autowired
+    private AppProperties appProperties;
 
     /**
-     * Number of child passports to create at each level.
+     * Injecting UserRepository.
      */
-    private static final int CHILDREN_PER_LEVEL = 3;
-
-    /**
-     * Number of properties to select from the datasheet template.
-     */
-    private static final int PROPERTIES_TO_SELECT = 2;
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Service to retrieve data dictionary templates.
@@ -72,7 +73,7 @@ public class PassportSeeder {
      * The data dictionary used for seeding passport templates.
      */
     private final DataDictionary dictionary = DataDictionary.BSDD;
-    
+
     /**
      * Cache the class templates.
      */
@@ -145,9 +146,16 @@ public class PassportSeeder {
      */
     public void seed() {
         try {
-            for (int i = 0; i < CHILDREN_PER_LEVEL; i++) {
-                String uri = uriList.get(i % uriList.size());
-                createPassportRecursive(1, String.valueOf(i + 1), uri, i, null);
+
+            //Will be updated when task (Remove username from OpenCirc) is implemented
+            User user = userRepository.findByUsername("user@test.com");
+            if (user == null) {
+                throw new IllegalStateException("Seed user 'user@test.com' not found.");
+            }
+            for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
+                String uri = uriList.get(index % uriList.size());
+                createPassportRecursive(1, String.valueOf(index + 1), uri, index, null,
+                        String.valueOf(user.getId()));
             }
             log.info("Passport seeding completed.");
         } catch (Exception e) {
@@ -164,22 +172,22 @@ public class PassportSeeder {
      * @param uri
      * @param uriIndex
      * @param parentId
+     * @param userId
      * @throws Exception if passport creation fails.
      */
     private void createPassportRecursive(int level, String nameSuffix, String uri,
-            int uriIndex, String parentId) throws Exception {
-        if (level > MAX_LEVEL) {
+            int uriIndex, String parentId, String userId) throws Exception {
+        if (level > appProperties.getMaximumLevel()) {
             return;
         }
 
         JsonNode templateNode = templateCache.computeIfAbsent(uri, k -> {
             Object template = null;
             try {
-                template = dataDictionaryService.createClassTemplate(dictionary, k, true);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            } catch (JsonValidationException e) {
-                e.printStackTrace();
+                template = dataDictionaryService
+                        .createClassTemplate(dictionary, k, true);
+            } catch (JsonProcessingException | JsonValidationException e) {
+                throw new RuntimeException("Failed to create template for URI: " + k, e);
             }
             return objectMapper.valueToTree(template);
         }).deepCopy();
@@ -190,18 +198,17 @@ public class PassportSeeder {
         request.setDatasheetData(datasheetData);
         request.setDataCategory(DataCategory.GENERIC.getValue());
         request.setPassportName("Passport" + nameSuffix);
-        request.setCreatedBy("Seeder");
+        request.setCreatedBy(userId);
         request.setCreatedTime(LocalDateTime.now());
-        request.setParentId(parentId);
 
         PassportDto createdPassport = passportService
                 .createPassportUsingDictionary(dictionary, request);
 
-        for (int i = 0; i < CHILDREN_PER_LEVEL; i++) {
+        for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
             int nextUriIndex = (uriIndex + i + 1) % uriList.size();
             String nextUri = uriList.get(nextUriIndex);
             createPassportRecursive(level + 1, nameSuffix + "." + (i + 1), nextUri,
-                    nextUriIndex, createdPassport.getId());
+                    nextUriIndex, createdPassport.getId(), userId);
         }
     }
 
@@ -220,8 +227,8 @@ public class PassportSeeder {
         List<JsonNode> props = new ArrayList<>();
         template.get("classProperties").forEach(props::add);
 
-        List<JsonNode> selectedProperties = props.stream().limit(PROPERTIES_TO_SELECT)
-                .toList();
+        List<JsonNode> selectedProperties = props.stream().limit(appProperties
+                .getPropertyCountToSelect()).toList();
 
         ObjectNode objectNode = (ObjectNode) template;
         ArrayNode newProperty = objectMapper.createArrayNode();
@@ -234,7 +241,8 @@ public class PassportSeeder {
                     && propertyNode.get("allowedValues").isArray()
                     && propertyNode.get("allowedValues").size() > 0) {
                 JsonNode first = propertyNode.get("allowedValues").get(0);
-                String allowedValue = first.has("value") ? first.get("value").asText() : first.asText();
+                String allowedValue = first.has("value") ? first
+                        .get("value").asText() : first.asText();
                 propObj.put("actualValue", allowedValue);
             } else if (propertyNode.has("dataType")) {
                 String dataType = propertyNode.get("dataType").asText().toLowerCase();

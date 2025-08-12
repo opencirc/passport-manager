@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.command;
 
+import java.util.Arrays;
+
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
 
@@ -68,10 +70,11 @@ public class Seeder {
             seedType = SeedType.valueOf(seedTypeInput.toUpperCase());
         } catch (IllegalArgumentException e) {
             log.error(
-                    "Invalid seed type'. Valid types: user, passport, all."
-                    + "Default value is 'all'.",
-                    seedTypeInput);
-            seedType = SeedType.ALL;
+                    "Invalid seed type '{}'. Valid types: {}. Default value is 'all'.",
+                    seedTypeInput,
+                    Arrays.toString(SeedType.values())
+                );
+            throw e;
         }
 
         try {
@@ -86,7 +89,7 @@ public class Seeder {
             log.info("Seeding complete.");
         } catch (Exception e) {
             log.error("Seeding failed: {}", e.getMessage(), e);
-            throw new RuntimeException("Seeding failed", e);
+            throw e;
         }
     }
 }

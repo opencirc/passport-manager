@@ -68,6 +68,30 @@ public class AppProperties {
     private String encryptionKey;
 
     /**
+     * Maximum depth of passport hierarchy to create.
+     */
+    @Value("${seed.passport.max-level}")
+    private String maximumLevel;
+
+    /**
+     * Number of child passports to create at each level.
+     */
+    @Value("${seed.passport.children-per-level}")
+    private String childrenPerLevel;
+
+    /**
+     * Number of child passports to create at each level.
+     */
+    @Value("${seed.passport.properties-count-to-select}")
+    private String propertyCountToSelect;
+
+    /**
+     * Default Password for the users created by seed.
+     */
+    @Value("${seed.user.default-password}")
+    private String defaultSeedPassword;
+
+    /**
      * Getter for refresh token.
      * @return refresh token expiry time
      */
@@ -81,6 +105,30 @@ public class AppProperties {
      */
     public int getAccessTokenExpiryTime() {
         return Integer.parseInt(accessTokenExpiryTime);
+    }
+
+    /**
+     * Getter for Maximum level.
+     * @return Maximum level of the passports to be created
+     */
+    public int getMaximumLevel() {
+        return Integer.parseInt(maximumLevel);
+    }
+
+    /**
+     * Getter for childrenPerLevel.
+     * @return Number of children for each passport
+     */
+    public int getChildrenPerLevel() {
+        return Integer.parseInt(childrenPerLevel);
+    }
+
+    /**
+     * Getter for propertyCountToSelect.
+     * @return the number of properties to have in the template
+     */
+    public int getPropertyCountToSelect() {
+        return Integer.parseInt(propertyCountToSelect);
     }
 
 }
