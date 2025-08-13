@@ -181,8 +181,7 @@ public class PassportService {
 
             if (row.getDatasheetId() != null) {
                 boolean alreadyExists = passportDto.getDatasheets().stream()
-                        .anyMatch(ds -> java.util.Objects.equals(ds.getId(),
-                                row.getDatasheetId()));
+                        .anyMatch(ds -> ds.getId().equals(row.getDatasheetId()));
 
                 if (!alreadyExists) {
                     DatasheetDto datasheetDto = new DatasheetDto();
@@ -304,9 +303,8 @@ public class PassportService {
     public List<PassportDto> getRootPassports() {
         List<Passport> passports = passportRepository
                 .getRootPassports();
-        if (passports == null || passports.isEmpty()) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passport found");
+        if (passports == null) {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not retrieve root passports");
 
         }
         return passports.stream()
