@@ -64,7 +64,7 @@ public final class AppConstants {
     public static final String JWT_BEARER = "Bearer ";
 
     /**
-     * Text lenth of bearer token.
+     * Text length of bearer token.
      */
     public static final int JWT_BEARER_LENGTH = 7;
 
@@ -94,64 +94,64 @@ public final class AppConstants {
     public static final String ERR_INVALID_TOKEN = "Invalid token";
 
     /**
-     * number 12.
+     * Number 12.
      */
-    public static final int NUM_TWELVE = 12;
+    public static final int TWELVE = 12;
 
     /**
-     * number 36.
+     * Number 36.
      */
-    public static final int NUM_THIRTY_SIX = 36;
+    public static final int THIRTY_SIX = 36;
 
     /**
-     * number 0.
+     * Number 0.
      */
-    public static final int NUM_ZERO = 0;
+    public static final int ZERO = 0;
 
     /**
-     * number 1.
+     * Number 1.
      */
-    public static final int NUM_ONE = 1;
+    public static final int ONE = 1;
 
     /**
-     * number 2.
+     * Number 2.
      */
-    public static final int NUM_TWO = 2;
+    public static final int TWO = 2;
 
     /**
-     * number 3.
+     * Number 3.
      */
-    public static final int NUM_THREE = 3;
+    public static final int THREE = 3;
 
     /**
-     * number 4.
+     * Number 4.
      */
-    public static final int NUM_FOUR = 4;
+    public static final int FOUR = 4;
 
     /**
-     * number 20.
+     * Number 20.
      */
-    public static final int NUM_TWENTY = 20;
+    public static final int TWENTY = 20;
 
     /**
-     * number 25.
+     * Number 25.
      */
-    public static final int NUM_TWENTY_FIVE = 25;
+    public static final int TWENTY_FIVE = 25;
 
     /**
-     * number 60.
+     * Number 60.
      */
-    public static final int NUM_SIXTY = 60;
+    public static final int SIXTY = 60;
 
     /**
-     * number 1000.
+     * Number 1000.
      */
-    public static final int NUM_THOUSAND = 1000;
-    
+    public static final int THOUSAND = 1000;
+
     /**
-     * number 100.
+     * Number 100.
      */
-    public static final int NUM_HUNDRED = 100;
+    public static final int HUNDRED = 100;
 
     /**
      * hexString.

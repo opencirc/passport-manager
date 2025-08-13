@@ -134,7 +134,7 @@ public class JwtService {
         return Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiryMinutes
-                        * AppConstants.NUM_SIXTY * AppConstants.NUM_THOUSAND))
+                        * AppConstants.SIXTY * AppConstants.THOUSAND))
                 .signWith(getKey()).compact();
 
     }

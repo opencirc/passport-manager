@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,10 +21,10 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
 
     /**
      * Initialising JsonNodeConverter.
-     * @param objectMapper
+     * @param mapper
      */
-    public JsonNodeConverter(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public JsonNodeConverter(ObjectMapper mapper) {
+        this.objectMapper = mapper;
     }
 
     /**

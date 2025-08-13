@@ -26,7 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,7 +85,7 @@ public class PassportService {
                     e.getMessage());
         }
 
-        int customLength = AppConstants.NUM_THIRTY_SIX;
+        int customLength = AppConstants.THIRTY_SIX;
         CUID cuid = CUID.randomCUID2(customLength);
 
         Passport rawPassport = new Passport();
@@ -211,7 +216,7 @@ public class PassportService {
     }
 
     /**
-     * Retrieves the passports with the given parent ID
+     * Retrieves the passports with the given parent ID.
      *
      * @param passportId
      * @return a list of {@link PassportDto} objects
@@ -225,7 +230,6 @@ public class PassportService {
         List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
                 .orElse(Collections.emptyList());
 
-        ObjectMapper objectMapper = new ObjectMapper();
         List<PassportDto> passportDtoList = new ArrayList<>();
         Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
 
@@ -261,7 +265,8 @@ public class PassportService {
                     datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
                 }
 
-                passportDto.getDatasheets().add(datasheetDtoMap.get(row.getDatasheetId()));
+                passportDto.getDatasheets().add(datasheetDtoMap
+                        .get(row.getDatasheetId()));
             }
 
             passportDtoList.add(passportDto);

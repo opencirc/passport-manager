@@ -67,7 +67,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() throws Exception {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(new BCryptPasswordEncoder(AppConstants.NUM_TWELVE));
+        provider.setPasswordEncoder(new BCryptPasswordEncoder(AppConstants.TWELVE));
         provider.setUserDetailsService(userDetailsService);
         return provider;
     }
@@ -101,10 +101,11 @@ public class SecurityConfig {
         return request -> {
             CorsConfiguration corsConfiguration = new CorsConfiguration();
             corsConfiguration.setAllowCredentials(true);
-            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3001", "http://localhost:3002"));
+            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3001",
+                    "http://localhost:3002"));
             corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
             corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
-            corsConfiguration.setMaxAge(Duration.ofMinutes(AppConstants.NUM_TWENTY_FIVE));
+            corsConfiguration.setMaxAge(Duration.ofMinutes(AppConstants.TWENTY_FIVE));
             return corsConfiguration;
         };
     }

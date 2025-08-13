@@ -10,8 +10,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 public class JacksonConfig {
 
     /**
-     * ObjectMapper Bean Initialisation.
-     * @return {@link ObjectMapper}
+     * Configures Jackson to handle Java time types and serialize dates as ISO-8601
+     * strings.
+     *
+     * @return a customizer that applies these settings to the Jackson builder.
      */
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
