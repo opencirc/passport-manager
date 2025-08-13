@@ -75,8 +75,7 @@ public class PassportService {
      * @return Passport DTO from passport
      */
     public PassportDto createPassportUsingDictionary(DataDictionary dictionary,
-            CreatePassportRequestDto data)
-            throws InvalidInputException {
+            CreatePassportRequestDto data) throws InvalidInputException {
         JsonNode datasheetData = data.getDatasheetData();
         try {
             validatePassportData(dictionary, datasheetData);
@@ -90,11 +89,19 @@ public class PassportService {
 
         Passport rawPassport = new Passport();
         rawPassport.setId(cuid.toString());
-
         rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
         rawPassport.setCreatedBy(data.getCreatedBy());
         rawPassport.setCreatedTime(LocalDateTime.now());
+        String parentId = data.getParentId();
+        if (parentId != null && !parentId.isBlank()) {
+            boolean parentExists = passportRepository.existsById(parentId);
+            if (!parentExists) {
+                throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Invalid parentId: active parent not found");
+            }
+            rawPassport.setParentId(parentId);
+        }
         Passport passport = passportRepository.save(rawPassport);
 
         Datasheet datasheet = new Datasheet();
@@ -110,7 +117,7 @@ public class PassportService {
         passportDatasheet.setDatasheet(datasheet);
         PassportDatasheetMapping passportDatasheetMapping =
                 passportDatasheetMappingRepository.save(passportDatasheet);
-        //Set up the data sheet mapping details in the return value of the Passport DTO
+        // Set up the data sheet mapping details in the return value of the Passport DTO
         passport.setDatasheetMappings(new ArrayList<>());
         passport.getDatasheetMappings().add(passportDatasheetMapping);
 
