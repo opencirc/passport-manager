@@ -67,6 +67,7 @@ public class UserSeeder {
                     && e.getMessage().toLowerCase().contains("exists")) {
                 log.info("User '{}' already exists. Skipping.",
                         registerUserDto.getEmail());
+                return;
             }
             throw e;
         }

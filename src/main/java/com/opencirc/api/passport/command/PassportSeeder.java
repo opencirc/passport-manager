@@ -115,14 +115,14 @@ public class PassportSeeder {
                 throw new IllegalStateException("URI list cannot be empty for passport seeding");
             }
             for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
-                String uri = appProperties.getUriList().get(index % appProperties.getUriList().size());
+                String uri = uris.get(index % uris.size());
                 createPassportRecursive(1, String.valueOf(index + 1), uri, index, null,
                         String.valueOf(user.getId()));
             }
             log.info("Passport seeding completed.");
         } catch (Exception e) {
             log.error("Passport seeding failed: {}", e.getMessage(), e);
-            throw new RuntimeException("Passport seeding failed", e);
+            throw e;
         }
     }
 
