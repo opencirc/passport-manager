@@ -52,7 +52,7 @@ public class RegisterUserCommand {
         }
 
         try {
-            String userId = authService.register(email.trim(), password.trim(),
+            String userId = authService.register(email.trim().toLowerCase(), password.trim(),
                     firstName.trim(), lastName.trim(), parsedRole);
             return String.format("User created with id: %s", userId);
         } catch (AuthenticationException authenticationException) {

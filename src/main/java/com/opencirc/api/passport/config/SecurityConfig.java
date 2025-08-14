@@ -48,6 +48,11 @@ public class SecurityConfig {
     @Autowired
     private AppProperties properties;
 
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(AppConstants.NUM_TWELVE);
+    }
+
     /**
      * Bean to get authenticationManager.
      * @param config
@@ -65,9 +70,10 @@ public class SecurityConfig {
      * @return the instance of authentication provider
      */
     @Bean
-    public AuthenticationProvider authenticationProvider() throws Exception {
+    public AuthenticationProvider authenticationProvider(BCryptPasswordEncoder
+            bCryptPasswordEncoder) throws Exception {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(new BCryptPasswordEncoder(AppConstants.NUM_TWELVE));
+        provider.setPasswordEncoder(bCryptPasswordEncoder);
         provider.setUserDetailsService(userDetailsService);
         return provider;
     }

@@ -107,7 +107,7 @@ public class User {
         USER("user");
 
         /**
-         * Role represented in STring.
+         * Role represented as String.
          */
         private final String value;
 
@@ -151,7 +151,7 @@ public class User {
                     .filter(role -> role.value.equalsIgnoreCase(value))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "Invalid Status: " + value));
+                            "Invalid Role: " + value));
         }
     }
 

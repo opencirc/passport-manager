@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
@@ -45,12 +46,9 @@ public class AuthService {
      */
     @Autowired
     private AppProperties properties;
-
-    /**
-     * Instantiating BCryptPasswordEncoder class.
-     */
-    private BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(
-            AppConstants.NUM_TWELVE);
+ 
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     /**
      * Injecting AuthenticationManager class.
@@ -80,12 +78,13 @@ public class AuthService {
      * @param role
      * @return userId
      */
+    @Transactional
     public String register(String email, String password, String firstName,
             String lastName, Role role) throws AuthenticationException {
 
         validateRegistrationFields(email, password, firstName, lastName);
 
-        if (userRepository.findByEmail(email) != null) {
+        if (userRepository.existsByEmail(email)) {
             throw new AuthenticationException("Email is already registered.");
         }
 
@@ -94,7 +93,7 @@ public class AuthService {
         user.setEmail(email);
         user.setFirstName(firstName);
         user.setLastName(lastName);
-        user.setRole(role);
+        user.setRole(role != null ? role : Role.USER);
         user.setActive(true);
         user.setCreatedTime(LocalDateTime.now());
         user.setPassword(bCryptPasswordEncoder.encode(password));
@@ -103,7 +102,7 @@ public class AuthService {
             user = userRepository.save(user);
             return user.getId().toString();
         } catch (Exception e) {
-            throw new AuthenticationException("Error during user registration.");
+            throw new AuthenticationException("Error during user registration.", e);
         }
     }
 
@@ -155,10 +154,7 @@ public class AuthService {
         if (password.chars().anyMatch(Character::isDigit)) {
             classes++;
         }
-        if (password.chars()
-                .anyMatch(c -> "!@#$%^&*()_+[]{}|;:'\",.<>/?`~-=\\".indexOf(c) >= 0)) {
-            classes++;
-        }
+        if (password.chars().anyMatch(ch -> !Character.isLetterOrDigit(ch))) classes++;
         return classes >= 3;
     }
 
@@ -243,8 +239,7 @@ public class AuthService {
 
             return jwtService.validateToken(token, userDetails);
         } catch (Exception e) {
-            throw new AuthenticationException(
-                    "Error validating token: " + e.getMessage());
+            return false;
         }
     }
 
@@ -257,10 +252,12 @@ public class AuthService {
     public void logout(String refreshToken, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
         String userId = jwtService.extractUserId(refreshToken);
-        User existingUser = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        existingUser.setRefreshToken(null);
-        userRepository.save(existingUser);
+        try {
+            userRepository.updateRefreshTokenById(UUID.fromString(userId), null);
+        } catch (IllegalArgumentException e) {
+            throw new AuthenticationException(
+                    "Error while logging out: " + e.getMessage());
+        }
 
         // Removing the JWT cookies (access_token, refresh_token)
         jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_ACCESS_TOKEN, 0);

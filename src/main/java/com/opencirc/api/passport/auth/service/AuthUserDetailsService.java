@@ -23,7 +23,7 @@ public class AuthUserDetailsService implements UserDetailsService {
     private UserRepository userRepository;
 
     /**
-     * Gets the user data by name.
+     * Loads the user details by email.
      *
      * @param email
      * @return the details of the user

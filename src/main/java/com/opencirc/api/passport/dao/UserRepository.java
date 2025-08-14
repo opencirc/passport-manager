@@ -23,6 +23,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     User findByEmail(String email);
 
+    /**
+     * Checks whether a user with the given email exists.
+     *
+     * @param email the email to check
+     * @return true if a user exists with the given email; false otherwise
+     */
+    boolean existsByEmail(String email);
+
 
     /**
      * Updates the refresh token.
