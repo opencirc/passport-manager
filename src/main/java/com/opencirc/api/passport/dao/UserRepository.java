@@ -16,21 +16,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
 
     /**
-     * Fetches a user by name.
+     * Fetches a user by email.
      *
-     * @param username
+     * @param email
      * @return User Entity
      */
-    User findByUsername(String username);
+    User findByEmail(String email);
 
-
-    /**
-     * Checks if the user is already present.
-     *
-     * @param username
-     * @return status
-     */
-    boolean existsByUsername(String username);
 
     /**
      * Updates the refresh token.

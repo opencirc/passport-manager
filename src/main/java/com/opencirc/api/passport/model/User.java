@@ -37,15 +37,21 @@ public class User {
     private UUID id;
 
     /**
-     * Name of the user.
+     * First Name of the user.
      */
-    @Column(name = "username", unique = true, nullable = false)
-    private String username;
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    /**
+     * Last Name of the user.
+     */
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
 
     /**
      * Users's email.
      */
-    @Column(unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
     /**
