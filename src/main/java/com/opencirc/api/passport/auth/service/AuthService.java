@@ -46,10 +46,12 @@ public class AuthService {
      */
     @Autowired
     private AppProperties properties;
- 
-    @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    /**
+     * Instantiating BCryptPasswordEncoder class.
+     */
+    private BCryptPasswordEncoder bCryptPasswordEncoder =
+            new BCryptPasswordEncoder(AppConstants.PASSWORD_STRENGTH);
     /**
      * Injecting AuthenticationManager class.
      */

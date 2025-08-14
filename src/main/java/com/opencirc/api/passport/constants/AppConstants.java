@@ -64,7 +64,7 @@ public final class AppConstants {
     public static final String JWT_BEARER = "Bearer ";
 
     /**
-     * Text lenth of bearer token.
+     * Text length of bearer token.
      */
     public static final int JWT_BEARER_LENGTH = 7;
 
@@ -94,59 +94,25 @@ public final class AppConstants {
     public static final String ERR_INVALID_TOKEN = "Invalid token";
 
     /**
-     * number 12.
+     * Password Strength.
      */
-    public static final int NUM_TWELVE = 12;
+    public static final int PASSWORD_STRENGTH = 12;
 
     /**
-     * number 36.
+     * CUID length.
      */
-    public static final int NUM_THIRTY_SIX = 36;
+    public static final int CUID_LENGTH = 36;
+
 
     /**
-     * number 0.
+     * Bsdd result limit.
      */
-    public static final int NUM_ZERO = 0;
+    public static final int BSDD_LIMIT = 20;
 
     /**
-     * number 1.
+     * Cors Maximum age.
      */
-    public static final int NUM_ONE = 1;
-
-    /**
-     * number 2.
-     */
-    public static final int NUM_TWO = 2;
-
-    /**
-     * number 3.
-     */
-    public static final int NUM_THREE = 3;
-
-    /**
-     * number 4.
-     */
-    public static final int NUM_FOUR = 4;
-
-    /**
-     * number 20.
-     */
-    public static final int NUM_TWENTY = 20;
-
-    /**
-     * number 25.
-     */
-    public static final int NUM_TWENTY_FIVE = 25;
-
-    /**
-     * number 60.
-     */
-    public static final int NUM_SIXTY = 60;
-
-    /**
-     * number 1000.
-     */
-    public static final int NUM_THOUSAND = 1000;
+    public static final int CORS_MAX_AGE = 25;
 
     /**
      * hexString.

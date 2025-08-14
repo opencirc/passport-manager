@@ -17,12 +17,6 @@ import com.opencirc.api.passport.exception.JsonValidationException;
 public class DataDictionaryService {
 
     /**
-     * Injecting CacheService class.
-     */
-    @Autowired
-    private CacheService cacheService;
-
-    /**
      * Injecting DictionaryAdapterFactory class.
      */
     @Autowired
@@ -40,7 +34,6 @@ public class DataDictionaryService {
         DictionaryAdapter<?> adapter = dictionaryAdapterFactory
                 .getAdapter(dictionary);
         List<Map<String, String>> classMap = adapter.listClass(text);
-        cacheService.storePropertiesInRedis(dictionary, classMap);
         return classMap;
     }
 
@@ -91,43 +84,4 @@ public class DataDictionaryService {
 
     }
 
-    /**
-     * Fetches the uri from the dictionary for the given property names.
-     *
-     * @param code
-     * @param dictionary
-     * @return URI of the property
-     */
-    private String fetchUriForProperty(String code, DataDictionary dictionary) {
-        String uri = cacheService.getUriFomCode(dictionary, code);
-
-        if (uri == null) {
-            List<Map<String, String>> properties = listProperties(dictionary, code
-            );
-            for (Map<String, String> property : properties) {
-                String propertyCode = property.get("code");
-                if (code.equals(propertyCode)) {
-                    uri = property.get("uri");
-                    break;
-                }
-            }
-        }
-        return uri;
-    }
-
-    /**
-     * Clears the cache.
-     *
-     */
-    public void clearCache() {
-        cacheService.clearCache();
-    }
-
-    /**
-     * List the data from cache.
-     * @return the data from cache
-     */
-    public Map<String, Object> lookCache() {
-        return cacheService.lookCache();
-    }
 }
