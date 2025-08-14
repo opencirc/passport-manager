@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -72,7 +73,6 @@ public class PassportService {
      * @param dictionaryAdapterFactory
      * @param objectMapper
      */
-    @Autowired
     public PassportService(DatasheetRepository datasheetRepository,
                            PassportRepository passportRepository,
                            PassportDatasheetMappingRepository
@@ -154,8 +154,7 @@ public class PassportService {
 
         Optional<Passport> optionalPassport = passportRepository
                 .findPassport(passportId, Passport.Status.ACTIVE);
-        if (optionalPassport.isEmpty()
-                || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
+        if (optionalPassport.isEmpty()) {
             throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
                     "Could not find passport with ID " + passportId);
         }
@@ -200,7 +199,7 @@ public class PassportService {
 
             if (row.getDatasheetId() != null) {
                 boolean alreadyExists = passportDto.getDatasheets().stream()
-                        .anyMatch(ds -> ds.getId().equals(row.getDatasheetId()));
+                        .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
 
                 if (!alreadyExists) {
                     DatasheetDto datasheetDto = new DatasheetDto();

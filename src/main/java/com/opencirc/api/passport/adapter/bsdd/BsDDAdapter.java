@@ -87,9 +87,6 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     @Override
     public List<Map<String, String>> listClass(String text) {
 
-        if (properties == null) {
-            throw new IllegalStateException("Properties bean is not injected!");
-        }
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromHttpUrl(properties.getBsDDClassSearchTextURL())
                 .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
@@ -139,7 +136,7 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
                         formPropertyTemplate(updatedProperties, propertyNode);
                     } catch (Exception e) {
                         throw new JsonValidationException(
-                                "Skipping invalid propertyNode: " + propertyNode, e);
+                                "Invalid propertyNode: " + propertyNode, e);
                     }
                 }
             }
@@ -221,21 +218,25 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
                     .queryParam(AppConstants.URI, uri);
             String url = uriBuilder.toUriString();
 
-           JsonNode propertyTemplate = cacheService
-                   .getCachedTemplate(url, JsonNode.class);
+            JsonNode propertyTemplate = cacheService.getCachedTemplate(url,
+                    JsonNode.class);
 
             if (propertyTemplate == null) {
-                ResponseEntity<JsonNode> response = restTemplate
-                        .getForEntity(url, JsonNode.class);
-
-                if (!response.getStatusCode().is2xxSuccessful() || response
-                        .getBody() == null) {
+                try {
+                    ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
+                            JsonNode.class);
+                    if (!response.getStatusCode().is2xxSuccessful()
+                            || response.getBody() == null) {
+                        throw new JsonValidationException(
+                                "Failed to fetch template. HTTP Status: "
+                                        + response.getStatusCode());
+                    }
+                    propertyTemplate = response.getBody();
+                    cacheService.cacheTemplate(url, propertyTemplate);
+                } catch (RestClientException e) {
                     throw new JsonValidationException(
-                            "Failed to fetch template. HTTP Status: "
-                    + response.getStatusCode());
+                            "Error fetching property template: " + e.getMessage(), e);
                 }
-                propertyTemplate = response.getBody();
-                cacheService.cacheTemplate(url, propertyTemplate);
             }
             formPropertyTemplate(propertiesArray, propertyTemplate);
         }

@@ -25,6 +25,7 @@ public class CacheService {
 
     /**
      * Initialising CacheService bean.
+     *
      * @param redisTemplateParam
      * @param objectMapperParam
      */
@@ -35,17 +36,22 @@ public class CacheService {
     }
 
     /**
-     * Caches the template for the given uri.
+     * Caches the template under the given key as a JSON string.
      *
-     * @param key
-     * @param template
-     * @param <T>
+     * @param key cache key
+     * @param template the template
+     * @param <T> type of the template being cached
      */
     public <T> void cacheTemplate(String key, T template) {
+        if (key == null || key.trim().isEmpty()) {
+            throw new IllegalArgumentException("Cache key must not be null or blank");
+        }
         try {
             String json = objectMapper.writeValueAsString(template);
             redisTemplate.opsForValue().set(key, json);
+            log.debug("Cached template for key={}", key);
         } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize template for cache key={}", key, e);
             throw new CacheSerializationException(
                     "Failed to serialize template for cache key: " + key, e);
         }
@@ -54,21 +60,28 @@ public class CacheService {
     /**
      * Retrieves the cached template.
      *
-     * @param key
-     * @param <T>
-     * @param valueType
-     * @return the template
+     * @param key cache key
+     * @param <T> expected template type
+     * @param valueType class of the expected type
+     * @return the template instance
      */
     public <T> T getCachedTemplate(String key, Class<T> valueType) {
+        if (key == null || key.trim().isEmpty()) {
+            throw new IllegalArgumentException("Cache key must not be null or blank");
+        }
         String cachedJson = redisTemplate.opsForValue().get(key);
         if (cachedJson == null) {
+            log.debug("Cache miss for key={}", key);
             return null;
         }
         try {
-            return objectMapper.readValue(cachedJson, valueType);
+            T value = objectMapper.readValue(cachedJson, valueType);
+            log.debug("Cache hit for key={}, type={}", key, valueType.getSimpleName());
+            return value;
         } catch (JsonProcessingException e) {
+            log.warn("Failed to deserialize cached template for key={}", key, e);
             throw new CacheSerializationException(
                     "Failed to deserialize cached template for key: " + key, e);
         }
     }
- }
+}

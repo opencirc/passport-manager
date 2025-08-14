@@ -41,6 +41,12 @@ public class DictionaryMapping {
     }
 
     /**
+     * Stores the required Dictionary mappings.
+     */
+    private final Map<DataDictionary, Map<String, String>> reverseCache = new HashMap<>();
+
+
+    /**
      * Loads the field names from dictionary mapping property file.
      */
     private void loadDictionaryMappings() throws IOException {
@@ -91,14 +97,8 @@ public class DictionaryMapping {
         Map<String, String> dictionaryMappings = getDictionaryMapping(dictionaryName);
 
         if (template != null && dictionaryMappings != null) {
-            Map<String, String> reverseMapping = new HashMap<>();
-            for (Map.Entry<String, String> entry : dictionaryMappings.entrySet()) {
-                String standardKey = entry.getKey();
-                String[] possibleKeys = entry.getValue().split(",");
-                for (String key : possibleKeys) {
-                    reverseMapping.put(key.trim(), standardKey);
-                }
-            }
+            Map<String, String> reverseMapping = getReverseMapping(dictionaryName,
+                    dictionaryMappings);
 
             template.fields().forEachRemaining(entry -> {
                 String originalKey = entry.getKey();
@@ -110,4 +110,23 @@ public class DictionaryMapping {
         return resultNode;
     }
 
+    /**
+     * Retrieves the mapping details for the specified data dictionary.
+     * @param dictionary dictionary name
+     * @param dictionaryMappings fetched mappings
+     * @return map the matched field names
+     */
+    private Map<String, String> getReverseMapping(DataDictionary dictionary,
+            Map<String, String> dictionaryMappings) {
+        return reverseCache.computeIfAbsent(dictionary, d -> {
+            Map<String, String> map = new HashMap<>();
+            for (Map.Entry<String, String> entry : dictionaryMappings.entrySet()) {
+                String standardKey = entry.getKey();
+                for (String alias : entry.getValue().split(",")) {
+                    map.put(alias.trim(), standardKey);
+                }
+            }
+            return map;
+        });
+    }
 }

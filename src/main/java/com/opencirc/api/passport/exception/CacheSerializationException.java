@@ -13,6 +13,14 @@ public class CacheSerializationException extends RuntimeException {
     }
 
     /**
+     * CacheSerializationException with cause.
+     * @param cause
+     */
+    public CacheSerializationException(Throwable cause) {
+        super(cause);
+    }
+
+    /**
      * CacheSerializationException with message and cause.
      * @param message
      * @param cause
