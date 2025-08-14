@@ -91,25 +91,18 @@ public class DictionaryMapping {
         Map<String, String> dictionaryMappings = getDictionaryMapping(dictionaryName);
 
         if (template != null && dictionaryMappings != null) {
+            Map<String, String> reverseMapping = new HashMap<>();
+            for (Map.Entry<String, String> entry : dictionaryMappings.entrySet()) {
+                String standardKey = entry.getKey();
+                String[] possibleKeys = entry.getValue().split(",");
+                for (String key : possibleKeys) {
+                    reverseMapping.put(key.trim(), standardKey);
+                }
+            }
+
             template.fields().forEachRemaining(entry -> {
                 String originalKey = entry.getKey();
-                String mappedKey = originalKey;
-
-                for (Map.Entry<String, String> mappingEntry : dictionaryMappings
-                        .entrySet()) {
-                    String standardKey = mappingEntry.getKey();
-                    String[] possibleKeys = mappingEntry.getValue().split(",");
-                    for (String key : possibleKeys) {
-                        if (key.trim().equals(originalKey)) {
-                            mappedKey = standardKey;
-                            break;
-                        }
-                    }
-                    if (!mappedKey.equals(originalKey)) {
-                        break;
-                    }
-                }
-
+                String mappedKey = reverseMapping.getOrDefault(originalKey, originalKey);
                 resultNode.set(mappedKey, entry.getValue());
             });
         }

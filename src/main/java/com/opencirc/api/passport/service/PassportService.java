@@ -1,5 +1,19 @@
 package com.opencirc.api.passport.service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,20 +33,8 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
-import io.github.thibaultmeyer.cuid.CUID;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import io.github.thibaultmeyer.cuid.CUID;
 
 @Service
 public class PassportService {
@@ -40,32 +42,49 @@ public class PassportService {
     /**
      * Injecting DatasheetRepository class.
      */
-    @Autowired
-    private DatasheetRepository datasheetRepository;
+    private final DatasheetRepository datasheetRepository;
 
     /**
      * Injecting PassportRepository class.
      */
-    @Autowired
-    private PassportRepository passportRepository;
+    private final PassportRepository passportRepository;
 
     /**
      * Injecting PassportDatasheetMappingRepository class.
      */
-    @Autowired
-    private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+    private final PassportDatasheetMappingRepository passportDatasheetMappingRepository;
 
     /**
      * Injecting ObjectMapper bean.
      */
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     /**
      * Injecting DictionaryAdapterFactory class.
      */
+    private final DictionaryAdapterFactory dictionaryAdapterFactory;
+
+    /**
+     * Constructor.
+     * @param datasheetRepository
+     * @param passportRepository
+     * @param passportDatasheetMappingRepository
+     * @param dictionaryAdapterFactory
+     * @param objectMapper
+     */
     @Autowired
-    private DictionaryAdapterFactory dictionaryAdapterFactory;
+    public PassportService(DatasheetRepository datasheetRepository,
+                           PassportRepository passportRepository,
+                           PassportDatasheetMappingRepository
+                           passportDatasheetMappingRepository,
+                           DictionaryAdapterFactory dictionaryAdapterFactory,
+                           ObjectMapper objectMapper) {
+        this.datasheetRepository = datasheetRepository;
+        this.passportRepository = passportRepository;
+        this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
+        this.dictionaryAdapterFactory = dictionaryAdapterFactory;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Creates template Entry.
@@ -84,7 +103,7 @@ public class PassportService {
                     e.getMessage());
         }
 
-        int customLength = AppConstants.THIRTY_SIX;
+        int customLength = AppConstants.CUID_LENGTH;
         CUID cuid = CUID.randomCUID2(customLength);
 
         Passport rawPassport = new Passport();
@@ -304,7 +323,8 @@ public class PassportService {
         List<Passport> passports = passportRepository
                 .getRootPassports();
         if (passports == null) {
-            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not retrieve root passports");
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Could not retrieve root passports");
 
         }
         return passports.stream()

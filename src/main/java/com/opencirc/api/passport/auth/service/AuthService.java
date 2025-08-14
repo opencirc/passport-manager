@@ -49,7 +49,7 @@ public class AuthService {
      * Instantiating BCryptPasswordEncoder class.
      */
     private BCryptPasswordEncoder bCryptPasswordEncoder =
-            new BCryptPasswordEncoder(AppConstants.TWELVE);
+            new BCryptPasswordEncoder(AppConstants.PASSWORD_STRENGTH);
 
     /**
      * Injecting AuthenticationManager class.

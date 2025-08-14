@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +11,6 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -17,14 +18,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.opencirc.api.passport.auth.principal.UserPrincipal;
+import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.config.AppProperties;
-import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.JwtConfigRepository;
 import com.opencirc.api.passport.dao.UserRepository;
+import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.model.JwtConfig;
 import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.exception.AuthenticationException;
-import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.util.EncryptionUtil;
 
 import io.jsonwebtoken.Claims;
@@ -133,8 +134,8 @@ public class JwtService {
         claims.put("userId", userId);
         return Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiryMinutes
-                        * AppConstants.SIXTY * AppConstants.THOUSAND))
+                .expiration(Date.from(Instant.now().plus(Duration
+                        .ofMinutes(expiryMinutes))))
                 .signWith(getKey()).compact();
 
     }
@@ -241,14 +242,10 @@ public class JwtService {
         User user = userRepository.findById(UUID
                 .fromString(userId)).orElseThrow(
                 () -> new UsernameNotFoundException("User not found"));
-        if (!validateToken(refreshToken, userDetails)) {
-            throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
-        }
-
-        if (userDetails == null
-                || !validateToken(refreshToken, userDetails)) {
+        if (userDetails == null || !validateToken(refreshToken, userDetails)) {
             throw new AuthenticationException("Invalid refresh token");
         }
+
         if (!refreshToken.equals(user.getRefreshToken())) {
             throw new AuthenticationException("Invalid Refresh Token");
         }

@@ -93,7 +93,7 @@ public class BsDDAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder
                 .fromHttpUrl(properties.getBsDDClassSearchTextURL())
                 .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
-                .queryParam(AppConstants.QP_BSDD_LIMIT, AppConstants.TWENTY);
+                .queryParam(AppConstants.QP_BSDD_LIMIT, AppConstants.BSDD_LIMIT);
         String url = uriBuilder.toUriString();
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url,
                 JsonNode.class);

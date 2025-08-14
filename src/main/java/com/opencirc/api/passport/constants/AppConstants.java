@@ -94,64 +94,25 @@ public final class AppConstants {
     public static final String ERR_INVALID_TOKEN = "Invalid token";
 
     /**
-     * Number 12.
+     * Password Strength.
      */
-    public static final int TWELVE = 12;
+    public static final int PASSWORD_STRENGTH = 12;
 
     /**
-     * Number 36.
+     * CUID length.
      */
-    public static final int THIRTY_SIX = 36;
+    public static final int CUID_LENGTH = 36;
+
 
     /**
-     * Number 0.
+     * Bsdd result limit.
      */
-    public static final int ZERO = 0;
+    public static final int BSDD_LIMIT = 20;
 
     /**
-     * Number 1.
+     * Cors Maximum age.
      */
-    public static final int ONE = 1;
-
-    /**
-     * Number 2.
-     */
-    public static final int TWO = 2;
-
-    /**
-     * Number 3.
-     */
-    public static final int THREE = 3;
-
-    /**
-     * Number 4.
-     */
-    public static final int FOUR = 4;
-
-    /**
-     * Number 20.
-     */
-    public static final int TWENTY = 20;
-
-    /**
-     * Number 25.
-     */
-    public static final int TWENTY_FIVE = 25;
-
-    /**
-     * Number 60.
-     */
-    public static final int SIXTY = 60;
-
-    /**
-     * Number 1000.
-     */
-    public static final int THOUSAND = 1000;
-
-    /**
-     * Number 100.
-     */
-    public static final int HUNDRED = 100;
+    public static final int CORS_MAX_AGE = 25;
 
     /**
      * hexString.
