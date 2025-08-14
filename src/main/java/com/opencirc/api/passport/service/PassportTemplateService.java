@@ -10,8 +10,6 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -48,6 +46,12 @@ public class PassportTemplateService {
     @Autowired
     private UserContext userContext;
 
+    /**
+     * Injecting ObjectMapper bean.
+     */
+    @Autowired
+    private ObjectMapper objectMapper;
+
 
     /**
      * Creates template from the existing passport.
@@ -58,8 +62,7 @@ public class PassportTemplateService {
      * @return the template in json format
      */
     public PassportTemplateDto createTemplateFromPassport(String passportId,
-            boolean dryRun, String templateName)
-            throws JsonMappingException, JsonProcessingException {
+            boolean dryRun, String templateName) {
         Optional<Passport> passport = passportRepository.findPassport(passportId,
                 Passport.Status.ACTIVE);
         if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.ACTIVE) {
@@ -83,8 +86,7 @@ public class PassportTemplateService {
     private PassportTemplate generateTemplateFromPassport(Passport passport,
             String templateName) {
         PassportTemplate template = new PassportTemplate();
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = mapper.createObjectNode();
+        ObjectNode rootNode = objectMapper.createObjectNode();
 
         for (PassportDatasheetMapping passportDatasheetMapping : passport
                 .getDatasheetMappings()) {

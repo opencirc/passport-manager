@@ -10,6 +10,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.opencirc.api.passport.enums.DataDictionary;
+
 /**
  * Dictionary mapping class.
  */
@@ -22,11 +27,24 @@ public class DictionaryMapping {
     private Map<String, Map<String, String>> dictionaries = new HashMap<>();
 
     /**
-     * DictionaryMapping constructor.
+     * Injecting ObjectMapper.
      */
-    public DictionaryMapping() throws IOException {
+    private final ObjectMapper objectMapper;
+
+    /**
+     * DictionaryMapping constructor.
+     * @param mapper
+     */
+    public DictionaryMapping(ObjectMapper mapper) throws IOException {
+        this.objectMapper = mapper;
         loadDictionaryMappings();
     }
+
+    /**
+     * Stores the required Dictionary mappings.
+     */
+    private final Map<DataDictionary, Map<String, String>> reverseCache = new HashMap<>();
+
 
     /**
      * Loads the field names from dictionary mapping property file.
@@ -62,38 +80,53 @@ public class DictionaryMapping {
      * @param dictionaryName
      * @return the dictionary mappings for the requested dictionary
      */
-    public Map<String, String> getDictionaryMapping(String dictionaryName) {
-        return dictionaries.get(dictionaryName);
+    public Map<String, String> getDictionaryMapping(DataDictionary dictionaryName) {
+        return dictionaries.get(dictionaryName.getValue());
     }
 
     /**
-     * Maps the fetched dictionary mapping.
+     * Maps the keys of a template to their corresponding ISO standard keys.
      *
-     * @param ddResponse
+     * @param template
      * @param dictionaryName
-     * @return the dictionary mappings
+     * @return an ObjectNode containing the mapped template
      */
-    public Map<String, Object> mapDDFieldtoOC(Map<String, Object> ddResponse,
-            String dictionaryName) {
-
-        Map<String, Object> result = new HashMap<>();
+    public ObjectNode mapTemplateFieldsToStandards(JsonNode template,
+            DataDictionary dictionaryName) {
+        ObjectNode resultNode = objectMapper.createObjectNode();
         Map<String, String> dictionaryMappings = getDictionaryMapping(dictionaryName);
-        if (ddResponse != null && dictionaryMappings != null) {
-            for (Map.Entry<String, String> mappingEntry : dictionaryMappings.entrySet()) {
-                String mappingKey = mappingEntry.getKey();
-                String mappingValue = mappingEntry.getValue();
-                String[] mappedValues = mappingValue.split(",");
-                for (String mappedValue : mappedValues) {
-                    mappedValue = mappedValue.trim();
 
-                    if (ddResponse.containsKey(mappedValue)) {
-                        result.put(mappingKey, ddResponse.get(mappedValue));
-                        break;
-                    }
-                }
-            }
+        if (template != null && dictionaryMappings != null) {
+            Map<String, String> reverseMapping = getReverseMapping(dictionaryName,
+                    dictionaryMappings);
+
+            template.fields().forEachRemaining(entry -> {
+                String originalKey = entry.getKey();
+                String mappedKey = reverseMapping.getOrDefault(originalKey, originalKey);
+                resultNode.set(mappedKey, entry.getValue());
+            });
         }
-        return result;
+
+        return resultNode;
     }
 
+    /**
+     * Retrieves the mapping details for the specified data dictionary.
+     * @param dictionary dictionary name
+     * @param dictionaryMappings fetched mappings
+     * @return map the matched field names
+     */
+    private Map<String, String> getReverseMapping(DataDictionary dictionary,
+            Map<String, String> dictionaryMappings) {
+        return reverseCache.computeIfAbsent(dictionary, d -> {
+            Map<String, String> map = new HashMap<>();
+            for (Map.Entry<String, String> entry : dictionaryMappings.entrySet()) {
+                String standardKey = entry.getKey();
+                for (String alias : entry.getValue().split(",")) {
+                    map.put(alias.trim(), standardKey);
+                }
+            }
+            return map;
+        });
+    }
 }
