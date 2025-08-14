@@ -53,7 +53,7 @@ public class UserPrincipal implements UserDetails {
     public UserPrincipal(User user) {
         Objects.requireNonNull(user, "User cannot be null");
         this.userId = String.valueOf(user.getId());
-        this.username = user.getEmail();
+        this.username = user.getEmail(); //Will be updated
         this.email = user.getEmail();
         this.password = user.getPassword();
         this.isActive = user.isActive();
