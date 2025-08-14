@@ -12,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +30,10 @@ import com.opencirc.api.passport.service.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class AuthService {
 
     /**
@@ -50,8 +51,8 @@ public class AuthService {
     /**
      * Instantiating BCryptPasswordEncoder class.
      */
-    private BCryptPasswordEncoder bCryptPasswordEncoder =
-            new BCryptPasswordEncoder(AppConstants.PASSWORD_STRENGTH);
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
     /**
      * Injecting AuthenticationManager class.
      */
@@ -156,7 +157,9 @@ public class AuthService {
         if (password.chars().anyMatch(Character::isDigit)) {
             classes++;
         }
-        if (password.chars().anyMatch(ch -> !Character.isLetterOrDigit(ch))) classes++;
+        if (password.chars().anyMatch(ch -> !Character.isLetterOrDigit(ch))) {
+            classes++;
+        }
         return classes >= 3;
     }
 
@@ -257,8 +260,7 @@ public class AuthService {
         try {
             userRepository.updateRefreshTokenById(UUID.fromString(userId), null);
         } catch (IllegalArgumentException e) {
-            throw new AuthenticationException(
-                    "Error while logging out: " + e.getMessage());
+            log.warn("Invalid UUID during logout for token: {}", refreshToken);
         }
 
         // Removing the JWT cookies (access_token, refresh_token)

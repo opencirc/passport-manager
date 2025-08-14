@@ -75,9 +75,9 @@ public class SecurityConfig {
      */
     @Bean
     public AuthenticationProvider authenticationProvider(BCryptPasswordEncoder
-            bCryptPasswordEncoder) throws Exception {
+            bCryptPasswordEncoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(bCryptPasswordEncoder);
         provider.setUserDetailsService(userDetailsService);
         return provider;
     }
