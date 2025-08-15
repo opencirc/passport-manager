@@ -12,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +25,7 @@ import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.service.JwtService;
+import com.opencirc.api.passport.service.PasswordService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,10 +49,11 @@ public class AuthService {
     private AppProperties properties;
 
     /**
-     * Instantiating BCryptPasswordEncoder class.
+     * Injecting PasswordService class.
      */
     @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private PasswordService passwordService;
+
     /**
      * Injecting AuthenticationManager class.
      */
@@ -99,7 +100,7 @@ public class AuthService {
         user.setRole(role != null ? role : Role.USER);
         user.setActive(true);
         user.setCreatedTime(LocalDateTime.now());
-        user.setPassword(bCryptPasswordEncoder.encode(password));
+        user.setPassword(passwordService.hashPassword(password));
 
         try {
             user = userRepository.save(user);
@@ -283,7 +284,7 @@ public class AuthService {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if ("access_token".equals(cookie.getName())) {
+                if (AppConstants.COOKIE_ACCESS_TOKEN.equals(cookie.getName())) {
                     token = cookie.getValue();
                     break;
                 }

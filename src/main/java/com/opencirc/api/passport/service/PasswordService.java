@@ -7,13 +7,13 @@ import org.springframework.stereotype.Service;
 public class PasswordService {
 
     /**
-     * Instantiation of BCryptPasswordEncoder class.
+     * Injected BCryptPasswordEncoder used for hashing and verification.
      */
     private final BCryptPasswordEncoder encoder;
 
     /**
      * Constructor.
-     * @param encoder
+     * @param encoder BCryptPasswordEncoder bean injected by Spring
      */
     public PasswordService(BCryptPasswordEncoder encoder) {
         this.encoder = encoder;
