@@ -93,7 +93,7 @@ public class PassportSeeder {
         this.appProperties = appPropertiesParam;
         this.userRepository = userRepositoryParam;
     }
-    
+
 
     /**
      * Seeds sample passports recursively using the predefined URI list.
@@ -109,10 +109,11 @@ public class PassportSeeder {
                     .orElseThrow(() -> new IllegalStateException(
                             "No users found in the database. "
                             + "Please seed users before running passport seeding."));
-            
+
             List<String> uris = appProperties.getUriList();
             if (uris == null || uris.isEmpty()) {
-                throw new IllegalStateException("URI list cannot be empty for passport seeding");
+                throw new IllegalStateException("URI list cannot be empty "
+                        + "for passport seeding");
             }
             for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
                 String uri = uris.get(index % uris.size());
@@ -160,7 +161,8 @@ public class PassportSeeder {
         request.setDataCategory(DataCategory.GENERIC.getValue());
         request.setPassportName("Passport" + nameSuffix);
         request.setCreatedBy(userId);
-        request.setParentId(parentId); //This error will be cleared when this branch is merged
+        // TODO: Uncomment this line after merging the code
+        // request.setParentId(parentId);
         request.setCreatedTime(LocalDateTime.now());
 
         PassportDto createdPassport = passportService
@@ -190,10 +192,10 @@ public class PassportSeeder {
             return template;
         }
 
-        List<JsonNode> props = new ArrayList<>();
-        template.get("classProperties").forEach(props::add);
+        List<JsonNode> properties = new ArrayList<>();
+        template.get("classProperties").forEach(properties::add);
 
-        List<JsonNode> selectedProperties = props.stream()
+        List<JsonNode> selectedProperties = properties.stream()
                 .limit(appProperties.getPropertyCountToSelect()).toList();
 
         ObjectNode objectNode = (ObjectNode) template;
@@ -202,6 +204,10 @@ public class PassportSeeder {
         objectNode.set("classProperties", newProperties);
 
         for (JsonNode propertyNode : selectedProperties) {
+            if (!propertyNode.isObject()) {
+                log.debug("Skipping non-object property node in classProperties");
+                continue;
+            }
             ObjectNode propertyObject = (ObjectNode) propertyNode;
             if (propertyNode.has("allowedValues")
                     && propertyNode.get("allowedValues").isArray()
