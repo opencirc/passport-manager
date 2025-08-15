@@ -9,7 +9,15 @@ public class PasswordService {
     /**
      * Instantiation of BCryptPasswordEncoder class.
      */
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder encoder;
+
+    /**
+     * Constructor.
+     * @param encoder
+     */
+    public PasswordService(BCryptPasswordEncoder encoder) {
+        this.encoder = encoder;
+    }
 
     /**
      * Hashes the given password.

@@ -74,18 +74,18 @@ public class AuthService {
     /**
      * Register new user.
      *
-     * @param email
-     * @param password
-     * @param firstName
-     * @param lastName
-     * @param role
-     * @return userId
+     * @param email normalized email (trimmed, lowercased)
+     * @param password raw password
+     * @param firstName trimmed first name
+     * @param lastName  trimmed last name
+     * @param role desired role (defaults to USER if null)
+     * @return userId the persisted user's UUID as string
      */
     @Transactional
     public String register(String email, String password, String firstName,
             String lastName, Role role) throws AuthenticationException {
 
-        validateRegistrationFields(email, password, firstName, lastName);
+        validateRegistrationFields(email, password);
 
         if (userRepository.existsByEmail(email)) {
             throw new AuthenticationException("Email is already registered.");
@@ -110,16 +110,13 @@ public class AuthService {
     }
 
     /**
-     * Validates user input fields for registration.
+     * Validates registration fields (email and password).
      *
      * @param email     the user's email address
      * @param password  the user's password
-     * @param firstName the first name of the user
-     * @param lastName  the last name of the user
      * @throws AuthenticationException if any validation rule fails
      */
-    private void validateRegistrationFields(String email, String password,
-            String firstName, String lastName) {
+    private void validateRegistrationFields(String email, String password) {
         EmailValidator emailValidator = EmailValidator.getInstance();
 
         if (!emailValidator.isValid(email)) {
@@ -146,20 +143,24 @@ public class AuthService {
         if (password == null || password.length() < 8) {
             return false;
         }
-
-        int classes = 0;
-        if (password.chars().anyMatch(Character::isLowerCase)) {
-            classes++;
+        boolean hasLower = false, hasUpper = false, hasDigit = false, hasSpecial = false;
+        for (int i = 0; i < password.length(); i++) {
+            char ch = password.charAt(i);
+            if (Character.isLowerCase(ch))
+                hasLower = true;
+            else if (Character.isUpperCase(ch))
+                hasUpper = true;
+            else if (Character.isDigit(ch))
+                hasDigit = true;
+            else
+                hasSpecial = true;
+            int classes = (hasLower ? 1 : 0) + (hasUpper ? 1 : 0) + (hasDigit ? 1 : 0)
+                    + (hasSpecial ? 1 : 0);
+            if (classes >= 3)
+                return true;
         }
-        if (password.chars().anyMatch(Character::isUpperCase)) {
-            classes++;
-        }
-        if (password.chars().anyMatch(Character::isDigit)) {
-            classes++;
-        }
-        if (password.chars().anyMatch(ch -> !Character.isLetterOrDigit(ch))) {
-            classes++;
-        }
+        int classes = (hasLower ? 1 : 0) + (hasUpper ? 1 : 0) + (hasDigit ? 1 : 0)
+                + (hasSpecial ? 1 : 0);
         return classes >= 3;
     }
 
@@ -227,7 +228,7 @@ public class AuthService {
             return newAccessToken;
         } catch (Exception e) {
             throw new AuthenticationException(
-                    "Error refreshing token: " + e.getMessage());
+                    "Error refreshing token", e);
         }
     }
 
@@ -244,6 +245,7 @@ public class AuthService {
 
             return jwtService.validateToken(token, userDetails);
         } catch (Exception e) {
+            log.debug("Token validation failed", e);
             return false;
         }
     }
@@ -256,8 +258,8 @@ public class AuthService {
      */
     public void logout(String refreshToken, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
-        String userId = jwtService.extractUserId(refreshToken);
         try {
+            String userId = jwtService.extractUserId(refreshToken);
             userRepository.updateRefreshTokenById(UUID.fromString(userId), null);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid UUID during logout for token: {}", refreshToken);
