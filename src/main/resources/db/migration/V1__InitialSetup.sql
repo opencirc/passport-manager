@@ -4,8 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Users table
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL,
@@ -38,11 +37,14 @@ CREATE TABLE IF NOT EXISTS public.passports (
 -- Passport-Datasheet mappings
 CREATE TABLE IF NOT EXISTS public.passport_datasheet_mappings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    passport_id VARCHAR(100),
-    datasheet_id UUID,
+    passport_id VARCHAR(100) NOT NULL,
+    datasheet_id UUID NOT NULL,
     CONSTRAINT fk_passport FOREIGN KEY (passport_id) REFERENCES public.passports (id) ON DELETE CASCADE,
     CONSTRAINT fk_datasheet FOREIGN KEY (datasheet_id) REFERENCES public.datasheets (id) ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_pdm_passport_id ON public.passport_datasheet_mappings(passport_id);
+CREATE INDEX IF NOT EXISTS idx_pdm_datasheet_id ON public.passport_datasheet_mappings(datasheet_id);
 
 -- Passport templates
 CREATE TABLE IF NOT EXISTS public.passport_templates (
@@ -55,7 +57,7 @@ CREATE TABLE IF NOT EXISTS public.passport_templates (
 
 -- Passport logs
 CREATE TABLE IF NOT EXISTS public.passport_logs (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     passport_id VARCHAR(100) NOT NULL,
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
@@ -65,7 +67,7 @@ CREATE TABLE IF NOT EXISTS public.passport_logs (
 
 -- Passport lifecycles
 CREATE TABLE IF NOT EXISTS public.passport_lifecycles (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     passport_id VARCHAR(100) NOT NULL,
     event_type VARCHAR(255) NOT NULL,
     data JSON NOT NULL,
