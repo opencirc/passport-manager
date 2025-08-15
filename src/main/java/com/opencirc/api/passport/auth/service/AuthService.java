@@ -264,12 +264,15 @@ public class AuthService {
             userRepository.updateRefreshTokenById(UUID.fromString(userId), null);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid UUID during logout for token: {}", refreshToken);
+        } catch (Exception e) {
+            log.debug("Ignoring logout error during token extraction/update", e);
+        } finally {
+            // Always clear cookies
+            jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_ACCESS_TOKEN,
+                    0);
+            jwtService.generateTokenCookie(response, "",
+                    AppConstants.COOKIE_REFRESH_TOKEN, 0);
         }
-
-        // Removing the JWT cookies (access_token, refresh_token)
-        jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_ACCESS_TOKEN, 0);
-        jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_REFRESH_TOKEN,
-                0);
     }
 
     /**
