@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -105,6 +106,8 @@ public class AuthService {
         try {
             user = userRepository.save(user);
             return user.getId().toString();
+        } catch (DataIntegrityViolationException e) {
+            throw new AuthenticationException("Email is already registered.");
         } catch (Exception e) {
             throw new AuthenticationException("Error during user registration.", e);
         }
@@ -144,22 +147,11 @@ public class AuthService {
         if (password == null || password.length() < 8) {
             return false;
         }
-        boolean hasLower = false, hasUpper = false, hasDigit = false, hasSpecial = false;
-        for (int i = 0; i < password.length(); i++) {
-            char ch = password.charAt(i);
-            if (Character.isLowerCase(ch))
-                hasLower = true;
-            else if (Character.isUpperCase(ch))
-                hasUpper = true;
-            else if (Character.isDigit(ch))
-                hasDigit = true;
-            else
-                hasSpecial = true;
-            int classes = (hasLower ? 1 : 0) + (hasUpper ? 1 : 0) + (hasDigit ? 1 : 0)
-                    + (hasSpecial ? 1 : 0);
-            if (classes >= 3)
-                return true;
-        }
+        boolean hasLower = password.chars().anyMatch(Character::isLowerCase);
+        boolean hasUpper = password.chars().anyMatch(Character::isUpperCase);
+        boolean hasDigit = password.chars().anyMatch(Character::isDigit);
+        boolean hasSpecial = password.chars().anyMatch(
+                c -> !Character.isLetterOrDigit(c) && !Character.isWhitespace(c));
         int classes = (hasLower ? 1 : 0) + (hasUpper ? 1 : 0) + (hasDigit ? 1 : 0)
                 + (hasSpecial ? 1 : 0);
         return classes >= 3;
