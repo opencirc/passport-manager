@@ -255,7 +255,7 @@ public class AuthService {
             String userId = jwtService.extractUserId(refreshToken);
             userRepository.updateRefreshTokenById(UUID.fromString(userId), null);
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid UUID during logout for token: {}", refreshToken);
+            log.warn("Invalid token");
         } catch (Exception e) {
             log.debug("Ignoring logout error during token extraction/update", e);
         } finally {
