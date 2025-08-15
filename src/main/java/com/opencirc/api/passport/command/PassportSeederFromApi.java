@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.command;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class PassportSeeder {
+public class PassportSeederFromApi {
 
     /**
      * Application properties class.
@@ -84,7 +85,7 @@ public class PassportSeeder {
      * @param appPropertiesParam
      * @param userRepositoryParam
      */
-    public PassportSeeder(DataDictionaryService dataDictionaryServiceParam,
+    public PassportSeederFromApi(DataDictionaryService dataDictionaryServiceParam,
             PassportService passportServiceParam, ObjectMapper objectMapperParam,
             AppProperties appPropertiesParam, UserRepository userRepositoryParam) {
         this.dataDictionaryService = dataDictionaryServiceParam;
@@ -93,7 +94,7 @@ public class PassportSeeder {
         this.appProperties = appPropertiesParam;
         this.userRepository = userRepositoryParam;
     }
-
+    private final Map<String, JsonNode> uniqueTemplatesByUri = new ConcurrentHashMap<>();
 
     /**
      * Seeds sample passports recursively using the predefined URI list.
@@ -121,10 +122,11 @@ public class PassportSeeder {
                         String.valueOf(user.getId()));
             }
             log.info("Passport seeding completed.");
+            writeUniqueTemplatesToFile("bsdd_templates.json");
         } catch (Exception e) {
             log.error("Passport seeding failed: {}", e.getMessage(), e);
             throw e;
-        }
+        } 
     }
 
     /**
@@ -155,6 +157,8 @@ public class PassportSeeder {
             return objectMapper.valueToTree(template);
         }).deepCopy();
         JsonNode datasheetData = filterAndFillProperties(templateNode);
+        uniqueTemplatesByUri.putIfAbsent(uri, datasheetData.deepCopy());
+
 
         CreatePassportRequestDto request = new CreatePassportRequestDto();
         request.setDatasheetData(datasheetData);
@@ -173,6 +177,18 @@ public class PassportSeeder {
             String nextUri = appProperties.getUriList().get(nextUriIndex);
             createPassportRecursive(level + 1, nameSuffix + "." + (index + 1), nextUri,
                     nextUriIndex, createdPassport.getId(), userId);
+        }
+    }
+    
+    private void writeUniqueTemplatesToFile(String filePath) {
+        try {
+            ArrayNode arrayNode = objectMapper.createArrayNode();
+            uniqueTemplatesByUri.values().forEach(arrayNode::add);
+            objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValue(new File(filePath), arrayNode);
+            log.info("Wrote {} unique templates to {}", uniqueTemplatesByUri.size(), filePath);
+        } catch (Exception e) {
+            log.error("Failed to write unique templates to file", e);
         }
     }
 
