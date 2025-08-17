@@ -19,12 +19,12 @@ public class Seeder {
     private final UserSeeder userSeeder;
 
     /**
-     * PassportSeeder bean.
+     * Passport seeder via data dictionary API.
      */
     private final PassportSeederFromApi passportSeeder;
 
     /**
-     * PassportSeeder bean.
+     * Passport seeder from stored JSON templates.
      */
     private final PassportSeederFromJson passportJsonSeeder;
 
@@ -69,14 +69,14 @@ public class Seeder {
      * @param seedType       Seed type: USER | PASSPORT | ALL
      * @param storedTemplate - If true, seed passports from stored JSON templates;
      *                       otherwise, seed via the BSDD API.
-     * @throws RuntimeException if seeding fails or the seed type is invalid
+     * @throws RuntimeException if seeding fails
      */
     @Command(command = "seed", description = "Run seed")
     public void seed(
-            @Option(longNames = "type", defaultValue = "all") SeedType seedType,
+            @Option(longNames = "type", defaultValue = "ALL") SeedType seedType,
             @Option(longNames = "stored-template", defaultValue = "true")
             boolean storedTemplate) {
-
+        log.info("Seeding started.");
         try {
             Runnable passportSeeding = () -> {
                 if (storedTemplate) {
