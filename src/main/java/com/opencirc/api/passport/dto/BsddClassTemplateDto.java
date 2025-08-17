@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.dto;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -66,7 +66,7 @@ public class BsddClassTemplateDto {
      * UTC date when this class became active.
      */
     @JsonProperty("activationDateUtc")
-    private ZonedDateTime activationDateUtc;
+    private OffsetDateTime activationDateUtc;
 
     /**
      * Code of the class.
@@ -144,7 +144,7 @@ public class BsddClassTemplateDto {
      * Version date.
      */
     @JsonProperty("versionDateUtc")
-    private ZonedDateTime versionDateUtc;
+    private OffsetDateTime versionDateUtc;
 
 
     /**
