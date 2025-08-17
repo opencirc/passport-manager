@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS public.passport_datasheet_mappings (
     passport_id VARCHAR(100) NOT NULL,
     datasheet_id UUID NOT NULL,
     CONSTRAINT fk_passport FOREIGN KEY (passport_id) REFERENCES public.passports (id) ON DELETE CASCADE,
-    CONSTRAINT fk_datasheet FOREIGN KEY (datasheet_id) REFERENCES public.datasheets (id) ON DELETE CASCADE
+    CONSTRAINT fk_datasheet FOREIGN KEY (datasheet_id) REFERENCES public.datasheets (id) ON DELETE CASCADE,
+    CONSTRAINT uq_passport_datasheet UNIQUE (passport_id, datasheet_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_pdm_passport_id ON public.passport_datasheet_mappings(passport_id);
@@ -62,7 +63,8 @@ CREATE TABLE IF NOT EXISTS public.passport_logs (
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (passport_id) REFERENCES public.passports(id)
+    FOREIGN KEY (passport_id) REFERENCES public.passports(id) ON DELETE CASCADE,
+    CREATE INDEX IF NOT EXISTS idx_passport_logs_passport_id ON public.passport_logs(passport_id);
 );
 
 -- Passport lifecycles

@@ -43,7 +43,6 @@ public class PassportLifecycle {
     /**
      * Lifecycle data in JSON format.
      */
-    @Convert(converter = JsonNodeConverter.class)
     @Column(name = "data", columnDefinition = "json", nullable = false)
     private JsonNode data;
 
