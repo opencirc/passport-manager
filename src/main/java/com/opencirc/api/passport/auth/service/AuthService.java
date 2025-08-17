@@ -81,7 +81,7 @@ public class AuthService {
      * @param firstName trimmed first name
      * @param lastName  trimmed last name
      * @param role desired role (defaults to USER if null)
-     * @return userId the persisted user's UUID as string
+     * @return the persisted User
      */
     @Transactional
     public User register(String email, String password, String firstName,
@@ -124,7 +124,7 @@ public class AuthService {
         EmailValidator emailValidator = EmailValidator.getInstance();
 
         if (!emailValidator.isValid(email)) {
-            throw new AuthenticationException("Invalid email format.");
+            throw new InvalidInputException("Invalid email format.");
         }
         validatePassword(password);
     }
@@ -272,6 +272,7 @@ public class AuthService {
      *
      * @param request - Http servlet request
      * @return the instance of UserDto or null
+     * @throws AuthenticationException
      */
     public UserDto getCurrentUser(HttpServletRequest request) {
 
