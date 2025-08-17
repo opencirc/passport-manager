@@ -76,7 +76,8 @@ public class PassportSeederFromJson {
         this.passportService = passportService;
         this.objectMapper = objectMapper;
         loadTemplatesFromFile();
-        this.uriList = List.copyOf(templatesByUri.keySet()); // Cache the URI list
+        this.uriList = templatesByUri.keySet().stream().sorted()
+                .toList();
     }
 
     /**
@@ -84,14 +85,20 @@ public class PassportSeederFromJson {
      */
     private void loadTemplatesFromFile() {
         try (InputStream is = getClass()
-                .getResourceAsStream("/templates/bsdd_templates.json")) {
+                .getResourceAsStream(appProperties.getTemplatePath())) {
             if (is == null) {
-                throw new IllegalStateException("Template file "
-                        + "not found in resources/templates");
+                throw new IllegalStateException(
+                        "Template file " + "not found in templates folder");
             }
             ArrayNode arrayNode = (ArrayNode) objectMapper.readTree(is);
-            arrayNode.forEach(node -> templatesByUri.put(node
-                    .get("uri").asText(), node.deepCopy()));
+            arrayNode.forEach(node -> {
+                JsonNode uriNode = node.get("uri");
+                if (uriNode != null && !uriNode.isNull()) {
+                    templatesByUri.put(uriNode.asText(), node.deepCopy());
+                } else {
+                    log.warn("Skipping template without 'uri': {}", node);
+                }
+            });
             log.info("Loaded {} templates from JSON file", templatesByUri.size());
         } catch (Exception e) {
             throw new RuntimeException("Failed to load templates from JSON", e);
@@ -106,6 +113,12 @@ public class PassportSeederFromJson {
                     .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No users"
                         + " found in the database. Seed users first."));
+
+        if (uriList == null || uriList.isEmpty()) {
+            throw new IllegalStateException(
+                    "No templates loaded; "
+                    + "ensure templates/bsdd_templates.json is present and non-empty.");
+        }
 
         for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
             String uri = uriList.get(i % uriList.size());

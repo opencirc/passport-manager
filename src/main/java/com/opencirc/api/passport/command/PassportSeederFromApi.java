@@ -1,7 +1,7 @@
 package com.opencirc.api.passport.command;
 
-import java.io.File;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +94,6 @@ public class PassportSeederFromApi {
         this.appProperties = appPropertiesParam;
         this.userRepository = userRepositoryParam;
     }
-    private final Map<String, JsonNode> uniqueTemplatesByUri = new ConcurrentHashMap<>();
 
     /**
      * Seeds sample passports recursively using the predefined URI list.
@@ -122,11 +121,10 @@ public class PassportSeederFromApi {
                         String.valueOf(user.getId()));
             }
             log.info("Passport seeding completed.");
-            writeUniqueTemplatesToFile("bsdd_templates.json");
         } catch (Exception e) {
             log.error("Passport seeding failed: {}", e.getMessage(), e);
             throw e;
-        } 
+        }
     }
 
     /**
@@ -157,8 +155,6 @@ public class PassportSeederFromApi {
             return objectMapper.valueToTree(template);
         }).deepCopy();
         JsonNode datasheetData = filterAndFillProperties(templateNode);
-        uniqueTemplatesByUri.putIfAbsent(uri, datasheetData.deepCopy());
-
 
         CreatePassportRequestDto request = new CreatePassportRequestDto();
         request.setDatasheetData(datasheetData);
@@ -177,18 +173,6 @@ public class PassportSeederFromApi {
             String nextUri = appProperties.getUriList().get(nextUriIndex);
             createPassportRecursive(level + 1, nameSuffix + "." + (index + 1), nextUri,
                     nextUriIndex, createdPassport.getId(), userId);
-        }
-    }
-    
-    private void writeUniqueTemplatesToFile(String filePath) {
-        try {
-            ArrayNode arrayNode = objectMapper.createArrayNode();
-            uniqueTemplatesByUri.values().forEach(arrayNode::add);
-            objectMapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(new File(filePath), arrayNode);
-            log.info("Wrote {} unique templates to {}", uniqueTemplatesByUri.size(), filePath);
-        } catch (Exception e) {
-            log.error("Failed to write unique templates to file", e);
         }
     }
 
@@ -240,8 +224,9 @@ public class PassportSeederFromApi {
                 case "real" -> propertyObject.put("actualValue", RANDOM.nextDouble());
                 case "integer" -> propertyObject.put("actualValue", RANDOM.nextInt(50));
                 case "datetime" -> propertyObject.put("actualValue",
-                        LocalDateTime.now().minusHours(RANDOM.nextInt(200)).format(
-                                java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                        OffsetDateTime.now(java.time.ZoneOffset.UTC)
+                        .minusHours(RANDOM.nextInt(200))
+                        .format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME));
                 default -> {
                     log.debug("Unknown data type '{}' for property, using "
                             + "default test data", dataType);

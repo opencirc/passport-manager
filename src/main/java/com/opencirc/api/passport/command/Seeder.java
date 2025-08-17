@@ -35,6 +35,7 @@ public class Seeder {
      *
      * @param userSeederParam
      * @param passportSeederParam
+     * @param passportJsonSeeder
      */
     public Seeder(UserSeeder userSeederParam, PassportSeederFromApi passportSeederParam,
             PassportSeederFromJson passportJsonSeeder) {
@@ -65,15 +66,19 @@ public class Seeder {
     }
 
     /**
-     * Runs the seed process for the specified type.
+     * Executes the seeding process for the given type.
      *
-     * @param seedTypeInput
-     * @throws RuntimeException
+     * @param seedTypeInput        Seed type: user | passport | all
+     * @param storedTemplateSource - If true, seed passports from stored JSON
+     *                             templates; otherwise, seed via the BSDD API.
+     *                             false to fetch from the API
+     * @throws RuntimeException if seeding fails or the seed type is invalid
      */
     @Command(command = "seed", description = "Run seed")
     public void seed(
             @Option(longNames = "type", defaultValue = "all") String seedTypeInput,
-            @Option(longNames = "stored-template", defaultValue = "true") boolean storedTemplateSource) {
+            @Option(longNames = "stored-template", defaultValue = "true")
+            boolean storedTemplateSource) {
 
         SeedType seedType;
         try {

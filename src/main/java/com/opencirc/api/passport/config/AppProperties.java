@@ -100,6 +100,12 @@ public class AppProperties {
     private List<String> uriList;
 
     /**
+     * Path where templates are stored in json format.
+     */
+    @Value("${seed.passport.templates.path}")
+    private String templatePath;
+
+    /**
      * Getter for refresh token.
      * @return refresh token expiry time
      */
