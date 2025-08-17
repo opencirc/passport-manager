@@ -103,17 +103,14 @@ public class PassportSeederFromApi {
     public void seed() {
         try {
 
-            User user = userRepository.findAll()
-                    .stream()
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException(
-                            "No users found in the database. "
+            User user = userRepository.findAll().stream().findFirst().orElseThrow(
+                    () -> new IllegalStateException("No users found in the database. "
                             + "Please seed users before running passport seeding."));
 
             List<String> uris = appProperties.getUriList();
             if (uris == null || uris.isEmpty()) {
-                throw new IllegalStateException("URI list cannot be empty "
-                        + "for passport seeding");
+                throw new IllegalStateException(
+                        "URI list cannot be empty for passport seeding");
             }
             for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
                 String uri = uris.get(index % uris.size());
@@ -121,9 +118,12 @@ public class PassportSeederFromApi {
                         String.valueOf(user.getId()));
             }
             log.info("Passport seeding completed.");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Passport seeding failed: {}", e.getMessage(), e);
             throw e;
+        } catch (Exception e) {
+            log.error("Passport seeding failed: {}", e.getMessage(), e);
+            throw new RuntimeException("Passport seeding failed", e);
         }
     }
 

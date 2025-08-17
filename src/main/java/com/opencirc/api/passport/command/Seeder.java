@@ -33,13 +33,13 @@ public class Seeder {
      *
      * @param userSeederParam
      * @param passportSeederParam
-     * @param passportJsonSeeder
+     * @param passportJsonSeederParam
      */
     public Seeder(UserSeeder userSeederParam, PassportSeederFromApi passportSeederParam,
-            PassportSeederFromJson passportJsonSeeder) {
+            PassportSeederFromJson passportJsonSeederParam) {
         this.userSeeder = userSeederParam;
         this.passportSeeder = passportSeederParam;
-        this.passportJsonSeeder = passportJsonSeeder;
+        this.passportJsonSeeder = passportJsonSeederParam;
     }
 
     /**
@@ -87,18 +87,21 @@ public class Seeder {
             };
 
             switch (seedType) {
-                case USER -> userSeeder.seed();
-                case PASSPORT -> passportSeeding.run();
-                case ALL -> {
-                    userSeeder.seed();
-                    passportSeeding.run();
-                }
+            case USER -> userSeeder.seed();
+            case PASSPORT -> passportSeeding.run();
+            case ALL -> {
+                userSeeder.seed();
+                passportSeeding.run();
+            }
             }
 
             log.info("Seeding complete.");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Seeding failed: {}", e.getMessage(), e);
             throw e;
+        } catch (Exception e) {
+            log.error("Seeding failed: {}", e.getMessage(), e);
+            throw new RuntimeException("Seeding failed", e);
         }
     }
 
