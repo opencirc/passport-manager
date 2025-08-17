@@ -66,10 +66,9 @@ public class Seeder {
     /**
      * Executes the seeding process for the given type.
      *
-     * @param seedType        Seed type: user | passport | all
-     * @param storedTemplate - If true, seed passports from stored JSON
-     *                             templates; otherwise, seed via the BSDD API.
-     *                             false to fetch from the API
+     * @param seedType       Seed type: USER | PASSPORT | ALL
+     * @param storedTemplate - If true, seed passports from stored JSON templates;
+     *                       otherwise, seed via the BSDD API.
      * @throws RuntimeException if seeding fails or the seed type is invalid
      */
     @Command(command = "seed", description = "Run seed")

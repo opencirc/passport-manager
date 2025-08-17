@@ -161,8 +161,7 @@ public class PassportSeederFromApi {
         request.setDataCategory(DataCategory.GENERIC.getValue());
         request.setPassportName("Passport" + nameSuffix);
         request.setCreatedBy(userId);
-        // TODO: Uncomment this line after merging the code
-        // request.setParentId(parentId);
+        request.setParentId(parentId);
         request.setCreatedTime(LocalDateTime.now());
 
         PassportDto createdPassport = passportService

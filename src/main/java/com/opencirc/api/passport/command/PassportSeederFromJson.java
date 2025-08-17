@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
@@ -120,8 +119,9 @@ public class PassportSeederFromJson {
 
         if (uriList == null || uriList.isEmpty()) {
             throw new IllegalStateException(
-                    "No templates loaded; "
-                    + "ensure templates/bsdd_templates.json is present and non-empty.");
+                    "No templates loaded; ensure template file at "
+                            + appProperties.getTemplatePath()
+                            + " is present on the classpath and non-empty.");
         }
 
         for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
@@ -145,8 +145,7 @@ public class PassportSeederFromJson {
         request.setDataCategory(DataCategory.GENERIC.getValue());
         request.setPassportName("Passport" + nameSuffix);
         request.setCreatedBy(userId);
-        // TODO: Uncomment if parentId is used
-        // request.setParentId(parentId);
+        request.setParentId(parentId);
         request.setCreatedTime(LocalDateTime.now());
 
         PassportDto createdPassport = passportService
