@@ -1,5 +1,20 @@
 package com.opencirc.api.passport.service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,15 +34,8 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
-import io.github.thibaultmeyer.cuid.CUID;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import io.github.thibaultmeyer.cuid.CUID;
 
 @Service
 public class PassportService {
@@ -35,27 +43,48 @@ public class PassportService {
     /**
      * Injecting DatasheetRepository class.
      */
-    @Autowired
-    private DatasheetRepository datasheetRepository;
+    private final DatasheetRepository datasheetRepository;
 
     /**
      * Injecting PassportRepository class.
      */
-    @Autowired
-    private PassportRepository passportRepository;
+    private final PassportRepository passportRepository;
 
     /**
      * Injecting PassportDatasheetMappingRepository class.
      */
-    @Autowired
-    private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+    private final PassportDatasheetMappingRepository passportDatasheetMappingRepository;
 
+    /**
+     * Injecting ObjectMapper bean.
+     */
+    private final ObjectMapper objectMapper;
 
     /**
      * Injecting DictionaryAdapterFactory class.
      */
-    @Autowired
-    private DictionaryAdapterFactory dictionaryAdapterFactory;
+    private final DictionaryAdapterFactory dictionaryAdapterFactory;
+
+    /**
+     * Constructor.
+     * @param datasheetRepository
+     * @param passportRepository
+     * @param passportDatasheetMappingRepository
+     * @param dictionaryAdapterFactory
+     * @param objectMapper
+     */
+    public PassportService(DatasheetRepository datasheetRepository,
+                           PassportRepository passportRepository,
+                           PassportDatasheetMappingRepository
+                           passportDatasheetMappingRepository,
+                           DictionaryAdapterFactory dictionaryAdapterFactory,
+                           ObjectMapper objectMapper) {
+        this.datasheetRepository = datasheetRepository;
+        this.passportRepository = passportRepository;
+        this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
+        this.dictionaryAdapterFactory = dictionaryAdapterFactory;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Creates template Entry.
@@ -65,8 +94,7 @@ public class PassportService {
      * @return Passport DTO from passport
      */
     public PassportDto createPassportUsingDictionary(DataDictionary dictionary,
-            CreatePassportRequestDto data)
-            throws InvalidInputException {
+            CreatePassportRequestDto data) throws InvalidInputException {
         JsonNode datasheetData = data.getDatasheetData();
         try {
             validatePassportData(dictionary, datasheetData);
@@ -75,16 +103,24 @@ public class PassportService {
                     e.getMessage());
         }
 
-        int customLength = AppConstants.NUM_THIRTY_SIX;
+        int customLength = AppConstants.CUID_LENGTH;
         CUID cuid = CUID.randomCUID2(customLength);
 
         Passport rawPassport = new Passport();
         rawPassport.setId(cuid.toString());
-
         rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
         rawPassport.setCreatedBy(data.getCreatedBy());
         rawPassport.setCreatedTime(LocalDateTime.now());
+        String parentId = data.getParentId();
+        if (parentId != null && !parentId.isBlank()) {
+            boolean parentExists = passportRepository.existsById(parentId);
+            if (!parentExists) {
+                throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Invalid parentId: active parent not found");
+            }
+            rawPassport.setParentId(parentId);
+        }
         Passport passport = passportRepository.save(rawPassport);
 
         Datasheet datasheet = new Datasheet();
@@ -100,7 +136,7 @@ public class PassportService {
         passportDatasheet.setDatasheet(datasheet);
         PassportDatasheetMapping passportDatasheetMapping =
                 passportDatasheetMappingRepository.save(passportDatasheet);
-        //Set up the data sheet mapping details in the return value of the Passport DTO
+        // Set up the data sheet mapping details in the return value of the Passport DTO
         passport.setDatasheetMappings(new ArrayList<>());
         passport.getDatasheetMappings().add(passportDatasheetMapping);
 
@@ -118,8 +154,7 @@ public class PassportService {
 
         Optional<Passport> optionalPassport = passportRepository
                 .findPassport(passportId, Passport.Status.ACTIVE);
-        if (optionalPassport.isEmpty()
-                || optionalPassport.get().getStatus() != Passport.Status.ACTIVE) {
+        if (optionalPassport.isEmpty()) {
             throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
                     "Could not find passport with ID " + passportId);
         }
@@ -148,9 +183,6 @@ public class PassportService {
         }
 
         Map<String, PassportDto> dtoById = new LinkedHashMap<>();
-        ObjectMapper objectMapper = new ObjectMapper();
-
-
         for (PassportDatasheetResultMapDto row : resultRows) {
             String passportId = row.getPassportId();
 
@@ -167,7 +199,7 @@ public class PassportService {
 
             if (row.getDatasheetId() != null) {
                 boolean alreadyExists = passportDto.getDatasheets().stream()
-                        .anyMatch(ds -> ds.getId() == row.getDatasheetId());
+                        .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
 
                 if (!alreadyExists) {
                     DatasheetDto datasheetDto = new DatasheetDto();
@@ -208,7 +240,7 @@ public class PassportService {
     }
 
     /**
-     * Retrieves the passports with the given parent ID
+     * Retrieves the passports with the given parent ID.
      *
      * @param passportId
      * @return a list of {@link PassportDto} objects
@@ -222,7 +254,6 @@ public class PassportService {
         List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
                 .orElse(Collections.emptyList());
 
-        ObjectMapper objectMapper = new ObjectMapper();
         List<PassportDto> passportDtoList = new ArrayList<>();
         Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
 
@@ -258,7 +289,8 @@ public class PassportService {
                     datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
                 }
 
-                passportDto.getDatasheets().add(datasheetDtoMap.get(row.getDatasheetId()));
+                passportDto.getDatasheets().add(datasheetDtoMap
+                        .get(row.getDatasheetId()));
             }
 
             passportDtoList.add(passportDto);
@@ -290,9 +322,10 @@ public class PassportService {
         List<Passport> passports = passportRepository
                 .getRootPassports();
         if (passports == null) {
-            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not retrieve root passports");
-        }
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Could not retrieve root passports");
 
+        }
         return passports.stream()
                 .map(PassportDto::from)
                 .collect(Collectors.toList());
