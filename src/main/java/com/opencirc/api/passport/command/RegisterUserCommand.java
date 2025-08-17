@@ -5,6 +5,7 @@ import org.springframework.shell.command.annotation.Option;
 
 import com.opencirc.api.passport.auth.service.AuthService;
 import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 
 import lombok.extern.slf4j.Slf4j;
@@ -46,20 +47,19 @@ public class RegisterUserCommand {
 
         Role parsedRole;
         try {
-            parsedRole = (role == null) ? Role.USER : Role.fromValue(role.toUpperCase());
+            parsedRole = Role.fromValue(role.toUpperCase());
         } catch (IllegalArgumentException ex) {
             return "Invalid role. Valid roles are 'user' or 'admin'.";
         }
 
         try {
-            String userId = authService.register(email.trim().toLowerCase(), password.trim(),
+            User user = authService.register(email.trim().toLowerCase(), password.trim(),
                     firstName.trim(), lastName.trim(), parsedRole);
-            return String.format("User created with id: %s", userId);
+            return String.format("User created with id: %s", user.getId());
         } catch (AuthenticationException authenticationException) {
-            return "Registration failed: " + authenticationException.getMessage();
+            throw authenticationException;
         } catch (Exception e) {
-            log.error("Unexpected error during registration for email={}", email, e);
-            return "An unexpected error occurred during registration";
+            throw e;
         }
 
     }

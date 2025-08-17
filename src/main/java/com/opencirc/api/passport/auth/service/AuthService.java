@@ -1,7 +1,6 @@
 package com.opencirc.api.passport.auth.service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.validator.routines.EmailValidator;
@@ -23,6 +22,7 @@ import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.LoginRequestDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.service.JwtService;
@@ -84,7 +84,7 @@ public class AuthService {
      * @return userId the persisted user's UUID as string
      */
     @Transactional
-    public String register(String email, String password, String firstName,
+    public User register(String email, String password, String firstName,
             String lastName, Role role) throws AuthenticationException {
 
         validateRegistrationFields(email, password);
@@ -105,7 +105,7 @@ public class AuthService {
 
         try {
             user = userRepository.save(user);
-            return user.getId().toString();
+            return user;
         } catch (DataIntegrityViolationException e) {
             throw new AuthenticationException("Email is already registered.");
         } catch (Exception e) {
@@ -118,7 +118,7 @@ public class AuthService {
      *
      * @param email     the user's email address
      * @param password  the user's password
-     * @throws AuthenticationException if any validation rule fails
+     * @throws InvalidInputException if any validation rule fails
      */
     private void validateRegistrationFields(String email, String password) {
         EmailValidator emailValidator = EmailValidator.getInstance();
@@ -126,13 +126,7 @@ public class AuthService {
         if (!emailValidator.isValid(email)) {
             throw new AuthenticationException("Invalid email format.");
         }
-
-        if (!isPasswordStrong(password)) {
-            throw new AuthenticationException(
-                    "Weak password. Use at least 8 characters and mix of "
-                            + "upper/lowercase, digits, or symbols.");
-        }
-
+        validatePassword(password);
     }
 
     /**
@@ -141,11 +135,12 @@ public class AuthService {
      * character types:Lower case, Upper case, Digits, Special characters
      *
      * @param password
-     * @return true if the password meets the criteria, false otherwise
+     * @throws InvalidInputException if the password does not meet criteria
      */
-    private boolean isPasswordStrong(String password) {
+    private void validatePassword(String password) {
         if (password == null || password.length() < 8) {
-            return false;
+            throw new InvalidInputException("Password must be at least "
+                    + "8 characters long.");
         }
         boolean hasLower = password.chars().anyMatch(Character::isLowerCase);
         boolean hasUpper = password.chars().anyMatch(Character::isUpperCase);
@@ -154,7 +149,11 @@ public class AuthService {
                 c -> !Character.isLetterOrDigit(c) && !Character.isWhitespace(c));
         int classes = (hasLower ? 1 : 0) + (hasUpper ? 1 : 0) + (hasDigit ? 1 : 0)
                 + (hasSpecial ? 1 : 0);
-        return classes >= 3;
+        if (classes < 3) {
+            throw new InvalidInputException(
+                    "Weak password. Use at least 8 characters and mix of "
+                            + "upper/lowercase, digits, or symbols.");
+        }
     }
 
     /**
@@ -229,17 +228,18 @@ public class AuthService {
      * Validates the token.
      *
      * @param token - JWT token
-     * @return result whether the token is valid or not
+     * @throws AuthenticationException
      */
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         try {
             String userId = jwtService.extractUserId(token);
             UserDetails userDetails = authUserDetailsService.loadUserById(userId);
 
-            return jwtService.validateToken(token, userDetails);
+            if (!jwtService.validateToken(token, userDetails)) {
+                throw new AuthenticationException("Invalid or expired token");
+            }
         } catch (Exception e) {
-            log.debug("Token validation failed", e);
-            return false;
+            throw new AuthenticationException("Token validation failed", e);
         }
     }
 
@@ -285,14 +285,15 @@ public class AuthService {
                 }
             }
         }
-
-        if (token == null || !validateToken(token)) {
+        if (token == null) {
             return null;
         }
+        validateToken(token);
 
         String userId = jwtService.extractUserId(token);
-        Optional<User> user = userRepository.findById(UUID.fromString(userId));
-        return user.map(UserDto::from).orElse(null);
+        return userRepository.findById(UUID.fromString(userId)).map(UserDto::from)
+                .orElseThrow(
+                        () -> new AuthenticationException("User not found"));
 
     }
 }

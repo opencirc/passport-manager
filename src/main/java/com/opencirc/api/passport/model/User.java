@@ -151,7 +151,7 @@ public class User {
                     .filter(role -> role.value.equalsIgnoreCase(value))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "Invalid Role: " + value));
+                            "Invalid role: " + value));
         }
     }
 
