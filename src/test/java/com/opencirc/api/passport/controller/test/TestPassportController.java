@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -67,6 +68,11 @@ public class TestPassportController {
     @MockBean
     private AuthenticationManager authenticationManager;
 
+    /**
+     * Injecting ObjectMapper bean.
+     */
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * JWT token.
@@ -149,7 +155,7 @@ public class TestPassportController {
                     "dataCategory": "Unique"
                 }
                                 """;
-        ObjectMapper objectMapper = new ObjectMapper();
+        
         CreatePassportRequestDto createPassportRequest = new CreatePassportRequestDto();
         createPassportRequest.setCreatedTime(LocalDateTime.now());
         createPassportRequest.setDataCategory(DataCategory.GENERIC.getValue());
@@ -229,7 +235,7 @@ public class TestPassportController {
             throws JsonValidationException, JsonMappingException,
             JsonProcessingException {
         String dictionary = "bsdd";
-        ObjectMapper objectMapper = new ObjectMapper();
+        
         JsonNode invalidNode = objectMapper.readTree("""
             {
                 "ABCDFWEREWRHIH": "ABCDFWEREWRHIH"
@@ -356,7 +362,7 @@ public class TestPassportController {
 
     private JsonNode generateDatasheetData() throws JsonMappingException,
     JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
+
         String jsonBody = """
                 {
             "id": "c98fbb40-5c9e-4daf-a2ae-961b1aa75adb",

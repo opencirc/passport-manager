@@ -1,9 +1,6 @@
 package com.opencirc.api.passport.config;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-
+import com.opencirc.api.passport.constants.AppConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +10,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,7 +19,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import com.opencirc.api.passport.constants.AppConstants;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Spring security configuration.
@@ -49,6 +49,15 @@ public class SecurityConfig {
     private AppProperties properties;
 
     /**
+     * PasswordEncoder bean.
+     * @return passwordEncoder
+     */
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(AppConstants.PASSWORD_STRENGTH);
+    }
+
+    /**
      * Bean to get authenticationManager.
      * @param config
      * @return the instance of authentication manager
@@ -67,7 +76,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() throws Exception {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(new BCryptPasswordEncoder(AppConstants.NUM_TWELVE));
+        provider.setPasswordEncoder(passwordEncoder());
         provider.setUserDetailsService(userDetailsService);
         return provider;
     }
@@ -88,7 +97,7 @@ public class SecurityConfig {
                                 properties.getLoginUrl(), "/swagger-ui/**",
                                 "/v3/api-docs/**")
                         .permitAll().anyRequest().authenticated())
-                .httpBasic().disable()
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -101,10 +110,11 @@ public class SecurityConfig {
         return request -> {
             CorsConfiguration corsConfiguration = new CorsConfiguration();
             corsConfiguration.setAllowCredentials(true);
-            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3001", "http://localhost:3002"));
+            corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3001",
+                    "http://localhost:3002"));
             corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
             corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
-            corsConfiguration.setMaxAge(Duration.ofMinutes(AppConstants.NUM_TWENTY_FIVE));
+            corsConfiguration.setMaxAge(Duration.ofMinutes(AppConstants.CORS_MAX_AGE));
             return corsConfiguration;
         };
     }
