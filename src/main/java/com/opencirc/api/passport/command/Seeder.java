@@ -1,7 +1,5 @@
 package com.opencirc.api.passport.command;
 
-import java.util.Arrays;
-
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
 
@@ -68,30 +66,21 @@ public class Seeder {
     /**
      * Executes the seeding process for the given type.
      *
-     * @param seedTypeInput        Seed type: user | passport | all
-     * @param storedTemplateSource - If true, seed passports from stored JSON
+     * @param seedType        Seed type: user | passport | all
+     * @param storedTemplate - If true, seed passports from stored JSON
      *                             templates; otherwise, seed via the BSDD API.
      *                             false to fetch from the API
      * @throws RuntimeException if seeding fails or the seed type is invalid
      */
     @Command(command = "seed", description = "Run seed")
     public void seed(
-            @Option(longNames = "type", defaultValue = "all") String seedTypeInput,
+            @Option(longNames = "type", defaultValue = "all") SeedType seedType,
             @Option(longNames = "stored-template", defaultValue = "true")
-            boolean storedTemplateSource) {
-
-        SeedType seedType;
-        try {
-            seedType = SeedType.valueOf(seedTypeInput.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid seed type '{}'. Valid types: {}. Default value is 'all'.",
-                    seedTypeInput, Arrays.toString(SeedType.values()));
-            throw e;
-        }
+            boolean storedTemplate) {
 
         try {
             Runnable passportSeeding = () -> {
-                if (storedTemplateSource) {
+                if (storedTemplate) {
                     passportJsonSeeder.seed();
                 } else {
                     passportSeeder.seed();

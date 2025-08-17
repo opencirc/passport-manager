@@ -84,21 +84,25 @@ public class PassportSeederFromJson {
      * Load filled templates from resources/templates/bsdd_templates.json.
      */
     private void loadTemplatesFromFile() {
-        try (InputStream is = getClass()
-                .getResourceAsStream(appProperties.getTemplatePath())) {
+        final String path = appProperties.getTemplatePath();
+        try (InputStream is = getClass().getResourceAsStream(path)) {
             if (is == null) {
                 throw new IllegalStateException(
-                        "Template file " + "not found in templates folder");
+                        "Template file not found at classpath location: " + path);
             }
-            ArrayNode arrayNode = (ArrayNode) objectMapper.readTree(is);
-            arrayNode.forEach(node -> {
+            JsonNode root = objectMapper.readTree(is);
+            if (root == null || !root.isArray()) {
+                throw new IllegalStateException("Template file at " + path
+                        + " must contain a JSON array of templates");
+            }
+            for (JsonNode node : root) {
                 JsonNode uriNode = node.get("uri");
                 if (uriNode != null && !uriNode.isNull()) {
                     templatesByUri.put(uriNode.asText(), node.deepCopy());
                 } else {
                     log.warn("Skipping template without 'uri': {}", node);
                 }
-            });
+            }
             log.info("Loaded {} templates from JSON file", templatesByUri.size());
         } catch (Exception e) {
             throw new RuntimeException("Failed to load templates from JSON", e);

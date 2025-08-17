@@ -168,9 +168,10 @@ public class PassportSeederFromApi {
         PassportDto createdPassport = passportService
                 .createPassportUsingDictionary(dictionary, request);
 
+        List<String> uris = appProperties.getUriList();
         for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
-            int nextUriIndex = (uriIndex + index + 1) % appProperties.getUriList().size();
-            String nextUri = appProperties.getUriList().get(nextUriIndex);
+            int nextUriIndex = (uriIndex + index + 1) % uris.size();
+            String nextUri = uris.get(nextUriIndex);
             createPassportRecursive(level + 1, nameSuffix + "." + (index + 1), nextUri,
                     nextUriIndex, createdPassport.getId(), userId);
         }
