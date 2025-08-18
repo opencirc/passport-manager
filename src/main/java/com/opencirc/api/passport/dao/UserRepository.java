@@ -34,9 +34,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByUsername(String username);
 
     /**
-     * Retrieves the first user.
+     * Retrieves the first user ordered by ID in ascending order.
      *
-     * @return user
+     * @return an Optional containing the first User if present, or an empty
+     *         Optional if no users exist
      */
     Optional<User> findFirstByOrderByIdAsc();
 
