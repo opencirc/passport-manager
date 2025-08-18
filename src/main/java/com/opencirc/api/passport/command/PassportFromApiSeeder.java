@@ -103,7 +103,7 @@ public class PassportFromApiSeeder {
     public void seed() {
         try {
 
-            User user = userRepository.findAll().stream().findFirst().orElseThrow(
+            User user = userRepository.findFirstByOrderByIdAsc().orElseThrow(
                     () -> new IllegalStateException("No users found in the database. "
                             + "Please seed users before running passport seeding."));
 

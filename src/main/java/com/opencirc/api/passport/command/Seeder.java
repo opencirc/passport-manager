@@ -60,12 +60,12 @@ public class Seeder {
         PASSPORT_FROM_API,
 
         /**
-         * Seed passport-related data from Stored Json.
+         * Seed passport-related data from stored JSON.
          */
         PASSPORT_FROM_JSON,
 
         /**
-         * Seed both user and passport data(From Json).
+         * Seed both user and passport data(From JSON).
          */
         ALL
     }

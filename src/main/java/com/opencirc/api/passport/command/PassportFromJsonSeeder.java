@@ -112,10 +112,9 @@ public class PassportFromJsonSeeder {
      * Seed passports using the loaded templates.
      */
     public void seed() {
-        User user = userRepository.findAll().stream()
-                    .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No users"
-                        + " found in the database. Seed users first."));
+        User user = userRepository.findFirstByOrderByIdAsc()
+                .orElseThrow(() -> new IllegalStateException(
+                        "No users" + " found in the database. Seed users first."));
 
         if (uriList == null || uriList.isEmpty()) {
             throw new IllegalStateException(
@@ -126,10 +125,10 @@ public class PassportFromJsonSeeder {
 
         for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
             String uri = uriList.get(i % uriList.size());
-            createPassportRecursive(1, String.valueOf(i + 1),
-                    uri, i, null, user.getId().toString());
-            }
-            log.info("Passport seeding from JSON templates completed.");
+            createPassportRecursive(1, String.valueOf(i + 1), uri, i, null,
+                    String.valueOf(user.getId()));
+        }
+        log.info("Passport seeding from JSON templates completed.");
     }
 
     private void createPassportRecursive(int level, String nameSuffix, String uri,
