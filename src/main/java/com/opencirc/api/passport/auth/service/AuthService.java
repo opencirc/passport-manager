@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.apache.commons.validator.routines.EmailValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -40,38 +39,53 @@ public class AuthService {
     /**
      * Injecting UserRepository class.
      */
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     /**
      * Injecting Properties class.
      */
-    @Autowired
-    private AppProperties properties;
+    private final AppProperties properties;
 
     /**
      * Injecting PasswordService class.
      */
-    @Autowired
-    private PasswordService passwordService;
+    private final PasswordService passwordService;
 
     /**
      * Injecting AuthenticationManager class.
      */
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * Injecting JwtService class.
      */
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
     /**
      * Injecting AuthUserDetailsService class.
      */
-    @Autowired
-    private AuthUserDetailsService authUserDetailsService;
+    private final AuthUserDetailsService authUserDetailsService;
+
+
+    /**
+     * Constructor.
+     * @param userRepository
+     * @param properties
+     * @param passwordService
+     * @param authenticationManager
+     * @param jwtService
+     * @param authUserDetailsService
+     */
+    public AuthService(UserRepository userRepository, AppProperties properties,
+            PasswordService passwordService, AuthenticationManager authenticationManager,
+            JwtService jwtService, AuthUserDetailsService authUserDetailsService) {
+        this.userRepository = userRepository;
+        this.properties = properties;
+        this.passwordService = passwordService;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.authUserDetailsService = authUserDetailsService;
+    }
 
     /**
      * Register new user.
@@ -82,6 +96,8 @@ public class AuthService {
      * @param lastName  trimmed last name
      * @param role desired role (defaults to USER if null)
      * @return the persisted User
+     * @throws InvalidInputException if email or password are invalid
+     * @throws AuthenticationException if email is already registered
      */
     @Transactional
     public User register(String email, String password, String firstName,
@@ -271,8 +287,8 @@ public class AuthService {
      * Gets the details of current logged in user.
      *
      * @param request - Http servlet request
-     * @return the instance of UserDto or null
-     * @throws AuthenticationException
+     * @return the instance of UserDto
+     * @throws AuthenticationException if the token is invalid or the user is not found
      */
     public UserDto getCurrentUser(HttpServletRequest request) {
 
@@ -297,4 +313,5 @@ public class AuthService {
                         () -> new AuthenticationException("User not found"));
 
     }
+
 }
