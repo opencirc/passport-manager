@@ -101,7 +101,7 @@ public class AuthService {
             String lastName, Role role) throws AuthenticationException {
         validateRegistrationFields(email, password);
         if (userRepository.existsByEmail(email)) {
-            throw new AuthenticationException("A user by the provided email"
+            throw new AuthenticationException("A user by the provided email "
                     + "already exists: " + email);
         }
 
@@ -117,7 +117,7 @@ public class AuthService {
         try {
             return userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new AuthenticationException("A user by the provided email"
+            throw new AuthenticationException("A user by the provided email "
                     + "already exists: " + email);
         } catch (Exception e) {
             throw new AuthenticationException("Error during user registration.", e);
