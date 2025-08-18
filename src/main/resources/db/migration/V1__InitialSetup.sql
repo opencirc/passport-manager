@@ -4,7 +4,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Users table
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    username VARCHAR(255) NOT NULL UNIQUE,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL,
@@ -62,10 +63,12 @@ CREATE TABLE IF NOT EXISTS public.passport_logs (
     passport_id VARCHAR(100) NOT NULL,
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
-    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (passport_id) REFERENCES public.passports(id) ON DELETE CASCADE,
-    CREATE INDEX IF NOT EXISTS idx_passport_logs_passport_id ON public.passport_logs(passport_id);
+    created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (passport_id) REFERENCES public.passports(id) ON DELETE CASCADE
 );
+
+
+CREATE INDEX IF NOT EXISTS idx_passport_logs_passport_id ON public.passport_logs(passport_id);
 
 -- Passport lifecycles
 CREATE TABLE IF NOT EXISTS public.passport_lifecycles (
@@ -74,7 +77,7 @@ CREATE TABLE IF NOT EXISTS public.passport_lifecycles (
     event_type VARCHAR(255) NOT NULL,
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
-    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (passport_id) REFERENCES public.passports(id)
 );
 

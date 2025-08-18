@@ -3,7 +3,8 @@ package com.opencirc.api.passport.auth.service;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.validator.routines.EmailValidator;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,20 +12,21 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.LoginRequestDto;
-import com.opencirc.api.passport.dto.RegisterUserDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.service.JwtService;
+import com.opencirc.api.passport.service.PasswordService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,68 +38,129 @@ public class AuthService {
     /**
      * Injecting UserRepository class.
      */
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     /**
      * Injecting Properties class.
      */
-    @Autowired
-    private AppProperties properties;
+    private final AppProperties properties;
 
     /**
-     * Instantiating BCryptPasswordEncoder class.
+     * Injecting PasswordService class.
      */
-    private BCryptPasswordEncoder bCryptPasswordEncoder =
-            new BCryptPasswordEncoder(AppConstants.PASSWORD_STRENGTH);
+    private final PasswordService passwordService;
 
     /**
      * Injecting AuthenticationManager class.
      */
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * Injecting JwtService class.
      */
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
     /**
      * Injecting AuthUserDetailsService class.
      */
-    @Autowired
-    private AuthUserDetailsService authUserDetailsService;
+    private final AuthUserDetailsService authUserDetailsService;
 
+    /**
+     * Constructor.
+     * @param userRepository
+     * @param properties
+     * @param passwordService
+     * @param authenticationManager
+     * @param jwtService
+     * @param authUserDetailsService
+     */
+    public AuthService(UserRepository userRepository, AppProperties properties,
+            PasswordService passwordService, AuthenticationManager authenticationManager,
+            JwtService jwtService, AuthUserDetailsService authUserDetailsService) {
+        this.userRepository = userRepository;
+        this.properties = properties;
+        this.passwordService = passwordService;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.authUserDetailsService = authUserDetailsService;
+    }
     /**
      * Register new user.
      *
-     * @param registerUser with username, email, password
+     * @param email normalized email (trimmed, lowercased)
+     * @param password raw password
+     * @param firstName trimmed first name
+     * @param lastName  trimmed last name
+     * @param role desired role (defaults to USER if null)
+     * @return the persisted User
+     * @throws InvalidInputException if email or password are invalid
+     * @throws AuthenticationException if email is already registered
      */
-    public void register(RegisterUserDto registerUser) throws AuthenticationException {
+    @Transactional
+    public User register(String email, String password, String firstName,
+            String lastName, Role role) throws AuthenticationException {
+        validateRegistrationFields(email, password);
+        if (userRepository.existsByEmail(email)) {
+            throw new AuthenticationException("A user by the provided email "
+                    + "already exists: " + email);
+        }
 
         User user = new User();
 
-        user.setUsername(registerUser.getUsername());
-        user.setPassword(registerUser.getPassword());
-        user.setEmail(registerUser.getEmail());
-        user.setRole(Role.USER);
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setRole(role != null ? role : Role.USER);
         user.setActive(true);
-        user.setCreatedTime(registerUser.getCreatedTime());
-
-        if (userRepository.existsByUsername(user.getUsername())) {
-            throw new AuthenticationException(AppConstants.ERR_USERNAME_EXISTS);
-        }
-
-        String encodedPassword = bCryptPasswordEncoder
-                .encode(user.getPassword());
-        user.setPassword(encodedPassword);
+        user.setPassword(passwordService.hashPassword(password));
 
         try {
-            userRepository.save(user);
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new AuthenticationException("A user by the provided email "
+                    + "already exists: " + email);
         } catch (Exception e) {
-            throw new AuthenticationException("Error during user registration: "
-        + e.getMessage());
+            throw new AuthenticationException("Error during user registration.", e);
+        }
+    }
+    /**
+     * Validates registration fields (email and password).
+     *
+     * @param email     the user's email address
+     * @param password  the user's password
+     * @throws InvalidInputException if any validation rule fails
+     */
+    private void validateRegistrationFields(String email, String password) {
+        EmailValidator emailValidator = EmailValidator.getInstance();
+        if (!emailValidator.isValid(email)) {
+            throw new InvalidInputException("Invalid email format.");
+        }
+        validatePassword(password);
+    }
+    /**
+     * Checks whether the given password meets the complexity criteria. The password
+     * must be at least 12 characters and contain at least three of the following
+     * character types:Lower case, Upper case, Digits, Special characters
+     *
+     * @param password
+     * @throws InvalidInputException if the password does not meet criteria
+     */
+    private void validatePassword(String password) {
+        if (password == null || password.length() < 12) {
+            throw new InvalidInputException("Password must be at least "
+                    + "12 characters long.");
+        }
+        boolean hasLower = password.chars().anyMatch(Character::isLowerCase);
+        boolean hasUpper = password.chars().anyMatch(Character::isUpperCase);
+        boolean hasDigit = password.chars().anyMatch(Character::isDigit);
+        boolean hasSpecial = password.chars().anyMatch(
+                c -> !Character.isLetterOrDigit(c) && !Character.isWhitespace(c));
+        int classes = (hasLower ? 1 : 0) + (hasUpper ? 1 : 0) + (hasDigit ? 1 : 0)
+                + (hasSpecial ? 1 : 0);
+        if (classes < 3) {
+            throw new InvalidInputException(
+                    "Weak password. Use at least 12 characters and mix of "
+                            + "upper/lowercase, digits, or symbols.");
         }
     }
 

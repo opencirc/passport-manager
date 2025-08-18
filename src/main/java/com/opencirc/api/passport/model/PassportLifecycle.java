@@ -55,7 +55,6 @@ public class PassportLifecycle {
     /**
      * Created time.
      */
-    @Column(name = "created_time",
-            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_time", updatable = false, insertable = false)
     private LocalDateTime createdTime;
 }
