@@ -45,8 +45,7 @@ public class PassportLog {
     /**
      * Log information in JSON format.
      */
-    @Convert(converter = JsonNodeConverter.class)
-    @Column(name = "data", nullable = false)
+    @Column(name = "data", columnDefinition = "json", nullable = false)
     private JsonNode data;
 
     /**
