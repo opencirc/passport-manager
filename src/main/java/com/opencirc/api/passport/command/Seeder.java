@@ -21,25 +21,25 @@ public class Seeder {
     /**
      * Passport seeder via data dictionary API.
      */
-    private final PassportSeederFromApi passportSeeder;
+    private final PassportFromApiSeeder passportFromApiSeeder;
 
     /**
      * Passport seeder from stored JSON templates.
      */
-    private final PassportSeederFromJson passportJsonSeeder;
+    private final PassportFromJsonSeeder passportFromJsonSeeder;
 
     /**
      * Constructor-based dependency injection for seeder components.
      *
      * @param userSeederParam
-     * @param passportSeederParam
-     * @param passportJsonSeederParam
+     * @param passportFromApiSeeder
+     * @param passportFromJsonSeeder
      */
-    public Seeder(UserSeeder userSeederParam, PassportSeederFromApi passportSeederParam,
-            PassportSeederFromJson passportJsonSeederParam) {
+    public Seeder(UserSeeder userSeederParam, PassportFromApiSeeder passportFromApiSeeder,
+            PassportFromJsonSeeder passportFromJsonSeeder) {
         this.userSeeder = userSeederParam;
-        this.passportSeeder = passportSeederParam;
-        this.passportJsonSeeder = passportJsonSeederParam;
+        this.passportFromApiSeeder = passportFromApiSeeder;
+        this.passportFromJsonSeeder = passportFromJsonSeeder;
     }
 
     /**
@@ -53,12 +53,17 @@ public class Seeder {
         USER,
 
         /**
-         * Seed only passport-related data.
+         * Seed passport-related data from API.
          */
-        PASSPORT,
+        PASSPORT_FROM_API,
 
         /**
-         * Seed both user and passport data.
+         * Seed passport-related data from Stored Json.
+         */
+        PASSPORT_FROM_JSON,
+
+        /**
+         * Seed both user and passport data(From Json).
          */
         ALL
     }
@@ -66,32 +71,22 @@ public class Seeder {
     /**
      * Executes the seeding process for the given type.
      *
-     * @param seedType       Seed type: USER | PASSPORT | ALL
-     * @param storedTemplate - If true, seed passports from stored JSON templates;
-     *                       otherwise, seed via the BSDD API.
+     * @param seedType  Seed type: USER | PASSPORT_API | PASSPORT_JSON | ALL
      * @throws RuntimeException if seeding fails
      */
     @Command(command = "seed", description = "Run seed")
     public void seed(
-            @Option(longNames = "type", defaultValue = "ALL") SeedType seedType,
-            @Option(longNames = "stored-template", defaultValue = "true")
-            boolean storedTemplate) {
+            @Option(longNames = "type", defaultValue = "ALL") SeedType seedType) {
         log.info("Seeding started.");
         try {
-            Runnable passportSeeding = () -> {
-                if (storedTemplate) {
-                    passportJsonSeeder.seed();
-                } else {
-                    passportSeeder.seed();
-                }
-            };
 
             switch (seedType) {
             case USER -> userSeeder.seed();
-            case PASSPORT -> passportSeeding.run();
+            case PASSPORT_FROM_API -> passportFromApiSeeder.seed();
+            case PASSPORT_FROM_JSON -> passportFromJsonSeeder.seed();
             case ALL -> {
                 userSeeder.seed();
-                passportSeeding.run();
+                passportFromJsonSeeder.seed();
             }
             }
 

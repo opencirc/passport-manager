@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class PassportSeederFromApi {
+public class PassportFromApiSeeder {
 
     /**
      * Application properties class.
@@ -85,7 +85,7 @@ public class PassportSeederFromApi {
      * @param appPropertiesParam
      * @param userRepositoryParam
      */
-    public PassportSeederFromApi(DataDictionaryService dataDictionaryServiceParam,
+    public PassportFromApiSeeder(DataDictionaryService dataDictionaryServiceParam,
             PassportService passportServiceParam, ObjectMapper objectMapperParam,
             AppProperties appPropertiesParam, UserRepository userRepositoryParam) {
         this.dataDictionaryService = dataDictionaryServiceParam;

@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class PassportSeederFromJson {
+public class PassportFromJsonSeeder {
 
     /**
      * Application properties class.
@@ -66,7 +66,7 @@ public class PassportSeederFromJson {
      * @param passportService
      * @param objectMapper
      */
-    public PassportSeederFromJson(AppProperties appProperties,
+    public PassportFromJsonSeeder(AppProperties appProperties,
                                   UserRepository userRepository,
                                   PassportService passportService,
                                   ObjectMapper objectMapper) {
