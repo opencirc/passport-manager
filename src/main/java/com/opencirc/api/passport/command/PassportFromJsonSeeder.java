@@ -127,18 +127,22 @@ public class PassportFromJsonSeeder {
         for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
             String uri = uriList.get(i % uriList.size());
             createPassportRecursive(1, String.valueOf(i + 1),
-                    uri, i, null, String.valueOf(user.getId()));
+                    uri, i, null, user.getId().toString());
             }
             log.info("Passport seeding from JSON templates completed.");
     }
 
     private void createPassportRecursive(int level, String nameSuffix, String uri,
-                                         int uriIndex, String parentId, String userId) {
+            int uriIndex, String parentId, String userId) {
         if (level > appProperties.getMaximumLevel()) {
             return;
         }
 
-        JsonNode templateNode = templatesByUri.get(uri).deepCopy();
+        JsonNode template = templatesByUri.get(uri);
+        if (template == null) {
+            throw new IllegalStateException("No template found for URI: " + uri);
+        }
+        JsonNode templateNode = template.deepCopy();
 
         CreatePassportRequestDto request = new CreatePassportRequestDto();
         request.setDatasheetData(templateNode);

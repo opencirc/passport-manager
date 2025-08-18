@@ -2,6 +2,7 @@ package com.opencirc.api.passport.command;
 
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
+import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Command(group = "Seeder Commands")
 @Slf4j
+@Component
 public class Seeder {
 
     /**
@@ -71,7 +73,7 @@ public class Seeder {
     /**
      * Executes the seeding process for the given type.
      *
-     * @param seedType  Seed type: USER | PASSPORT_API | PASSPORT_JSON | ALL
+     * @param seedType  Seed type: USER | PASSPORT_FROM_API | PASSPORT_FROM_JSON | ALL
      * @throws RuntimeException if seeding fails
      */
     @Command(command = "seed", description = "Run seed")
