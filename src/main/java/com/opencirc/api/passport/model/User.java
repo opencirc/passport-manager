@@ -90,7 +90,7 @@ public class User {
     /**
      * Created time.
      */
-    @Column(name = "created_time", updatable = false)
+    @Column(name = "created_time", updatable = false, insertable = false)
     private LocalDateTime createdTime;
 
     /**

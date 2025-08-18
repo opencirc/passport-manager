@@ -68,17 +68,13 @@ public class AuthController {
                 }
             }
         }
-        if (token == null) {
+
+        if (token == null || !authService.validateToken(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new StatusResponseDto("Not authenticated"));
         }
-        try {
-            authService.validateToken(token);
-            return ResponseEntity.ok(new StatusResponseDto("Authenticated"));
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new StatusResponseDto("Not authenticated"));
-        }
+
+        return ResponseEntity.ok(new StatusResponseDto("Authenticated"));
     }
 
 

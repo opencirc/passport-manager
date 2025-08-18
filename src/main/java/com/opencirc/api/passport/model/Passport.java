@@ -67,7 +67,7 @@ public class Passport {
     /**
      * Time of passport creation.
      */
-    @Column(name = "created_time", updatable = false)
+    @Column(name = "created_time", updatable = false, insertable = false)
     private LocalDateTime createdTime;
 
     /**

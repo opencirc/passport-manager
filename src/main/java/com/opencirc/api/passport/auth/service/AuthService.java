@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.auth.service;
 
-import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.validator.routines.EmailValidator;
@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,10 +31,8 @@ import com.opencirc.api.passport.service.PasswordService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 public class AuthService {
 
     /**
@@ -66,7 +65,6 @@ public class AuthService {
      */
     private final AuthUserDetailsService authUserDetailsService;
 
-
     /**
      * Constructor.
      * @param userRepository
@@ -86,7 +84,6 @@ public class AuthService {
         this.jwtService = jwtService;
         this.authUserDetailsService = authUserDetailsService;
     }
-
     /**
      * Register new user.
      *
@@ -102,11 +99,10 @@ public class AuthService {
     @Transactional
     public User register(String email, String password, String firstName,
             String lastName, Role role) throws AuthenticationException {
-
         validateRegistrationFields(email, password);
-
         if (userRepository.existsByEmail(email)) {
-            throw new AuthenticationException("Email is already registered.");
+            throw new AuthenticationException("A user by the provided email"
+                    + "already exists: " + email);
         }
 
         User user = new User();
@@ -116,19 +112,17 @@ public class AuthService {
         user.setLastName(lastName);
         user.setRole(role != null ? role : Role.USER);
         user.setActive(true);
-        user.setCreatedTime(LocalDateTime.now());
         user.setPassword(passwordService.hashPassword(password));
 
         try {
-            user = userRepository.save(user);
-            return user;
+            return userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new AuthenticationException("Email is already registered.");
+            throw new AuthenticationException("A user by the provided email"
+                    + "already exists: " + email);
         } catch (Exception e) {
             throw new AuthenticationException("Error during user registration.", e);
         }
     }
-
     /**
      * Validates registration fields (email and password).
      *
@@ -138,25 +132,23 @@ public class AuthService {
      */
     private void validateRegistrationFields(String email, String password) {
         EmailValidator emailValidator = EmailValidator.getInstance();
-
         if (!emailValidator.isValid(email)) {
             throw new InvalidInputException("Invalid email format.");
         }
         validatePassword(password);
     }
-
     /**
      * Checks whether the given password meets the complexity criteria. The password
-     * must be at least 8 characters and contain at least three of the following
+     * must be at least 12 characters and contain at least three of the following
      * character types:Lower case, Upper case, Digits, Special characters
      *
      * @param password
      * @throws InvalidInputException if the password does not meet criteria
      */
     private void validatePassword(String password) {
-        if (password == null || password.length() < 8) {
+        if (password == null || password.length() < 12) {
             throw new InvalidInputException("Password must be at least "
-                    + "8 characters long.");
+                    + "12 characters long.");
         }
         boolean hasLower = password.chars().anyMatch(Character::isLowerCase);
         boolean hasUpper = password.chars().anyMatch(Character::isUpperCase);
@@ -167,7 +159,7 @@ public class AuthService {
                 + (hasSpecial ? 1 : 0);
         if (classes < 3) {
             throw new InvalidInputException(
-                    "Weak password. Use at least 8 characters and mix of "
+                    "Weak password. Use at least 12 characters and mix of "
                             + "upper/lowercase, digits, or symbols.");
         }
     }
@@ -218,6 +210,7 @@ public class AuthService {
         }
     }
 
+
     /**
      * Refreshes the expired token.
      *
@@ -236,7 +229,7 @@ public class AuthService {
             return newAccessToken;
         } catch (Exception e) {
             throw new AuthenticationException(
-                    "Error refreshing token", e);
+                    "Error refreshing token: " + e.getMessage());
         }
     }
 
@@ -244,18 +237,17 @@ public class AuthService {
      * Validates the token.
      *
      * @param token - JWT token
-     * @throws AuthenticationException
+     * @return result whether the token is valid or not
      */
-    public void validateToken(String token) {
+    public boolean validateToken(String token) {
         try {
             String userId = jwtService.extractUserId(token);
             UserDetails userDetails = authUserDetailsService.loadUserById(userId);
 
-            if (!jwtService.validateToken(token, userDetails)) {
-                throw new AuthenticationException("Invalid or expired token");
-            }
+            return jwtService.validateToken(token, userDetails);
         } catch (Exception e) {
-            throw new AuthenticationException("Token validation failed", e);
+            throw new AuthenticationException("Error validating token: "
+        + e.getMessage());
         }
     }
 
@@ -267,28 +259,25 @@ public class AuthService {
      */
     public void logout(String refreshToken, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
-        try {
-            String userId = jwtService.extractUserId(refreshToken);
-            userRepository.updateRefreshTokenById(UUID.fromString(userId), null);
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid token");
-        } catch (Exception e) {
-            log.debug("Ignoring logout error during token extraction/update", e);
-        } finally {
-            // Always clear cookies
-            jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_ACCESS_TOKEN,
-                    0);
-            jwtService.generateTokenCookie(response, "",
-                    AppConstants.COOKIE_REFRESH_TOKEN, 0);
-        }
+        String userId = jwtService.extractUserId(refreshToken);
+        User existingUser = userRepository.findById(UUID
+                .fromString(userId)).orElseThrow(()
+                -> new UsernameNotFoundException("User not found"));
+        existingUser.setRefreshToken(null);
+        userRepository.save(existingUser);
+
+        // Removing the JWT cookies (access_token, refresh_token)
+        jwtService.generateTokenCookie(response, "",
+                AppConstants.COOKIE_ACCESS_TOKEN, 0);
+        jwtService.generateTokenCookie(response, "",
+                AppConstants.COOKIE_REFRESH_TOKEN, 0);
     }
 
     /**
      * Gets the details of current logged in user.
      *
      * @param request - Http servlet request
-     * @return the instance of UserDto
-     * @throws AuthenticationException if the token is invalid or the user is not found
+     * @return the instance of UserDto or null
      */
     public UserDto getCurrentUser(HttpServletRequest request) {
 
@@ -296,22 +285,20 @@ public class AuthService {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (AppConstants.COOKIE_ACCESS_TOKEN.equals(cookie.getName())) {
+                if ("access_token".equals(cookie.getName())) {
                     token = cookie.getValue();
                     break;
                 }
             }
         }
-        if (token == null) {
+
+        if (token == null || !validateToken(token)) {
             return null;
         }
-        validateToken(token);
 
         String userId = jwtService.extractUserId(token);
-        return userRepository.findById(UUID.fromString(userId)).map(UserDto::from)
-                .orElseThrow(
-                        () -> new AuthenticationException("User not found"));
+        Optional<User> user = userRepository.findById(UUID.fromString(userId));
+        return user.map(UserDto::from).orElse(null);
 
     }
-
 }

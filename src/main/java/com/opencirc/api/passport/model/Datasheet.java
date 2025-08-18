@@ -77,7 +77,7 @@ public class Datasheet {
     /**
      * Time when datasheet is created.
      */
-    @Column(name = "created_time", updatable = false)
+    @Column(name = "created_time", updatable = false, insertable = false)
     private LocalDateTime createdTime;
 
     /**
