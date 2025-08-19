@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,7 @@ public class CacheService {
      * @param redisTemplateParam
      * @param objectMapperParam
      */
-    public CacheService(RedisTemplate<String, String> redisTemplateParam,
+    public CacheService(@Qualifier("redisTemplate") RedisTemplate<String, String> redisTemplateParam,
             ObjectMapper objectMapperParam) {
         this.redisTemplate = redisTemplateParam;
         this.objectMapper = objectMapperParam;

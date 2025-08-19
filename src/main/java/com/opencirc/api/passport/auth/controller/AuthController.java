@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.opencirc.api.passport.auth.service.AuthService;
 import com.opencirc.api.passport.dto.LoginRequestDto;
-import com.opencirc.api.passport.dto.RegisterUserDto;
 import com.opencirc.api.passport.dto.StatusResponseDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
@@ -34,18 +33,6 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    /**
-     * Endpoint to register new user.
-     *
-     * @param userDetails with username, email, password
-     * @return response
-     */
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterUserDto userDetails)
-            throws AuthenticationException {
-        authService.register(userDetails);
-        return ResponseEntity.ok(new StatusResponseDto("User registered successfully"));
-    }
 
     /**
      * Endpoint to Login.

@@ -39,15 +39,21 @@ public class User {
     private UUID id;
 
     /**
-     * Name of the user.
+     * First Name of the user.
      */
-    @Column(name = "username", unique = true, nullable = false)
-    private String username;
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    /**
+     * Last Name of the user.
+     */
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
 
     /**
      * Users's email.
      */
-    @Column(unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
     /**
@@ -84,7 +90,7 @@ public class User {
     /**
      * Created time.
      */
-    @Column(name = "created_time", updatable = false)
+    @Column(name = "created_time", updatable = false, insertable = false)
     private LocalDateTime createdTime;
 
     /**
@@ -103,7 +109,7 @@ public class User {
         USER("user");
 
         /**
-         * Role represented in STring.
+         * Role represented as String.
          */
         private final String value;
 
@@ -147,7 +153,7 @@ public class User {
                     .filter(role -> role.value.equalsIgnoreCase(value))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "Invalid Status: " + value));
+                            "Invalid role: " + value));
         }
     }
 

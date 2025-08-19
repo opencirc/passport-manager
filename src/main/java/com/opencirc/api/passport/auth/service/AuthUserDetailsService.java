@@ -23,21 +23,23 @@ public class AuthUserDetailsService implements UserDetailsService {
     private UserRepository userRepository;
 
     /**
-     * Gets the user data by name.
+     * Loads the user details by email.
      *
-     * @param username
+     * @param email
      * @return the details of the user
      */
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+
+        // Default method from UserDetailsService that must be implemented.
+        // Loads a user by email for authentication.
+        User user = userRepository.findByEmail(email);
         if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
 
         return new UserPrincipal(user);
-        }
+    }
 
     /**
      * Gets the user data by ID.
@@ -46,8 +48,7 @@ public class AuthUserDetailsService implements UserDetailsService {
      * @return User details
      */
     public UserDetails loadUserById(String userId) {
-        Optional<User> userOptional = userRepository.findById(UUID
-                .fromString(userId));
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
         User user = userOptional.orElseThrow(
                 () -> new UsernameNotFoundException("User not found : " + userId));
 
