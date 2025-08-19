@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.dao;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,6 +32,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     boolean existsByEmail(String email);
 
+    /**
+     * Retrieves the first user ordered by ID in ascending order.
+     *
+     * @return an Optional containing the first User if present, or an empty
+     *         Optional if no users exist
+     */
+    Optional<User> findFirstByOrderByIdAsc();
 
     /**
      * Updates the refresh token.

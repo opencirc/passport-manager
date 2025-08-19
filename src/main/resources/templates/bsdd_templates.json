@@ -1,0 +1,867 @@
+[ {
+  "classType" : "Class",
+  "referenceCode" : "EG000001",
+  "relatedIfcEntityNames" : [ "IfcCableSegment", "IfcCableCarrierSegment", "IfcDuctsegment" ],
+  "hierarchy" : [ {
+    "level" : 1,
+    "name" : "Cables and wires (unassembled)",
+    "code" : "EG000001",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000001"
+  } ],
+  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+  "activationDateUtc" : "2025-01-31T00:00:00Z",
+  "code" : "EG000001",
+  "creatorLanguageCode" : "EN",
+  "countriesOfUse" : [ ],
+  "definition" : "Electrical conductors used for power, signal, and data transmission without pre-attached connectors.",
+  "name" : "Cables and wires (unassembled)",
+  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000001",
+  "replacedObjectCodes" : [ ],
+  "replacingObjectCodes" : [ ],
+  "revisionNumber" : 0,
+  "status" : "Active",
+  "subdivisionsOfUse" : [ ],
+  "versionDateUtc" : "2025-01-30T00:00:00Z"
+}, {
+  "classType" : "Class",
+  "referenceCode" : "EC000020",
+  "relatedIfcEntityNames" : [ "IfcOutlet" ],
+  "parentClassReference" : {
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000013",
+    "name" : "Domestic switching devices",
+    "code" : "EG000013"
+  },
+  "classProperties" : [ {
+    "allowedValues" : [ {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV000397",
+      "code" : "EV000397",
+      "value" : "Off switch",
+      "sortNumber" : 1
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV006435",
+      "code" : "EV006435",
+      "value" : "Intermediate switch",
+      "sortNumber" : 2
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV000943",
+      "code" : "EV000943",
+      "value" : "Series switch",
+      "sortNumber" : 3
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV000648",
+      "code" : "EV000648",
+      "value" : "Two-way switch",
+      "sortNumber" : 4
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV000987",
+      "code" : "EV000987",
+      "value" : "Single push button",
+      "sortNumber" : 5
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV002407",
+      "code" : "EV002407",
+      "value" : "Group push button",
+      "sortNumber" : 6
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV003155",
+      "code" : "EV003155",
+      "value" : "Series push button",
+      "sortNumber" : 7
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV002422",
+      "code" : "EV002422",
+      "value" : "Reversing push button",
+      "sortNumber" : 8
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496/value/EV000154",
+      "code" : "EV000154",
+      "value" : "Other",
+      "sortNumber" : 9
+    } ],
+    "code" : "EF019496",
+    "propertySet" : "Model , type",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "String",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Model , type/EF019496",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF019496",
+    "name" : "Type of switch/push button",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF019496",
+    "status" : "Active",
+    "actualValue" : "Off switch"
+  }, {
+    "code" : "EF005997",
+    "propertySet" : "Options",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Boolean",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020/prop/Options/EF005997",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF005997",
+    "name" : "Concurrently switching neutral conductor",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF005997",
+    "status" : "Active",
+    "actualValue" : false
+  } ],
+  "hierarchy" : [ {
+    "level" : 1,
+    "name" : "Domestic switching devices",
+    "code" : "EG000013",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000013"
+  }, {
+    "level" : 2,
+    "name" : "Combination of switch/push button with socket outlet",
+    "code" : "EC000020",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020"
+  } ],
+  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+  "activationDateUtc" : "2025-01-31T00:00:00Z",
+  "code" : "EC000020",
+  "creatorLanguageCode" : "EN",
+  "countriesOfUse" : [ ],
+  "definition" : "A unit integrating a switch or push button with a power socket.",
+  "name" : "Combination of switch/push button with socket outlet",
+  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000020",
+  "replacedObjectCodes" : [ ],
+  "replacingObjectCodes" : [ ],
+  "revisionNumber" : 10,
+  "status" : "Active",
+  "subdivisionsOfUse" : [ ],
+  "versionDateUtc" : "2025-01-30T00:00:00Z"
+}, {
+  "classType" : "Class",
+  "referenceCode" : "EC000003",
+  "parentClassReference" : {
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000020",
+    "name" : "Circuit breakers and fuses",
+    "code" : "EG000020"
+  },
+  "classProperties" : [ {
+    "code" : "EF001391",
+    "propertySet" : "Electrical",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Real",
+    "description" : "The number of poles is the number of current-carrying cores including neutral and earth.",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003/prop/Electrical/EF001391",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF001391",
+    "name" : "Number of poles",
+    "definition" : "The number of poles is the number of current-carrying cores including neutral and earth.",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF001391",
+    "status" : "Active",
+    "actualValue" : 0.41380167986698646
+  }, {
+    "dimensionElectricCurrent" : -1,
+    "code" : "EF000228",
+    "dimensionMass" : 1,
+    "propertySet" : "Electrical",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Real",
+    "dimensionLength" : 2,
+    "units" : [ "V" ],
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003/prop/Electrical/EF000228",
+    "dimensionAmountOfSubstance" : 0,
+    "propertyValueKind" : "Single",
+    "dimensionTime" : -3,
+    "propertyStatus" : "Active",
+    "qudtCodes" : [ "V" ],
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF000228",
+    "name" : "Rated voltage",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000228",
+    "dimension" : "2 1 -3 -1 0 0 0",
+    "dimensionLuminousIntensity" : 0,
+    "dimensionThermodynamicTemperature" : 0,
+    "status" : "Active",
+    "actualValue" : 0.6762099539498266
+  } ],
+  "hierarchy" : [ {
+    "level" : 1,
+    "name" : "Circuit breakers and fuses",
+    "code" : "EG000020",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000020"
+  }, {
+    "level" : 2,
+    "name" : "Residual current circuit breaker (RCCB)",
+    "code" : "EC000003",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003"
+  } ],
+  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+  "activationDateUtc" : "2025-01-31T00:00:00Z",
+  "code" : "EC000003",
+  "creatorLanguageCode" : "EN",
+  "countriesOfUse" : [ ],
+  "definition" : "A safety device that disconnects a circuit when leakage current is detected.",
+  "name" : "Residual current circuit breaker (RCCB)",
+  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003",
+  "replacedObjectCodes" : [ ],
+  "replacingObjectCodes" : [ ],
+  "revisionNumber" : 10,
+  "status" : "Active",
+  "subdivisionsOfUse" : [ ],
+  "versionDateUtc" : "2025-01-30T00:00:00Z"
+}, {
+  "classType" : "Class",
+  "referenceCode" : "EC000019",
+  "parentClassReference" : {
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000001",
+    "name" : "Cables and wires (unassembled)",
+    "code" : "EG000001"
+  },
+  "classProperties" : [ {
+    "code" : "EF017070",
+    "propertySet" : "Options",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Boolean",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000019/prop/Options/EF017070",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF017070",
+    "name" : "Paired co-axial cable",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF017070",
+    "status" : "Active",
+    "actualValue" : false
+  }, {
+    "code" : "EF017071",
+    "propertySet" : "Options",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Boolean",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000019/prop/Options/EF017071",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF017071",
+    "name" : "2 core co-axial cable (twinax)",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF017071",
+    "status" : "Active",
+    "actualValue" : true
+  } ],
+  "hierarchy" : [ {
+    "level" : 1,
+    "name" : "Cables and wires (unassembled)",
+    "code" : "EG000001",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000001"
+  }, {
+    "level" : 2,
+    "name" : "Coaxial cable",
+    "code" : "EC000019",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000019"
+  } ],
+  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+  "activationDateUtc" : "2025-01-31T00:00:00Z",
+  "code" : "EC000019",
+  "creatorLanguageCode" : "EN",
+  "countriesOfUse" : [ ],
+  "definition" : "A type of cable with a central conductor, insulating layer, and shielding for signal transmission.",
+  "name" : "Coaxial cable",
+  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000019",
+  "replacedObjectCodes" : [ ],
+  "replacingObjectCodes" : [ ],
+  "revisionNumber" : 9,
+  "status" : "Active",
+  "subdivisionsOfUse" : [ ],
+  "versionDateUtc" : "2025-01-30T00:00:00Z"
+}, {
+  "classType" : "Class",
+  "referenceCode" : "EC000008",
+  "relatedIfcEntityNames" : [ "IfcOutlet" ],
+  "parentClassReference" : {
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000015",
+    "name" : "Energy distribution systems",
+    "code" : "EG000015"
+  },
+  "classProperties" : [ {
+    "code" : "EF001148",
+    "propertySet" : "Electrical",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Real",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000008/prop/Electrical/EF001148",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF001148",
+    "name" : "Number of conductors (without earthing)",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF001148",
+    "status" : "Active",
+    "actualValue" : 0.35189573453859313
+  }, {
+    "code" : "EF001391",
+    "propertySet" : "Electrical",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Real",
+    "description" : "The number of poles is the number of current-carrying cores including neutral and earth.",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000008/prop/Electrical/EF001391",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF001391",
+    "name" : "Number of poles",
+    "definition" : "The number of poles is the number of current-carrying cores including neutral and earth.",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF001391",
+    "status" : "Active",
+    "actualValue" : 0.9087112913152625
+  } ],
+  "hierarchy" : [ {
+    "level" : 1,
+    "name" : "Energy distribution systems",
+    "code" : "EG000015",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000015"
+  }, {
+    "level" : 2,
+    "name" : "Tap off unit for busbar trunk",
+    "code" : "EC000008",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000008"
+  } ],
+  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+  "activationDateUtc" : "2025-01-31T00:00:00Z",
+  "code" : "EC000008",
+  "creatorLanguageCode" : "EN",
+  "countriesOfUse" : [ ],
+  "definition" : "A device that allows branching from a busbar trunking system.",
+  "name" : "Tap off unit for busbar trunk",
+  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000008",
+  "replacedObjectCodes" : [ ],
+  "replacingObjectCodes" : [ ],
+  "revisionNumber" : 2,
+  "status" : "Active",
+  "subdivisionsOfUse" : [ ],
+  "versionDateUtc" : "2025-01-30T00:00:00Z"
+}, {
+  "classType" : "Class",
+  "referenceCode" : "EC000007",
+  "relatedIfcEntityNames" : [ "IfcSwitchingDevice" ],
+  "parentClassReference" : {
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000013",
+    "name" : "Domestic switching devices",
+    "code" : "EG000013"
+  },
+  "classProperties" : [ {
+    "code" : "EF000074",
+    "propertySet" : "Model , type",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Real",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000007/prop/Model , type/EF000074",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF000074",
+    "name" : "Number of units",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000074",
+    "status" : "Active",
+    "actualValue" : 0.11664165340308386
+  }, {
+    "allowedValues" : [ {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000007/prop/Mounting , installation/EF003824/value/EV002314",
+      "code" : "EV002314",
+      "value" : "Horizontal",
+      "sortNumber" : 1
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000007/prop/Mounting , installation/EF003824/value/EV000130",
+      "code" : "EV000130",
+      "value" : "Horizontal and vertical",
+      "sortNumber" : 2
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000007/prop/Mounting , installation/EF003824/value/EV001302",
+      "code" : "EV001302",
+      "value" : "Vertical",
+      "sortNumber" : 3
+    } ],
+    "code" : "EF003824",
+    "propertySet" : "Mounting , installation",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "String",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000007/prop/Mounting , installation/EF003824",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF003824",
+    "name" : "Mounting direction",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF003824",
+    "status" : "Active",
+    "actualValue" : "Horizontal"
+  } ],
+  "hierarchy" : [ {
+    "level" : 1,
+    "name" : "Domestic switching devices",
+    "code" : "EG000013",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000013"
+  }, {
+    "level" : 2,
+    "name" : "Cover frame for domestic switching devices",
+    "code" : "EC000007",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000007"
+  } ],
+  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+  "activationDateUtc" : "2025-01-31T00:00:00Z",
+  "code" : "EC000007",
+  "creatorLanguageCode" : "EN",
+  "countriesOfUse" : [ ],
+  "definition" : "A decorative or protective frame surrounding switches or sockets.",
+  "name" : "Cover frame for domestic switching devices",
+  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000007",
+  "replacedObjectCodes" : [ ],
+  "replacingObjectCodes" : [ ],
+  "revisionNumber" : 11,
+  "status" : "Active",
+  "subdivisionsOfUse" : [ ],
+  "versionDateUtc" : "2025-01-30T00:00:00Z"
+}, {
+  "classType" : "Class",
+  "referenceCode" : "EC000018",
+  "relatedIfcEntityNames" : [ "IfcOutlet" ],
+  "parentClassReference" : {
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000013",
+    "name" : "Domestic switching devices",
+    "code" : "EG000013"
+  },
+  "classProperties" : [ {
+    "allowedValues" : [ {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV000078",
+      "code" : "EV000078",
+      "value" : "Basic element",
+      "sortNumber" : 1
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV006346",
+      "code" : "EV006346",
+      "value" : "Basic element with adaptor plate",
+      "sortNumber" : 2
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV006347",
+      "code" : "EV006347",
+      "value" : "Basic element with housing top",
+      "sortNumber" : 3
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV006348",
+      "code" : "EV006348",
+      "value" : "Basic element with complete housing",
+      "sortNumber" : 4
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV006349",
+      "code" : "EV006349",
+      "value" : "Basic element with full cover plate",
+      "sortNumber" : 5
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV006345",
+      "code" : "EV006345",
+      "value" : "Basic element with central cover plate",
+      "sortNumber" : 6
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV006351",
+      "code" : "EV006351",
+      "value" : "Control element",
+      "sortNumber" : 7
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV011832",
+      "code" : "EV011832",
+      "value" : "Modular device for domestic switching devices",
+      "sortNumber" : 8
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV004388",
+      "code" : "EV004388",
+      "value" : "Full cover plate",
+      "sortNumber" : 9
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV000319",
+      "code" : "EV000319",
+      "value" : "Central cover plate",
+      "sortNumber" : 10
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV009049",
+      "code" : "EV009049",
+      "value" : "Central cover plate for intermediate ring",
+      "sortNumber" : 11
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005/value/EV000154",
+      "code" : "EV000154",
+      "value" : "Other",
+      "sortNumber" : 12
+    } ],
+    "code" : "EF000005",
+    "propertySet" : "Model , type",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "String",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Model , type/EF000005",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF000005",
+    "name" : "Assembly arrangement",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000005",
+    "status" : "Active",
+    "actualValue" : "Basic element"
+  }, {
+    "allowedValues" : [ {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV006336",
+      "code" : "EV006336",
+      "value" : "AMP-ACO",
+      "sortNumber" : 1
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000376",
+      "code" : "EV000376",
+      "value" : "Blind cap",
+      "sortNumber" : 2
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000380",
+      "code" : "EV000380",
+      "value" : "BNC/TNC",
+      "sortNumber" : 3
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV003630",
+      "code" : "EV003630",
+      "value" : "Bore hole",
+      "sortNumber" : 4
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV002571",
+      "code" : "EV002571",
+      "value" : "RCA",
+      "sortNumber" : 5
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV010889",
+      "code" : "EV010889",
+      "value" : "RCA/S-Video",
+      "sortNumber" : 6
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV015645",
+      "code" : "EV015645",
+      "value" : "DisplayPort (DP)",
+      "sortNumber" : 7
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV004377",
+      "code" : "EV004377",
+      "value" : "D-sub-miniature",
+      "sortNumber" : 8
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000734",
+      "code" : "EV000734",
+      "value" : "D-Sub 15-pole",
+      "sortNumber" : 9
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV011002",
+      "code" : "EV011002",
+      "value" : "DVI",
+      "sortNumber" : 10
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV006388",
+      "code" : "EV006388",
+      "value" : "For data connection housing",
+      "sortNumber" : 11
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV006392",
+      "code" : "EV006392",
+      "value" : "For spacer ring",
+      "sortNumber" : 12
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV010888",
+      "code" : "EV010888",
+      "value" : "HDMI",
+      "sortNumber" : 13
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV010848",
+      "code" : "EV010848",
+      "value" : "Mounting cover data connector",
+      "sortNumber" : 14
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV004407",
+      "code" : "EV004407",
+      "value" : "Hotel card system",
+      "sortNumber" : 15
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000740",
+      "code" : "EV000740",
+      "value" : "IBM data plug",
+      "sortNumber" : 16
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV008859",
+      "code" : "EV008859",
+      "value" : "Clap cap",
+      "sortNumber" : 17
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV002572",
+      "code" : "EV002572",
+      "value" : "Jack plug",
+      "sortNumber" : 18
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV006039",
+      "code" : "EV006039",
+      "value" : "Coaxial antenna socket outlet",
+      "sortNumber" : 19
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000377",
+      "code" : "EV000377",
+      "value" : "Loudspeaker connection",
+      "sortNumber" : 20
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV009897",
+      "code" : "EV009897",
+      "value" : "Cable outlet",
+      "sortNumber" : 21
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000174",
+      "code" : "EV000174",
+      "value" : "Light signalling unit",
+      "sortNumber" : 22
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV002723",
+      "code" : "EV002723",
+      "value" : "Modular Jack",
+      "sortNumber" : 23
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000252",
+      "code" : "EV000252",
+      "value" : "Potential equalization socket",
+      "sortNumber" : 24
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV003629",
+      "code" : "EV003629",
+      "value" : "SAT",
+      "sortNumber" : 25
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV002573",
+      "code" : "EV002573",
+      "value" : "Scart",
+      "sortNumber" : 26
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV010886",
+      "code" : "EV010886",
+      "value" : "S-Video",
+      "sortNumber" : 27
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000378",
+      "code" : "EV000378",
+      "value" : "TAE",
+      "sortNumber" : 28
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV010125",
+      "code" : "EV010125",
+      "value" : "TDO",
+      "sortNumber" : 29
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV008425",
+      "code" : "EV008425",
+      "value" : "Telex/ADo",
+      "sortNumber" : 30
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000212",
+      "code" : "EV000212",
+      "value" : "Twinax",
+      "sortNumber" : 31
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV004045",
+      "code" : "EV004045",
+      "value" : "USB",
+      "sortNumber" : 32
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV010887",
+      "code" : "EV010887",
+      "value" : "USB/jack plug",
+      "sortNumber" : 33
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV004378",
+      "code" : "EV004378",
+      "value" : "UAE/IAE (ISDN)",
+      "sortNumber" : 34
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV002971",
+      "code" : "EV002971",
+      "value" : "XLR",
+      "sortNumber" : 35
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV017827",
+      "code" : "EV017827",
+      "value" : "Swedish telephone outlet",
+      "sortNumber" : 36
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV010602",
+      "code" : "EV010602",
+      "value" : "RJ11",
+      "sortNumber" : 37
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000731",
+      "code" : "EV000731",
+      "value" : "RJ45",
+      "sortNumber" : 38
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV019053",
+      "code" : "EV019053",
+      "value" : "British Telecom master telephone outlet",
+      "sortNumber" : 39
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV019216",
+      "code" : "EV019216",
+      "value" : "British Telecom secondary telephone outlet",
+      "sortNumber" : 40
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV001345",
+      "code" : "EV001345",
+      "value" : "F-plug",
+      "sortNumber" : 41
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV019219",
+      "code" : "EV019219",
+      "value" : "Diplexer TV/radio",
+      "sortNumber" : 42
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV019220",
+      "code" : "EV019220",
+      "value" : "Diplexer TV/satellite",
+      "sortNumber" : 43
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV019221",
+      "code" : "EV019221",
+      "value" : "Triplexer TV/radio/satellite",
+      "sortNumber" : 44
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV019222",
+      "code" : "EV019222",
+      "value" : "Quadplexer TV/radio/2 x satellite",
+      "sortNumber" : 45
+    }, {
+      "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133/value/EV000154",
+      "code" : "EV000154",
+      "value" : "Other",
+      "sortNumber" : 46
+    } ],
+    "code" : "EF000133",
+    "propertySet" : "Application",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "String",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018/prop/Application/EF000133",
+    "propertyValueKind" : "Single",
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF000133",
+    "name" : "Utilization",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000133",
+    "status" : "Active",
+    "actualValue" : "AMP-ACO"
+  } ],
+  "hierarchy" : [ {
+    "level" : 1,
+    "name" : "Domestic switching devices",
+    "code" : "EG000013",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000013"
+  }, {
+    "level" : 2,
+    "name" : "Insert/cover for communication technology",
+    "code" : "EC000018",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018"
+  } ],
+  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+  "activationDateUtc" : "2025-01-31T00:00:00Z",
+  "code" : "EC000018",
+  "creatorLanguageCode" : "EN",
+  "countriesOfUse" : [ ],
+  "definition" : "A component used to house or protect communication device connections.",
+  "name" : "Insert/cover for communication technology",
+  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000018",
+  "replacedObjectCodes" : [ ],
+  "replacingObjectCodes" : [ ],
+  "revisionNumber" : 9,
+  "status" : "Active",
+  "subdivisionsOfUse" : [ ],
+  "versionDateUtc" : "2025-01-30T00:00:00Z"
+}, {
+  "classType" : "Class",
+  "referenceCode" : "EC000017",
+  "parentClassReference" : {
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000014",
+    "name" : "Industrial sockets/plug applications",
+    "code" : "EG000014"
+  },
+  "classProperties" : [ {
+    "dimensionElectricCurrent" : -1,
+    "code" : "EF000105",
+    "dimensionMass" : 1,
+    "propertySet" : "Electrical",
+    "propertyDictionaryName" : "ETIM",
+    "dataType" : "Real",
+    "dimensionLength" : 2,
+    "units" : [ "V" ],
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000017/prop/Electrical/EF000105",
+    "dimensionAmountOfSubstance" : 0,
+    "propertyValueKind" : "Single",
+    "dimensionTime" : -3,
+    "propertyStatus" : "Active",
+    "qudtCodes" : [ "V" ],
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF000105",
+    "name" : "Mains voltage",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000105",
+    "dimension" : "2 1 -3 -1 0 0 0",
+    "dimensionLuminousIntensity" : 0,
+    "dimensionThermodynamicTemperature" : 0,
+    "status" : "Active",
+    "actualValue" : 0.19055020449307492
+  }, {
+    "code" : "EF000001",
+    "dimensionMass" : 0,
+    "propertyDictionaryName" : "ETIM",
+    "dimensionLength" : 0,
+    "description" : "Average current in normal operating condition",
+    "units" : [ "A" ],
+    "dimensionTime" : 0,
+    "propertyStatus" : "Active",
+    "propertyDictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "propertyCode" : "EF000001",
+    "definition" : "Average current in normal operating condition",
+    "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+    "dimension" : "0 0 0 1 0 0 0",
+    "dimensionLuminousIntensity" : 0,
+    "dimensionThermodynamicTemperature" : 0,
+    "dimensionElectricCurrent" : 1,
+    "propertySet" : "Electrical",
+    "dataType" : "Real",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000017/prop/Electrical/EF000001",
+    "dimensionAmountOfSubstance" : 0,
+    "propertyValueKind" : "Single",
+    "qudtCodes" : [ "A" ],
+    "name" : "Nominal current",
+    "propertyUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000001",
+    "status" : "Active",
+    "actualValue" : 0.4806345892934675
+  } ],
+  "hierarchy" : [ {
+    "level" : 1,
+    "name" : "Industrial sockets/plug applications",
+    "code" : "EG000014",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000014"
+  }, {
+    "level" : 2,
+    "name" : "Explosion proof CEE-plug/-coupler (IEC 60309)",
+    "code" : "EC000017",
+    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000017"
+  } ],
+  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+  "activationDateUtc" : "2025-01-31T00:00:00Z",
+  "code" : "EC000017",
+  "creatorLanguageCode" : "EN",
+  "countriesOfUse" : [ ],
+  "definition" : "A plug or coupler designed for safe use in hazardous environments.",
+  "name" : "Explosion proof CEE-plug/-coupler (IEC 60309)",
+  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000017",
+  "replacedObjectCodes" : [ ],
+  "replacingObjectCodes" : [ ],
+  "revisionNumber" : 8,
+  "status" : "Active",
+  "subdivisionsOfUse" : [ ],
+  "versionDateUtc" : "2025-01-30T00:00:00Z"
+} ]

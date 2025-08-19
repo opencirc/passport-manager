@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -68,6 +70,42 @@ public class AppProperties {
     private String encryptionKey;
 
     /**
+     * Maximum depth of passport hierarchy to create.
+     */
+    @Value("${seed.passport.max-level}")
+    private String maximumLevel;
+
+    /**
+     * Number of child passports to create at each level.
+     */
+    @Value("${seed.passport.children-per-level}")
+    private String childrenPerLevel;
+
+    /**
+     * Number of properties to select from the template.
+     */
+    @Value("${seed.passport.properties-count-to-select}")
+    private String propertyCountToSelect;
+
+    /**
+     * Default Password for the users created by seed.
+     */
+    @Value("${seed.user.default-password}")
+    private String defaultSeedPassword;
+
+    /**
+     * Uri list of passport seed.
+     */
+    @Value("${seed.passport.uris}")
+    private List<String> uriList;
+
+    /**
+     * Path where templates are stored in json format.
+     */
+    @Value("${seed.passport.templates.path}")
+    private String templatePath;
+
+    /**
      * Getter for refresh token.
      * @return refresh token expiry time
      */
@@ -81,6 +119,46 @@ public class AppProperties {
      */
     public int getAccessTokenExpiryTime() {
         return Integer.parseInt(accessTokenExpiryTime);
+    }
+
+    /**
+     * Getter for Maximum level.
+     * @return Maximum level of the passports to be created
+     */
+    public int getMaximumLevel() {
+        try {
+            return Integer.parseInt(maximumLevel);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid configuration for"
+                    + " seed.passport.max-level", e);
+        }
+    }
+
+
+    /**
+     * Getter for childrenPerLevel.
+     * @return Number of children for each passport
+     */
+    public int getChildrenPerLevel() {
+        try {
+            return Integer.parseInt(childrenPerLevel);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid configuration for "
+                    + "seed.passport.children-per-level", e);
+        }
+    }
+
+    /**
+     * Getter for propertyCountToSelect.
+     * @return the number of properties to have in the template
+     */
+    public int getPropertyCountToSelect() {
+        try {
+            return Integer.parseInt(propertyCountToSelect);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid configuration for "
+                    + "seed.passport.properties-count-to-select", e);
+        }
     }
 
 }
