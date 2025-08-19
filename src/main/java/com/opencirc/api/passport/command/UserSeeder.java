@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.command;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.opencirc.api.passport.auth.service.AuthService;
@@ -23,16 +22,17 @@ public class UserSeeder {
     /**
      * Injecting Properties class.
      */
-    @Autowired
-    private AppProperties appProperties;
+    private final AppProperties appProperties;
 
     /**
      * Constructor-based dependency injection for AuthService.
      *
-     * @param authServiceParam
+     * @param authService
+     * @param appProperties
      */
-    public UserSeeder(AuthService authServiceParam) {
-        this.authService = authServiceParam;
+    public UserSeeder(AuthService authService, AppProperties appProperties) {
+        this.authService = authService;
+        this.appProperties = appProperties;
     }
 
     /**
@@ -41,14 +41,11 @@ public class UserSeeder {
      * @throws RuntimeException if user seeding fails.
      */
     public void seed() {
-        try {
-            registerSafely("admin@test.com", "test","admin");
-            registerSafely("user@test.com", "test","user");
-            log.info("User seeding completed.");
-        } catch (Exception e) {
-            log.error("User seeding failed: {}", e.getMessage(), e);
-            throw new RuntimeException("User seeding failed", e);
-        }
+
+        registerSafely("admin@test.com", "test", "admin");
+        registerSafely("user@test.com", "test", "user");
+        log.info("User seeding completed.");
+
     }
 
     /**
