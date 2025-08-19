@@ -33,13 +33,13 @@ public class Seeder {
     /**
      * Constructor-based dependency injection for seeder components.
      *
-     * @param userSeederParam
+     * @param userSeeder
      * @param passportFromApiSeeder
      * @param passportFromJsonSeeder
      */
-    public Seeder(UserSeeder userSeederParam, PassportFromApiSeeder passportFromApiSeeder,
+    public Seeder(UserSeeder userSeeder, PassportFromApiSeeder passportFromApiSeeder,
             PassportFromJsonSeeder passportFromJsonSeeder) {
-        this.userSeeder = userSeederParam;
+        this.userSeeder = userSeeder;
         this.passportFromApiSeeder = passportFromApiSeeder;
         this.passportFromJsonSeeder = passportFromJsonSeeder;
     }

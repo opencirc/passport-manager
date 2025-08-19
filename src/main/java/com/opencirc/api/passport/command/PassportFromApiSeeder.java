@@ -81,20 +81,20 @@ public class PassportFromApiSeeder {
     /**
      * Constructor-based dependency injection.
      *
-     * @param dataDictionaryServiceParam
-     * @param passportServiceParam
-     * @param objectMapperParam
-     * @param appPropertiesParam
-     * @param userRepositoryParam
+     * @param dataDictionaryService
+     * @param passportService
+     * @param objectMapper
+     * @param appProperties
+     * @param userRepository
      */
-    public PassportFromApiSeeder(DataDictionaryService dataDictionaryServiceParam,
-            PassportService passportServiceParam, ObjectMapper objectMapperParam,
-            AppProperties appPropertiesParam, UserRepository userRepositoryParam) {
-        this.dataDictionaryService = dataDictionaryServiceParam;
-        this.passportService = passportServiceParam;
-        this.objectMapper = objectMapperParam;
-        this.appProperties = appPropertiesParam;
-        this.userRepository = userRepositoryParam;
+    public PassportFromApiSeeder(DataDictionaryService dataDictionaryService,
+            PassportService passportService, ObjectMapper objectMapper,
+            AppProperties appProperties, UserRepository userRepository) {
+        this.dataDictionaryService = dataDictionaryService;
+        this.passportService = passportService;
+        this.objectMapper = objectMapper;
+        this.appProperties = appProperties;
+        this.userRepository = userRepository;
     }
 
     /**
