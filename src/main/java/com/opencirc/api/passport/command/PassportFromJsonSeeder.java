@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
+import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -51,12 +52,14 @@ public class PassportFromJsonSeeder {
     /**
      * Stores the templates.
      */
-    private final Map<String, JsonNode> templatesByUri = new ConcurrentHashMap<>();
+    private final Map<String, BsddClassTemplateDto> templatesByUri
+    = new ConcurrentHashMap<>();
 
     /**
      * List to store the uri.
      */
     private List<String> uriList;
+
 
     /**
      * Constructor-based dependency injection.
@@ -97,7 +100,9 @@ public class PassportFromJsonSeeder {
             for (JsonNode node : root) {
                 JsonNode uriNode = node.get("uri");
                 if (uriNode != null && !uriNode.isNull()) {
-                    templatesByUri.put(uriNode.asText(), node.deepCopy());
+                    BsddClassTemplateDto template = objectMapper
+                            .treeToValue(node, BsddClassTemplateDto.class);
+                    templatesByUri.put(uriNode.asText(), template);
                 } else {
                     log.warn("Skipping template without 'uri': {}", node);
                 }
@@ -131,17 +136,27 @@ public class PassportFromJsonSeeder {
         log.info("Passport seeding from JSON templates completed.");
     }
 
+    /**
+     * Recursively creates passports and their child passports.
+     *
+     * @param level
+     * @param nameSuffix
+     * @param uri
+     * @param uriIndex
+     * @param parentId
+     * @param userId
+     */
     private void createPassportRecursive(int level, String nameSuffix, String uri,
             int uriIndex, String parentId, String userId) {
         if (level > appProperties.getMaximumLevel()) {
             return;
         }
 
-        JsonNode template = templatesByUri.get(uri);
+        BsddClassTemplateDto template = templatesByUri.get(uri);
         if (template == null) {
             throw new IllegalStateException("No template found for URI: " + uri);
         }
-        JsonNode templateNode = template.deepCopy();
+        JsonNode templateNode = objectMapper.valueToTree(template);
 
         CreatePassportRequestDto request = new CreatePassportRequestDto();
         request.setDatasheetData(templateNode);
@@ -150,7 +165,6 @@ public class PassportFromJsonSeeder {
         request.setCreatedBy(userId);
         request.setParentId(parentId);
         request.setCreatedTime(LocalDateTime.now());
-
         PassportDto createdPassport = passportService
                 .createPassportUsingDictionary(DataDictionary.BSDD, request);
 
@@ -162,6 +176,5 @@ public class PassportFromJsonSeeder {
                     nextUriIndex, createdPassport.getId(), userId);
         }
     }
-
 
 }

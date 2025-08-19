@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
+import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -74,7 +75,8 @@ public class PassportFromApiSeeder {
     /**
      * Cache the class templates.
      */
-    private final Map<String, JsonNode> templateCache = new ConcurrentHashMap<>();
+    private final Map<String, BsddClassTemplateDto> templateCache
+    = new ConcurrentHashMap<>();
 
     /**
      * Constructor-based dependency injection.
@@ -143,21 +145,20 @@ public class PassportFromApiSeeder {
             return;
         }
 
-        JsonNode templateNode = templateCache.computeIfAbsent(uri, currentUri -> {
-            Object template = null;
-            try {
-                template = dataDictionaryService.createClassTemplate(dictionary,
-                        currentUri, true);
-            } catch (JsonProcessingException | JsonValidationException e) {
-                throw new RuntimeException(
-                        "Failed to create template for URI: " + currentUri, e);
-            }
-            return objectMapper.valueToTree(template);
-        }).deepCopy();
-        JsonNode datasheetData = filterAndFillProperties(templateNode);
+        BsddClassTemplateDto templateNode = templateCache.computeIfAbsent(uri,
+                currentUri -> {
+                    try {
+                        return dataDictionaryService.createClassTemplate(dictionary,
+                                currentUri, true);
+                    } catch (JsonProcessingException | JsonValidationException e) {
+                        throw new RuntimeException(
+                                "Failed to create template for URI: " + currentUri, e);
+                    }
+                });
+        filterAndFillProperties(templateNode);
 
         CreatePassportRequestDto request = new CreatePassportRequestDto();
-        request.setDatasheetData(datasheetData);
+        request.setDatasheetData(objectMapper.valueToTree(templateNode));
         request.setDataCategory(DataCategory.GENERIC.getValue());
         request.setPassportName("Passport" + nameSuffix);
         request.setCreatedBy(userId);
@@ -181,27 +182,22 @@ public class PassportFromApiSeeder {
      * values.
      *
      * @param template
-     * @return Modified JSON node with restricted and populated properties.
      */
-    private JsonNode filterAndFillProperties(JsonNode template) {
-        if (!template.isObject()) {
-            log.warn("Template node is not an object; skipping property filtering");
-            return template;
-        }
-        if (!template.has("classProperties")) {
-            return template;
+    private void filterAndFillProperties(BsddClassTemplateDto template) {
+
+        if (template.getClassProperties() == null) {
+            return;
         }
 
         List<JsonNode> properties = new ArrayList<>();
-        template.get("classProperties").forEach(properties::add);
+        template.getClassProperties().forEach(properties::add);
 
         List<JsonNode> selectedProperties = properties.stream()
                 .limit(appProperties.getPropertyCountToSelect()).toList();
 
-        ObjectNode objectNode = (ObjectNode) template;
         ArrayNode newProperties = objectMapper.createArrayNode();
         selectedProperties.forEach(newProperties::add);
-        objectNode.set("classProperties", newProperties);
+        template.setClassProperties(newProperties);
 
         for (JsonNode propertyNode : selectedProperties) {
             if (!propertyNode.isObject()) {
@@ -223,9 +219,8 @@ public class PassportFromApiSeeder {
                 case "string" -> propertyObject.put("actualValue", "testData");
                 case "real" -> propertyObject.put("actualValue", RANDOM.nextDouble());
                 case "integer" -> propertyObject.put("actualValue", RANDOM.nextInt(50));
-                case "datetime" -> propertyObject.put("actualValue",
-                        OffsetDateTime.now(java.time.ZoneOffset.UTC)
-                        .minusHours(RANDOM.nextInt(200))
+                case "datetime" -> propertyObject.put("actualValue", OffsetDateTime
+                        .now(java.time.ZoneOffset.UTC).minusHours(RANDOM.nextInt(200))
                         .format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME));
                 default -> {
                     log.debug("Unknown data type '{}' for property, using "
@@ -235,7 +230,5 @@ public class PassportFromApiSeeder {
                 }
             }
         }
-
-        return template;
     }
 }

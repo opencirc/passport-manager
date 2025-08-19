@@ -32,7 +32,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     boolean existsByEmail(String email);
 
-
     /**
      * Retrieves the first user ordered by ID in ascending order.
      *

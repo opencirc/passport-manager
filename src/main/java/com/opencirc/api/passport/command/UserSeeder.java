@@ -1,13 +1,10 @@
 package com.opencirc.api.passport.command;
 
-import java.time.LocalDateTime;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.opencirc.api.passport.auth.service.AuthService;
 import com.opencirc.api.passport.config.AppProperties;
-import com.opencirc.api.passport.dto.RegisterUserDto;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,8 +42,8 @@ public class UserSeeder {
      */
     public void seed() {
         try {
-            registerSafely(createUser("admin@test.com"));
-            registerSafely(createUser("user@test.com"));
+            registerSafely("admin@test.com", "test","admin");
+            registerSafely("user@test.com", "test","user");
             log.info("User seeding completed.");
         } catch (Exception e) {
             log.error("User seeding failed: {}", e.getMessage(), e);
@@ -55,37 +52,24 @@ public class UserSeeder {
     }
 
     /**
-     * Verifies and skips if user is already present.
-     * @param registerUserDto
+     * Registers new user. Skips if user is already present.
+     * @param email
+     * @param firstName
+     * @param lastName
      *
      */
-    private void registerSafely(RegisterUserDto registerUserDto) {
+    private void registerSafely(String email, String firstName, String lastName) {
         try {
-            authService.register(registerUserDto);
+            authService.register(email, appProperties.getDefaultSeedPassword(), firstName, lastName, null);
         } catch (Exception e) {
             if (e.getMessage() != null
                     && e.getMessage().toLowerCase().contains("exists")) {
                 log.info("User '{}' already exists. Skipping.",
-                        registerUserDto.getEmail());
+                        email);
                 return;
             }
             throw e;
         }
     }
 
-    /**
-     * Creates a RegisterUserDto with default values.
-     *
-     * @param email
-     * @return Populated RegisterUserDto instance.
-     */
-    private RegisterUserDto createUser(String email) {
-        RegisterUserDto user = new RegisterUserDto();
-        user.setEmail(email);
-        // Will be removed when task (Remove username from OpenCirc) is implemented
-        user.setUsername(email);
-        user.setPassword(appProperties.getDefaultSeedPassword());
-        user.setCreatedTime(LocalDateTime.now());
-        return user;
-    }
 }

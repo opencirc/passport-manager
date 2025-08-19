@@ -76,7 +76,25 @@ public class Seeder {
      * @param seedType  Seed type: USER | PASSPORT_FROM_API | PASSPORT_FROM_JSON | ALL
      * @throws RuntimeException if seeding fails
      */
-    @Command(command = "seed", description = "Run seed")
+    @Command(
+            command = "seed",
+            description = """
+            Seed database tables with initial or sample data.
+
+            Available seed types:
+              USER               - Seed only user data
+              PASSPORT_FROM_API  - Seed passport data via API
+              PASSPORT_FROM_JSON - Seed passport data from local JSON templates
+              ALL (default)      - Seed users + passports (from JSON)
+
+            Examples:
+              seed --type USER
+              seed --type PASSPORT_FROM_API
+              seed --type PASSPORT_FROM_JSON
+              seed --type ALL
+              seed                 (defaults to ALL)
+            """
+        )
     public void seed(
             @Option(longNames = "type", defaultValue = "ALL") SeedType seedType) {
         log.info("Seeding started.");
