@@ -57,7 +57,8 @@ public class UserSeeder {
      */
     private void registerSafely(String email, String firstName, String lastName) {
         try {
-            authService.register(email, appProperties.getDefaultSeedPassword(), firstName, lastName, null);
+            authService.register(email, appProperties.getDefaultSeedPassword(),
+                    firstName, lastName, null);
         } catch (Exception e) {
             if (e.getMessage() != null
                     && e.getMessage().toLowerCase().contains("exists")) {
