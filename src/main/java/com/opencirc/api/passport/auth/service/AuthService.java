@@ -27,6 +27,7 @@ import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.service.JwtService;
 import com.opencirc.api.passport.service.PasswordService;
+import com.opencirc.api.passport.util.StringUtil;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -170,15 +171,15 @@ public class AuthService {
      * @param loginRequest details with email, password
      * @param response
      * @return userDto the instance of UserDto
+     * @throws InvalidInputException, AuthenticationException
      */
-    public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response)
-            throws AuthenticationException {
+    public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response) {
 
-        final String email = normalizeEmail(loginRequest.getEmail());
+        final String email = StringUtil.normalizeEmail(loginRequest.getEmail());
+
         final String password = loginRequest.getPassword();
-        if (email == null || email.isBlank() || password == null || password.isBlank()) {
-            throw new AuthenticationException(
-                    "Email or password must not be null or blank");
+        if (password == null || password.isBlank()) {
+            throw new InvalidInputException("Password cannot be null or blank");
         }
 
         try {
@@ -213,14 +214,7 @@ public class AuthService {
         }
     }
 
-    /**
-     * Normalizes the given email by trimming whitespace and converting it to lowercase.
-     * @param email
-     * @return normalized email, or {@code null} if input is null
-     */
-    private static String normalizeEmail(String email) {
-        return email == null ? null : email.trim().toLowerCase();
-    }
+
 
     /**
      * Refreshes the expired token.
