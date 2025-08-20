@@ -3,15 +3,16 @@ package com.opencirc.api.passport.auth.service;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.opencirc.api.passport.auth.principal.UserPrincipal;
-import com.opencirc.api.passport.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.dao.UserRepository;
+import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.util.StringUtil;
 
 @Service
 public class AuthUserDetailsService implements UserDetailsService {
@@ -35,7 +36,7 @@ public class AuthUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         if (email != null) {
-            email = email.trim().toLowerCase();
+            email = StringUtil.normalizeEmail(email);
         }
         User user = userRepository.findByEmail(email);
         if (user == null) {
