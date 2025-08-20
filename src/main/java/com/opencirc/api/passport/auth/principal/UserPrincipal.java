@@ -21,17 +21,15 @@ public class UserPrincipal implements UserDetails {
      */
     private final String userId;
 
-
-
     /**
      * User Email.
      */
-    private String email;
+    private final String email;
 
     /**
      * User password.
      */
-    private String password;
+    private final String password;
 
     /**
      * Indicates whether the user account is enabled (active) or disabled.

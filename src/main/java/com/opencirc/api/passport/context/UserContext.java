@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.context;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,8 @@ public class UserContext {
     /**
      * Gets the userId of the currently authenticated user.
      *
-     * @return the userId or null if not authenticated
+     * @return the userId
+     * @throws AuthenticationCredentialsNotFoundException, when unauthenticated
      */
     public String getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext()
@@ -24,10 +26,9 @@ public class UserContext {
             Object principal = authentication.getPrincipal();
             if (principal instanceof UserPrincipal) {
                 return ((UserPrincipal) principal).getUserId();
-            } else if (principal instanceof String) {
-                return (String) principal;
             }
         }
-        return null;
+        throw new AuthenticationCredentialsNotFoundException(
+                "No authenticated principal with a userId is available");
     }
 }
