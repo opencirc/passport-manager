@@ -22,11 +22,6 @@ public class UserDto {
     private UUID id;
 
     /**
-     * Username.
-     */
-    private String username;
-
-    /**
      * Email.
      */
     private String email;
@@ -40,7 +35,6 @@ public class UserDto {
     public static UserDto from(UserPrincipal userPrincipal) {
         UserDto userDto = new UserDto();
         userDto.setId(UUID.fromString(userPrincipal.getUserId()));
-        userDto.setUsername(userPrincipal.getUsername());
         userDto.setEmail(userPrincipal.getEmail());
 
         return userDto;

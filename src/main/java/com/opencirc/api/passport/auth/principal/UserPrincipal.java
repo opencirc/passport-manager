@@ -21,20 +21,7 @@ public class UserPrincipal implements UserDetails {
      */
     private final String userId;
 
-    /**
-     * User name.
-     */
-    private final String username;
 
-    /**
-     * Indicator for the User account is active or not.
-     */
-    private final boolean isActive;
-
-    /**
-     * User Authorities.
-     */
-    private final Collection<? extends GrantedAuthority> authorities;
 
     /**
      * User Email.
@@ -53,12 +40,8 @@ public class UserPrincipal implements UserDetails {
     public UserPrincipal(User user) {
         Objects.requireNonNull(user, "User cannot be null");
         this.userId = String.valueOf(user.getId());
-        this.username = user.getEmail();
         this.email = user.getEmail();
         this.password = user.getPassword();
-        this.isActive = user.isActive();
-        this.authorities = Collections.singleton(new SimpleGrantedAuthority(user
-                .getRole().getValue()));
     }
 
     /**
@@ -97,12 +80,15 @@ public class UserPrincipal implements UserDetails {
     }
 
     /**
-     * method to get Username.
-     * @return Username
+     * This method is required by UserDetails interface. Since this application
+     * identifies users by their email address, the email is returned here instead
+     * of a username.
+     *
+     * @return the user's email
      */
     @Override
     public String getUsername() {
-        return username;
+        return email;
     }
 
     /**

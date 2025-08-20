@@ -12,9 +12,9 @@ import lombok.ToString;
 public class LoginRequestDto {
 
     /**
-     * Username.
+     * email.
      */
-    private String username;
+    private String email;
 
 
     /**

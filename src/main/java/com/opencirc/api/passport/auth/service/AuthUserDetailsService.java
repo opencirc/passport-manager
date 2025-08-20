@@ -23,16 +23,17 @@ public class AuthUserDetailsService implements UserDetailsService {
     private UserRepository userRepository;
 
     /**
-     * Loads the user details by email.
+     * This method is required to be implemented by UserDetailsService interface.
+     * Loads a user by their email. Although the interface defines the method as
+     * {@code loadUserByUsername}, our application uses email as the unique
+     * identifier for users.
      *
-     * @param email
+     * @param email the user's email address
      * @return the details of the user
+     * @throws UsernameNotFoundException if no user is found with the given email
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-
-        // Default method from UserDetailsService that must be implemented.
-        // Loads a user by email for authentication.
         User user = userRepository.findByEmail(email);
         if (user == null) {
             throw new UsernameNotFoundException("User not found");

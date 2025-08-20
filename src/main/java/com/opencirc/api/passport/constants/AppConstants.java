@@ -79,11 +79,6 @@ public final class AppConstants {
     public static final String REFRESH_TOKEN = "refreshToken";
 
     /**
-     * Error message for users already exists.
-     */
-    public static final String ERR_USERNAME_EXISTS = "Username already exists";
-
-    /**
      * Error message for invalid credentials.
      */
     public static final String ERR_INVALID_CREDENTIALS = "Invalid Credentials";

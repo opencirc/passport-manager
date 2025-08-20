@@ -2,24 +2,25 @@ package com.opencirc.api.passport.context;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+import com.opencirc.api.passport.auth.principal.UserPrincipal;
 
 @Component
 public class UserContext {
 
     /**
-     * Gets the username of the currently authenticated user.
+     * Gets the userId of the currently authenticated user.
      *
-     * @return the username or null if not authenticated
+     * @return the userId or null if not authenticated
      */
-    public String getCurrentUsername() {
+    public String getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth != null && auth.isAuthenticated()) {
             Object principal = auth.getPrincipal();
-            if (principal instanceof UserDetails) {
-                return ((UserDetails) principal).getUsername();
+            if (principal instanceof UserPrincipal) {
+                return ((UserPrincipal) principal).getUserId();
             } else if (principal instanceof String) {
                 return (String) principal;
             }

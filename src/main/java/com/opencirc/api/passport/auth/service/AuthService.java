@@ -167,19 +167,19 @@ public class AuthService {
     /**
      * Login and verifies the user.
      *
-     * @param loginRequest details with username, password
+     * @param loginRequest details with email, password
      * @param response
      * @return userDto the instance of UserDto
      */
     public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response)
             throws AuthenticationException {
-        if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
-            throw new AuthenticationException("Username or password must not be null");
+        if (loginRequest.getEmail() == null || loginRequest.getPassword() == null) {
+            throw new AuthenticationException("Email or password must not be null");
         }
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
                             loginRequest.getPassword()));
 
             if (!authentication.isAuthenticated()) {
