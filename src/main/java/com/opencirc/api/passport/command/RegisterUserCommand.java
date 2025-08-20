@@ -7,6 +7,7 @@ import com.opencirc.api.passport.auth.service.AuthService;
 import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
+import com.opencirc.api.passport.util.StringUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +54,8 @@ public class RegisterUserCommand {
         }
 
         try {
-            User user = authService.register(email.trim().toLowerCase(), password.trim(),
+            User user = authService.register(StringUtil
+                    .normalizeEmail(email), password.trim(),
                     firstName.trim(), lastName.trim(), parsedRole);
             return String.format("User created with id: %s", user.getId());
         } catch (AuthenticationException authenticationException) {

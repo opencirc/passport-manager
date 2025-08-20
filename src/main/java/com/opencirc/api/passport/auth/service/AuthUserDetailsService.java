@@ -3,15 +3,16 @@ package com.opencirc.api.passport.auth.service;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.opencirc.api.passport.auth.principal.UserPrincipal;
-import com.opencirc.api.passport.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.dao.UserRepository;
+import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.util.StringUtil;
 
 @Service
 public class AuthUserDetailsService implements UserDetailsService {
@@ -23,16 +24,20 @@ public class AuthUserDetailsService implements UserDetailsService {
     private UserRepository userRepository;
 
     /**
-     * Loads the user details by email.
+     * This method is required to be implemented by UserDetailsService interface.
+     * Loads a user by their email. Although the interface defines the method as
+     * {@code loadUserByUsername}, our application uses email as the unique
+     * identifier for users.
      *
-     * @param email
+     * @param email the user's email address
      * @return the details of the user
+     * @throws UsernameNotFoundException if no user is found with the given email
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-
-        // Default method from UserDetailsService that must be implemented.
-        // Loads a user by email for authentication.
+        if (email != null) {
+            email = StringUtil.normalizeEmail(email);
+        }
         User user = userRepository.findByEmail(email);
         if (user == null) {
             throw new UsernameNotFoundException("User not found");

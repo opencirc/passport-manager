@@ -37,7 +37,7 @@ public class AuthController {
     /**
      * Endpoint to Login.
      *
-     * @param loginRequest details with username, password
+     * @param loginRequest details with email, password
      * @param response
      * @return response with JWT token (access and refresh tokens)
      */

@@ -27,6 +27,7 @@ import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.service.JwtService;
 import com.opencirc.api.passport.service.PasswordService;
+import com.opencirc.api.passport.util.StringUtil;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -167,20 +168,23 @@ public class AuthService {
     /**
      * Login and verifies the user.
      *
-     * @param loginRequest details with username, password
+     * @param loginRequest details with email, password
      * @param response
      * @return userDto the instance of UserDto
+     * @throws InvalidInputException, AuthenticationException
      */
-    public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response)
-            throws AuthenticationException {
-        if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
-            throw new AuthenticationException("Username or password must not be null");
+    public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response) {
+
+        final String email = StringUtil.normalizeEmail(loginRequest.getEmail());
+
+        final String password = loginRequest.getPassword();
+        if (password == null || password.isBlank()) {
+            throw new InvalidInputException("Password cannot be null or blank");
         }
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
-                            loginRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(email, password));
 
             if (!authentication.isAuthenticated()) {
                 throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
@@ -209,6 +213,7 @@ public class AuthService {
             throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
         }
     }
+
 
 
     /**
