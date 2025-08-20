@@ -27,6 +27,11 @@ public class UserPrincipal implements UserDetails {
     private final String email;
 
     /**
+     * User full name.
+     */
+    private final String fullName;
+
+    /**
      * User password.
      */
     private final String password;
@@ -44,6 +49,7 @@ public class UserPrincipal implements UserDetails {
         Objects.requireNonNull(user, "User cannot be null");
         this.userId = String.valueOf(user.getId());
         this.email = user.getEmail();
+        this.fullName = user.getFirstName() + " " + user.getLastName();
         this.password = user.getPassword();
         this.enabled = user.isActive();
     }
@@ -81,6 +87,14 @@ public class UserPrincipal implements UserDetails {
      */
     public String getEmail() {
         return email;
+    }
+
+    /**
+     * Gets fullName of the user.
+     * @return fullName
+     */
+    public String getFullName() {
+        return fullName;
     }
 
     /**

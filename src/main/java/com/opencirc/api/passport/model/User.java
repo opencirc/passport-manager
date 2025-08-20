@@ -82,12 +82,6 @@ public class User {
     private String refreshToken;
 
     /**
-     * Created by.
-     */
-    @Column(name = "created_by")
-    private String createdBy;
-
-    /**
      * Created time.
      */
     @Column(name = "created_time", updatable = false, insertable = false)

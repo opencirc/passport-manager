@@ -38,7 +38,8 @@ public interface PassportRepository
      */
     @Query(value = """
             WITH RECURSIVE PassportTree AS (
-                SELECT pe.id, pe.name, pe.status, pe.parent_id, pe.created_by,
+                SELECT pe.id, pe.name, pe.status, pe.parent_id,
+                pe.created_by_id, pe.created_by,
                 pe.created_time
                 FROM passports pe
                 WHERE pe.id = :passport_id
@@ -46,7 +47,7 @@ public interface PassportRepository
                 UNION ALL
 
                 SELECT child.id, child.name, child.status, child.parent_id,
-                child.created_by, child.created_time
+                child.created_by_id, child.created_by, child.created_time
                 FROM passports child
                 INNER JOIN PassportTree parent ON child.parent_id = parent.id
             )
@@ -57,6 +58,7 @@ public interface PassportRepository
                    ds.data_category AS dataCategory,
                    pt.status AS status,
                    pt.parent_id AS parentId,
+                   pt.created_by_id AS createdById,
                    pt.created_by AS createdBy,
                    pt.created_time AS createdTime
             FROM PassportTree pt
@@ -82,6 +84,7 @@ public interface PassportRepository
                    ds.data_category AS dataCategory,
                    p.status AS status,
                    p.parent_id AS parentId,
+                   p.created_by_id AS createdById,
                    p.created_by AS createdBy,
                    p.created_time AS createdTime
             FROM passports p

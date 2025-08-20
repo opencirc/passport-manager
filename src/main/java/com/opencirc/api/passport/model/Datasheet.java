@@ -6,9 +6,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 
 import jakarta.persistence.CascadeType;
@@ -69,10 +72,17 @@ public class Datasheet {
 
 
     /**
-     * User who created the datasheet.
+     * Id of the user who created the datasheet.
      */
-    @Column(name = "created_by")
-    private String createdBy;
+    @Column(name = "created_by_id")
+    private String createdById;
+    
+    /**
+     * User information, stored as JSON.
+     */
+    @Column(name = "created_by", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private CreatedByDto createdBy;
 
     /**
      * Time when datasheet is created.

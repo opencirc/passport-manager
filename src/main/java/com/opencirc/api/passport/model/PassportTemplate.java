@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.opencirc.api.passport.dto.CreatedByDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -57,10 +60,17 @@ public class PassportTemplate {
 
 
     /**
-     * user created the template.
+     * Id of the user created the template.
      */
-    @Column(name = "created_by")
-    private String createdBy;
+    @Column(name = "created_by_id")
+    private String createdById;
+
+    /**
+     * User information, stored as JSON.
+     */
+    @Column(name = "created_by", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private CreatedByDto createdBy;
 
 
     /**

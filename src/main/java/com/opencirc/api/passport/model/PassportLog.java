@@ -2,11 +2,13 @@ package com.opencirc.api.passport.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.fasterxml.jackson.databind.JsonNode;
-import com.opencirc.api.passport.util.JsonNodeConverter;
+import com.opencirc.api.passport.dto.CreatedByDto;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,8 +53,15 @@ public class PassportLog {
     /**
      * Created by.
      */
-    @Column(name = "created_by", nullable = false)
-    private String createdBy;
+    @Column(name = "created_by_id", nullable = false)
+    private String createdById;
+
+    /**
+     * User information, stored as JSON.
+     */
+    @Column(name = "created_by", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private CreatedByDto createdBy;
 
     /**
      * Created time.

@@ -48,7 +48,12 @@ public interface PassportDatasheetResultMapDto {
     String getDataCategory();
 
     /**
-     * @return the user who created the passport or datasheet
+     * @return the user id who created the passport or datasheet
+     */
+    String getCreatedById();
+
+    /**
+     * @return the user information who created the passport or datasheet
      */
     String getCreatedBy();
 

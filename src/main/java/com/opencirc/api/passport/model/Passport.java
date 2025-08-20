@@ -4,7 +4,11 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.opencirc.api.passport.dto.CreatedByDto;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -59,10 +63,17 @@ public class Passport {
 
 
     /**
-     * User who created Passport.
+     * Id of the user who created Passport.
      */
-    @Column(name = "created_by")
-    private String createdBy;
+    @Column(name = "created_by_id")
+    private String createdById;
+
+    /**
+     * User information, stored as JSON.
+     */
+    @Column(name = "created_by", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private CreatedByDto createdBy;
 
     /**
      * Time of passport creation.

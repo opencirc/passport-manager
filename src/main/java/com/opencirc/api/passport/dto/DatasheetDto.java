@@ -50,7 +50,13 @@ public class DatasheetDto {
      * User who created the datasheet.
      */
     @JsonProperty
-    private String createdBy;
+    private String createdById;
+
+    /**
+     * Metadata of the user who created datasheet.
+     */
+    @JsonProperty
+    private CreatedByDto createdBy;
 
     /**
      * Time when datasheet is created.
@@ -69,6 +75,7 @@ public class DatasheetDto {
         datasheetDto.data = datasheet.getData();
         datasheetDto.dataCategory = datasheet.getDataCategory();
         datasheetDto.dataDictionary = datasheet.getDataDictionary();
+        datasheetDto.createdById = datasheet.getCreatedById();
         datasheetDto.createdBy = datasheet.getCreatedBy();
         datasheetDto.createdTime = datasheet.getCreatedTime();
         return datasheetDto;

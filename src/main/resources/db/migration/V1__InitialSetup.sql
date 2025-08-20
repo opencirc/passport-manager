@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS public.users (
     role VARCHAR(50) NOT NULL,
     is_active BOOLEAN NOT NULL,
     refresh_token VARCHAR(255),
-    created_by VARCHAR(255),
     created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -21,9 +20,12 @@ CREATE TABLE IF NOT EXISTS public.datasheets (
     data JSONB,
     data_category VARCHAR(20),
     data_dictionary VARCHAR(50),
-    created_by VARCHAR(255),
+    created_by_id VARCHAR(255),
+    created_by jsonb NOT NULL,
     created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_datasheets_created_by_id ON public.datasheets(created_by_id);
 
 -- Passports table
 CREATE TABLE IF NOT EXISTS public.passports (
@@ -31,9 +33,12 @@ CREATE TABLE IF NOT EXISTS public.passports (
     name VARCHAR(255),
     status VARCHAR(50),
     parent_id VARCHAR(100),
-    created_by VARCHAR(255),
+    created_by_id VARCHAR(255),
+    created_by jsonb NOT NULL,
     created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_passports_created_by_id ON public.passports(created_by_id);
 
 -- Passport-Datasheet mappings
 CREATE TABLE IF NOT EXISTS public.passport_datasheet_mappings (
@@ -53,16 +58,20 @@ CREATE TABLE IF NOT EXISTS public.passport_templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255),
     template JSONB,
-    created_by VARCHAR(255),
+    created_by_id VARCHAR(255),
+    created_by jsonb NOT NULL,
     created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_templates_created_by_id ON public.passport_templates(created_by_id);
 
 -- Passport logs
 CREATE TABLE IF NOT EXISTS public.passport_logs (
     id BIGSERIAL PRIMARY KEY,
     passport_id VARCHAR(100) NOT NULL,
     data JSON NOT NULL,
-    created_by VARCHAR(255) NOT NULL,
+    created_by_id VARCHAR(255),
+    created_by jsonb NOT NULL,
     created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (passport_id) REFERENCES public.passports(id) ON DELETE CASCADE
 );
@@ -76,7 +85,8 @@ CREATE TABLE IF NOT EXISTS public.passport_lifecycles (
     passport_id VARCHAR(100) NOT NULL,
     event_type VARCHAR(255) NOT NULL,
     data JSON NOT NULL,
-    created_by VARCHAR(255) NOT NULL,
+    created_by_id VARCHAR(255),
+    created_by jsonb NOT NULL,
     created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (passport_id) REFERENCES public.passports(id)
 );

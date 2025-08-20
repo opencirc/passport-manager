@@ -99,9 +99,11 @@ public class PassportTemplateService {
             rootNode = (ObjectNode) newDataNode;
 
         }
-        String userId = userContext.getCurrentUserId();
         template = PassportTemplate.builder().name(templateName).template(rootNode)
-                .createdBy(userId).build();
+                .createdById(userContext.getCurrentUserId())
+                .createdBy(userContext.getCurrentUserInformation())
+                .build();
+
         return template;
     }
 
