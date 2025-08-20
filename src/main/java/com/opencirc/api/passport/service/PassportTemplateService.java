@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +101,7 @@ public class PassportTemplateService {
         }
         String userId = userContext.getCurrentUserId();
         template = PassportTemplate.builder().name(templateName).template(rootNode)
-                .createdBy(userId).createdTime(LocalDateTime.now()).build();
+                .createdBy(userId).build();
         return template;
     }
 

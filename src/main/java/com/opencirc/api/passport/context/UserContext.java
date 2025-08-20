@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.context;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -15,10 +16,12 @@ public class UserContext {
      * @return the userId or null if not authenticated
      */
     public String getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
 
-        if (auth != null && auth.isAuthenticated()) {
-            Object principal = auth.getPrincipal();
+        if (authentication != null && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken)) {
+            Object principal = authentication.getPrincipal();
             if (principal instanceof UserPrincipal) {
                 return ((UserPrincipal) principal).getUserId();
             } else if (principal instanceof String) {

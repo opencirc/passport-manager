@@ -34,6 +34,11 @@ public class UserPrincipal implements UserDetails {
     private String password;
 
     /**
+     * Indicates whether the user account is enabled (active) or disabled.
+     */
+    private final boolean enabled;
+
+    /**
      * Injecting UserPrincipal class.
      * @param user
      */
@@ -42,6 +47,7 @@ public class UserPrincipal implements UserDetails {
         this.userId = String.valueOf(user.getId());
         this.email = user.getEmail();
         this.password = user.getPassword();
+        this.enabled = user.isActive();
     }
 
     /**
@@ -73,7 +79,7 @@ public class UserPrincipal implements UserDetails {
 
     /**
      * Email getter.
-     * @return password
+     * @return email
      */
     public String getEmail() {
         return email;
@@ -120,11 +126,12 @@ public class UserPrincipal implements UserDetails {
 
     /**
      * Gets the status of the account is enabled or not.
+     *
      * @return status
      */
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 
 }

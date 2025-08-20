@@ -173,14 +173,17 @@ public class AuthService {
      */
     public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response)
             throws AuthenticationException {
-        if (loginRequest.getEmail() == null || loginRequest.getPassword() == null) {
-            throw new AuthenticationException("Email or password must not be null");
+
+        final String email = normalizeEmail(loginRequest.getEmail());
+        final String password = loginRequest.getPassword();
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            throw new AuthenticationException(
+                    "Email or password must not be null or blank");
         }
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
-                            loginRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(email, password));
 
             if (!authentication.isAuthenticated()) {
                 throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
@@ -210,6 +213,14 @@ public class AuthService {
         }
     }
 
+    /**
+     * Normalizes the given email by trimming whitespace and converting it to lowercase.
+     * @param email
+     * @return normalized email, or {@code null} if input is null
+     */
+    private static String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
 
     /**
      * Refreshes the expired token.
