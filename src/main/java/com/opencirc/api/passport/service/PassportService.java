@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -77,6 +78,7 @@ public class PassportService {
      * @param passportDatasheetMappingRepository
      * @param dictionaryAdapterFactory
      * @param objectMapper
+     * @param userContext
      */
     public PassportService(DatasheetRepository datasheetRepository,
                            PassportRepository passportRepository,
@@ -116,13 +118,14 @@ public class PassportService {
         rawPassport.setId(cuid.toString());
         rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
-        if (data.getCreatedById().isEmpty()) {
+        String reqCreatedById = data.getCreatedById();
+        if (reqCreatedById == null || reqCreatedById.isBlank()) {
             rawPassport.setCreatedById(userContext.getCurrentUserId());
         } else {
             rawPassport.setCreatedById(data.getCreatedById());
         }
 
-        if (data.getCreatedBy() == null) {
+        if (data.getCreatedBy() == null || data.getCreatedBy().toString().isBlank()) {
             rawPassport.setCreatedBy(userContext.getCurrentUserInformation());
         } else {
             rawPassport.setCreatedBy(data.getCreatedBy());
@@ -143,7 +146,7 @@ public class PassportService {
         datasheet.setData(datasheetData);
         datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
         datasheet.setDataDictionary(dictionary);
-        if (data.getCreatedById().isEmpty()) {
+        if (reqCreatedById == null || reqCreatedById.isBlank()) {
             datasheet.setCreatedById(userContext.getCurrentUserId());
         } else {
             datasheet.setCreatedById(data.getCreatedById());
@@ -211,10 +214,18 @@ public class PassportService {
         for (PassportDatasheetResultMapDto row : resultRows) {
             String passportId = row.getPassportId();
 
-            CreatedByDto createdByDto = objectMapper.readValue(row.getCreatedBy(),
-                    CreatedByDto.class);
-
             PassportDto passportDto = dtoById.computeIfAbsent(passportId, key -> {
+
+                CreatedByDto createdByDto = null;
+                String passportCreatedByJson = row.getCreatedBy();
+                if (passportCreatedByJson != null && !passportCreatedByJson.isBlank()) {
+                    try {
+                        createdByDto = objectMapper.readValue(passportCreatedByJson,
+                                CreatedByDto.class);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error parsing createdBy JSON", e);
+                    }
+                }
                 PassportDto dto = new PassportDto();
                 dto.setId(passportId);
                 dto.setName(row.getPassportName());
@@ -248,6 +259,15 @@ public class PassportService {
                         datasheetDto.setDataDictionary(null);
                     }
                     datasheetDto.setCreatedById(row.getCreatedById());
+
+                    CreatedByDto createdByDto = null;
+                    String datasheetCreatedByJson = row.getCreatedBy();
+                    if (datasheetCreatedByJson != null
+                            && !datasheetCreatedByJson.isBlank()) {
+                        createdByDto = objectMapper.readValue(datasheetCreatedByJson,
+                                CreatedByDto.class);
+                    }
+
                     datasheetDto.setCreatedBy(createdByDto);
                     datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
 
@@ -320,7 +340,10 @@ public class PassportService {
                         datasheetDto.setDataDictionary(null);
                     }
                     datasheetDto.setCreatedById(row.getCreatedById());
-                    datasheetDto.setCreatedBy(createdByDto);
+                    CreatedByDto datasheetCreatedBy = objectMapper.readValue(
+                            row.getCreatedBy(), CreatedByDto.class
+                        );
+                    datasheetDto.setCreatedBy(datasheetCreatedBy);
                     datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
                     datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
                 }

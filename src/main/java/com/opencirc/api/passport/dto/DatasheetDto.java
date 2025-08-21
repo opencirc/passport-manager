@@ -48,7 +48,7 @@ public class DatasheetDto {
     private DataDictionary dataDictionary;
 
     /**
-     * User who created the datasheet.
+     * Id of the user who created the datasheet.
      */
     @JsonProperty
     private String createdById;

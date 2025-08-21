@@ -13,14 +13,14 @@ import com.opencirc.api.passport.dto.CreatedByDto;
 public class UserContext {
 
     /**
-     * Injection appProperties.
+     * Injected application properties.
      */
     private final AppProperties appProperties;
 
 
     /**
      * Constructor.
-     * @param appProperties
+     * @param appProperties application properties
      */
     public UserContext(AppProperties appProperties) {
         this.appProperties = appProperties;

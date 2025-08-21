@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.util;
 
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.dto.CreatedByDto;
@@ -8,6 +10,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 @Converter(autoApply = true)
+@Component
 public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, String> {
 
     /**
@@ -57,7 +60,7 @@ public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, S
      */
     @Override
     public CreatedByDto convertToEntityAttribute(String dbData) {
-        if (dbData == null || dbData.isEmpty()) {
+        if (dbData == null || dbData.isBlank()) {
             return null;
         }
         try {
