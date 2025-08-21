@@ -4,14 +4,15 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.annotations.ColumnTransformer;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.util.CreatedByDtoConverter;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -71,8 +72,9 @@ public class Passport {
     /**
      * User information, stored as JSON.
      */
-    @Column(name = "created_by", columnDefinition = "jsonb")
-    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "created_by", columnDefinition = "jsonb", nullable = false)
+    @Convert(converter = CreatedByDtoConverter.class)
+    @ColumnTransformer(write = "?::jsonb")
     private CreatedByDto createdBy;
 
     /**

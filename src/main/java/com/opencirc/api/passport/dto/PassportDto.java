@@ -58,6 +58,7 @@ public class PassportDto {
      * Metadata of the user who created Passport.
      */
     @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private CreatedByDto createdBy;
 
     /**

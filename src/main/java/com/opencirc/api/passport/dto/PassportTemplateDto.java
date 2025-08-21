@@ -39,13 +39,13 @@ public class PassportTemplateDto {
     private JsonNode template;
 
     /**
-     * Id of the user created the template.
+     * Id of the user who created the template.
      */
     @JsonProperty
     private String createdById;
 
     /**
-     * Metadata of the user created the template.
+     * Metadata of the user who created the template.
      */
     @JsonProperty
     private CreatedByDto createdBy;

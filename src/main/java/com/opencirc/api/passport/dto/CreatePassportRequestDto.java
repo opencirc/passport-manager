@@ -42,7 +42,7 @@ public class CreatePassportRequestDto {
     private String parentId;
 
     /**
-     * Id of the user created.
+     * ID of the user who created the passport.
      */
     private String createdById;
 

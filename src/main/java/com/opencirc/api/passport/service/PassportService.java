@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -15,11 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
 import com.opencirc.api.passport.constants.AppConstants;
+import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
@@ -67,6 +66,11 @@ public class PassportService {
     private final DictionaryAdapterFactory dictionaryAdapterFactory;
 
     /**
+     * Injecting UserContext class.
+     */
+    private final UserContext userContext;
+
+    /**
      * Constructor.
      * @param datasheetRepository
      * @param passportRepository
@@ -79,12 +83,13 @@ public class PassportService {
                            PassportDatasheetMappingRepository
                            passportDatasheetMappingRepository,
                            DictionaryAdapterFactory dictionaryAdapterFactory,
-                           ObjectMapper objectMapper) {
+                           ObjectMapper objectMapper, UserContext userContext) {
         this.datasheetRepository = datasheetRepository;
         this.passportRepository = passportRepository;
         this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
         this.dictionaryAdapterFactory = dictionaryAdapterFactory;
         this.objectMapper = objectMapper;
+        this.userContext = userContext;
     }
 
     /**
@@ -111,9 +116,18 @@ public class PassportService {
         rawPassport.setId(cuid.toString());
         rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
-        rawPassport.setCreatedById(data.getCreatedById());
-        rawPassport.setCreatedBy(data.getCreatedBy());
-        rawPassport.setCreatedTime(LocalDateTime.now());
+        if (data.getCreatedById().isEmpty()) {
+            rawPassport.setCreatedById(userContext.getCurrentUserId());
+        } else {
+            rawPassport.setCreatedById(data.getCreatedById());
+        }
+
+        if (data.getCreatedBy() == null) {
+            rawPassport.setCreatedBy(userContext.getCurrentUserInformation());
+        } else {
+            rawPassport.setCreatedBy(data.getCreatedBy());
+        }
+
         String parentId = data.getParentId();
         if (parentId != null && !parentId.isBlank()) {
             boolean parentExists = passportRepository.existsById(parentId);
@@ -129,9 +143,17 @@ public class PassportService {
         datasheet.setData(datasheetData);
         datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
         datasheet.setDataDictionary(dictionary);
-        datasheet.setCreatedById(data.getCreatedById());
-        datasheet.setCreatedBy(data.getCreatedBy());
-        datasheet.setCreatedTime(data.getCreatedTime());
+        if (data.getCreatedById().isEmpty()) {
+            datasheet.setCreatedById(userContext.getCurrentUserId());
+        } else {
+            datasheet.setCreatedById(data.getCreatedById());
+        }
+
+        if (data.getCreatedBy() == null) {
+            datasheet.setCreatedBy(userContext.getCurrentUserInformation());
+        } else {
+            datasheet.setCreatedBy(data.getCreatedBy());
+        }
         datasheet = datasheetRepository.save(datasheet);
 
         PassportDatasheetMapping passportDatasheet = new PassportDatasheetMapping();
@@ -173,7 +195,7 @@ public class PassportService {
      * @throws JsonProcessingException
      */
     public List<PassportDto> getPassportChildren(String id)
-            throws JsonProcessingException, JsonMappingException {
+            throws JsonProcessingException {
         Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
                 passportRepository.findPassportWithDescendants(id);
 
@@ -189,13 +211,8 @@ public class PassportService {
         for (PassportDatasheetResultMapDto row : resultRows) {
             String passportId = row.getPassportId();
 
-            CreatedByDto createdByDto;
-            try {
-                createdByDto = objectMapper.readValue(row.getCreatedBy(),
-                        CreatedByDto.class);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Failed to parse CreatedBy JSON", e);
-            }
+            CreatedByDto createdByDto = objectMapper.readValue(row.getCreatedBy(),
+                    CreatedByDto.class);
 
             PassportDto passportDto = dtoById.computeIfAbsent(passportId, key -> {
                 PassportDto dto = new PassportDto();
@@ -231,8 +248,7 @@ public class PassportService {
                         datasheetDto.setDataDictionary(null);
                     }
                     datasheetDto.setCreatedById(row.getCreatedById());
-                    datasheetDto.setCreatedBy(objectMapper.readValue(row.getCreatedBy(),
-                            CreatedByDto.class));
+                    datasheetDto.setCreatedBy(createdByDto);
                     datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
 
                     passportDto.getDatasheets().add(datasheetDto);
@@ -277,8 +293,11 @@ public class PassportService {
             passportDto.setName(row.getPassportName());
             passportDto.setStatus(Passport.Status.fromValue(row.getStatus()));
             passportDto.setCreatedById(row.getCreatedById());
-            passportDto.setCreatedBy(objectMapper.readValue(row.getCreatedBy(),
-                    CreatedByDto.class));
+
+            CreatedByDto createdByDto = objectMapper.readValue(
+                    row.getCreatedBy(), CreatedByDto.class
+                );
+            passportDto.setCreatedBy(createdByDto);
             passportDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
             passportDto.setDatasheets(new ArrayList<>());
 
@@ -301,8 +320,7 @@ public class PassportService {
                         datasheetDto.setDataDictionary(null);
                     }
                     datasheetDto.setCreatedById(row.getCreatedById());
-                    datasheetDto.setCreatedBy(objectMapper.readValue(row.getCreatedBy(),
-                            CreatedByDto.class));
+                    datasheetDto.setCreatedBy(createdByDto);
                     datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
                     datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
                 }

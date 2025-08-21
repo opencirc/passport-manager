@@ -124,7 +124,9 @@ public class PassportFromJsonSeeder {
 
         CreatedByDto createdByDto = new CreatedByDto();
         createdByDto.setEmail(user.getEmail());
-        createdByDto.setFullName(user.getFirstName() + " " + user.getLastName());
+        String firstName = user.getFirstName() == null ? "" : user.getFirstName().trim();
+        String lastName = user.getLastName() == null ? "" : user.getLastName().trim();
+        createdByDto.setFullName((firstName + " " + lastName).trim());
 
         if (uriList == null || uriList.isEmpty()) {
             throw new IllegalStateException(

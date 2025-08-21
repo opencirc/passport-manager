@@ -106,6 +106,20 @@ public class AppProperties {
     private String templatePath;
 
     /**
+     * System admin name.
+     */
+    @Value("${system.admin.full-name}")
+    private String systemAdminName;
+
+
+    /**
+     * System admin email.
+     */
+    @Value("${system.admin.email}")
+    private String systemAdminEmail;
+
+
+    /**
      * Getter for refresh token.
      * @return refresh token expiry time
      */

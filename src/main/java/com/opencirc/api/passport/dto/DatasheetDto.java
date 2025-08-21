@@ -2,6 +2,7 @@ package com.opencirc.api.passport.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -56,6 +57,7 @@ public class DatasheetDto {
      * Metadata of the user who created datasheet.
      */
     @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private CreatedByDto createdBy;
 
     /**

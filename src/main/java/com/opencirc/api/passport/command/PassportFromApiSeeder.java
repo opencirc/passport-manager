@@ -112,7 +112,11 @@ public class PassportFromApiSeeder {
 
             CreatedByDto createdByDto = new CreatedByDto();
             createdByDto.setEmail(user.getEmail());
-            createdByDto.setFullName(user.getFirstName() + " " + user.getLastName());
+            String firstName = user.getFirstName() == null
+                    ? "" : user.getFirstName().trim();
+            String lastName = user.getLastName() == null
+                    ? "" : user.getLastName().trim();
+            createdByDto.setFullName((firstName + " " + lastName).trim());
             List<String> uris = appProperties.getUriList();
             if (uris == null || uris.isEmpty()) {
                 throw new IllegalStateException(

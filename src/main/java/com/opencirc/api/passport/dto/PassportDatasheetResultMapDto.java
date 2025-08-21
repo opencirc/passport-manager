@@ -53,7 +53,8 @@ public interface PassportDatasheetResultMapDto {
     String getCreatedById();
 
     /**
-     * @return the user information who created the passport or datasheet
+     * @return the JSON (as text) containing user information who
+     * created the passport or datasheet
      */
     String getCreatedBy();
 

@@ -42,14 +42,16 @@ public class UserPrincipal implements UserDetails {
     private final boolean enabled;
 
     /**
-     * Injecting UserPrincipal class.
+     * Constructs a UserPrincipal from a User entity.
      * @param user
      */
     public UserPrincipal(User user) {
         Objects.requireNonNull(user, "User cannot be null");
         this.userId = String.valueOf(user.getId());
         this.email = user.getEmail();
-        this.fullName = user.getFirstName() + " " + user.getLastName();
+        String first = user.getFirstName() == null ? "" : user.getFirstName().trim();
+        String last = user.getLastName() == null ? "" : user.getLastName().trim();
+        this.fullName = (first + " " + last).trim();
         this.password = user.getPassword();
         this.enabled = user.isActive();
     }

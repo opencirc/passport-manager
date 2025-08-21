@@ -2,6 +2,7 @@ package com.opencirc.api.passport.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,5 +23,6 @@ public class CreatedByDto {
     /**
      * Email.
      */
+    @Email
     private String email;
 }
