@@ -56,11 +56,15 @@ public interface PassportRepository
                    ds.id AS datasheetId,
                    ds.data AS data,
                    ds.data_category AS dataCategory,
+                   ds.data_dictionary AS dataDictionary,
+                   ds.created_by_id AS datasheetCreatedById,
+                   ds.created_by AS datasheetCreatedBy,
+                   ds.created_time AS datasheetCreatedTime
                    pt.status AS status,
                    pt.parent_id AS parentId,
-                   pt.created_by_id AS createdById,
-                   pt.created_by AS createdBy,
-                   pt.created_time AS createdTime
+                   pt.created_by_id AS passportCreatedById,
+                   pt.created_by AS passportCreatedBy,
+                   pt.created_time AS passportCreatedTime
             FROM PassportTree pt
             LEFT JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
@@ -80,13 +84,17 @@ public interface PassportRepository
             SELECT p.id AS passportId,
                    p.name AS passportName,
                    ds.id AS datasheetId,
-                   ds.data AS data,
-                   ds.data_category AS dataCategory,
                    p.status AS status,
                    p.parent_id AS parentId,
-                   p.created_by_id AS createdById,
-                   p.created_by AS createdBy,
-                   p.created_time AS createdTime
+                   p.created_by_id AS passportCreatedById,
+                   p.created_by AS passportCreatedBy,
+                   p.created_time AS passportCreatedTime,
+                   ds.data AS data,
+                   ds.data_category AS dataCategory,
+                   ds.data_dictionary AS dataDictionary,
+                   ds.created_by_id AS datasheetCreatedById,
+                   ds.created_by AS datasheetCreatedBy,
+                   ds.created_time AS datasheetCreatedTime
             FROM passports p
             LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
