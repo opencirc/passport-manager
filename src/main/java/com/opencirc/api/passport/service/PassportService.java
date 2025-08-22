@@ -164,7 +164,6 @@ public class PassportService {
         passportDatasheet.setDatasheet(datasheet);
         PassportDatasheetMapping passportDatasheetMapping =
                 passportDatasheetMappingRepository.save(passportDatasheet);
-        // Set up the data sheet mapping details in the return value of the Passport DTO
         passport.setDatasheetMappings(new ArrayList<>());
         passport.getDatasheetMappings().add(passportDatasheetMapping);
 
@@ -199,10 +198,8 @@ public class PassportService {
      */
     public List<PassportDto> getPassportChildren(String id)
             throws JsonProcessingException {
-        Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
-                passportRepository.findPassportWithDescendants(id);
-
-        List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
+        List<PassportDatasheetResultMapDto> resultRows = passportRepository
+                .findPassportWithDescendants(id)
                 .orElse(Collections.emptyList());
 
         if (resultRows.isEmpty()) {
@@ -212,82 +209,20 @@ public class PassportService {
 
         Map<String, PassportDto> dtoById = new LinkedHashMap<>();
         for (PassportDatasheetResultMapDto row : resultRows) {
-            String passportId = row.getPassportId();
+            PassportDto passportDto = dtoById.computeIfAbsent(row.getPassportId(),
+                    key -> buildPassportDto(row));
 
-            PassportDto passportDto = dtoById.computeIfAbsent(passportId, key -> {
-
-                CreatedByDto createdByDto = null;
-                String passportCreatedByJson = row.getPassportCreatedBy();
-                if (passportCreatedByJson != null && !passportCreatedByJson.isBlank()) {
-                    try {
-                        createdByDto = objectMapper.readValue(passportCreatedByJson,
-                                CreatedByDto.class);
-                    } catch (JsonProcessingException  e) {
-                        throw new RuntimeException("Error parsing createdBy JSON", e);
-                    }
-                }
-                PassportDto dto = new PassportDto();
-                dto.setId(passportId);
-                dto.setName(row.getPassportName());
-                dto.setStatus(Passport.Status.fromValue(row.getStatus()));
-                dto.setCreatedById(row.getPassportCreatedById());
-                dto.setCreatedBy(createdByDto);
-                if (row.getPassportCreatedTime() != null) {
-                    dto.setCreatedTime(row.getPassportCreatedTime().toLocalDateTime());
-                }
-                dto.setDatasheets(new ArrayList<>());
-                return dto;
-            });
-
-            if (row.getDatasheetId() != null) {
-                boolean alreadyExists = passportDto.getDatasheets().stream()
-                        .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
-
-                if (!alreadyExists) {
-                    DatasheetDto datasheetDto = new DatasheetDto();
-                    datasheetDto.setId(row.getDatasheetId());
-                    datasheetDto.setData(objectMapper.readTree(row.getData()));
-                    if (row.getDataCategory() != null) {
-                        datasheetDto.setDataCategory(DataCategory.fromValue(row
-                                .getDataCategory()));
-                    } else {
-                        datasheetDto.setDataCategory(null);
-                    }
-
-                    if (row.getDataDictionary() != null) {
-                        datasheetDto.setDataDictionary(DataDictionary
-                                .fromValue(row.getDataDictionary()));
-                    } else {
-                        datasheetDto.setDataDictionary(null);
-                    }
-                    datasheetDto.setCreatedById(row.getDatasheetCreatedById());
-
-                    CreatedByDto createdByDto = null;
-                    String datasheetCreatedByJson = row.getDatasheetCreatedBy();
-                    if (datasheetCreatedByJson != null
-                            && !datasheetCreatedByJson.isBlank()) {
-                        createdByDto = objectMapper.readValue(datasheetCreatedByJson,
-                                CreatedByDto.class);
-                    }
-
-                    datasheetDto.setCreatedBy(createdByDto);
-                    if (row.getDatasheetCreatedTime() != null) {
-                        datasheetDto.setCreatedTime(row
-                                .getDatasheetCreatedTime().toLocalDateTime());
-                    }
-
-
-                    passportDto.getDatasheets().add(datasheetDto);
-                }
+            if (row.getDatasheetId() != null && passportDto.getDatasheets().stream()
+                    .noneMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()))) {
+                passportDto.getDatasheets().add(buildDatasheetDto(row));
             }
         }
 
+        // Assign parent-child relationship
         for (PassportDatasheetResultMapDto row : resultRows) {
-            String passportId = row.getPassportId();
-            String parentId = row.getParentId();
-            if (parentId != null && dtoById.containsKey(parentId)) {
-                PassportDto child = dtoById.get(passportId);
-                PassportDto parent = dtoById.get(parentId);
+            if (row.getParentId() != null && dtoById.containsKey(row.getParentId())) {
+                PassportDto child = dtoById.get(row.getPassportId());
+                PassportDto parent = dtoById.get(row.getParentId());
                 child.setParent(parent);
             }
         }
@@ -304,71 +239,19 @@ public class PassportService {
      */
     public List<PassportDto> getImmediateChildren(String passportId)
             throws JsonProcessingException {
-        Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
-                passportRepository.findImmediateChildren(passportId);
-
-        List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
+        List<PassportDatasheetResultMapDto> resultRows =
+                passportRepository.findImmediateChildren(passportId)
                 .orElse(Collections.emptyList());
 
-        List<PassportDto> passportDtoList = new ArrayList<>();
         Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
+        List<PassportDto> passportDtoList = new ArrayList<>();
 
         for (PassportDatasheetResultMapDto row : resultRows) {
-            PassportDto passportDto = new PassportDto();
-            passportDto.setId(row.getPassportId());
-            passportDto.setName(row.getPassportName());
-            passportDto.setStatus(Passport.Status.fromValue(row.getStatus()));
-            passportDto.setCreatedById(row.getPassportCreatedById());
-
-            CreatedByDto passportCreatedBy = null;
-            String passportCreatedByJson = row.getPassportCreatedBy();
-            if (passportCreatedByJson != null && !passportCreatedByJson.isBlank()) {
-                passportCreatedBy = objectMapper.readValue(passportCreatedByJson,
-                        CreatedByDto.class);
-            }
-            passportDto.setCreatedBy(passportCreatedBy);
-            if (row.getPassportCreatedTime() != null) {
-                passportDto.setCreatedTime(row
-                        .getPassportCreatedTime().toLocalDateTime());
-            }
-
-            passportDto.setDatasheets(new ArrayList<>());
+            PassportDto passportDto = buildPassportDto(row);
 
             if (row.getDatasheetId() != null) {
-                if (!datasheetDtoMap.containsKey(row.getDatasheetId())) {
-                    DatasheetDto datasheetDto = new DatasheetDto();
-                    datasheetDto.setId(row.getDatasheetId());
-                    datasheetDto.setData(objectMapper.readTree(row.getData()));
-                    if (row.getDataCategory() != null) {
-                        datasheetDto.setDataCategory(DataCategory.fromValue(row
-                                .getDataCategory()));
-                    } else {
-                        datasheetDto.setDataCategory(null);
-                    }
-
-                    if (row.getDataDictionary() != null) {
-                        datasheetDto.setDataDictionary(DataDictionary
-                                .fromValue(row.getDataDictionary()));
-                    } else {
-                        datasheetDto.setDataDictionary(null);
-                    }
-                    datasheetDto.setCreatedById(row.getDatasheetCreatedById());
-                    CreatedByDto datasheetCreatedBy = null;
-                    String datasheetCreatedByJson = row.getDatasheetCreatedBy();
-                    if (datasheetCreatedByJson != null
-                            && !datasheetCreatedByJson.isBlank()) {
-                        datasheetCreatedBy = objectMapper
-                                .readValue(datasheetCreatedByJson, CreatedByDto.class);
-                    }
-                    datasheetDto.setCreatedBy(datasheetCreatedBy);
-                    if (row.getDatasheetCreatedTime() != null) {
-                        datasheetDto.setCreatedTime(
-                                row.getDatasheetCreatedTime().toLocalDateTime());
-                    }
-
-                    datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
-                }
-
+                datasheetDtoMap.putIfAbsent(row.getDatasheetId(),
+                        buildDatasheetDto(row));
                 passportDto.getDatasheets().add(datasheetDtoMap
                         .get(row.getDatasheetId()));
             }
@@ -378,7 +261,6 @@ public class PassportService {
 
         return passportDtoList;
     }
-
 
 
     /**
@@ -413,4 +295,50 @@ public class PassportService {
     }
 
 
+    private PassportDto buildPassportDto(PassportDatasheetResultMapDto row) {
+        PassportDto dto = new PassportDto();
+        dto.setId(row.getPassportId());
+        dto.setName(row.getPassportName());
+        dto.setStatus(Passport.Status.fromValue(row.getStatus()));
+        dto.setCreatedById(row.getPassportCreatedById());
+        dto.setCreatedBy(parseCreatedBy(row.getPassportCreatedBy()));
+        if (row.getPassportCreatedTime() != null) {
+            dto.setCreatedTime(row.getPassportCreatedTime());
+        }
+        dto.setDatasheets(new ArrayList<>());
+        return dto;
+    }
+
+    private DatasheetDto buildDatasheetDto(PassportDatasheetResultMapDto row) {
+        try {
+            DatasheetDto dto = new DatasheetDto();
+            dto.setId(row.getDatasheetId());
+            dto.setData(objectMapper.readTree(row.getData()));
+            dto.setDataCategory(row.getDataCategory() != null
+                    ? DataCategory.fromValue(row.getDataCategory())
+                    : null);
+            dto.setDataDictionary(row.getDataDictionary() != null
+                    ? DataDictionary.fromValue(row.getDataDictionary())
+                    : null);
+            dto.setCreatedById(row.getDatasheetCreatedById());
+            dto.setCreatedBy(parseCreatedBy(row.getDatasheetCreatedBy()));
+            if (row.getDatasheetCreatedTime() != null) {
+                dto.setCreatedTime(row.getDatasheetCreatedTime());
+            }
+            return dto;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error parsing datasheet JSON", e);
+        }
+    }
+
+    private CreatedByDto parseCreatedBy(String createdByJson) {
+        if (createdByJson == null || createdByJson.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(createdByJson, CreatedByDto.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error parsing createdBy JSON", e);
+        }
+    }
 }
