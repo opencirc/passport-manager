@@ -59,7 +59,7 @@ public interface PassportRepository
                    ds.data_dictionary AS dataDictionary,
                    ds.created_by_id AS datasheetCreatedById,
                    ds.created_by AS datasheetCreatedBy,
-                   ds.created_time AS datasheetCreatedTime
+                   ds.created_time AS datasheetCreatedTime,
                    pt.status AS status,
                    pt.parent_id AS parentId,
                    pt.created_by_id AS passportCreatedById,

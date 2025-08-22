@@ -50,32 +50,32 @@ public interface PassportDatasheetResultMapDto {
     /**
      * @return the user id who created the passport
      */
-    String getpassportCreatedById();
+    String getPassportCreatedById();
 
     /**
      * @return the JSON (as text) containing user information who
      * created the passport.
      */
-    String getpassportCreatedBy();
+    String getPassportCreatedBy();
 
     /**
      * @return the creation timestamp of the passport
      */
-    Timestamp getpassportCreatedTime();
+    Timestamp getPassportCreatedTime();
 
     /**
      * @return the user id who created the datasheet
      */
-    String getdatasheetCreatedById();
+    String getDatasheetCreatedById();
 
     /**
      * @return the JSON (as text) containing user information who
      * created the datasheet.
      */
-    String getdatasheetCreatedBy();
+    String getDatasheetCreatedBy();
 
     /**
      * @return the creation timestamp of the datasheet
      */
-    Timestamp getdatasheetCreatedTime();
+    Timestamp getDatasheetCreatedTime();
 }
