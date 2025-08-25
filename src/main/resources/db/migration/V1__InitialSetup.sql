@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS public.passport_templates (
 
 -- Passport logs
 CREATE TABLE IF NOT EXISTS public.passport_logs (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     passport_id VARCHAR(100) NOT NULL,
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
@@ -72,7 +72,7 @@ CREATE INDEX IF NOT EXISTS idx_passport_logs_passport_id ON public.passport_logs
 
 -- Passport lifecycles
 CREATE TABLE IF NOT EXISTS public.passport_lifecycles (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     passport_id VARCHAR(100) NOT NULL,
     event_type VARCHAR(255) NOT NULL,
     data JSON NOT NULL,
