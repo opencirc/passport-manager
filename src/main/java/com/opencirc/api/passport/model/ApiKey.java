@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.model;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
@@ -12,9 +12,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.Setter;
 
 /**
  * JPA entity representing API keys assigned to users.
@@ -22,10 +22,10 @@ import lombok.ToString;
 @Entity
 @Table(name = "api_keys", indexes = {
         @Index(name = "idx_api_keys_user_id", columnList = "user_id") })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class ApiKey {
 
     /** Unique identifier for the API key. */
@@ -44,16 +44,16 @@ public class ApiKey {
     private UUID userId;
 
     /** Optional user-defined display name for the API key. */
-    @Column(name = "name")
+    @Column(name = "name", length = 100)
     private String name;
 
     /** Timestamp when the API key record was created. */
     @Column(name = "created_time", nullable = false,
             updatable = false, insertable = false)
-    private Instant createdTime;
+    private ZonedDateTime createdTime;
 
     /** Optional timestamp indicating when the API key expires.  */
     @Column(name = "expiration_time")
-    private Instant expirationTime;
+    private ZonedDateTime expirationTime;
 
 }
