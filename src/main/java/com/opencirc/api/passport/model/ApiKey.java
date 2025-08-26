@@ -43,8 +43,8 @@ public class ApiKey {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    /** Optional user-defined display name for the API key. */
-    @Column(name = "name", length = 100)
+    /** User-defined display name for the API key. */
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
 
     /** Timestamp when the API key record was created. */

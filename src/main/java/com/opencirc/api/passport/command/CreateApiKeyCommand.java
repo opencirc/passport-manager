@@ -13,7 +13,7 @@ import com.opencirc.api.passport.service.ApiKeyService;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Command(group = "Create Api key Command")
+@Command(group = "Create API key")
 @Slf4j
 public class CreateApiKeyCommand {
 
@@ -44,18 +44,22 @@ public class CreateApiKeyCommand {
             Parameters:
               --user-id         (required) UUID of the user
               --expiration-date (optional) Expiration date in yyyy-MM-dd
-              --name (optional) name of the token
+              --name  name of the token
             Example:
               create-api-key --user-id <<user id>>
               --expiration-date 2025-12-31 --name test
             """)
-    public void createApiKey(@Option(longNames = "user-id") String userId,
+    public void createApiKey(@Option(longNames = "user-id", required = true) String userId,
             @Option(longNames = "expiration-date") String expirationDate,
-            @Option(longNames = "name") String name) {
+            @Option(longNames = "name", required = true) String name) {
 
         try {
             if (userId == null || userId.isEmpty()) {
                 throw new InvalidInputException("User ID is required.");
+            }
+
+            if (name == null || name.isEmpty() || name.isBlank()) {
+                throw new InvalidInputException("Name is required.");
             }
 
             UUID userUuid;
@@ -70,17 +74,21 @@ public class CreateApiKeyCommand {
                 try {
                     formattedExpirationDate = LocalDate.parse(expirationDate);
                 } catch (DateTimeParseException e) {
-                    throw new InvalidInputException("Invalid expiration date "
-                            + "format. Expected yyyy-MM-dd.");
+                    throw new InvalidInputException(
+                            "Invalid expiration date " + "format. Expected yyyy-MM-dd.");
                 }
             }
 
-            GeneratedApiKeyDto generatedApiKey = apiKeyService
-                    .createApiKey(userUuid, formattedExpirationDate, name);
+            if (name != null && name.length() > 100) {
+                throw new InvalidInputException("Name must be at most 100 characters.");
+            }
 
-            log.info("API Key created successfully!");
-            log.info("ID: {}", generatedApiKey.getApiKey().getId());
-            log.info("Secret API Key: {}", generatedApiKey.getRawSecret());
+            GeneratedApiKeyDto generatedApiKey = apiKeyService.createApiKey(userUuid,
+                    formattedExpirationDate, name.trim());
+
+            log.info("API Key created successfully");
+            log.info("Key: {}", generatedApiKey.getApiKey().getId());
+            log.info("Secret: {}", generatedApiKey.getRawSecret());
 
         } catch (InvalidInputException e) {
             log.error("Validation error: {}", e.getMessage());
