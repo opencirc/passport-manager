@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS public.jwt_configs (
 );
 
 -- Api keys
-CREATE TABLE IF NOT EXISTS  api_keys (
+CREATE TABLE IF NOT EXISTS public.api_keys (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     secret TEXT NOT NULL,
     user_id UUID NOT NULL,
@@ -98,4 +98,4 @@ CREATE TABLE IF NOT EXISTS  api_keys (
     CONSTRAINT fk_api_keys_user_id FOREIGN KEY (user_id) REFERENCES public.users (id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON public.api_keys(user_id);
