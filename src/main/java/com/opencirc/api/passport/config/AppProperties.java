@@ -106,6 +106,12 @@ public class AppProperties {
     private String templatePath;
 
     /**
+     * Secret key to compute CRC32.
+     */
+    @Value("${api.secret.key}")
+    private String apiSecretKey;
+
+    /**
      * Getter for refresh token.
      * @return refresh token expiry time
      */
