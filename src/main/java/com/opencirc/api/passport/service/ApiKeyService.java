@@ -107,4 +107,14 @@ public class ApiKeyService {
         return new GeneratedApiKeyDto(apiKey, rawSecret);
     }
 
+    /**
+     * Fetch an API key by ID.
+     *
+     * @param id the API key UUID
+     * @return Optional containing the ApiKey if found
+     */
+    public ApiKey findById(UUID id) {
+        return apiKeyRepository.findById(id).orElse(null);
+    }
+
 }
