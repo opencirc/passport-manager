@@ -3,7 +3,11 @@ package com.opencirc.api.passport.util;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Objects;
-import java.util.zip.CRC32;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import com.opencirc.api.passport.constants.AppConstants;
 
 public final class SecretGenerator {
 
@@ -46,11 +50,11 @@ public final class SecretGenerator {
     }
 
     /**
-     * Generates an API token with the format: {prefix}_{randomString}_{crc32}.
+     * Generates an API token with the format: {prefix}_{randomString}_{macHex}.
      *
      * @param prefix
      * @param length
-     * @param secretKey secret key used in CRC32 calculation
+     * @param secretKey secret key used in MAC calculation
      * @return generated API token
      * @throws IllegalArgumentException if inputs are invalid
      */
@@ -59,30 +63,49 @@ public final class SecretGenerator {
         if (prefix == null || prefix.isBlank()) {
             throw new IllegalArgumentException("Prefix must not be null or blank");
         }
-        if (length <= 0 ) {
-            throw new IllegalArgumentException("Random string length must be greater than 0");
+        if (length <= 0) {
+            throw new IllegalArgumentException(
+                    "Random string " + "length must be greater than 0");
         }
         if (secretKey == null || secretKey.isBlank()) {
             throw new IllegalArgumentException("Secret key must not be null or blank");
         }
 
         String randomString = generateRandomString(length);
-        long crc32 = computeCrc32(randomString + secretKey);
+        String macHex = computeHmacSha256Hex(prefix + "_" + randomString,
+                secretKey, AppConstants.API_KEY_HMAC_HEX_LENGTH);
 
-        return String.format("%s_%s_%08x", prefix, randomString, crc32);
+        return String.format("%s_%s_%s", prefix, randomString, macHex);
     }
 
+
     /**
-     * Computes a CRC32 checksum for the given input string.
-     *
+     * Computes HMAC-SHA256(input) using the given secret and returns a hex string,
+     * optionally truncated to maxHexLen characters.
      * @param input
-     * @return CRC32 checksum as a long
-     * @throws NullPointerException if input is null
+     * @param secretKey
+     * @param maxHexLength
+     * @return computed maxHex
      */
-    private static long computeCrc32(String input) {
+    private static String computeHmacSha256Hex(String input,
+            String secretKey, int maxHexLength) {
         Objects.requireNonNull(input, "Input must not be null");
-        CRC32 crc = new CRC32();
-        crc.update(input.getBytes(StandardCharsets.UTF_8));
-        return crc.getValue();
+        Objects.requireNonNull(secretKey, "Secret key must not be null");
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(secretKey
+                    .getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] out = mac.doFinal(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(out.length * 2);
+            for (byte b : out) {
+                sb.append(String.format("%02x", b));
+            }
+            if (maxHexLength > 0 && sb.length() > maxHexLength) {
+                return sb.substring(0, maxHexLength);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to compute token MAC", e);
+        }
     }
 }

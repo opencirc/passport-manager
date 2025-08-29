@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Command(group = "Create API key")
 @Slf4j
-public class CreateApiKeyCommand {
+public class ApiKeyCommand {
 
     /**
      * Injecting ApiKeyService.
@@ -26,7 +26,7 @@ public class CreateApiKeyCommand {
      * Constructor.
      * @param apiKeyService
      */
-    public CreateApiKeyCommand(ApiKeyService apiKeyService) {
+    public ApiKeyCommand(ApiKeyService apiKeyService) {
         this.apiKeyService = apiKeyService;
     }
 
@@ -73,33 +73,31 @@ public class CreateApiKeyCommand {
             if (expirationDate != null && !expirationDate.isBlank()) {
                 try {
                     formattedExpirationDate = LocalDate.parse(expirationDate);
-                    if (formattedExpirationDate.isBefore(LocalDate.now())) {
-                        throw new InvalidInputException(
-                                "Expiration date cannot be in the past.");
-                    }
+
                 } catch (DateTimeParseException e) {
                     throw new InvalidInputException(
                             "Invalid expiration date " + "format. Expected yyyy-MM-dd.");
                 }
-            }
 
-            final String trimmedName = name.trim();
-
-            if (trimmedName.length() > 100) {
-                throw new InvalidInputException("Name must be at most 100 characters.");
+                if (formattedExpirationDate.isBefore(LocalDate.now())) {
+                    throw new InvalidInputException(
+                            "Expiration date cannot be in the past.");
+                }
             }
 
             GeneratedApiKeyDto generatedApiKey = apiKeyService.createApiKey(userUuid,
-                    formattedExpirationDate, trimmedName);
+                    formattedExpirationDate, name.trim());
 
-            log.info("API Key created successfully");
-            log.info("Key: {}", generatedApiKey.getApiKey().getId());
-            log.info("Secret: {}", generatedApiKey.getRawSecret());
+            System.out.println("API Key created successfully");
+            System.out.println("Key: " + generatedApiKey.getApiKey().getId());
+            System.out.println("Secret: " + generatedApiKey.getRawSecret());
 
         } catch (InvalidInputException e) {
-            log.error("Validation error: {}", e.getMessage());
+            System.out.println("Validation error: " + e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error while creating API key: {}", e.getMessage(), e);
+            System.out.println("Unexpected error while creating API key:");
+            System.out.println("  Message: " + e.getMessage());
+            System.out.println("  Type: " + e.getCause());
         }
     }
 }
