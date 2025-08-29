@@ -80,7 +80,8 @@ public class ApiKeyService {
                     "Invalid user id. " + "No user found with id : " + userId);
         }
         if (name.length() > AppConstants.API_KEY_NAME_MAX_LENGTH) {
-            throw new InvalidInputException("Name must be at most 100 characters.");
+            throw new InvalidInputException("Name must be at most "
+                    + AppConstants.API_KEY_NAME_MAX_LENGTH + " characters.");
         }
         String rawSecret = SecretGenerator.generateApiToken("API",
                 AppConstants.API_KEY_RANDOM_STRING_LENGTH,
