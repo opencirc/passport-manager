@@ -99,6 +99,8 @@ public class ApiKeyCommand {
             System.out.println("Validation error: " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Unexpected error while creating API key:");
+            System.out.println("  Message: " + e.getMessage());
+            System.out.println("  Type: " + e.getCause());
         }
     }
 
