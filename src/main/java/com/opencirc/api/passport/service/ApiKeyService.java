@@ -5,6 +5,8 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -108,4 +110,26 @@ public class ApiKeyService {
         return new GeneratedApiKeyDto(apiKey, rawSecret);
     }
 
+    /**
+     * Lists all the api tokens for the userId.
+     * @param userId
+     * @return list of ApiKey instances
+     */
+    public List<ApiKey> listApiTokens(UUID userId) {
+        return apiKeyRepository.findAllByUserId(userId);
+    }
+
+    /**
+     * Deletes the api token for the given key.
+     * @param keyId
+     * @return result
+     */
+    public boolean deleteApiToken(UUID keyId) {
+        Optional<ApiKey> apiKeyOpt = apiKeyRepository.findById(keyId);
+        if (apiKeyOpt.isPresent()) {
+            apiKeyRepository.deleteById(keyId);
+            return true;
+        }
+        return false;
+    }
 }

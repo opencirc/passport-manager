@@ -1,7 +1,9 @@
 package com.opencirc.api.passport.command;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.shell.command.annotation.Command;
@@ -9,6 +11,7 @@ import org.springframework.shell.command.annotation.Option;
 
 import com.opencirc.api.passport.dto.GeneratedApiKeyDto;
 import com.opencirc.api.passport.exception.InvalidInputException;
+import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.service.ApiKeyService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -96,8 +99,84 @@ public class ApiKeyCommand {
             System.out.println("Validation error: " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Unexpected error while creating API key:");
-            System.out.println("  Message: " + e.getMessage());
-            System.out.println("  Type: " + e.getCause());
+        }
+    }
+
+
+    /**
+     * Lists all the available API token of the specified user.
+     *
+     * @param userId  the UUID of the user (required)
+     */
+    @Command(command = "list-api-tokens", description = """
+            Lists all the api tokens associated with the user.
+            Parameters:
+              --user-id         (required) UUID of the user
+            Example:
+              list-api-tokens --user-id <<user id>>
+            """)
+    public void listApiTokens(
+            @Option(longNames = "user-id", required = true) String userId) {
+        try {
+            if (userId == null || userId.isEmpty()) {
+                throw new InvalidInputException("User ID is required.");
+            }
+            UUID userUuid = UUID.fromString(userId);
+            List<ApiKey> tokens = apiKeyService.listApiTokens(userUuid);
+            if (tokens.isEmpty()) {
+                System.out.println("No API tokens found for user: " + userId);
+                return;
+            }
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter
+                    .ofPattern("yyyy-MM-dd");
+            System.out.printf("%-40s %-20s %-25s%n", "Key", "Name", "Expiration");
+            System.out.println("---------------------------------------"
+                    + "------------------------------------");
+            for (ApiKey token : tokens) {
+                String expiration = (token.getExpirationTime() == null)
+                        ? "Never"
+                        : token.getExpirationTime().format(dateTimeFormatter);
+                System.out.printf("%-40s %-20s %-25s%n",
+                        token.getId(),
+                        token.getName() == null ? "" : token.getName(),
+                        expiration);
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid user ID format: {}", userId);
+            System.err.println("Invalid UUID format: " + userId);
+        } catch (Exception e) {
+            log.error("Unexpected error while listing API keys: {}", e.getMessage(), e);
+            System.err.println("Unexpected error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Deletes the api token for the given key.
+     * @param keyId
+     */
+    @Command(command = "delete-api-token", description = """
+            Deletes an API token by ID.
+            Parameters:
+              --key         (required) UUID of the API key
+            Example:
+              delete-api-token --key <<key id>>
+            """)
+    public void deleteApiToken(
+            @Option(longNames = "key", required = true) String keyId) {
+        try {
+            UUID uuid = UUID.fromString(keyId);
+            boolean deleted = apiKeyService.deleteApiToken(uuid);
+            if (deleted) {
+                System.out.println("Deleted API token: " + keyId);
+            } else {
+                System.err.println("Key not found: " + keyId);
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid key ID format: {}", keyId);
+            System.err.println("Invalid UUID format: " + keyId);
+        } catch (Exception e) {
+            log.error("Unexpected error while deleting API key: {}", e.getMessage(), e);
+            System.err.println("Unexpected error: " + e.getMessage());
         }
     }
 }
