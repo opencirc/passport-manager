@@ -1,6 +1,8 @@
 package com.opencirc.api.passport.config;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +19,7 @@ import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.service.ApiKeyService;
 import com.opencirc.api.passport.service.JwtService;
 import com.opencirc.api.passport.service.PasswordService;
+import com.opencirc.api.passport.util.StringUtil;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -56,7 +59,6 @@ public class JwtFilter extends OncePerRequestFilter {
     /**
      * Constructor to initialize JwtFilter dependencies.
      * @param jwtService
-     * @param context
      * @param properties
      * @param apiKeyService
      * @param passwordService
@@ -131,7 +133,7 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response, FilterChain filterChain, String apiKeyHeader)
             throws IOException, ServletException {
 
-        UUID apiKeyUuid = parseUuid(apiKeyHeader);
+        UUID apiKeyUuid = StringUtil.parseUuid(apiKeyHeader);
         if (apiKeyUuid == null) {
             sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
                     "Invalid API key format");
@@ -141,8 +143,15 @@ public class JwtFilter extends OncePerRequestFilter {
         ApiKey apiKey = apiKeyService.findById(apiKeyUuid);
 
         if (apiKey == null) {
-            sendErrorResponse(response, HttpServletResponse.SC_NOT_FOUND,
-                    "API key not found");
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid API credentials");
+            return;
+        }
+
+        if (apiKey.getExpirationTime() != null
+                && !ZonedDateTime.now().isBefore(apiKey.getExpirationTime())) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "API key expired");
             return;
         }
 
@@ -178,19 +187,6 @@ public class JwtFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Internal server error: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Safely parses a UUID string.
-     * @param key
-     * @return UUID value of a given string
-     */
-    private UUID parseUuid(String key) {
-        try {
-            return UUID.fromString(key);
-        } catch (IllegalArgumentException e) {
-            return null;
         }
     }
 
@@ -297,9 +293,8 @@ public class JwtFilter extends OncePerRequestFilter {
         response.reset();
         response.setStatus(status);
         response.setContentType("application/json");
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getWriter().write("{\"error\": \"" + message + "\"}");
-        response.getWriter().flush();
-        response.getWriter().close();
 
     }
 

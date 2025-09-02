@@ -1,5 +1,7 @@
 package com.opencirc.api.passport.util;
 
+import java.util.UUID;
+
 import com.opencirc.api.passport.exception.InvalidInputException;
 
 public final class StringUtil {
@@ -10,7 +12,7 @@ public final class StringUtil {
     private StringUtil() {
     }
 
-    
+
     /**
      * Normalizes the given email by trimming whitespace and converting it to lowercase.
      * Throws an exception if the email is null, blank, or contains invalid characters.
@@ -23,7 +25,7 @@ public final class StringUtil {
         if (email == null) {
             throw new InvalidInputException("Email cannot be null");
         }
-        
+
         email = email.trim();
         if (email.isEmpty()) {
             throw new InvalidInputException("Email cannot be blank");
@@ -35,4 +37,18 @@ public final class StringUtil {
 
         return email.toLowerCase();
     }
+
+    /**
+     * Safely parses a UUID string.
+     * @param key
+     * @return UUID value of a given string
+     */
+    public static UUID parseUuid(String key) {
+        try {
+            return UUID.fromString(key);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
 }

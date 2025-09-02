@@ -109,7 +109,7 @@ public class ApiKeyService {
     }
 
     /**
-     * Fetch an API key by ID.
+     * Fetch an API key by ID, returning null if not found.
      *
      * @param id the API key UUID
      * @return Optional containing the ApiKey if found
