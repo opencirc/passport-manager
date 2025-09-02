@@ -98,7 +98,7 @@ public class ApiKeyCommand {
         } catch (InvalidInputException e) {
             System.out.println("Validation error: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Unexpected error while creating API key:");
+            System.out.println("Error while creating API key:");
             System.out.println("  Message: " + e.getMessage());
             System.out.println("  Type: " + e.getCause());
         }
@@ -155,8 +155,8 @@ public class ApiKeyCommand {
                         token.getName() == null ? "" : token.getName(), expiration);
             }
         } catch (Exception e) {
-            log.error("Unexpected error while listing API keys: {}", e.getMessage(), e);
-            System.err.println("Unexpected error: " + e.getMessage());
+            log.error("Error while listing API keys: {}", e.getMessage(), e);
+            System.err.println("Error: " + e.getMessage());
         }
     }
 
@@ -197,8 +197,8 @@ public class ApiKeyCommand {
                 System.err.println("Key not found: " + keyId);
             }
         } catch (Exception e) {
-            log.error("Unexpected error while deleting API key: {}", e.getMessage(), e);
-            System.err.println("Unexpected error: " + e.getMessage());
+            log.error("Error while deleting API key: {}", e.getMessage(), e);
+            System.err.println("Error: " + e.getMessage());
         }
     }
 }

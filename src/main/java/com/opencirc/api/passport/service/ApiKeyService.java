@@ -121,6 +121,9 @@ public class ApiKeyService {
      */
     @Transactional(readOnly = true)
     public List<ApiKey> getApiTokens(UUID userId) {
+        if (userId == null) {
+            throw new InvalidInputException("User ID must not be null");
+        }
         if (!userRepository.existsById(userId)) {
             throw new InvalidInputException("No user found with id: " + userId);
         }
@@ -135,7 +138,7 @@ public class ApiKeyService {
     @Transactional
     public boolean deleteApiToken(UUID keyId) {
         if (keyId == null) {
-            throw new InvalidInputException("Key ID must not be null.");
+            throw new InvalidInputException("Key ID must not be null");
         }
         try {
             apiKeyRepository.deleteById(keyId);
