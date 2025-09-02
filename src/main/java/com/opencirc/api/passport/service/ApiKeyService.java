@@ -132,6 +132,7 @@ public class ApiKeyService {
      * @param keyId
      * @return result
      */
+    @Transactional
     public boolean deleteApiToken(UUID keyId) {
         if (keyId == null) {
             throw new InvalidInputException("Key ID must not be null.");
