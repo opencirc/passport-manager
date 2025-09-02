@@ -96,22 +96,22 @@ public class ApiKeyCommand {
             System.out.println("Secret: " + generatedApiKey.getRawSecret());
 
         } catch (InvalidInputException e) {
-            System.out.println("Validation error: " + e.getMessage());
+            log.warn("Validation error: {}", e.getMessage());
+            System.err.println("Validation error: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Error while creating API key:");
-            System.out.println("  Message: " + e.getMessage());
-            System.out.println("  Type: " + e.getCause());
+            log.error("Error while creating API key", e);
+            System.err.println(e.getMessage());
         }
     }
 
 
     /**
-     * Lists all the available API token of the specified user.
+     * Lists all available API tokens for the specified user.
      *
-     * @param userId  the UUID of the user (required)
+     * @param userId the UUID of the user (required)
      */
     @Command(command = "list-api-tokens", description = """
-            Retrieves all the api tokens associated with the user.
+            Retrieves all the API tokens associated with the user.
             Parameters:
               --user-id         (required) UUID of the user
             Example:
@@ -130,7 +130,7 @@ public class ApiKeyCommand {
         try {
             userUuid = UUID.fromString(userId);
         } catch (IllegalArgumentException e) {
-            log.error("Invalid user ID format: {}", userId);
+            log.warn("Invalid user ID format: {}", userId);
             System.err.println("Invalid UUID format: " + userId);
             return;
         }
