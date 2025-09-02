@@ -47,11 +47,7 @@ public final class StringUtil {
         if (key == null || key.isBlank()) {
             return null;
         }
-        try {
-            return UUID.fromString(key);
-        } catch (IllegalArgumentException e) {
-            throw e;
-        }
+        return UUID.fromString(key);
     }
 
 }

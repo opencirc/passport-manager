@@ -138,7 +138,14 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response, FilterChain filterChain, String apiKeyHeader)
             throws IOException, ServletException {
 
-        UUID apiKeyUuid = StringUtil.validateUuid(apiKeyHeader);
+        UUID apiKeyUuid;
+        try {
+            apiKeyUuid = StringUtil.validateUuid(apiKeyHeader);
+        } catch (IllegalArgumentException ex) {
+            sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
+                    AppConstants.ERR_INVALID_CREDENTIALS);
+            return;
+        }
         if (apiKeyUuid == null) {
             sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
                     AppConstants.ERR_INVALID_CREDENTIALS);
