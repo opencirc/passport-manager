@@ -17,8 +17,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
+import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
-import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
@@ -27,7 +27,6 @@ import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
 import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
@@ -66,10 +65,11 @@ public class PassportService {
      */
     private final DictionaryAdapterFactory dictionaryAdapterFactory;
 
+
     /**
-     * Injecting UserContext class.
+     * Injecting AppProperties class.
      */
-    private final UserContext userContext;
+    private final AppProperties appProperties;
 
     /**
      * Constructor.
@@ -78,20 +78,21 @@ public class PassportService {
      * @param passportDatasheetMappingRepository
      * @param dictionaryAdapterFactory
      * @param objectMapper
-     * @param userContext
+     * @param appProperties
      */
     public PassportService(DatasheetRepository datasheetRepository,
                            PassportRepository passportRepository,
                            PassportDatasheetMappingRepository
                            passportDatasheetMappingRepository,
                            DictionaryAdapterFactory dictionaryAdapterFactory,
-                           ObjectMapper objectMapper, UserContext userContext) {
+                           ObjectMapper objectMapper,
+                           AppProperties appProperties) {
         this.datasheetRepository = datasheetRepository;
         this.passportRepository = passportRepository;
         this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
         this.dictionaryAdapterFactory = dictionaryAdapterFactory;
         this.objectMapper = objectMapper;
-        this.userContext = userContext;
+        this.appProperties = appProperties;
     }
 
     /**
@@ -119,17 +120,11 @@ public class PassportService {
         rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
         String createdById = data.getCreatedById();
-        UserDto userDtoContext = userContext.getCurrentUser();
+        rawPassport.setCreatedById(data.getCreatedById());
+
         if (createdById == null || createdById.isBlank()) {
-            rawPassport.setCreatedById(userDtoContext.getId().toString());
-        } else {
-            rawPassport.setCreatedById(data.getCreatedById());
-        }
-
-
-        if (data.getCreatedBy() == null) {
-            rawPassport.setCreatedBy(new CreatedByDto(userDtoContext.getFullName(),
-                    userDtoContext.getEmail()));
+            rawPassport.setCreatedBy(new CreatedByDto(appProperties.getSystemAdminName(),
+                    appProperties.getSystemAdminEmail()));
         } else {
             rawPassport.setCreatedBy(data.getCreatedBy());
         }
@@ -149,17 +144,13 @@ public class PassportService {
         datasheet.setData(datasheetData);
         datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
         datasheet.setDataDictionary(dictionary);
-        if (createdById == null || createdById.isBlank()) {
-            datasheet.setCreatedById(userDtoContext.getId().toString());
-        } else {
-            datasheet.setCreatedById(data.getCreatedById());
-        }
+        rawPassport.setCreatedById(data.getCreatedById());
 
-        if (data.getCreatedBy() == null) {
-            datasheet.setCreatedBy(new CreatedByDto(userDtoContext.getFullName(),
-                    userDtoContext.getEmail()));
+        if (createdById == null || createdById.isBlank()) {
+            rawPassport.setCreatedBy(new CreatedByDto(appProperties.getSystemAdminName(),
+                    appProperties.getSystemAdminEmail()));
         } else {
-            datasheet.setCreatedBy(data.getCreatedBy());
+            rawPassport.setCreatedBy(data.getCreatedBy());
         }
         datasheet = datasheetRepository.save(datasheet);
 
