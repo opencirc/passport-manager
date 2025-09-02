@@ -2,6 +2,7 @@ package com.opencirc.api.passport.config;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -137,7 +138,7 @@ public class JwtFilter extends OncePerRequestFilter {
         UUID apiKeyUuid = StringUtil.parseUuid(apiKeyHeader);
         if (apiKeyUuid == null) {
             sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid API key format");
+                    AppConstants.ERR_INVALID_CREDENTIALS);
             return;
         }
 
@@ -145,12 +146,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (apiKey == null) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                    "Invalid API credentials");
+                    AppConstants.ERR_INVALID_CREDENTIALS);
             return;
         }
 
         if (apiKey.getExpirationTime() != null
-                && !ZonedDateTime.now().isBefore(apiKey.getExpirationTime())) {
+                && !Instant.now().isBefore(apiKey.getExpirationTime().toInstant())) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                     "API key expired");
             return;
@@ -165,7 +166,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (!passwordService.verifyPassword(apiSecretHeader, apiKey.getSecret())) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                    "Invalid API secret");
+                    AppConstants.ERR_INVALID_CREDENTIALS);
             return;
         }
 
