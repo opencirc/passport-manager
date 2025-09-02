@@ -44,6 +44,9 @@ public final class StringUtil {
      * @return UUID value of a given string
      */
     public static UUID parseUuid(String key) {
+        if (key == null || key.isBlank()) {
+            return null;
+        }
         try {
             return UUID.fromString(key);
         } catch (IllegalArgumentException e) {

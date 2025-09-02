@@ -3,6 +3,7 @@ package com.opencirc.api.passport.config;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -87,14 +88,14 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String apiKeyHeader = request.getHeader("X-Api-Key");
+        String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
         if (apiKeyHeader != null && !apiKeyHeader.isBlank()) {
             handleApiKeyAuth(request, response, filterChain, apiKeyHeader);
             return;
         }
 
-        String accessToken = extractTokenFromCookies(request, "access_token");
-        String refreshToken = extractTokenFromCookies(request, "refresh_token");
+        String accessToken = extractTokenFromCookies(request, AppConstants.COOKIE_ACCESS_TOKEN);
+        String refreshToken = extractTokenFromCookies(request, AppConstants.COOKIE_REFRESH_TOKEN);
 
         if (accessToken == null && refreshToken != null) {
             accessToken = handleRefreshToken(response, refreshToken);
@@ -155,10 +156,10 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        String apiSecretHeader = request.getHeader("X-Api-Secret");
+        String apiSecretHeader = request.getHeader(AppConstants.HEADER_API_SECRET);
         if (apiSecretHeader == null || apiSecretHeader.isBlank()) {
-            sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "X-Api-Secret header is required");
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    AppConstants.ERR_INVALID_CREDENTIALS);
             return;
         }
 
@@ -186,7 +187,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     "User not found for API key");
         } catch (Exception e) {
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Internal server error: " + e.getMessage());
+                    "Internal server error");
         }
     }
 
@@ -294,7 +295,8 @@ public class JwtFilter extends OncePerRequestFilter {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.getWriter().write("{\"error\": \"" + message + "\"}");
+        new com.fasterxml.jackson.databind.ObjectMapper().writeValue(response.getWriter(),
+                Map.of("error", message));
 
     }
 
