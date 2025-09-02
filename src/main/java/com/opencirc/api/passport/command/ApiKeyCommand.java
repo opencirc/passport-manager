@@ -175,8 +175,8 @@ public class ApiKeyCommand {
             @Option(longNames = "key", required = true) String keyId) {
 
         if (keyId == null || keyId.isBlank()) {
-            log.error("Validation error: KeyId should be valid.");
-            System.err.println("Validation error: KeyId should be valid.");
+            log.warn("Validation error: Key ID is required.");
+            System.err.println("Validation error: Key ID is required.");
             return;
         }
 
@@ -196,6 +196,9 @@ public class ApiKeyCommand {
             } else {
                 System.err.println("Key not found: " + keyId);
             }
+        } catch (InvalidInputException e) {
+            log.warn("Validation error: {}", e.getMessage());
+            System.err.println("Validation error: " + e.getMessage());
         } catch (Exception e) {
             log.error("Error while deleting API key: {}", e.getMessage(), e);
             System.err.println("Error: " + e.getMessage());
