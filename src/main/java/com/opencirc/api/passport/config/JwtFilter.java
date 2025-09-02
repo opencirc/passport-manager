@@ -3,7 +3,6 @@ package com.opencirc.api.passport.config;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,10 +27,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Filter to validate the JWT token.
  */
+@Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
     /**
@@ -95,8 +96,10 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        String accessToken = extractTokenFromCookies(request, AppConstants.COOKIE_ACCESS_TOKEN);
-        String refreshToken = extractTokenFromCookies(request, AppConstants.COOKIE_REFRESH_TOKEN);
+        String accessToken = extractTokenFromCookies(request,
+                AppConstants.COOKIE_ACCESS_TOKEN);
+        String refreshToken = extractTokenFromCookies(request,
+                AppConstants.COOKIE_REFRESH_TOKEN);
 
         if (accessToken == null && refreshToken != null) {
             accessToken = handleRefreshToken(response, refreshToken);
@@ -135,7 +138,7 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response, FilterChain filterChain, String apiKeyHeader)
             throws IOException, ServletException {
 
-        UUID apiKeyUuid = StringUtil.parseUuid(apiKeyHeader);
+        UUID apiKeyUuid = StringUtil.validateUuid(apiKeyHeader);
         if (apiKeyUuid == null) {
             sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
                     AppConstants.ERR_INVALID_CREDENTIALS);
@@ -147,13 +150,6 @@ public class JwtFilter extends OncePerRequestFilter {
         if (apiKey == null) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                     AppConstants.ERR_INVALID_CREDENTIALS);
-            return;
-        }
-
-        if (apiKey.getExpirationTime() != null
-                && !Instant.now().isBefore(apiKey.getExpirationTime().toInstant())) {
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                    "API key expired");
             return;
         }
 
@@ -170,6 +166,12 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (apiKey.getExpirationTime() != null
+                && !Instant.now().isBefore(apiKey.getExpirationTime().toInstant())) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "API key expired");
+            return;
+        }
 
         try {
             UserDetails userDetails = authUserDetailsService
@@ -184,9 +186,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (UsernameNotFoundException e) {
-            sendErrorResponse(response, HttpServletResponse.SC_NOT_FOUND,
+            log.warn("API-key auth: User not found for key {}", apiKey.getId());
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                     "User not found for API key");
         } catch (Exception e) {
+            log.error("API-key auth error", e);
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Internal server error");
         }
@@ -273,7 +277,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
         } catch (UsernameNotFoundException e) {
-            sendErrorResponse(response, HttpServletResponse.SC_NOT_FOUND,
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                     "User not found");
         } catch (AuthenticationException e) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
@@ -292,7 +296,6 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private void sendErrorResponse(HttpServletResponse response, int status,
             String message) throws IOException {
-        response.reset();
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

@@ -43,14 +43,14 @@ public final class StringUtil {
      * @param key
      * @return UUID value of a given string
      */
-    public static UUID parseUuid(String key) {
+    public static UUID validateUuid(String key) {
         if (key == null || key.isBlank()) {
             return null;
         }
         try {
             return UUID.fromString(key);
         } catch (IllegalArgumentException e) {
-            return null;
+            throw e;
         }
     }
 
