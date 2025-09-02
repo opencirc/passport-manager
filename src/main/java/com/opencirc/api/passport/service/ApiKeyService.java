@@ -6,11 +6,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
@@ -21,7 +22,10 @@ import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.util.SecretGenerator;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class ApiKeyService {
 
     /**
@@ -115,7 +119,11 @@ public class ApiKeyService {
      * @param userId
      * @return list of ApiKey instances
      */
-    public List<ApiKey> listApiTokens(UUID userId) {
+    @Transactional(readOnly = true)
+    public List<ApiKey> getApiTokens(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new InvalidInputException("No user found with id: " + userId);
+        }
         return apiKeyRepository.findAllByUserId(userId);
     }
 
@@ -125,11 +133,19 @@ public class ApiKeyService {
      * @return result
      */
     public boolean deleteApiToken(UUID keyId) {
-        Optional<ApiKey> apiKeyOpt = apiKeyRepository.findById(keyId);
-        if (apiKeyOpt.isPresent()) {
+        if (keyId == null) {
+            throw new InvalidInputException("Key ID must not be null.");
+        }
+        try {
             apiKeyRepository.deleteById(keyId);
             return true;
+        } catch (EmptyResultDataAccessException ex) {
+            log.warn("Attempted to delete non-existent API token with ID: {}", keyId);
+            return false;
+        } catch (Exception e) {
+            log.error("Unexpected error while deleting API token with ID {}: {}", keyId,
+                    e.getMessage(), e);
+            throw e;
         }
-        return false;
     }
 }
