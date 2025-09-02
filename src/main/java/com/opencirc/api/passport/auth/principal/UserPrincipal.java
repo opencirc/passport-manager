@@ -4,10 +4,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 
-import com.opencirc.api.passport.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.model.User.Role;
 
 public class UserPrincipal implements UserDetails {
 
@@ -37,6 +39,11 @@ public class UserPrincipal implements UserDetails {
     private final String password;
 
     /**
+     * User role.
+     */
+    private final Role role;
+
+    /**
      * Indicates whether the user account is enabled (active) or disabled.
      */
     private final boolean enabled;
@@ -49,11 +56,10 @@ public class UserPrincipal implements UserDetails {
         Objects.requireNonNull(user, "User cannot be null");
         this.userId = String.valueOf(user.getId());
         this.email = user.getEmail();
-        String first = user.getFirstName() == null ? "" : user.getFirstName().trim();
-        String last = user.getLastName() == null ? "" : user.getLastName().trim();
-        this.fullName = (first + " " + last).trim();
+        this.fullName = user.getFullName();
         this.password = user.getPassword();
         this.enabled = user.isActive();
+        this.role = user.getRole();
     }
 
     /**
@@ -146,6 +152,15 @@ public class UserPrincipal implements UserDetails {
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    /**
+     * Gets the role of the user.
+     *
+     * @return status
+     */
+    public Role getRole() {
+        return role;
     }
 
 }

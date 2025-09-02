@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.model.User.Role;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,6 +26,31 @@ public class UserDto {
      * Email.
      */
     private String email;
+
+    /**
+     * FirstName of the user..
+     */
+    private String firstName;
+
+    /**
+     * LastName of the user..
+     */
+    private String lastName;
+
+    /**
+     * FullName of the user.
+     */
+    private String fullName;
+
+    /**
+     * Role of the user.
+     */
+    private Role role;
+
+    /**
+     * Holds info if the user is active..
+     */
+    private boolean active;
 
     /**
      * Setting up values from UserPrincipal to User Dto.

@@ -27,6 +27,7 @@ import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
 import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
@@ -117,16 +118,18 @@ public class PassportService {
         rawPassport.setId(cuid.toString());
         rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
-        String reqCreatedById = data.getCreatedById();
-        if (reqCreatedById == null || reqCreatedById.isBlank()) {
-            rawPassport.setCreatedById(userContext.getCurrentUserId());
+        String createdById = data.getCreatedById();
+        UserDto userDtoContext = userContext.getCurrentUser();
+        if (createdById == null || createdById.isBlank()) {
+            rawPassport.setCreatedById(userDtoContext.getId().toString());
         } else {
             rawPassport.setCreatedById(data.getCreatedById());
         }
 
 
         if (data.getCreatedBy() == null) {
-            rawPassport.setCreatedBy(userContext.getCurrentUserInformation());
+            rawPassport.setCreatedBy(new CreatedByDto(userDtoContext.getFullName(),
+                    userDtoContext.getEmail()));
         } else {
             rawPassport.setCreatedBy(data.getCreatedBy());
         }
@@ -146,14 +149,15 @@ public class PassportService {
         datasheet.setData(datasheetData);
         datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
         datasheet.setDataDictionary(dictionary);
-        if (reqCreatedById == null || reqCreatedById.isBlank()) {
-            datasheet.setCreatedById(userContext.getCurrentUserId());
+        if (createdById == null || createdById.isBlank()) {
+            datasheet.setCreatedById(userDtoContext.getId().toString());
         } else {
             datasheet.setCreatedById(data.getCreatedById());
         }
 
         if (data.getCreatedBy() == null) {
-            datasheet.setCreatedBy(userContext.getCurrentUserInformation());
+            datasheet.setCreatedBy(new CreatedByDto(userDtoContext.getFullName(),
+                    userDtoContext.getEmail()));
         } else {
             datasheet.setCreatedBy(data.getCreatedBy());
         }

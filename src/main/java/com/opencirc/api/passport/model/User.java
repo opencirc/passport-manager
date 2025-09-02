@@ -88,6 +88,15 @@ public class User {
     private LocalDateTime createdTime;
 
     /**
+     * Get the user's full name.
+     *
+     * @return first name + space + last name
+     */
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    /**
      * Enum representing the roles.
      */
     public enum Role {
@@ -149,6 +158,7 @@ public class User {
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Invalid role: " + value));
         }
+
     }
 
 }
