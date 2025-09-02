@@ -78,8 +78,10 @@ CREATE TABLE IF NOT EXISTS public.passport_lifecycles (
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
     created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (passport_id) REFERENCES public.passports(id)
+     FOREIGN KEY (passport_id) REFERENCES public.passports(id) ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_passport_lifecycles_passport_id ON public.passport_lifecycles(passport_id);
 
 -- JWT configs
 CREATE TABLE IF NOT EXISTS public.jwt_configs (
