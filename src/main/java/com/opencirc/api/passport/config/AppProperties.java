@@ -117,6 +117,12 @@ public class AppProperties {
      */
     @Value("${system.admin.email}")
     private String systemAdminEmail;
+  
+    /**
+     * Secret key to compute CRC32.
+     */
+    @Value("${api.secret.key}")
+    private String apiSecretKey;
 
 
     /**

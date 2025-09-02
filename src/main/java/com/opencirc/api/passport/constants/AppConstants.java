@@ -129,4 +129,18 @@ public final class AppConstants {
      */
     public static final String COOKIE_REFRESH_TOKEN = "refresh_token";
 
+    /**
+     * API_KEY_RANDOM_STRING_LENGTH.
+     */
+    public static final int API_KEY_RANDOM_STRING_LENGTH = 24;
+
+    /**
+     * API_KEY_NAME_MAX_LENGTH.
+     */
+    public static final int API_KEY_NAME_MAX_LENGTH = 100;
+
+    /**
+     * API_KEY_HMAC_HEX_LENGTH.
+     */
+    public static final int API_KEY_HMAC_HEX_LENGTH = 12;
 }

@@ -96,3 +96,16 @@ CREATE TABLE IF NOT EXISTS public.jwt_configs (
     secret_key VARCHAR(255) NOT NULL,
     CONSTRAINT jwt_configs_pkey PRIMARY KEY (secret_key)
 );
+
+-- Api keys
+CREATE TABLE IF NOT EXISTS public.api_keys (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    secret TEXT NOT NULL,
+    user_id UUID NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    created_time TIMESTAMP(6) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expiration_time TIMESTAMP(6) WITH TIME ZONE,
+    CONSTRAINT fk_api_keys_user_id FOREIGN KEY (user_id) REFERENCES public.users (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON public.api_keys(user_id);
