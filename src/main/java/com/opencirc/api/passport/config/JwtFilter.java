@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.exception.AuthenticationException;
@@ -59,6 +60,9 @@ public class JwtFilter extends OncePerRequestFilter {
     /** Injecting AuthUserDetailsService class. */
     private final AuthUserDetailsService authUserDetailsService;
 
+    /** Injecting ObjectMapper class. */
+    private final ObjectMapper objectMapper;
+
     /**
      * Constructor to initialize JwtFilter dependencies.
      * @param jwtService
@@ -66,16 +70,19 @@ public class JwtFilter extends OncePerRequestFilter {
      * @param apiKeyService
      * @param passwordService
      * @param authUserDetailsService
+     * @param objectMapper
      */
     public JwtFilter(JwtService jwtService,
             AppProperties properties, ApiKeyService apiKeyService,
             PasswordService passwordService,
-            AuthUserDetailsService authUserDetailsService) {
+            AuthUserDetailsService authUserDetailsService,
+            ObjectMapper objectMapper) {
         this.jwtService = jwtService;
         this.properties = properties;
         this.apiKeyService = apiKeyService;
         this.passwordService = passwordService;
         this.authUserDetailsService = authUserDetailsService;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -306,7 +313,7 @@ public class JwtFilter extends OncePerRequestFilter {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        new com.fasterxml.jackson.databind.ObjectMapper().writeValue(response.getWriter(),
+        objectMapper.writeValue(response.getWriter(),
                 Map.of("error", message));
 
     }
