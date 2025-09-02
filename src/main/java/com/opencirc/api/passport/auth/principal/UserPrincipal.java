@@ -54,7 +54,7 @@ public class UserPrincipal implements UserDetails {
      */
     public UserPrincipal(User user) {
         Objects.requireNonNull(user, "User cannot be null");
-        this.userId = String.valueOf(user.getId());
+        this.userId = (user.getId() != null) ? user.getId().toString() : null;
         this.email = user.getEmail();
         this.fullName = user.getFullName();
         this.password = user.getPassword();
@@ -68,7 +68,8 @@ public class UserPrincipal implements UserDetails {
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("USER"));
+        String authority = (role != null) ? role.getValue() : "USER";
+        return Collections.singleton(new SimpleGrantedAuthority(authority));
     }
 
     /**
@@ -157,7 +158,7 @@ public class UserPrincipal implements UserDetails {
     /**
      * Gets the role of the user.
      *
-     * @return status
+     * @return role
      */
     public Role getRole() {
         return role;

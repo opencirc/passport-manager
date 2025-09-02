@@ -111,7 +111,8 @@ public class PassportFromApiSeeder {
                             + "Please seed users before running passport seeding."));
 
             CreatedByDto createdByDto = new CreatedByDto();
-            createdByDto.setFullName(user.getFullName());
+            createdByDto.setFullName(user.getFullName() != null ? user.getFullName().trim() : null);
+            createdByDto.setEmail(user.getEmail());
             List<String> uris = appProperties.getUriList();
             if (uris == null || uris.isEmpty()) {
                 throw new IllegalStateException(
