@@ -144,7 +144,7 @@ public class PassportService {
         datasheet.setData(datasheetData);
         datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
         datasheet.setDataDictionary(dictionary);
-        datasheet.setCreatedById(data.getCreatedById());
+        datasheet.setCreatedById(createdById);
 
         if (createdById == null || createdById.isBlank()) {
             datasheet.setCreatedBy(new CreatedByDto(appProperties.getSystemAdminName(),
