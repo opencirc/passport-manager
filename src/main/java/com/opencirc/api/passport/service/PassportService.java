@@ -120,7 +120,7 @@ public class PassportService {
         rawPassport.setName(data.getPassportName());
         rawPassport.setStatus(Passport.Status.ACTIVE);
         String createdById = data.getCreatedById();
-        rawPassport.setCreatedById(data.getCreatedById());
+        rawPassport.setCreatedById(createdById);
 
         if (createdById == null || createdById.isBlank()) {
             rawPassport.setCreatedBy(new CreatedByDto(appProperties.getSystemAdminName(),
@@ -155,7 +155,7 @@ public class PassportService {
         datasheet = datasheetRepository.save(datasheet);
 
         PassportDatasheetMapping passportDatasheet = new PassportDatasheetMapping();
-        passportDatasheet.setPassport(rawPassport);
+        passportDatasheet.setPassport(passport);
         passportDatasheet.setDatasheet(datasheet);
         PassportDatasheetMapping passportDatasheetMapping =
                 passportDatasheetMappingRepository.save(passportDatasheet);
@@ -322,7 +322,9 @@ public class PassportService {
             }
             return dto;
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error parsing datasheet JSON", e);
+            throw new RuntimeException(
+                    "Error parsing datasheet JSON for datasheetId=" + row.getDatasheetId()
+                    + ", passportId=" + row.getPassportId(), e);
         }
     }
 

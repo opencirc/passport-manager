@@ -62,7 +62,9 @@ public class UserDto {
         UserDto userDto = new UserDto();
         userDto.setId(UUID.fromString(userPrincipal.getUserId()));
         userDto.setEmail(userPrincipal.getEmail());
-
+        userDto.setFullName(userPrincipal.getFullName());
+        userDto.setRole(userPrincipal.getRole());
+        userDto.setActive(userPrincipal.isEnabled());
         return userDto;
     }
 

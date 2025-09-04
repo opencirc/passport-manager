@@ -1,7 +1,5 @@
 package com.opencirc.api.passport.context;
 
-import java.util.UUID;
-
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
@@ -29,14 +27,14 @@ public class UserContext {
             Object principal = authentication.getPrincipal();
 
             if (principal instanceof UserPrincipal userPrincipal) {
+                String userId = userPrincipal.getUserId();
+                if (userId == null || userId.isBlank()) {
+                    throw new AuthenticationCredentialsNotFoundException(
+                            "Missing user ID in authenticated principal");
+                }
+
                 try {
-                    UserDto userDto = new UserDto();
-                    userDto.setId(UUID.fromString(userPrincipal.getUserId()));
-                    userDto.setFullName(userPrincipal.getFullName());
-                    userDto.setEmail(userPrincipal.getEmail());
-                    userDto.setRole(userPrincipal.getRole());
-                    userDto.setActive(true);
-                    return userDto;
+                    return  UserDto.from(userPrincipal);
                 } catch (IllegalArgumentException e) {
                     throw new AuthenticationCredentialsNotFoundException(
                             "Invalid user ID format in authenticated principal", e);
@@ -44,6 +42,6 @@ public class UserContext {
             }
         }
         throw new AuthenticationCredentialsNotFoundException(
-                "No " + "authenticated principal is available");
+                "No authenticated principal is available");
     }
 }
