@@ -112,7 +112,7 @@ public class JwtFilter extends OncePerRequestFilter {
             accessToken = handleRefreshToken(response, refreshToken);
             if (accessToken == null) {
                 sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        "Invalid refresh token");
+                        AppConstants.ERR_INVALID_TOKEN);
                 return;
             }
         }
@@ -260,7 +260,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return jwtService.extractUserId(token);
         } catch (Exception e) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                    "Invalid or expired token");
+                    AppConstants.ERR_INVALID_TOKEN);
             return null;
         }
     }
@@ -310,6 +310,9 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private void sendErrorResponse(HttpServletResponse response, int status,
             String message) throws IOException {
+        if (response.isCommitted()) {
+            return;
+        }
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
