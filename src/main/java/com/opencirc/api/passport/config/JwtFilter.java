@@ -202,7 +202,7 @@ public class JwtFilter extends OncePerRequestFilter {
         } catch (UsernameNotFoundException e) {
             log.warn("API-key auth: User not found for key {}", apiKey.getId());
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                    "User not found for API key");
+                    AppConstants.ERR_INVALID_CREDENTIALS);
         } catch (Exception e) {
             log.error("API-key auth error", e);
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
@@ -283,22 +283,25 @@ public class JwtFilter extends OncePerRequestFilter {
                 throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
             }
 
-            UsernamePasswordAuthenticationToken authToken = new
-                    UsernamePasswordAuthenticationToken(
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
             authToken.setDetails(
                     new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
         } catch (UsernameNotFoundException e) {
+            log.warn("JWT auth: user not found for id {}", userId);
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                    "User not found");
+                    AppConstants.ERR_INVALID_TOKEN);
         } catch (AuthenticationException e) {
+            log.warn("JWT auth failed: {}", e.getMessage());
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
-                    "Invalid token: " + e.getMessage());
+                    AppConstants.ERR_INVALID_TOKEN);
         } catch (Exception e) {
+            log.error("JWT auth unexpected error", e);
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Internal server error: " + e.getMessage());
+                    "Internal server error");
         }
     }
 
@@ -316,6 +319,10 @@ public class JwtFilter extends OncePerRequestFilter {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setHeader("Cache-Control", "no-store");
+        if (status == HttpServletResponse.SC_UNAUTHORIZED) {
+            response.setHeader("WWW-Authenticate", "ApiKey");
+        }
         objectMapper.writeValue(response.getWriter(),
                 Map.of("error", message));
 
