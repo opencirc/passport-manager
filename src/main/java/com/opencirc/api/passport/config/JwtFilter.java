@@ -99,7 +99,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
         if (apiKeyHeader != null && !apiKeyHeader.isBlank()) {
-            handleApiKeyAuth(request, response, filterChain, apiKeyHeader);
+            handleApiKeyAuth(request, response, filterChain, apiKeyHeader.trim());
             return;
         }
 
@@ -174,7 +174,8 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!passwordService.verifyPassword(apiSecretHeader, apiKey.getSecret())) {
+        if (!passwordService.verifyPassword(apiSecretHeader.trim(),
+                apiKey.getSecret())) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                     AppConstants.ERR_INVALID_CREDENTIALS);
             return;
@@ -188,6 +189,12 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         try {
+            if (apiKey.getUserId() == null) {
+                log.warn("API-key auth: missing userId on ApiKey {}", apiKey.getId());
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        AppConstants.ERR_INVALID_CREDENTIALS);
+                return;
+            }
             UserDetails userDetails = authUserDetailsService
                     .loadUserById(apiKey.getUserId().toString());
 
@@ -244,7 +251,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     properties.getAccessTokenExpiryTime());
             return newAccessToken;
         } catch (AuthenticationException e) {
-            log.warn("Refresh token rejected: {}", e.getMessage());
+            log.info("Refresh token rejected: {}", e.getMessage());
             return null;
         } catch (Exception e) {
             log.error("Refresh token processing error", e);
@@ -317,14 +324,19 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private void sendErrorResponse(HttpServletResponse response, int status,
             String message) throws IOException {
+        SecurityContextHolder.clearContext();
         if (response.isCommitted()) {
             return;
         }
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        objectMapper.writeValue(response.getWriter(),
-                Map.of("error", message));
+        if (status == HttpServletResponse.SC_UNAUTHORIZED
+                || status == HttpServletResponse.SC_FORBIDDEN) {
+            response.setHeader("Cache-Control", "no-store");
+            response.setHeader("Pragma", "no-cache");
+        }
+        objectMapper.writeValue(response.getWriter(), Map.of("error", message));
 
     }
 
