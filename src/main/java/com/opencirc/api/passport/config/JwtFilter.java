@@ -319,10 +319,6 @@ public class JwtFilter extends OncePerRequestFilter {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setHeader("Cache-Control", "no-store");
-        if (status == HttpServletResponse.SC_UNAUTHORIZED) {
-            response.setHeader("WWW-Authenticate", "ApiKey");
-        }
         objectMapper.writeValue(response.getWriter(),
                 Map.of("error", message));
 
