@@ -1,18 +1,16 @@
 package com.opencirc.api.passport.model;
 
 import java.time.LocalDateTime;
-
+import java.util.UUID;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.annotations.ColumnTransformer;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.util.CreatedByDtoConverter;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -35,9 +33,10 @@ public class PassportLog {
      * Unique Id for logs.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @GeneratedValue
+    @UuidGenerator
+    @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
     /**
      * Passport id.
