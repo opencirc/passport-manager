@@ -144,13 +144,13 @@ public class PassportService {
         datasheet.setData(datasheetData);
         datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
         datasheet.setDataDictionary(dictionary);
-        rawPassport.setCreatedById(data.getCreatedById());
+        datasheet.setCreatedById(data.getCreatedById());
 
         if (createdById == null || createdById.isBlank()) {
-            rawPassport.setCreatedBy(new CreatedByDto(appProperties.getSystemAdminName(),
+            datasheet.setCreatedBy(new CreatedByDto(appProperties.getSystemAdminName(),
                     appProperties.getSystemAdminEmail()));
         } else {
-            rawPassport.setCreatedBy(data.getCreatedBy());
+            datasheet.setCreatedBy(data.getCreatedBy());
         }
         datasheet = datasheetRepository.save(datasheet);
 
@@ -308,7 +308,12 @@ public class PassportService {
         try {
             DatasheetDto dto = new DatasheetDto();
             dto.setId(row.getDatasheetId());
-            dto.setData(objectMapper.readTree(row.getData()));
+            JsonNode dataNode = null;
+            String data = row.getData();
+            if (data != null && !data.isBlank()) {
+                dataNode = objectMapper.readTree(data);
+            }
+            dto.setData(dataNode);
             dto.setDataCategory(row.getDataCategory() != null
                     ? DataCategory.fromValue(row.getDataCategory())
                     : null);
