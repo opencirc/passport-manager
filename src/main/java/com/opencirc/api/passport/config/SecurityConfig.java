@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.service.ApiKeyService;
@@ -62,6 +63,7 @@ public class SecurityConfig {
      * @param apiKeyService
      * @param passwordService
      * @param authUserDetailsService
+     * @param objectMapper
      * @return JwtFilter
      */
     @Bean
@@ -69,9 +71,10 @@ public class SecurityConfig {
                                AppProperties properties,
                                ApiKeyService apiKeyService,
                                PasswordService passwordService,
-                               AuthUserDetailsService authUserDetailsService) {
+                               AuthUserDetailsService authUserDetailsService,
+                               ObjectMapper objectMapper) {
         return new JwtFilter(jwtService, properties, apiKeyService,
-                passwordService, authUserDetailsService);
+                passwordService, authUserDetailsService, objectMapper);
     }
 
     /**

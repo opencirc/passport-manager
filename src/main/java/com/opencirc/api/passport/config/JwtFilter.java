@@ -200,7 +200,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (UsernameNotFoundException e) {
-            log.warn("API-key auth: User not found for key {}", apiKey.getId());
+            log.warn("API-key auth: user not found for provided API key");
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
                     AppConstants.ERR_INVALID_CREDENTIALS);
         } catch (Exception e) {
@@ -244,6 +244,10 @@ public class JwtFilter extends OncePerRequestFilter {
                     properties.getAccessTokenExpiryTime());
             return newAccessToken;
         } catch (AuthenticationException e) {
+            log.warn("Refresh token rejected: {}", e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.error("Refresh token processing error", e);
             return null;
         }
     }
