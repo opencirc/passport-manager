@@ -16,7 +16,7 @@ import com.opencirc.api.passport.service.ApiKeyService;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Command(group = "Create API key")
+@Command(group = "API key Commands")
 @Slf4j
 public class ApiKeyCommand {
 
@@ -98,9 +98,10 @@ public class ApiKeyCommand {
         } catch (InvalidInputException e) {
             log.warn("Validation error: {}", e.getMessage());
             System.err.println("Validation error: " + e.getMessage());
+            return;
         } catch (Exception e) {
-            log.error("Error while creating API key", e);
-            System.err.println(e.getMessage());
+            log.error("Error while creating API key: {}", e.getMessage(), e);
+            System.err.println("Error: " + e.getMessage());
         }
     }
 
