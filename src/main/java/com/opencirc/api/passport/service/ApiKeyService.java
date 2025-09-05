@@ -152,4 +152,14 @@ public class ApiKeyService {
             throw e;
         }
     }
+
+    /**
+     * Fetch an API key by ID, returning null if not found.
+     *
+     * @param id the API key UUID
+     * @return Optional containing the ApiKey if found
+     */
+    public ApiKey findById(UUID id) {
+        return apiKeyRepository.findById(id).orElse(null);
+    }
 }
