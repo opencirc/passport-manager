@@ -1,11 +1,7 @@
 package com.opencirc.api.passport.dao;
 
+import com.opencirc.api.passport.model.ApiKey;
 import java.util.UUID;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.opencirc.api.passport.model.ApiKey;
-
-public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID>  {
-
-}
+public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {}

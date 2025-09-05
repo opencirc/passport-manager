@@ -1,42 +1,40 @@
 package com.opencirc.api.passport.dao;
 
+import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
+import com.opencirc.api.passport.model.Passport;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
-import com.opencirc.api.passport.model.Passport;
+public interface PassportRepository extends JpaRepository<Passport, String> {
 
-public interface PassportRepository
-        extends JpaRepository<Passport, String> {
+  /**
+   * Retrieves passport.
+   *
+   * @param id
+   * @param status
+   * @return passports
+   */
+  @Query(
+      "SELECT p FROM Passport p "
+          + "LEFT JOIN FETCH p.datasheetMappings dm "
+          + "LEFT JOIN FETCH dm.datasheet "
+          + "WHERE p.id = :id AND p.status = :status")
+  Optional<Passport> findPassport(@Param("id") String id, @Param("status") Passport.Status status);
 
-    /**
-     * Retrieves passport.
-     *
-     * @param id
-     * @param status
-     * @return passports
-     */
-    @Query("SELECT p FROM Passport p "
-            + "LEFT JOIN FETCH p.datasheetMappings dm "
-            + "LEFT JOIN FETCH dm.datasheet "
-            + "WHERE p.id = :id AND p.status = :status")
-    Optional<Passport> findPassport(@Param("id") String id,
-            @Param("status") Passport.Status status);
-
-    /**
-     * Retrieves a passport with its descendants.
-     *
-     * @param passportId
-     *
-     * @return the passport with its descendants
-     */
-    @Query(value = """
+  /**
+   * Retrieves a passport with its descendants.
+   *
+   * @param passportId
+   * @return the passport with its descendants
+   */
+  @Query(
+      value =
+          """
             WITH RECURSIVE PassportTree AS (
                 SELECT pe.id, pe.name, pe.status, pe.parent_id, pe.created_by,
                 pe.created_time
@@ -63,18 +61,20 @@ public interface PassportRepository
             LEFT JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
             WHERE pt.status = 'ACTIVE'
-            """, nativeQuery = true)
-    Optional<List<PassportDatasheetResultMapDto>> findPassportWithDescendants(
-            @Param("passport_id") String passportId);
+            """,
+      nativeQuery = true)
+  Optional<List<PassportDatasheetResultMapDto>> findPassportWithDescendants(
+      @Param("passport_id") String passportId);
 
-    /**
-     * Retrieves the immediate children of a passport.
-     *
-     * @param passportId
-     *
-     * @return the passports whose parent_id matches the given passport id
-     */
-    @Query(value = """
+  /**
+   * Retrieves the immediate children of a passport.
+   *
+   * @param passportId
+   * @return the passports whose parent_id matches the given passport id
+   */
+  @Query(
+      value =
+          """
             SELECT p.id AS passportId,
                    p.name AS passportName,
                    ds.id AS datasheetId,
@@ -88,41 +88,41 @@ public interface PassportRepository
             LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
             WHERE p.parent_id = :passport_id AND p.status = 'ACTIVE'
-            """, nativeQuery = true)
-    Optional<List<PassportDatasheetResultMapDto>> findImmediateChildren(
-            @Param("passport_id") String passportId);
+            """,
+      nativeQuery = true)
+  Optional<List<PassportDatasheetResultMapDto>> findImmediateChildren(
+      @Param("passport_id") String passportId);
 
-    /**
-     * Deactivates the passport.
-     *
-     * @param passportId
-     *
-     * @return status
-     */
-    @Modifying
-    @Transactional
-    @Query("UPDATE Passport p SET p.status = 'inactive'"
-            + "WHERE p.id = :passport_id")
-    int updateStatusToInactive(@Param("passport_id") String passportId);
+  /**
+   * Deactivates the passport.
+   *
+   * @param passportId
+   * @return status
+   */
+  @Modifying
+  @Transactional
+  @Query("UPDATE Passport p SET p.status = 'inactive'" + "WHERE p.id = :passport_id")
+  int updateStatusToInactive(@Param("passport_id") String passportId);
 
-    /**
-     * Retrieves the parentId.
-     * @param passportId
-     * @return status
-     */
-    @Transactional
-    @Query("Select p.parentId from Passport p "
-            + "WHERE p.id = :passport_id")
-    String getParentId(@Param("passport_id") String passportId);
+  /**
+   * Retrieves the parentId.
+   *
+   * @param passportId
+   * @return status
+   */
+  @Transactional
+  @Query("Select p.parentId from Passport p " + "WHERE p.id = :passport_id")
+  String getParentId(@Param("passport_id") String passportId);
 
-
-    /**
-     * Retrieves passports without parent.
-     * @return passports
-     */
-    @Query("SELECT p FROM Passport p "
-            + "LEFT JOIN FETCH p.datasheetMappings dm "
-            + "LEFT JOIN FETCH dm.datasheet "
-            + "WHERE p.status = 'ACTIVE' AND p.parentId IS NULL ")
-    List<Passport> getRootPassports();
+  /**
+   * Retrieves passports without parent.
+   *
+   * @return passports
+   */
+  @Query(
+      "SELECT p FROM Passport p "
+          + "LEFT JOIN FETCH p.datasheetMappings dm "
+          + "LEFT JOIN FETCH dm.datasheet "
+          + "WHERE p.status = 'ACTIVE' AND p.parentId IS NULL ")
+  List<Passport> getRootPassports();
 }

@@ -1,20 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,159 +19,162 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
-
 import io.github.thibaultmeyer.cuid.CUID;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
 
 @Service
 public class PassportService {
 
-    /**
-     * Injecting DatasheetRepository class.
-     */
-    private final DatasheetRepository datasheetRepository;
+  /** Injecting DatasheetRepository class. */
+  private final DatasheetRepository datasheetRepository;
 
-    /**
-     * Injecting PassportRepository class.
-     */
-    private final PassportRepository passportRepository;
+  /** Injecting PassportRepository class. */
+  private final PassportRepository passportRepository;
 
-    /**
-     * Injecting PassportDatasheetMappingRepository class.
-     */
-    private final PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+  /** Injecting PassportDatasheetMappingRepository class. */
+  private final PassportDatasheetMappingRepository passportDatasheetMappingRepository;
 
-    /**
-     * Injecting ObjectMapper bean.
-     */
-    private final ObjectMapper objectMapper;
+  /** Injecting ObjectMapper bean. */
+  private final ObjectMapper objectMapper;
 
-    /**
-     * Injecting DictionaryAdapterFactory class.
-     */
-    private final DictionaryAdapterFactory dictionaryAdapterFactory;
+  /** Injecting DictionaryAdapterFactory class. */
+  private final DictionaryAdapterFactory dictionaryAdapterFactory;
 
-    /**
-     * Constructor.
-     * @param datasheetRepository
-     * @param passportRepository
-     * @param passportDatasheetMappingRepository
-     * @param dictionaryAdapterFactory
-     * @param objectMapper
-     */
-    public PassportService(DatasheetRepository datasheetRepository,
-                           PassportRepository passportRepository,
-                           PassportDatasheetMappingRepository
-                           passportDatasheetMappingRepository,
-                           DictionaryAdapterFactory dictionaryAdapterFactory,
-                           ObjectMapper objectMapper) {
-        this.datasheetRepository = datasheetRepository;
-        this.passportRepository = passportRepository;
-        this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
-        this.dictionaryAdapterFactory = dictionaryAdapterFactory;
-        this.objectMapper = objectMapper;
+  /**
+   * Constructor.
+   *
+   * @param datasheetRepository
+   * @param passportRepository
+   * @param passportDatasheetMappingRepository
+   * @param dictionaryAdapterFactory
+   * @param objectMapper
+   */
+  public PassportService(
+      DatasheetRepository datasheetRepository,
+      PassportRepository passportRepository,
+      PassportDatasheetMappingRepository passportDatasheetMappingRepository,
+      DictionaryAdapterFactory dictionaryAdapterFactory,
+      ObjectMapper objectMapper) {
+    this.datasheetRepository = datasheetRepository;
+    this.passportRepository = passportRepository;
+    this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
+    this.dictionaryAdapterFactory = dictionaryAdapterFactory;
+    this.objectMapper = objectMapper;
+  }
+
+  /**
+   * Creates template Entry.
+   *
+   * @param dictionary
+   * @param data
+   * @return Passport DTO from passport
+   */
+  public PassportDto createPassportUsingDictionary(
+      DataDictionary dictionary, CreatePassportRequestDto data) throws InvalidInputException {
+    JsonNode datasheetData = data.getDatasheetData();
+    try {
+      validatePassportData(dictionary, datasheetData);
+    } catch (JsonValidationException e) {
+      throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
     }
 
-    /**
-     * Creates template Entry.
-     *
-     * @param dictionary
-     * @param data
-     * @return Passport DTO from passport
-     */
-    public PassportDto createPassportUsingDictionary(DataDictionary dictionary,
-            CreatePassportRequestDto data) throws InvalidInputException {
-        JsonNode datasheetData = data.getDatasheetData();
-        try {
-            validatePassportData(dictionary, datasheetData);
-        } catch (JsonValidationException e) {
-            throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    e.getMessage());
-        }
+    int customLength = AppConstants.CUID_LENGTH;
+    CUID cuid = CUID.randomCUID2(customLength);
 
-        int customLength = AppConstants.CUID_LENGTH;
-        CUID cuid = CUID.randomCUID2(customLength);
-
-        Passport rawPassport = new Passport();
-        rawPassport.setId(cuid.toString());
-        rawPassport.setName(data.getPassportName());
-        rawPassport.setStatus(Passport.Status.ACTIVE);
-        rawPassport.setCreatedBy(data.getCreatedBy());
-        rawPassport.setCreatedTime(LocalDateTime.now());
-        String parentId = data.getParentId();
-        if (parentId != null && !parentId.isBlank()) {
-            boolean parentExists = passportRepository.existsById(parentId);
-            if (!parentExists) {
-                throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "Invalid parentId: active parent not found");
-            }
-            rawPassport.setParentId(parentId);
-        }
-        Passport passport = passportRepository.save(rawPassport);
-
-        Datasheet datasheet = new Datasheet();
-        datasheet.setData(datasheetData);
-        datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
-        datasheet.setDataDictionary(dictionary);
-        datasheet.setCreatedBy(data.getCreatedBy());
-        datasheet.setCreatedTime(data.getCreatedTime());
-        datasheet = datasheetRepository.save(datasheet);
-
-        PassportDatasheetMapping passportDatasheet = new PassportDatasheetMapping();
-        passportDatasheet.setPassport(rawPassport);
-        passportDatasheet.setDatasheet(datasheet);
-        PassportDatasheetMapping passportDatasheetMapping =
-                passportDatasheetMappingRepository.save(passportDatasheet);
-        // Set up the data sheet mapping details in the return value of the Passport DTO
-        passport.setDatasheetMappings(new ArrayList<>());
-        passport.getDatasheetMappings().add(passportDatasheetMapping);
-
-        return PassportDto.from(passport);
+    Passport rawPassport = new Passport();
+    rawPassport.setId(cuid.toString());
+    rawPassport.setName(data.getPassportName());
+    rawPassport.setStatus(Passport.Status.ACTIVE);
+    rawPassport.setCreatedBy(data.getCreatedBy());
+    rawPassport.setCreatedTime(LocalDateTime.now());
+    String parentId = data.getParentId();
+    if (parentId != null && !parentId.isBlank()) {
+      boolean parentExists = passportRepository.existsById(parentId);
+      if (!parentExists) {
+        throw new HttpServerErrorException(
+            HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
+      }
+      rawPassport.setParentId(parentId);
     }
 
-    /**
-     * Retrieves passport.
-     *
-     * @param passportId
-     * @return Passport DTO from passport
-     */
-    public PassportDto getPassport(String passportId)
-            throws JsonProcessingException {
+    Datasheet datasheet = new Datasheet();
+    datasheet.setData(datasheetData);
+    datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
+    datasheet.setDataDictionary(dictionary);
+    datasheet.setCreatedBy(data.getCreatedBy());
+    datasheet.setCreatedTime(data.getCreatedTime());
 
-        Optional<Passport> optionalPassport = passportRepository
-                .findPassport(passportId, Passport.Status.ACTIVE);
-        if (optionalPassport.isEmpty()) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "Could not find passport with ID " + passportId);
-        }
+    Passport passport = passportRepository.save(rawPassport);
+    datasheet = datasheetRepository.save(datasheet);
 
-         return PassportDto.from(optionalPassport.get());
+    PassportDatasheetMapping passportDatasheet = new PassportDatasheetMapping();
+    passportDatasheet.setPassport(passport);
+    passportDatasheet.setDatasheet(datasheet);
+    PassportDatasheetMapping passportDatasheetMapping =
+        passportDatasheetMappingRepository.save(passportDatasheet);
+    // Set up the data sheet mapping details in the return value of the Passport DTO
+    passport.setDatasheetMappings(new ArrayList<>());
+    passport.getDatasheetMappings().add(passportDatasheetMapping);
+
+    return PassportDto.from(passport);
+  }
+
+  /**
+   * Retrieves passport.
+   *
+   * @param passportId
+   * @return Passport DTO from passport
+   */
+  public PassportDto getPassport(String passportId) throws JsonProcessingException {
+
+    Optional<Passport> optionalPassport =
+        passportRepository.findPassport(passportId, Passport.Status.ACTIVE);
+    if (optionalPassport.isEmpty()) {
+      throw new HttpServerErrorException(
+          HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId);
     }
 
-    /**
-     * Retrieves passport and its children for the given id.
-     *
-     * @param id
-     * @return a list of {@link PassportDto} objects
-     * @throws JsonProcessingException
-     */
-    public List<PassportDto> getPassportChildren(String id)
-            throws JsonProcessingException {
-        Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
-                passportRepository.findPassportWithDescendants(id);
+    return PassportDto.from(optionalPassport.get());
+  }
 
-        List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
-                .orElse(Collections.emptyList());
+  /**
+   * Retrieves passport and its children for the given id.
+   *
+   * @param id
+   * @return a list of {@link PassportDto} objects
+   * @throws JsonProcessingException
+   */
+  public List<PassportDto> getPassportChildren(String id) throws JsonProcessingException {
+    Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
+        passportRepository.findPassportWithDescendants(id);
 
-        if (resultRows.isEmpty()) {
-            throw new HttpServerErrorException(HttpStatus.NOT_FOUND,
-                    "No active passports found with children");
-        }
+    List<PassportDatasheetResultMapDto> resultRows =
+        optionalPassportList.orElse(Collections.emptyList());
 
-        Map<String, PassportDto> dtoById = new LinkedHashMap<>();
-        for (PassportDatasheetResultMapDto row : resultRows) {
-            String passportId = row.getPassportId();
+    if (resultRows.isEmpty()) {
+      throw new HttpServerErrorException(
+          HttpStatus.NOT_FOUND, "No active passports found with children");
+    }
 
-            PassportDto passportDto = dtoById.computeIfAbsent(passportId, key -> {
+    Map<String, PassportDto> dtoById = new LinkedHashMap<>();
+    for (PassportDatasheetResultMapDto row : resultRows) {
+      String passportId = row.getPassportId();
+
+      PassportDto passportDto =
+          dtoById.computeIfAbsent(
+              passportId,
+              key -> {
                 PassportDto dto = new PassportDto();
                 dto.setId(passportId);
                 dto.setName(row.getPassportName());
@@ -195,142 +183,127 @@ public class PassportService {
                 dto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
                 dto.setDatasheets(new ArrayList<>());
                 return dto;
-            });
+              });
 
-            if (row.getDatasheetId() != null) {
-                boolean alreadyExists = passportDto.getDatasheets().stream()
-                        .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
+      if (row.getDatasheetId() != null) {
+        boolean alreadyExists =
+            passportDto.getDatasheets().stream()
+                .anyMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()));
 
-                if (!alreadyExists) {
-                    DatasheetDto datasheetDto = new DatasheetDto();
-                    datasheetDto.setId(row.getDatasheetId());
-                    datasheetDto.setData(objectMapper.readTree(row.getData()));
-                    if (row.getDataCategory() != null) {
-                        datasheetDto.setDataCategory(DataCategory.fromValue(row
-                                .getDataCategory()));
-                    } else {
-                        datasheetDto.setDataCategory(null);
-                    }
+        if (!alreadyExists) {
+          DatasheetDto datasheetDto = new DatasheetDto();
+          datasheetDto.setId(row.getDatasheetId());
+          datasheetDto.setData(objectMapper.readTree(row.getData()));
+          if (row.getDataCategory() != null) {
+            datasheetDto.setDataCategory(DataCategory.fromValue(row.getDataCategory()));
+          } else {
+            datasheetDto.setDataCategory(null);
+          }
 
-                    if (row.getDataDictionary() != null) {
-                        datasheetDto.setDataDictionary(DataDictionary
-                                .valueOf(row.getDataDictionary()));
-                    } else {
-                        datasheetDto.setDataDictionary(null);
-                    }
-                    datasheetDto.setCreatedBy(row.getCreatedBy());
-                    datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
+          if (row.getDataDictionary() != null) {
+            datasheetDto.setDataDictionary(DataDictionary.valueOf(row.getDataDictionary()));
+          } else {
+            datasheetDto.setDataDictionary(null);
+          }
+          datasheetDto.setCreatedBy(row.getCreatedBy());
+          datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
 
-                    passportDto.getDatasheets().add(datasheetDto);
-                }
-            }
+          passportDto.getDatasheets().add(datasheetDto);
         }
-
-        for (PassportDatasheetResultMapDto row : resultRows) {
-            String passportId = row.getPassportId();
-            String parentId = row.getParentId();
-            if (parentId != null && dtoById.containsKey(parentId)) {
-                PassportDto child = dtoById.get(passportId);
-                PassportDto parent = dtoById.get(parentId);
-                child.setParent(parent);
-            }
-        }
-
-        return new ArrayList<>(dtoById.values());
+      }
     }
 
-    /**
-     * Retrieves the passports with the given parent ID.
-     *
-     * @param passportId
-     * @return a list of {@link PassportDto} objects
-     * @throws JsonProcessingException
-     */
-    public List<PassportDto> getImmediateChildren(String passportId)
-            throws JsonProcessingException {
-        Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
-                passportRepository.findImmediateChildren(passportId);
+    for (PassportDatasheetResultMapDto row : resultRows) {
+      String passportId = row.getPassportId();
+      String parentId = row.getParentId();
+      if (parentId != null && dtoById.containsKey(parentId)) {
+        PassportDto child = dtoById.get(passportId);
+        PassportDto parent = dtoById.get(parentId);
+        child.setParent(parent);
+      }
+    }
 
-        List<PassportDatasheetResultMapDto> resultRows = optionalPassportList
-                .orElse(Collections.emptyList());
+    return new ArrayList<>(dtoById.values());
+  }
 
-        List<PassportDto> passportDtoList = new ArrayList<>();
-        Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
+  /**
+   * Retrieves the passports with the given parent ID.
+   *
+   * @param passportId
+   * @return a list of {@link PassportDto} objects
+   * @throws JsonProcessingException
+   */
+  public List<PassportDto> getImmediateChildren(String passportId) throws JsonProcessingException {
+    Optional<List<PassportDatasheetResultMapDto>> optionalPassportList =
+        passportRepository.findImmediateChildren(passportId);
 
-        for (PassportDatasheetResultMapDto row : resultRows) {
-            PassportDto passportDto = new PassportDto();
-            passportDto.setId(row.getPassportId());
-            passportDto.setName(row.getPassportName());
-            passportDto.setStatus(Passport.Status.fromValue(row.getStatus()));
-            passportDto.setCreatedBy(row.getCreatedBy());
-            passportDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
-            passportDto.setDatasheets(new ArrayList<>());
+    List<PassportDatasheetResultMapDto> resultRows =
+        optionalPassportList.orElse(Collections.emptyList());
 
-            if (row.getDatasheetId() != null) {
-                if (!datasheetDtoMap.containsKey(row.getDatasheetId())) {
-                    DatasheetDto datasheetDto = new DatasheetDto();
-                    datasheetDto.setId(row.getDatasheetId());
-                    datasheetDto.setData(objectMapper.readTree(row.getData()));
-                    if (row.getDataCategory() != null) {
-                        datasheetDto.setDataCategory(DataCategory.fromValue(row
-                                .getDataCategory()));
-                    } else {
-                        datasheetDto.setDataCategory(null);
-                    }
+    List<PassportDto> passportDtoList = new ArrayList<>();
+    Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
 
-                    if (row.getDataDictionary() != null) {
-                        datasheetDto.setDataDictionary(DataDictionary
-                                .valueOf(row.getDataDictionary()));
-                    } else {
-                        datasheetDto.setDataDictionary(null);
-                    }
-                    datasheetDto.setCreatedBy(row.getCreatedBy());
-                    datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
-                    datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
-                }
+    for (PassportDatasheetResultMapDto row : resultRows) {
+      PassportDto passportDto = new PassportDto();
+      passportDto.setId(row.getPassportId());
+      passportDto.setName(row.getPassportName());
+      passportDto.setStatus(Passport.Status.fromValue(row.getStatus()));
+      passportDto.setCreatedBy(row.getCreatedBy());
+      passportDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
+      passportDto.setDatasheets(new ArrayList<>());
 
-                passportDto.getDatasheets().add(datasheetDtoMap
-                        .get(row.getDatasheetId()));
-            }
+      if (row.getDatasheetId() != null) {
+        if (!datasheetDtoMap.containsKey(row.getDatasheetId())) {
+          DatasheetDto datasheetDto = new DatasheetDto();
+          datasheetDto.setId(row.getDatasheetId());
+          datasheetDto.setData(objectMapper.readTree(row.getData()));
+          if (row.getDataCategory() != null) {
+            datasheetDto.setDataCategory(DataCategory.fromValue(row.getDataCategory()));
+          } else {
+            datasheetDto.setDataCategory(null);
+          }
 
-            passportDtoList.add(passportDto);
+          if (row.getDataDictionary() != null) {
+            datasheetDto.setDataDictionary(DataDictionary.valueOf(row.getDataDictionary()));
+          } else {
+            datasheetDto.setDataDictionary(null);
+          }
+          datasheetDto.setCreatedBy(row.getCreatedBy());
+          datasheetDto.setCreatedTime(row.getCreatedTime().toLocalDateTime());
+          datasheetDtoMap.put(datasheetDto.getId(), datasheetDto);
         }
 
-        return passportDtoList;
+        passportDto.getDatasheets().add(datasheetDtoMap.get(row.getDatasheetId()));
+      }
+
+      passportDtoList.add(passportDto);
     }
 
+    return passportDtoList;
+  }
 
+  /**
+   * Validate the passport, throw if there is an error.
+   *
+   * @param dictionary
+   * @param passportData
+   */
+  private void validatePassportData(DataDictionary dictionary, JsonNode passportData)
+      throws JsonValidationException {
+    dictionaryAdapterFactory.getAdapter(dictionary).validatePassportData(passportData);
+  }
 
-    /**
-     * Validate the passport, throw if there is an error.
-     *
-     * @param dictionary
-     * @param passportData
-     */
-    private void validatePassportData(DataDictionary dictionary, JsonNode passportData)
-            throws JsonValidationException {
-        dictionaryAdapterFactory.getAdapter(dictionary)
-        .validatePassportData(passportData);
+  /**
+   * Retrieves all the root passports.
+   *
+   * @return Passport DTO list from passport
+   */
+  public List<PassportDto> getRootPassports() {
+    List<Passport> passports = passportRepository.getRootPassports();
+    if (passports == null) {
+      throw new HttpServerErrorException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Could not retrieve root passports");
     }
-
-    /**
-     * Retrieves all the root passports.
-     *
-     * @return Passport DTO list from passport
-     */
-    public List<PassportDto> getRootPassports() {
-        List<Passport> passports = passportRepository
-                .getRootPassports();
-        if (passports == null) {
-            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Could not retrieve root passports");
-
-        }
-        return passports.stream()
-                .map(PassportDto::from)
-                .collect(Collectors.toList());
-
-    }
-
-
+    return passports.stream().map(PassportDto::from).collect(Collectors.toList());
+  }
 }

@@ -7,25 +7,23 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-/**
- * Redis configuration class.
- */
+/** Redis configuration class. */
 @Configuration
 public class RedisConfig {
 
-    /**
-     * Created Redis template.
-     *
-     * @param redisConnectionFactory
-     * @return Redis template
-     */
-    @Bean
-    public RedisTemplate<String, String> redisTemplate(
-            RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        return template;
-    }
+  /**
+   * Created Redis template.
+   *
+   * @param redisConnectionFactory
+   * @return Redis template
+   */
+  @Bean
+  public RedisTemplate<String, String> redisTemplate(
+      RedisConnectionFactory redisConnectionFactory) {
+    RedisTemplate<String, String> template = new RedisTemplate<>();
+    template.setConnectionFactory(redisConnectionFactory);
+    template.setKeySerializer(new StringRedisSerializer());
+    template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+    return template;
+  }
 }
