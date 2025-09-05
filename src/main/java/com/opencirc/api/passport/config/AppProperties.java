@@ -119,7 +119,7 @@ public class AppProperties {
     private String systemAdminEmail;
   
     /**
-     * Secret key to compute CRC32.
+     * Secret key to compute Hmac.
      */
     @Value("${api.secret.key}")
     private String apiSecretKey;

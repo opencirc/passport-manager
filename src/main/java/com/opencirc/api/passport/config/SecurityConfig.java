@@ -1,7 +1,9 @@
 package com.opencirc.api.passport.config;
 
-import com.opencirc.api.passport.constants.AppConstants;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,9 +21,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.constants.AppConstants;
+import com.opencirc.api.passport.service.ApiKeyService;
+import com.opencirc.api.passport.service.JwtService;
+import com.opencirc.api.passport.service.PasswordService;
 
 /**
  * Spring security configuration.
@@ -31,22 +36,46 @@ import java.util.Collections;
 public class SecurityConfig {
 
     /**
-     * Injecting JwtFilter class.
-     */
-    @Autowired
-    private JwtFilter jwtFilter;
-
-    /**
      * Injecting UserDetailsService class.
      */
-    @Autowired
     private UserDetailsService userDetailsService;
 
     /**
      * Injecting Properties class.
      */
-    @Autowired
     private AppProperties properties;
+
+    /**
+     * Constructor.
+     * @param userDetailsService
+     * @param properties
+     */
+    public SecurityConfig(UserDetailsService userDetailsService,
+            AppProperties properties) {
+        this.userDetailsService = userDetailsService;
+        this.properties = properties;
+    }
+
+    /**
+     * JwtFilter bean.
+     * @param jwtService
+     * @param properties
+     * @param apiKeyService
+     * @param passwordService
+     * @param authUserDetailsService
+     * @param objectMapper
+     * @return JwtFilter
+     */
+    @Bean
+    public JwtFilter jwtFilter(JwtService jwtService,
+                               AppProperties properties,
+                               ApiKeyService apiKeyService,
+                               PasswordService passwordService,
+                               AuthUserDetailsService authUserDetailsService,
+                               ObjectMapper objectMapper) {
+        return new JwtFilter(jwtService, properties, apiKeyService,
+                passwordService, authUserDetailsService, objectMapper);
+    }
 
     /**
      * PasswordEncoder bean.
@@ -71,6 +100,7 @@ public class SecurityConfig {
 
     /**
      * Bean of authenticationProvider.
+     * @param bCryptPasswordEncoder
      * @return the instance of authentication provider
      */
     @Bean
@@ -85,10 +115,11 @@ public class SecurityConfig {
     /**
      * Configuring security filter chain.
      * @param http
+     * @param jwtFilter
      * @return instance of security filter chain
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter)
             throws Exception {
         http.csrf(customizer -> customizer.disable())
         .cors(corsCustomizer -> corsCustomizer
