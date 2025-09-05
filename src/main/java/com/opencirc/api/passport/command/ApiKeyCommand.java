@@ -13,6 +13,7 @@ import com.opencirc.api.passport.dto.GeneratedApiKeyDto;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.service.ApiKeyService;
+import com.opencirc.api.passport.util.StringUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +25,11 @@ public class ApiKeyCommand {
      * Injecting ApiKeyService.
      */
     private final ApiKeyService apiKeyService;
+
+    /**
+     * Format to show API keys to user in terminal.
+     */
+    private static final String API_TOKEN_DISPLAY_FORMAT = "%-40s %-20s %-25s%n";
 
     /**
      * Constructor.
@@ -67,7 +73,7 @@ public class ApiKeyCommand {
 
             UUID userUuid;
             try {
-                userUuid = UUID.fromString(userId);
+                userUuid = StringUtil.validateUuid(userId);
             } catch (IllegalArgumentException e) {
                 throw new InvalidInputException("Invalid user-id. Expected a UUID.");
             }
@@ -129,7 +135,7 @@ public class ApiKeyCommand {
 
         UUID userUuid;
         try {
-            userUuid = UUID.fromString(userId);
+            userUuid = StringUtil.validateUuid(userId);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid user ID format: {}", userId);
             System.err.println("Invalid UUID format: " + userId);
@@ -145,14 +151,14 @@ public class ApiKeyCommand {
 
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter
                     .ofPattern("yyyy-MM-dd");
-            System.out.printf("%-40s %-20s %-25s%n", "Key", "Name", "Expiration");
+            System.out.printf(API_TOKEN_DISPLAY_FORMAT, "Key", "Name", "Expiration");
             System.out.println("---------------------------------------"
                     + "------------------------------------");
 
             for (ApiKey token : tokens) {
                 String expiration = (token.getExpirationTime() == null) ? "Never"
                         : token.getExpirationTime().format(dateTimeFormatter);
-                System.out.printf("%-40s %-20s %-25s%n", token.getId(),
+                System.out.printf(API_TOKEN_DISPLAY_FORMAT, token.getId(),
                         token.getName() == null ? "" : token.getName(), expiration);
             }
         } catch (Exception e) {
@@ -183,7 +189,7 @@ public class ApiKeyCommand {
 
         UUID uuid;
         try {
-            uuid = UUID.fromString(keyId);
+            uuid = StringUtil.validateUuid(keyId);
         } catch (IllegalArgumentException e) {
             log.error("Invalid key ID format: {}", keyId);
             System.err.println("Invalid UUID format: " + keyId);
