@@ -122,10 +122,7 @@ public class PassportFromJsonSeeder {
                 .orElseThrow(() -> new IllegalStateException(
                         "No users" + " found in the database. Seed users first."));
 
-        CreatedByDto createdByDto = new CreatedByDto();
-        createdByDto.setEmail(user.getEmail());
-        createdByDto.setFullName(user.getFullName() != null
-                ? user.getFullName().trim() : null);
+        CreatedByDto createdByDto = CreatedByDto.fromUser(user);
 
         if (uriList == null || uriList.isEmpty()) {
             throw new IllegalStateException(

@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.opencirc.api.passport.model.User;
 
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -25,4 +26,17 @@ public class CreatedByDto {
      */
     @Email
     private String email;
+
+    /**
+     * Maps the User to CreatedByDto.
+     * @param user
+     * @return CreatedByDto
+     */
+    public static CreatedByDto fromUser(User user) {
+        CreatedByDto createdByDto = new CreatedByDto();
+        createdByDto.setFullName(user.getFullName() != null
+                ? user.getFullName().trim() : null);
+        createdByDto.setEmail(user.getEmail());
+        return createdByDto;
+    }
 }

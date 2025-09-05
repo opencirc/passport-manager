@@ -110,9 +110,7 @@ public class PassportFromApiSeeder {
                     () -> new IllegalStateException("No users found in the database. "
                             + "Please seed users before running passport seeding."));
 
-            CreatedByDto createdByDto = new CreatedByDto();
-            createdByDto.setFullName(user.getFullName() != null ? user.getFullName().trim() : null);
-            createdByDto.setEmail(user.getEmail());
+            CreatedByDto createdByDto = CreatedByDto.fromUser(user);
             List<String> uris = appProperties.getUriList();
             if (uris == null || uris.isEmpty()) {
                 throw new IllegalStateException(
