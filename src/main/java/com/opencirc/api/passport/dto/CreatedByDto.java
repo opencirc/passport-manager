@@ -33,10 +33,14 @@ public class CreatedByDto {
      * @return CreatedByDto
      */
     public static CreatedByDto fromUser(User user) {
-        CreatedByDto createdByDto = new CreatedByDto();
-        createdByDto.setFullName(user.getFullName() != null
-                ? user.getFullName().trim() : null);
-        createdByDto.setEmail(user.getEmail());
-        return createdByDto;
+        if (user == null) {
+            return null;
+        }
+        String name = user.getFullName();
+        String email = user.getEmail();
+        CreatedByDto dto = new CreatedByDto();
+        dto.setFullName(name != null && !name.isBlank() ? name.trim() : null);
+        dto.setEmail(email != null ? email.trim() : null);
+        return dto;
     }
 }
