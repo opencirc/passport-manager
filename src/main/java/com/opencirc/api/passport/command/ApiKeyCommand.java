@@ -17,7 +17,7 @@ import com.opencirc.api.passport.util.StringUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Command(group = "API key Commands")
+@Command(group = "API Key Commands")
 @Slf4j
 public class ApiKeyCommand {
 
@@ -73,7 +73,7 @@ public class ApiKeyCommand {
 
             UUID userUuid;
             try {
-                userUuid = StringUtil.validateUuid(userId);
+                userUuid = StringUtil.validateUuid(userId.trim());
             } catch (IllegalArgumentException e) {
                 throw new InvalidInputException("Invalid user-id. Expected a UUID.");
             }
@@ -81,7 +81,7 @@ public class ApiKeyCommand {
             LocalDate formattedExpirationDate = null;
             if (expirationDate != null && !expirationDate.isBlank()) {
                 try {
-                    formattedExpirationDate = LocalDate.parse(expirationDate);
+                    formattedExpirationDate = LocalDate.parse(expirationDate.trim());
 
                 } catch (DateTimeParseException e) {
                     throw new InvalidInputException(
@@ -107,7 +107,7 @@ public class ApiKeyCommand {
             return;
         } catch (Exception e) {
             log.error("Error while creating API key: {}", e.getMessage(), e);
-            System.err.println("Error: " + e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 
@@ -128,14 +128,14 @@ public class ApiKeyCommand {
             @Option(longNames = "user-id", required = true) String userId) {
 
         if (userId == null || userId.isBlank()) {
-            log.error("Validation error: User ID is required.");
+            log.warn("Validation error: User ID is required.");
             System.err.println("Validation error: User ID is required.");
             return;
         }
 
         UUID userUuid;
         try {
-            userUuid = StringUtil.validateUuid(userId);
+            userUuid = StringUtil.validateUuid(userId.trim());
         } catch (IllegalArgumentException e) {
             log.warn("Invalid user ID format: {}", userId);
             System.err.println("Invalid UUID format: " + userId);
@@ -189,9 +189,9 @@ public class ApiKeyCommand {
 
         UUID uuid;
         try {
-            uuid = StringUtil.validateUuid(keyId);
+            uuid = StringUtil.validateUuid(keyId.trim());
         } catch (IllegalArgumentException e) {
-            log.error("Invalid key ID format: {}", keyId);
+            log.warn("Invalid key ID format: {}", keyId);
             System.err.println("Invalid UUID format: " + keyId);
             return;
         }
