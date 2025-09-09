@@ -15,7 +15,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dao.PassportTemplateRepository;
+import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportTemplateDto;
+import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.ResourceNotFoundException;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Passport;
@@ -99,9 +101,13 @@ public class PassportTemplateService {
             rootNode = (ObjectNode) newDataNode;
 
         }
-        String userId = userContext.getCurrentUserId();
+        UserDto userDtoContext = userContext.getCurrentUser();
         template = PassportTemplate.builder().name(templateName).template(rootNode)
-                .createdBy(userId).build();
+                .createdById(userDtoContext.getId().toString())
+                .createdBy(new CreatedByDto(userDtoContext.getFullName(),
+                        userDtoContext.getEmail()))
+                .build();
+
         return template;
     }
 

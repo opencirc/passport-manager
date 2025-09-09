@@ -1,34 +1,43 @@
 package com.opencirc.api.passport.context;
 
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
+import com.opencirc.api.passport.dto.UserDto;
 
 @Component
 public class UserContext {
 
+
     /**
-     * Gets the userId of the currently authenticated user.
+     * Gets the user information of the currently authenticated user.
      *
-     * @return the userId
-     * @throws AuthenticationCredentialsNotFoundException, when unauthenticated
+     * @return the instance of UserDto
      */
-    public String getCurrentUserId() {
+    public UserDto getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext()
                 .getAuthentication();
 
-        if (authentication != null && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken)) {
-            Object principal = authentication.getPrincipal();
-            if (principal instanceof UserPrincipal) {
-                return ((UserPrincipal) principal).getUserId();
+        if (authentication != null
+                && authentication.getPrincipal() instanceof UserPrincipal userPrincipal) {
+            String userId = userPrincipal.getUserId();
+            if (userId == null || userId.isBlank()) {
+                throw new AuthenticationCredentialsNotFoundException(
+                        "Missing user ID in authenticated principal");
+            }
+
+            try {
+                return UserDto.from(userPrincipal);
+            } catch (IllegalArgumentException e) {
+                throw new AuthenticationCredentialsNotFoundException(
+                        "Invalid user ID format in authenticated principal", e);
             }
         }
+
         throw new AuthenticationCredentialsNotFoundException(
-                "No authenticated principal with a userId is available");
+                "No authenticated principal is available");
     }
 }

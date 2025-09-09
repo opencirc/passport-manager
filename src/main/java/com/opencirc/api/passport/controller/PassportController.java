@@ -2,9 +2,6 @@ package com.opencirc.api.passport.controller;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -102,7 +99,8 @@ public class PassportController {
     @GetMapping("/api/passport/{passportId}/immediateChildren")
     public ResponseEntity<List<PassportDto>> getImmediateChildren(
             @Parameter(description = "ID of the Passport",
-                    required = true, in = ParameterIn.PATH) @PathVariable String passportId)
+                    required = true, in = ParameterIn.PATH)
+            @PathVariable String passportId)
             throws JsonProcessingException, JsonValidationException {
         return ResponseEntity.ok(passportService.getImmediateChildren(passportId));
     }

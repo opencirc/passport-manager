@@ -39,11 +39,16 @@ public class PassportTemplateDto {
     private JsonNode template;
 
     /**
-     * Created by.
+     * Id of the user who created the template.
      */
     @JsonProperty
-    private String createdBy;
+    private String createdById;
 
+    /**
+     * Metadata of the user who created the template.
+     */
+    @JsonProperty
+    private CreatedByDto createdBy;
     /**
      * Time of creation.
      */
@@ -62,6 +67,7 @@ public class PassportTemplateDto {
         dto.setId(String.valueOf(passportTemplate.getId()));
         dto.setName(passportTemplate.getName());
         dto.setTemplate(passportTemplate.getTemplate());
+        dto.setCreatedById(passportTemplate.getCreatedById());
         dto.setCreatedBy(passportTemplate.getCreatedBy());
         dto.setCreatedTime(passportTemplate.getCreatedTime());
 

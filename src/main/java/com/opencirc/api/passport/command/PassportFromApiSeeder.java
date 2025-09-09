@@ -19,6 +19,7 @@ import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.JsonValidationException;
@@ -109,6 +110,7 @@ public class PassportFromApiSeeder {
                     () -> new IllegalStateException("No users found in the database. "
                             + "Please seed users before running passport seeding."));
 
+            CreatedByDto createdByDto = CreatedByDto.fromUser(user);
             List<String> uris = appProperties.getUriList();
             if (uris == null || uris.isEmpty()) {
                 throw new IllegalStateException(
@@ -117,7 +119,7 @@ public class PassportFromApiSeeder {
             for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
                 String uri = uris.get(index % uris.size());
                 createPassportRecursive(1, String.valueOf(index + 1), uri, index, null,
-                        String.valueOf(user.getId()));
+                        String.valueOf(user.getId()), createdByDto);
             }
             log.info("Passport seeding completed.");
         } catch (RuntimeException e) {
@@ -138,9 +140,10 @@ public class PassportFromApiSeeder {
      * @param uriIndex
      * @param parentId
      * @param userId
+     * @param createdByDto
      */
     private void createPassportRecursive(int level, String nameSuffix, String uri,
-            int uriIndex, String parentId, String userId) {
+            int uriIndex, String parentId, String userId, CreatedByDto createdByDto) {
         if (level > appProperties.getMaximumLevel()) {
             return;
         }
@@ -161,8 +164,10 @@ public class PassportFromApiSeeder {
         request.setDatasheetData(objectMapper.valueToTree(templateNode));
         request.setDataCategory(DataCategory.GENERIC.getValue());
         request.setPassportName("Passport" + nameSuffix);
-        request.setCreatedBy(userId);
+        request.setCreatedById(userId);
+        request.setCreatedBy(createdByDto);
         request.setParentId(parentId);
+
         request.setCreatedTime(LocalDateTime.now());
 
         PassportDto createdPassport = passportService
@@ -173,7 +178,7 @@ public class PassportFromApiSeeder {
             int nextUriIndex = (uriIndex + index + 1) % uris.size();
             String nextUri = uris.get(nextUriIndex);
             createPassportRecursive(level + 1, nameSuffix + "." + (index + 1), nextUri,
-                    nextUriIndex, createdPassport.getId(), userId);
+                    nextUriIndex, createdPassport.getId(), userId, createdByDto);
         }
     }
 

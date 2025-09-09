@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.dto;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /**
  * Interface to map the result set to passportDto.
@@ -48,12 +48,34 @@ public interface PassportDatasheetResultMapDto {
     String getDataCategory();
 
     /**
-     * @return the user who created the passport or datasheet
+     * @return the user id who created the passport
      */
-    String getCreatedBy();
+    String getPassportCreatedById();
 
     /**
-     * @return the creation timestamp
+     * @return the JSON (as text) containing user information who
+     * created the passport.
      */
-    Timestamp getCreatedTime();
+    String getPassportCreatedBy();
+
+    /**
+     * @return the creation timestamp of the passport
+     */
+    LocalDateTime getPassportCreatedTime();
+
+    /**
+     * @return the user id who created the datasheet
+     */
+    String getDatasheetCreatedById();
+
+    /**
+     * @return the JSON (as text) containing user information who
+     * created the datasheet.
+     */
+    String getDatasheetCreatedBy();
+
+    /**
+     * @return the creation timestamp of the datasheet
+     */
+    LocalDateTime getDatasheetCreatedTime();
 }

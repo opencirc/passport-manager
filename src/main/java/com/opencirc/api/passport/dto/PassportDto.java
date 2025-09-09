@@ -49,10 +49,17 @@ public class PassportDto {
 
 
     /**
-     * User who created Passport.
+     * Id of the user who created Passport.
      */
     @JsonProperty
-    private String createdBy;
+    private String createdById;
+
+    /**
+     * Metadata of the user who created Passport.
+     */
+    @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private CreatedByDto createdBy;
 
     /**
      * Time of passport creation.
@@ -75,6 +82,7 @@ public class PassportDto {
         dto.setId(passport.getId());
         dto.setName(passport.getName());
         dto.setStatus(passport.getStatus());
+        dto.setCreatedById(passport.getCreatedById());
         dto.setCreatedBy(passport.getCreatedBy());
         dto.setCreatedTime(passport.getCreatedTime());
 
@@ -86,5 +94,5 @@ public class PassportDto {
 
         return dto;
     }
-    
+
 }
