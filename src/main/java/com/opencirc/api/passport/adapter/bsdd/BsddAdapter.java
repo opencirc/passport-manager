@@ -200,7 +200,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
       }
 
       UriComponentsBuilder uriBuilder =
-          UriComponentsBuilder.fromHttpUrl(properties.getBsddPropertiesWithDetailUrl())
+          UriComponentsBuilder.fromHttpUrl(properties.getBsddClassDetailsUrl())
               .queryParam(AppConstants.URI, uri);
       String url = uriBuilder.toUriString();
 

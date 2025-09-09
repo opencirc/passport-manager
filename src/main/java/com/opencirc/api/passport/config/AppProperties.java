@@ -15,19 +15,19 @@ public class AppProperties {
 
   /** URL for searching class in BsDD. */
   @Value("${bsDD.class.searchText.url}")
-  private String bsDDClassSearchTextURL;
+  private String bsddClassSearchTextUrl;
 
   /** URL for fetching class details in BsDD. */
   @Value("${bsDD.classDetails.url}")
-  private String bsDDClassDetailsURL;
+  private String bsddClassDetailsUrl;
 
   /** URL for fetching properties with detail BsDD. */
   @Value("${bsDD.propertiesWithDetail.url}")
-  private String bsDDPropertiesWithDetailURL;
+  private String bsddPropertiesWithDetailUrl;
 
   /** URL for text based search in bsdd. */
   @Value("${bsDD.textSearch.url}")
-  private String bsDDTextSearchURL;
+  private String bsddTextSearchUrl;
 
   /** Access token expiration time. */
   @Value("${jwt.access.token.expiration.time}")
