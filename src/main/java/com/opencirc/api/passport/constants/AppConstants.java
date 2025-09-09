@@ -85,4 +85,10 @@ public final class AppConstants {
 
   /** API_KEY_HMAC_HEX_LENGTH. */
   public static final int API_KEY_HMAC_HEX_LENGTH = 12;
+
+  /** HEADER_API_KEY. */
+  public static final String HEADER_API_KEY = "X-Api-Key";
+
+  /** HEADER_API_SECRET. */
+  public static final String HEADER_API_SECRET = "X-Api-Secret";
 }

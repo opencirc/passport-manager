@@ -15,19 +15,19 @@ public class AppProperties {
 
   /** URL for searching class in BsDD. */
   @Value("${bsDD.class.searchText.url}")
-  private String bsddClassSearchTextUrl;
+  private String bsDDClassSearchTextURL;
 
   /** URL for fetching class details in BsDD. */
   @Value("${bsDD.classDetails.url}")
-  private String bsddClassDetailsUrl;
+  private String bsDDClassDetailsURL;
 
   /** URL for fetching properties with detail BsDD. */
   @Value("${bsDD.propertiesWithDetail.url}")
-  private String bsddPropertiesWithDetailUrl;
+  private String bsDDPropertiesWithDetailURL;
 
   /** URL for text based search in bsdd. */
   @Value("${bsDD.textSearch.url}")
-  private String bsddTextSearchUrl;
+  private String bsDDTextSearchURL;
 
   /** Access token expiration time. */
   @Value("${jwt.access.token.expiration.time}")
@@ -73,7 +73,7 @@ public class AppProperties {
   @Value("${seed.passport.templates.path}")
   private String templatePath;
 
-  /** Secret key to compute CRC32. */
+  /** Secret key to compute Hmac. */
   @Value("${api.secret.key}")
   private String apiSecretKey;
 

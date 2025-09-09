@@ -1,40 +1,81 @@
 package com.opencirc.api.passport.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.model.ApiKey;
+import com.opencirc.api.passport.service.ApiKeyService;
 import com.opencirc.api.passport.service.JwtService;
+import com.opencirc.api.passport.service.PasswordService;
+import com.opencirc.api.passport.util.StringUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /** Filter to validate the JWT token. */
-@Component
+@Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
   /** Injecting JwtService class. */
-  @Autowired private JwtService jwtService;
-
-  /** Injecting ApplicationContext class. */
-  @Autowired private ApplicationContext context;
+  private final JwtService jwtService;
 
   /** Injecting Properties class. */
-  @Autowired private AppProperties properties;
+  private final AppProperties properties;
+
+  /** Injecting ApiKeyService class. */
+  private final ApiKeyService apiKeyService;
+
+  /** Injecting PasswordService class. */
+  private final PasswordService passwordService;
+
+  /** Injecting AuthUserDetailsService class. */
+  private final AuthUserDetailsService authUserDetailsService;
+
+  /** Injecting ObjectMapper class. */
+  private final ObjectMapper objectMapper;
 
   /**
-   * Filters the http request and validates the jwt token.
+   * Constructor to initialize JwtFilter dependencies.
+   *
+   * @param jwtService
+   * @param properties
+   * @param apiKeyService
+   * @param passwordService
+   * @param authUserDetailsService
+   * @param objectMapper
+   */
+  public JwtFilter(
+      JwtService jwtService,
+      AppProperties properties,
+      ApiKeyService apiKeyService,
+      PasswordService passwordService,
+      AuthUserDetailsService authUserDetailsService,
+      ObjectMapper objectMapper) {
+    this.jwtService = jwtService;
+    this.properties = properties;
+    this.apiKeyService = apiKeyService;
+    this.passwordService = passwordService;
+    this.authUserDetailsService = authUserDetailsService;
+    this.objectMapper = objectMapper;
+  }
+
+  /**
+   * Processes incoming HTTP requests and validates authentication.
    *
    * @param request
    * @param response
@@ -45,13 +86,20 @@ public class JwtFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-    String accessToken = extractTokenFromCookies(request, "access_token");
-    String refreshToken = extractTokenFromCookies(request, "refresh_token");
+    String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
+    if (apiKeyHeader != null && !apiKeyHeader.isBlank()) {
+      handleApiKeyAuth(request, response, filterChain, apiKeyHeader.trim());
+      return;
+    }
+
+    String accessToken = extractTokenFromCookies(request, AppConstants.COOKIE_ACCESS_TOKEN);
+    String refreshToken = extractTokenFromCookies(request, AppConstants.COOKIE_REFRESH_TOKEN);
 
     if (accessToken == null && refreshToken != null) {
       accessToken = handleRefreshToken(response, refreshToken);
       if (accessToken == null) {
-        sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid refresh token");
+        sendErrorResponse(
+            response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_TOKEN);
         return;
       }
     }
@@ -71,6 +119,88 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  /**
+   * Handles authentication using API key and secret headers.
+   *
+   * @param request
+   * @param response
+   * @param filterChain
+   * @param apiKeyHeader
+   */
+  private void handleApiKeyAuth(
+      HttpServletRequest request,
+      HttpServletResponse response,
+      FilterChain filterChain,
+      String apiKeyHeader)
+      throws IOException, ServletException {
+
+    UUID apiKeyUuid;
+    try {
+      apiKeyUuid = StringUtil.validateUuid(apiKeyHeader);
+    } catch (IllegalArgumentException ex) {
+      sendErrorResponse(
+          response, HttpServletResponse.SC_BAD_REQUEST, AppConstants.ERR_INVALID_CREDENTIALS);
+      return;
+    }
+    if (apiKeyUuid == null) {
+      sendErrorResponse(
+          response, HttpServletResponse.SC_BAD_REQUEST, AppConstants.ERR_INVALID_CREDENTIALS);
+      return;
+    }
+
+    ApiKey apiKey = apiKeyService.findById(apiKeyUuid);
+
+    if (apiKey == null) {
+      sendErrorResponse(
+          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
+      return;
+    }
+
+    String apiSecretHeader = request.getHeader(AppConstants.HEADER_API_SECRET);
+    if (apiSecretHeader == null || apiSecretHeader.isBlank()) {
+      sendErrorResponse(
+          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
+      return;
+    }
+
+    if (!passwordService.verifyPassword(apiSecretHeader.trim(), apiKey.getSecret())) {
+      sendErrorResponse(
+          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
+      return;
+    }
+
+    if (apiKey.getExpirationTime() != null
+        && !Instant.now().isBefore(apiKey.getExpirationTime().toInstant())) {
+      sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "API key expired");
+      return;
+    }
+
+    try {
+      if (apiKey.getUserId() == null) {
+        log.warn("API-key auth: missing userId on ApiKey {}", apiKey.getId());
+        sendErrorResponse(
+            response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
+        return;
+      }
+      UserDetails userDetails = authUserDetailsService.loadUserById(apiKey.getUserId().toString());
+
+      UsernamePasswordAuthenticationToken authToken =
+          new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+      authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+      SecurityContextHolder.getContext().setAuthentication(authToken);
+
+      filterChain.doFilter(request, response);
+    } catch (UsernameNotFoundException e) {
+      log.warn("API-key auth: user not found for provided API key");
+      sendErrorResponse(
+          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
+    } catch (Exception e) {
+      log.error("API-key auth error", e);
+      sendErrorResponse(
+          response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+    }
   }
 
   /**
@@ -108,6 +238,10 @@ public class JwtFilter extends OncePerRequestFilter {
           properties.getAccessTokenExpiryTime());
       return newAccessToken;
     } catch (AuthenticationException e) {
+      log.info("Refresh token rejected: {}", e.getMessage());
+      return null;
+    } catch (Exception e) {
+      log.error("Refresh token processing error", e);
       return null;
     }
   }
@@ -124,7 +258,8 @@ public class JwtFilter extends OncePerRequestFilter {
     try {
       return jwtService.extractUserId(token);
     } catch (Exception e) {
-      sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+      sendErrorResponse(
+          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_TOKEN);
       return null;
     }
   }
@@ -141,7 +276,7 @@ public class JwtFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, String accessToken, String userId)
       throws IOException {
     try {
-      AuthUserDetailsService authUserDetailsService = context.getBean(AuthUserDetailsService.class);
+
       UserDetails userDetails = authUserDetailsService.loadUserById(userId);
 
       if (!jwtService.validateToken(accessToken, userDetails)) {
@@ -154,15 +289,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
       SecurityContextHolder.getContext().setAuthentication(authToken);
     } catch (UsernameNotFoundException e) {
-      sendErrorResponse(response, HttpServletResponse.SC_NOT_FOUND, "User not found");
+      log.warn("JWT auth: user not found for id {}", userId);
+      sendErrorResponse(
+          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_TOKEN);
     } catch (AuthenticationException e) {
+      log.warn("JWT auth failed: {}", e.getMessage());
       sendErrorResponse(
-          response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token: " + e.getMessage());
+          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_TOKEN);
     } catch (Exception e) {
+      log.error("JWT auth unexpected error", e);
       sendErrorResponse(
-          response,
-          HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-          "Internal server error: " + e.getMessage());
+          response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
     }
   }
 
@@ -175,6 +312,18 @@ public class JwtFilter extends OncePerRequestFilter {
    */
   private void sendErrorResponse(HttpServletResponse response, int status, String message)
       throws IOException {
-    response.sendError(status, message);
+    SecurityContextHolder.clearContext();
+    if (response.isCommitted()) {
+      return;
+    }
+    response.setStatus(status);
+    response.setContentType("application/json");
+    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+    if (status == HttpServletResponse.SC_UNAUTHORIZED
+        || status == HttpServletResponse.SC_FORBIDDEN) {
+      response.setHeader("Cache-Control", "no-store");
+      response.setHeader("Pragma", "no-cache");
+    }
+    objectMapper.writeValue(response.getWriter(), Map.of("error", message));
   }
 }
