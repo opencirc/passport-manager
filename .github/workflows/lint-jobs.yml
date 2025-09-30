@@ -37,3 +37,6 @@ jobs:
 
       - name: 'Run Checkstyle'
         run: mvn --no-transfer-progress checkstyle:check
+
+      - name: 'Check Checkstyle config'
+        run: mvn checkstyle:check -X | grep "configLocation"
