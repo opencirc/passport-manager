@@ -1,9 +1,12 @@
 package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -54,9 +57,15 @@ public class Datasheet {
   @Enumerated(EnumType.STRING)
   private DataDictionary dataDictionary;
 
-  /** User who created the datasheet. */
-  @Column(name = "created_by")
-  private String createdBy;
+  /** Id of the user who created the datasheet. */
+  @Column(name = "created_by_id")
+  private String createdById;
+
+  /** User information, stored as JSON. */
+  @Column(name = "created_by", columnDefinition = "jsonb", nullable = false)
+  @Convert(converter = CreatedByDtoConverter.class)
+  @ColumnTransformer(write = "?::jsonb")
+  private CreatedByDto createdBy;
 
   /** Time when datasheet is created. */
   @Column(name = "created_time", updatable = false, insertable = false)

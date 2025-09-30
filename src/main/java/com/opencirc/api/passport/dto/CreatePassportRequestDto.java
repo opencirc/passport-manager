@@ -27,8 +27,11 @@ public class CreatePassportRequestDto {
   /** Parent Id of the passport. */
   private String parentId;
 
-  /** Created By. */
-  private String createdBy;
+  /** ID of the user who created the passport. */
+  private String createdById;
+
+  /** User metadata who creates the passport. */
+  private CreatedByDto createdBy;
 
   /** Time of creation. */
   private LocalDateTime createdTime;

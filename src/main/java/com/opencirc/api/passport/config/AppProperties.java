@@ -14,19 +14,19 @@ import org.springframework.stereotype.Component;
 public class AppProperties {
 
   /** URL for searching class in BsDD. */
-  @Value("${bsDD.class.searchText.url}")
+  @Value("${bsdd.class.searchText.url}")
   private String bsddClassSearchTextUrl;
 
   /** URL for fetching class details in BsDD. */
-  @Value("${bsDD.classDetails.url}")
+  @Value("${bsdd.classDetails.url}")
   private String bsddClassDetailsUrl;
 
   /** URL for fetching properties with detail BsDD. */
-  @Value("${bsDD.propertiesWithDetail.url}")
+  @Value("${bsdd.propertiesWithDetail.url}")
   private String bsddPropertiesWithDetailUrl;
 
   /** URL for text based search in bsdd. */
-  @Value("${bsDD.textSearch.url}")
+  @Value("${bsdd.textSearch.url}")
   private String bsddTextSearchUrl;
 
   /** Access token expiration time. */
@@ -72,6 +72,14 @@ public class AppProperties {
   /** Path where templates are stored in json format. */
   @Value("${seed.passport.templates.path}")
   private String templatePath;
+
+  /** System admin name. */
+  @Value("${system.admin.full-name}")
+  private String systemAdminName;
+
+  /** System admin email. */
+  @Value("${system.admin.email}")
+  private String systemAdminEmail;
 
   /** Secret key to compute Hmac. */
   @Value("${api.secret.key}")

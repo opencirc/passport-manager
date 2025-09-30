@@ -6,6 +6,7 @@ import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
@@ -101,6 +102,8 @@ public class PassportFromJsonSeeder {
                     new IllegalStateException(
                         "No users" + " found in the database. Seed users first."));
 
+    CreatedByDto createdByDto = CreatedByDto.fromUser(user);
+
     if (uriList == null || uriList.isEmpty()) {
       throw new IllegalStateException(
           "No templates loaded; ensure template file at "
@@ -110,7 +113,8 @@ public class PassportFromJsonSeeder {
 
     for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
       String uri = uriList.get(i % uriList.size());
-      createPassportRecursive(1, String.valueOf(i + 1), uri, i, null, String.valueOf(user.getId()));
+      createPassportRecursive(
+          1, String.valueOf(i + 1), uri, i, null, String.valueOf(user.getId()), createdByDto);
     }
     log.info("Passport seeding from JSON templates completed.");
   }
@@ -124,9 +128,16 @@ public class PassportFromJsonSeeder {
    * @param uriIndex
    * @param parentId
    * @param userId
+   * @param createdByDto
    */
   private void createPassportRecursive(
-      int level, String nameSuffix, String uri, int uriIndex, String parentId, String userId) {
+      int level,
+      String nameSuffix,
+      String uri,
+      int uriIndex,
+      String parentId,
+      String userId,
+      CreatedByDto createdByDto) {
     if (level > appProperties.getMaximumLevel()) {
       return;
     }
@@ -141,7 +152,8 @@ public class PassportFromJsonSeeder {
     request.setDatasheetData(templateNode);
     request.setDataCategory(DataCategory.GENERIC.getValue());
     request.setPassportName("Passport" + nameSuffix);
-    request.setCreatedBy(userId);
+    request.setCreatedById(userId);
+    request.setCreatedBy(createdByDto);
     request.setParentId(parentId);
     request.setCreatedTime(LocalDateTime.now());
     PassportDto createdPassport =
@@ -156,7 +168,8 @@ public class PassportFromJsonSeeder {
           uriList.get(nextUriIndex),
           nextUriIndex,
           createdPassport.getId(),
-          userId);
+          userId,
+          createdByDto);
     }
   }
 }

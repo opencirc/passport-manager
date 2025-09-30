@@ -13,11 +13,16 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 public class ApiKeyService {
 
   /** Injecting ApiKeyRepository class. */
@@ -96,7 +101,49 @@ public class ApiKeyService {
     }
 
     apiKeyRepository.save(apiKey);
+
     return new GeneratedApiKeyDto(apiKey, rawSecret);
+  }
+
+  /**
+   * Lists all the api tokens for the userId.
+   *
+   * @param userId
+   * @return list of ApiKey instances
+   */
+  @Transactional(readOnly = true)
+  public List<ApiKey> getApiTokens(UUID userId) {
+    if (userId == null) {
+      throw new InvalidInputException("User ID must not be null");
+    }
+    if (!userRepository.existsById(userId)) {
+      throw new InvalidInputException("No user found with id: " + userId);
+    }
+    return apiKeyRepository.findAllByUserId(userId);
+  }
+
+  /**
+   * Deletes the api token for the given key.
+   *
+   * @param keyId
+   * @return result
+   */
+  @Transactional
+  public boolean deleteApiToken(UUID keyId) {
+    if (keyId == null) {
+      throw new InvalidInputException("Key ID must not be null");
+    }
+    try {
+      apiKeyRepository.deleteById(keyId);
+      return true;
+    } catch (EmptyResultDataAccessException ex) {
+      log.warn("Attempted to delete non-existent API token with ID: {}", keyId);
+      return false;
+    } catch (Exception e) {
+      log.error(
+          "Unexpected error while deleting API token with ID {}: {}", keyId, e.getMessage(), e);
+      throw e;
+    }
   }
 
   /**

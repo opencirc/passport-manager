@@ -1,8 +1,11 @@
 package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -17,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnTransformer;
 
 /** Model for passports table. */
 @Entity
@@ -45,9 +49,15 @@ public class Passport {
   @Column(name = "parent_id")
   private String parentId;
 
-  /** User who created Passport. */
-  @Column(name = "created_by")
-  private String createdBy;
+  /** Id of the user who created Passport. */
+  @Column(name = "created_by_id")
+  private String createdById;
+
+  /** User information, stored as JSON. */
+  @Column(name = "created_by", columnDefinition = "jsonb", nullable = false)
+  @Convert(converter = CreatedByDtoConverter.class)
+  @ColumnTransformer(write = "?::jsonb")
+  private CreatedByDto createdBy;
 
   /** Time of passport creation. */
   @Column(name = "created_time", updatable = false, insertable = false)

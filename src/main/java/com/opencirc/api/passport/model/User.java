@@ -61,13 +61,18 @@ public class User {
   @Column(name = "refresh_token")
   private String refreshToken;
 
-  /** Created by. */
-  @Column(name = "created_by")
-  private String createdBy;
-
   /** Created time. */
   @Column(name = "created_time", updatable = false, insertable = false)
   private LocalDateTime createdTime;
+
+  /**
+   * Get the user's full name.
+   *
+   * @return first name + space + last name
+   */
+  public String getFullName() {
+    return firstName + " " + lastName;
+  }
 
   /** Enum representing the roles. */
   public enum Role {
