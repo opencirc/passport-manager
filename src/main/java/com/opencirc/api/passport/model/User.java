@@ -44,8 +44,10 @@ public class User {
   @Column(name = "email", unique = true, nullable = false)
   private String email;
 
-  /** Users's password. */
+  /** User's password (stored as a hash). Never serialized back to clients. */
   @Column(nullable = false)
+  @com.fasterxml.jackson.annotation.JsonProperty(
+      access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
   private String password;
 
   /** Users's role. */
@@ -57,8 +59,10 @@ public class User {
   @Column(name = "is_active", nullable = false)
   private boolean isActive;
 
-  /** Holds JWT refresh token. */
+  /** JWT refresh token. Never serialized back to clients. */
   @Column(name = "refresh_token")
+  @com.fasterxml.jackson.annotation.JsonProperty(
+      access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
   private String refreshToken;
 
   /** Created time. */
