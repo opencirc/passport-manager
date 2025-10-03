@@ -4,23 +4,6 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,96 +21,95 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
-
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-classes = PassportManager.class)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    classes = PassportManager.class)
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class TestPassportController {
 
-    /**
-     * Assigns random port number in which application runs.
-     */
-    @LocalServerPort
-    private int port;
+  /** Assigns random port number in which application runs. */
+  @LocalServerPort private int port;
 
-    /**
-     * AuthUserDetailsService mock bean.
-     */
-    @MockBean
-    private AuthUserDetailsService authUserDetailsService;
+  /** AuthUserDetailsService mock bean. */
+  @MockBean private AuthUserDetailsService authUserDetailsService;
 
-    /**
-     * AuthUserDetailsService mock bean.
-     */
-    @MockBean
-    private AuthenticationManager authenticationManager;
+  /** AuthUserDetailsService mock bean. */
+  @MockBean private AuthenticationManager authenticationManager;
 
-    /**
-     * Injecting ObjectMapper bean.
-     */
-    @Autowired
-    private ObjectMapper objectMapper;
+  /** Injecting ObjectMapper bean. */
+  @Autowired private ObjectMapper objectMapper;
 
-    /**
-     * JWT token.
-     */
-    private String jwtToken = null;
+  /** JWT token. */
+  private String jwtToken = null;
 
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("bsDD.classDetails.url",
-                () -> "http://localhost:8089" + "/api/Class/v1");
-        registry.add("bsDD.propertiesWithDetail.url",
-                () -> "http://localhost:8089" + "/api/Property/v4");
+  @DynamicPropertySource
+  static void setProperties(DynamicPropertyRegistry registry) {
+    registry.add("bsDD.classDetails.url", () -> "http://localhost:8089" + "/api/Class/v1");
+    registry.add(
+        "bsDD.propertiesWithDetail.url", () -> "http://localhost:8089" + "/api/Property/v4");
+  }
+
+  /**
+   * Sets up necessary configurations and mocks before each test execution. Initializes REST Assured
+   * with the test server port, opens Mockito annotations, mocks the authentication context,
+   * generates a mock JWT token, and stubs the bsDD API response.
+   *
+   * @param wmInfo
+   */
+  @BeforeEach
+  void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
+    RestAssured.port = port;
+    MockitoAnnotations.openMocks(this);
+    // Mock auth
+    MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
+    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    generateMockJwtToken();
+  }
+
+  private void generateMockJwtToken() {
+    String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
+    Response response =
+        given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
+    if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
+      jwtToken = response.getCookie("access_token");
+    } else {
+      throw new AssertionError("Expected status 200, but got " + response.getStatusCode());
     }
+  }
 
-    /**
-     * Sets up necessary configurations and mocks before each test execution.
-     * Initializes REST Assured with the test server port, opens Mockito
-     * annotations, mocks the authentication context, generates a mock JWT token,
-     * and stubs the bsDD API response.
-     * @param wmInfo
-     */
-    @BeforeEach
-    void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
-        RestAssured.port = port;
-        MockitoAnnotations.openMocks(this);
-        // Mock auth
-        MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-        helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
-        generateMockJwtToken();
-
-    }
-
-    private void generateMockJwtToken() {
-        String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
-        Response response = given().contentType(ContentType.JSON).body(requestBody).when()
-                .post("/api/auth/login");
-        if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
-            jwtToken = response.getCookie("access_token");
-        } else {
-            throw new AssertionError(
-                    "Expected status 200, but got " + response.getStatusCode());
-        }
-
-    }
-
-    /**
-     * Tests the successful creation of a passport with valid JSON input.
-     * @throws JsonProcessingException
-     * @throws JsonMappingException
-     */
-    @Test
-    public void givenValidBsddDataWhenCreatePassportThenReturnCreatedPassportWithCorrectDetails()
-            throws JsonValidationException, JsonMappingException, JsonProcessingException {
-        String dictionary = "bsdd";
-        String jsonBody = """
+  /**
+   * Tests the successful creation of a passport with valid JSON input.
+   *
+   * @throws JsonProcessingException
+   * @throws JsonMappingException
+   */
+  @Test
+  public void givenValidBsddDataWhenCreatePassportThenReturnCreatedPassportWithCorrectDetails()
+      throws JsonValidationException, JsonMappingException, JsonProcessingException {
+    String dictionary = "bsdd";
+    String jsonBody =
+        """
                                 {
                     "classType": "Class",
                     "referenceCode": "A-A__",
@@ -155,215 +137,218 @@ public class TestPassportController {
                     "dataCategory": "Unique"
                 }
                                 """;
-        
-        CreatePassportRequestDto createPassportRequest = new CreatePassportRequestDto();
-        createPassportRequest.setCreatedTime(LocalDateTime.now());
-        createPassportRequest.setDataCategory(DataCategory.GENERIC.getValue());
-        createPassportRequest.setDatasheetData(objectMapper.readTree(jsonBody));
-        createPassportRequest.setPassportName("Dwelling Space");
-        createPassportRequest.setCreatedBy("Test");
 
-        Response response = RestAssured.given()
-                .log().all()
-                .cookie("access_token", jwtToken)
-                .contentType(ContentType.JSON)
-                .body(createPassportRequest)
-                .pathParam("dictionary", dictionary)
-                .when()
-                .post("/api/passport/dictionary/{dictionary}")
-                .then()
-                .statusCode(HttpStatus.SC_SUCCESS)
-                .contentType(ContentType.JSON)
-                .log().all()
-                .extract().response();
+    CreatePassportRequestDto createPassportRequest = new CreatePassportRequestDto();
+    createPassportRequest.setCreatedTime(LocalDateTime.now());
+    createPassportRequest.setDataCategory(DataCategory.GENERIC.getValue());
+    createPassportRequest.setDatasheetData(objectMapper.readTree(jsonBody));
+    createPassportRequest.setPassportName("Dwelling Space");
+    createPassportRequest.setCreatedBy("Test");
 
+    Response response =
+        RestAssured.given()
+            .log()
+            .all()
+            .cookie("access_token", jwtToken)
+            .contentType(ContentType.JSON)
+            .body(createPassportRequest)
+            .pathParam("dictionary", dictionary)
+            .when()
+            .post("/api/passport/dictionary/{dictionary}")
+            .then()
+            .statusCode(HttpStatus.SC_SUCCESS)
+            .contentType(ContentType.JSON)
+            .log()
+            .all()
+            .extract()
+            .response();
 
-        response.then()
-            .body("name", equalTo("Dwelling Space"))
-            .body("datasheets[0].data.classType", equalTo("Class"))
-            .body("datasheets[0].data.referenceCode", equalTo("A-A__"))
-            .body("datasheets[0].data.relatedIfcEntityNames[0]", equalTo("IfcSpace"))
-            .body("datasheets[0].data.classProperties[0].name",
-                    equalTo("Handicap Accessible"))
-            .body("datasheets[0].data.classProperties[0].actualValue", equalTo("true"))
-            .body("datasheets[0].data.definition",
-                    equalTo("space designed for human dwelling and related activities"));
+    response
+        .then()
+        .body("name", equalTo("Dwelling Space"))
+        .body("datasheets[0].data.classType", equalTo("Class"))
+        .body("datasheets[0].data.referenceCode", equalTo("A-A__"))
+        .body("datasheets[0].data.relatedIfcEntityNames[0]", equalTo("IfcSpace"))
+        .body("datasheets[0].data.classProperties[0].name", equalTo("Handicap Accessible"))
+        .body("datasheets[0].data.classProperties[0].actualValue", equalTo("true"))
+        .body(
+            "datasheets[0].data.definition",
+            equalTo("space designed for human dwelling and related activities"));
+  }
 
-    }
+  /** Tests the behaviour of the createPassport method when an empty JSON body is provided. */
+  @Test
+  public void shouldFailToCreatePassportWhenJsonBodyIsEmpty() throws JsonValidationException {
+    String dictionary = "bsdd";
+    CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
+    requestDto.setCreatedTime(LocalDateTime.now());
+    requestDto.setCreatedBy("Test");
+    requestDto.setPassportName("Empty Passport");
 
+    Response response =
+        RestAssured.given()
+            .log()
+            .all()
+            .cookie("access_token", jwtToken)
+            .contentType(ContentType.JSON)
+            .body(requestDto)
+            .pathParam("dictionary", dictionary)
+            .when()
+            .post("/api/passport/dictionary/{dictionary}")
+            .then()
+            .statusCode(HttpStatus.SC_BAD_REQUEST)
+            .log()
+            .all()
+            .extract()
+            .response();
 
-    /**
-     * Tests the behaviour of the createPassport method when an empty
-     * JSON body is provided.
-     */
-    @Test
-    public void shouldFailToCreatePassportWhenJsonBodyIsEmpty()
-            throws JsonValidationException {
-        String dictionary = "bsdd";
-        CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
-        requestDto.setCreatedTime(LocalDateTime.now());
-        requestDto.setCreatedBy("Test");
-        requestDto.setPassportName("Empty Passport");
+    String responseBody = response.getBody().asString();
+    assertTrue(responseBody.contains("Input JSON node is null"));
+  }
 
-        Response response = RestAssured.given()
-                .log().all()
-                .cookie("access_token", jwtToken)
-                .contentType(ContentType.JSON)
-                .body(requestDto)
-                .pathParam("dictionary", dictionary)
-                .when()
-                .post("/api/passport/dictionary/{dictionary}")
-                .then()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .log().all()
-                .extract().response();
+  /**
+   * Tests the behaviour of the createPassport method when an invalid JSON body is provided.
+   *
+   * @throws JsonProcessingException
+   * @throws JsonMappingException
+   */
+  @Test
+  public void shouldFailToCreatePassportWhenJsonBodyIsInvalid()
+      throws JsonValidationException, JsonMappingException, JsonProcessingException {
+    String dictionary = "bsdd";
 
-        String responseBody = response.getBody().asString();
-        assertTrue(responseBody.contains("Input JSON node is null"));
-
-    }
-
-
-    /**
-     * Tests the behaviour of the createPassport method when an invalid
-     * JSON body is provided.
-     * @throws JsonProcessingException
-     * @throws JsonMappingException
-     */
-    @Test
-    public void shouldFailToCreatePassportWhenJsonBodyIsInvalid()
-            throws JsonValidationException, JsonMappingException,
-            JsonProcessingException {
-        String dictionary = "bsdd";
-        
-        JsonNode invalidNode = objectMapper.readTree("""
+    JsonNode invalidNode =
+        objectMapper.readTree(
+            """
             {
                 "ABCDFWEREWRHIH": "ABCDFWEREWRHIH"
             }
         """);
 
-        CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
-        requestDto.setCreatedTime(LocalDateTime.now());
-        requestDto.setCreatedBy("Test");
-        requestDto.setPassportName("Invalid Passport");
-        requestDto.setDataCategory(DataCategory.GENERIC.getValue());
-        requestDto.setDatasheetData(invalidNode);
+    CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
+    requestDto.setCreatedTime(LocalDateTime.now());
+    requestDto.setCreatedBy("Test");
+    requestDto.setPassportName("Invalid Passport");
+    requestDto.setDataCategory(DataCategory.GENERIC.getValue());
+    requestDto.setDatasheetData(invalidNode);
 
+    Response response =
+        RestAssured.given()
+            .log()
+            .all()
+            .cookie("access_token", jwtToken)
+            .contentType(ContentType.JSON)
+            .body(requestDto)
+            .pathParam("dictionary", dictionary)
+            .when()
+            .post("/api/passport/dictionary/{dictionary}")
+            .then()
+            .statusCode(HttpStatus.SC_BAD_REQUEST)
+            .log()
+            .all()
+            .extract()
+            .response();
 
-        Response response = RestAssured.given()
-                .log().all()
-                .cookie("access_token", jwtToken)
-                .contentType(ContentType.JSON)
-                .body(requestDto)
-                .pathParam("dictionary", dictionary)
-                .when()
-                .post("/api/passport/dictionary/{dictionary}")
-                .then()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .log().all()
-                .extract().response();
+    String responseBody = response.getBody().asString();
+    assertTrue(responseBody.contains("Invalid Template"));
+  }
 
-        String responseBody = response.getBody().asString();
-        assertTrue(responseBody.contains("Invalid Template"));
+  /**
+   * Tests retrieval of passport details by a valid passport ID.Verifies that the response contains
+   * the correct passport ID, name, and associated datasheet information.
+   *
+   * @throws Exception if the request or data processing fails
+   */
+  @Test
+  public void shouldReturnPassportDetailsWhenPassportIdIsValid() throws Exception {
 
-    }
+    String passportId = "w6jqrmihmjcqf098dslae1ppsx3hdg7l4wgb";
 
+    Passport passport = new Passport();
+    passport.setId(passportId);
+    passport.setStatus(Passport.Status.ACTIVE);
+    passport.setName("Dwelling Space");
+    PassportDatasheetMapping datasheetMapping = new PassportDatasheetMapping();
+    Datasheet datasheet = new Datasheet();
+    datasheet.setData(generateDatasheetData());
+    datasheetMapping.setDatasheet(datasheet);
+    datasheetMapping.setPassport(passport);
+    datasheetMapping.setId(UUID.fromString("cd4d3ec2-0c8a-45bf-888f-81fdbd9eaa37"));
+    passport.setDatasheetMappings(List.of(datasheetMapping));
 
-    /**
-     * Tests retrieval of passport details by a valid passport ID.Verifies that the
-     * response contains the correct passport ID, name,
-     * and associated datasheet information.
-     *
-     * @throws Exception if the request or data processing fails
-     */
-    @Test
-    public void shouldReturnPassportDetailsWhenPassportIdIsValid() throws Exception {
+    Response response =
+        RestAssured.given()
+            .log()
+            .all()
+            .cookie("access_token", jwtToken)
+            .contentType(ContentType.JSON)
+            .pathParam("id", passportId)
+            .when()
+            .get("/api/passport/{id}")
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .contentType(ContentType.JSON)
+            .log()
+            .all()
+            .extract()
+            .response();
 
-        String passportId = "w6jqrmihmjcqf098dslae1ppsx3hdg7l4wgb";
+    // Assertions
+    response
+        .then()
+        .body("id", equalTo(passportId))
+        .body("name", equalTo("Dwelling Space"))
+        .body("datasheets[0].data.classType", equalTo("Class"))
+        .body("datasheets[0].data.classProperties[0].name", equalTo("Handicap Accessible"))
+        .body("datasheets[0].data.classProperties[0].actualValue", equalTo("true"))
+        .body(
+            "datasheets[0].data.definition",
+            equalTo("space designed for human dwelling and related activities"));
+  }
 
-        Passport passport = new Passport();
-        passport.setId(passportId);
-        passport.setStatus(Passport.Status.ACTIVE);
-        passport.setName("Dwelling Space");
-        PassportDatasheetMapping datasheetMapping = new PassportDatasheetMapping();
-        Datasheet datasheet = new Datasheet();
-        datasheet.setData(generateDatasheetData());
-        datasheetMapping.setDatasheet(datasheet);
-        datasheetMapping.setPassport(passport);
-        datasheetMapping.setId(UUID.fromString("cd4d3ec2-0c8a-45bf-888f-81fdbd9eaa37"));
-        passport.setDatasheetMappings(List.of(datasheetMapping));
+  /**
+   * Tests retrieval of passport details along with its children by a valid passport ID.
+   *
+   * <p>Verifies that the response includes child passport objects, with correct parent-child
+   * relationships and datasheet property values.
+   *
+   * @throws Exception if the request or data processing fails
+   */
+  @Test
+  public void shouldReturnPassportDetailsWithChildrenWhenPassportIdIsValid() throws Exception {
 
-        Response response = RestAssured.given()
-                .log().all()
-                .cookie("access_token", jwtToken)
-                .contentType(ContentType.JSON)
-                .pathParam("id", passportId)
-                .when()
-                .get("/api/passport/{id}")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .contentType(ContentType.JSON)
-                .log().all()
-                .extract().response();
+    String passportId = "w6jqrmihmjcqf098dslae1ppsx3hdg7l4wgb";
 
-        // Assertions
-        response.then()
-            .body("id", equalTo(passportId))
-            .body("name", equalTo("Dwelling Space"))
-            .body("datasheets[0].data.classType", equalTo("Class"))
-            .body("datasheets[0].data.classProperties[0].name",
-                    equalTo("Handicap Accessible"))
-            .body("datasheets[0].data.classProperties[0].actualValue", equalTo("true"))
-            .body("datasheets[0].data.definition",
-                    equalTo("space designed for human dwelling and related activities"));
+    Response response =
+        RestAssured.given()
+            .log()
+            .all()
+            .cookie("access_token", jwtToken)
+            .contentType(ContentType.JSON)
+            .pathParam("id", passportId)
+            .when()
+            .get("/api/passport/{id}/children")
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .contentType(ContentType.JSON)
+            .log()
+            .all()
+            .extract()
+            .response();
 
-    }
+    // Assertions
+    response
+        .then()
+        .body("[0].id", equalTo(passportId))
+        .body("[0].datasheets[0].data.classProperties[0].name", equalTo("Handicap Accessible"))
+        .body("[1].parent.id", equalTo(passportId))
+        .body("[1].id", equalTo("i29r9y3zkyjqkek7wkzjvpk1zkyeq98g1t3t"));
+  }
 
+  private JsonNode generateDatasheetData() throws JsonMappingException, JsonProcessingException {
 
-    /**
-     * Tests retrieval of passport details along with its children by a valid passport ID.
-     *
-     * Verifies that the response includes child passport objects,
-     * with correct parent-child relationships and datasheet property values.
-     *
-     * @throws Exception if the request or data processing fails
-     */
-    @Test
-    public void shouldReturnPassportDetailsWithChildrenWhenPassportIdIsValid()
-            throws Exception {
-
-        String passportId = "w6jqrmihmjcqf098dslae1ppsx3hdg7l4wgb";
-
-
-        Response response = RestAssured.given()
-                .log().all()
-                .cookie("access_token", jwtToken)
-                .contentType(ContentType.JSON)
-                .pathParam("id", passportId)
-                .when()
-                .get("/api/passport/{id}/children")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .contentType(ContentType.JSON)
-                .log().all()
-                .extract().response();
-
-        // Assertions
-        response.then()
-            .body("[0].id", equalTo(passportId))
-            .body("[0].datasheets[0].data.classProperties[0].name",
-                    equalTo("Handicap Accessible"))
-            .body("[1].parent.id", equalTo(passportId))
-            .body("[1].id", equalTo("i29r9y3zkyjqkek7wkzjvpk1zkyeq98g1t3t"));
-
-
-    }
-
-
-    private JsonNode generateDatasheetData() throws JsonMappingException,
-    JsonProcessingException {
-
-        String jsonBody = """
+    String jsonBody =
+        """
                 {
             "id": "c98fbb40-5c9e-4daf-a2ae-961b1aa75adb",
             "data": {
@@ -391,7 +376,6 @@ public class TestPassportController {
         }
                 """;
 
-        return objectMapper.readTree(jsonBody);
-
-    }
+    return objectMapper.readTree(jsonBody);
+  }
 }

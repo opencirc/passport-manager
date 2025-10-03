@@ -1,10 +1,9 @@
 package com.opencirc.api.passport.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
 import lombok.Data;
 import lombok.ToString;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "company")
@@ -12,10 +11,6 @@ import lombok.ToString;
 @ToString
 public class CompanyConfig {
 
-
-    /**
-     * Company name.
-     */
-    private String name;
-
+  /** Company name. */
+  private String name;
 }
