@@ -9,9 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/**
- * DTO for JWT Config table.
- */
+/** DTO for JWT Config table. */
 @Entity
 @Table(name = "jwt_configs")
 @Data
@@ -20,11 +18,8 @@ import lombok.ToString;
 @ToString
 public class JwtConfig {
 
-    /**
-     * secretKey.
-     */
-    @Id
-    @Column(name = "secret_key")
-    private String secretKey;
-
+  /** secretKey. */
+  @Id
+  @Column(name = "secret_key")
+  private String secretKey;
 }

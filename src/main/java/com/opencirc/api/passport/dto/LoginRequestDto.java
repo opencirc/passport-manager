@@ -11,15 +11,9 @@ import lombok.ToString;
 @ToString
 public class LoginRequestDto {
 
-    /**
-     * email.
-     */
-    private String email;
+  /** email. */
+  private String email;
 
-
-    /**
-     * password.
-     */
-    private String password;
-
+  /** password. */
+  private String password;
 }

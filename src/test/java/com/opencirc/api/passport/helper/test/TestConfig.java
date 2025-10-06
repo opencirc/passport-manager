@@ -11,14 +11,15 @@ import org.springframework.web.client.RestTemplate;
 @TestPropertySource(locations = "classpath:application-test.properties")
 public class TestConfig {
 
-    /**
-     * RestTemplate Bean.
-     * @param builder
-     * @return restTemplate
-     */
-    @Bean(name = "testRestTemplate")
-    @Primary
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder.build();
-    }
+  /**
+   * RestTemplate Bean.
+   *
+   * @param builder
+   * @return restTemplate
+   */
+  @Bean(name = "testRestTemplate")
+  @Primary
+  public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    return builder.build();
+  }
 }
