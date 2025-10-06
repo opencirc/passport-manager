@@ -1,0 +1,13 @@
+FROM maven:3.9.6-eclipse-temurin-21-alpine
+
+WORKDIR /app
+
+COPY pom.xml .
+#RUN mvn dependency:go-offline -B
+
+COPY src ./src
+
+EXPOSE 8080
+
+# Run in dev mode with hot reload
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.fork=false", "-Dspring.devtools.restart.enabled=true", "-Dmaven.test.skip=true"]
