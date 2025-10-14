@@ -65,7 +65,7 @@ public class Datasheet {
   private String description;
 
   /** Uri of the platform. */
-  @Column(name = "platform_id ")
+  @Column(name = "platform_id")
   private String platformId;
 
   /** Data category (Unique or Generic). */

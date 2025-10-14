@@ -1,7 +1,6 @@
 package com.opencirc.api.passport.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -178,10 +177,7 @@ public class PassportService {
       for (JsonNode propNode : propertiesNode) {
         String propCode =
             propNode.hasNonNull("propertyCode") ? propNode.get("propertyCode").asText() : null;
-        String propGroup =
-            propNode.hasNonNull("propertySet") ? propNode.get("propertySet").asText() : null;
-        String propType =
-            propNode.hasNonNull("dataType") ? propNode.get("dataType").asText() : null;
+
         JsonNode actualValueNode = propNode.path("actualValue");
 
         if (propCode != null) {
@@ -190,8 +186,12 @@ public class PassportService {
         }
 
         DatasheetProperty property = new DatasheetProperty();
+        String propGroup =
+            propNode.hasNonNull("propertySet") ? propNode.get("propertySet").asText() : null;
         property.setPropertyCode(propCode);
         property.setPropertyGroup(propGroup);
+        String propType =
+            propNode.hasNonNull("dataType") ? propNode.get("dataType").asText() : null;
         property.setPropertyType(propType);
         property.setDefinition(propNode);
         property.setPlatformId(platformId);
@@ -432,9 +432,6 @@ public class PassportService {
       if (definition != null && !definition.isBlank()) {
         try {
           definitionNode = objectMapper.readTree(definition);
-        } catch (JsonMappingException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
         } catch (JsonProcessingException e) {
           throw new RuntimeException(
               "Error parsing datasheet JSON for datasheet property Id="
