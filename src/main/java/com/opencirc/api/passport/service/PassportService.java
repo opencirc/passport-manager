@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
@@ -37,6 +40,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpServerErrorException;
 
 @Service
@@ -97,12 +101,14 @@ public class PassportService {
    * @param data
    * @return Passport DTO from passport
    */
+  @Transactional
   public PassportDto createPassportUsingDictionary(
       DataDictionaryPlatform dictionaryPlatform,
       DataDictionary dictionary,
       CreatePassportRequestDto data)
       throws InvalidInputException {
     JsonNode datasheetData = data.getDatasheetData();
+
     try {
       validatePassportData(dictionaryPlatform, datasheetData);
     } catch (JsonValidationException e) {
@@ -112,30 +118,30 @@ public class PassportService {
     int customLength = AppConstants.CUID_LENGTH;
     CUID cuid = CUID.randomCUID2(customLength);
 
-    Passport rawPassport = new Passport();
-    rawPassport.setId(cuid.toString());
-    rawPassport.setName(data.getPassportName());
-    rawPassport.setStatus(Passport.Status.ACTIVE);
-    String createdById = data.getCreatedById();
-    rawPassport.setCreatedById(createdById);
+    Passport passport = new Passport();
+    passport.setId(cuid.toString());
+    passport.setName(data.getPassportName());
+    passport.setStatus(Passport.Status.ACTIVE);
+    passport.setCreatedById(data.getCreatedById());
 
-    if (createdById == null || createdById.isBlank()) {
-      rawPassport.setCreatedBy(
+    if (data.getCreatedById() == null || data.getCreatedById().isBlank()) {
+      passport.setCreatedBy(
           new CreatedByDto(
               appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail()));
     } else {
-      rawPassport.setCreatedBy(data.getCreatedBy());
+      passport.setCreatedBy(data.getCreatedBy());
     }
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
-      boolean parentExists = passportRepository.existsById(parentId);
-      if (!parentExists) {
+      if (!passportRepository.existsById(parentId)) {
         throw new HttpServerErrorException(
             HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
       }
-      rawPassport.setParentId(parentId);
+      passport.setParentId(parentId);
     }
+
+    passport = passportRepository.save(passport);
 
     String code = datasheetData.hasNonNull("code") ? datasheetData.get("code").asText() : null;
     String name = datasheetData.hasNonNull("name") ? datasheetData.get("name").asText() : null;
@@ -153,54 +159,58 @@ public class PassportService {
     datasheet.setName(name);
     datasheet.setDescription(description);
     datasheet.setPlatformId(platformId);
-    datasheet.setData(datasheetData);
     datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
-    datasheet.setPlatform(dictionaryPlatform);
-    datasheet.setCreatedById(createdById);
+    datasheet.setCreatedById(data.getCreatedById());
 
-    if (createdById == null || createdById.isBlank()) {
+    if (data.getCreatedById() == null || data.getCreatedById().isBlank()) {
       datasheet.setCreatedBy(
           new CreatedByDto(
               appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail()));
     } else {
       datasheet.setCreatedBy(data.getCreatedBy());
     }
-    datasheet = datasheetRepository.save(datasheet);
+
+    ObjectNode dataJson = JsonNodeFactory.instance.objectNode();
+    List<DatasheetProperty> propertyList = new ArrayList<>();
 
     JsonNode propertiesNode = datasheetData.path("classProperties");
     if (propertiesNode.isArray()) {
-      List<DatasheetProperty> propertyList = new ArrayList<>();
-
       for (JsonNode propNode : propertiesNode) {
-        String propCode = propNode.hasNonNull("code") ? propNode.get("code").asText() : null;
+        String propCode =
+            propNode.hasNonNull("propertyCode") ? propNode.get("propertyCode").asText() : null;
         String propGroup =
             propNode.hasNonNull("propertySet") ? propNode.get("propertySet").asText() : null;
         String propType =
             propNode.hasNonNull("dataType") ? propNode.get("dataType").asText() : null;
+        JsonNode actualValueNode = propNode.path("actualValue");
 
-        DatasheetProperty datasheetProperty = new DatasheetProperty();
-        datasheetProperty.setDatasheet(datasheet);
-        datasheetProperty.setPropertyCode(propCode);
-        datasheetProperty.setPropertyGroup(propGroup);
-        datasheetProperty.setPropertyType(propType);
-        datasheetProperty.setDefinition(propNode);
-        datasheetProperty.setPlatformId(null);
+        if (propCode != null) {
+          dataJson.set(
+              propCode, actualValueNode.isMissingNode() ? NullNode.instance : actualValueNode);
+        }
 
-        propertyList.add(datasheetProperty);
+        DatasheetProperty property = new DatasheetProperty();
+        property.setPropertyCode(propCode);
+        property.setPropertyGroup(propGroup);
+        property.setPropertyType(propType);
+        property.setDefinition(propNode);
+        property.setPlatformId(platformId);
+        property.setDatasheet(datasheet);
+        propertyList.add(property);
       }
-
-      // Batch insert for performance
-      datasheetPropertyRepository.saveAll(propertyList);
     }
 
-    Passport passport = passportRepository.save(rawPassport);
-    PassportDatasheetMapping passportDatasheet = new PassportDatasheetMapping();
-    passportDatasheet.setPassport(passport);
-    passportDatasheet.setDatasheet(datasheet);
-    PassportDatasheetMapping passportDatasheetMapping =
-        passportDatasheetMappingRepository.save(passportDatasheet);
-    passport.setDatasheetMappings(new ArrayList<>());
-    passport.getDatasheetMappings().add(passportDatasheetMapping);
+    datasheet.setData(dataJson);
+    datasheet = datasheetRepository.save(datasheet);
+
+    datasheetPropertyRepository.saveAll(propertyList);
+
+    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
+    mapping.setPassport(passport);
+    mapping.setDatasheet(datasheet);
+    mapping = passportDatasheetMappingRepository.save(mapping);
+
+    passport.setDatasheetMappings(List.of(mapping));
 
     return PassportDto.from(passport);
   }
