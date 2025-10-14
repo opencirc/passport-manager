@@ -34,6 +34,7 @@ public class DatasheetProperty {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "datasheet_id", referencedColumnName = "id", nullable = false)
   @OnDelete(action = OnDeleteAction.CASCADE)
+  @ToString.Exclude
   private Datasheet datasheet;
 
   /** Code of the class. */

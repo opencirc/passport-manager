@@ -97,6 +97,7 @@ public class Datasheet {
   private List<PassportDatasheetMapping> datasheetMappings;
 
   /** Mapping to DatasheetProperties. */
+  @ToString.Exclude
   @OneToMany(mappedBy = "datasheet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   private List<DatasheetProperty> datasheetProperties;
 
