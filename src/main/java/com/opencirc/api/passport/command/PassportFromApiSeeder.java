@@ -12,6 +12,7 @@ import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
@@ -52,8 +53,11 @@ public class PassportFromApiSeeder {
   /** Random number generator for generating property values. */
   private static final Random RANDOM = new Random();
 
+  /** The platform in which data dictionary is present. */
+  private final DataDictionaryPlatform platform = DataDictionaryPlatform.BSDD;
+
   /** The data dictionary used for seeding passport templates. */
-  private final DataDictionary dictionary = DataDictionary.BSDD;
+  private final DataDictionary dictionary = DataDictionary.IFC;
 
   /** Cache the class templates. */
   private final Map<String, BsddClassTemplateDto> templateCache = new ConcurrentHashMap<>();
@@ -151,7 +155,7 @@ public class PassportFromApiSeeder {
             uri,
             currentUri -> {
               try {
-                return dataDictionaryService.createClassTemplate(dictionary, currentUri, true);
+                return dataDictionaryService.createClassTemplate(platform, currentUri, true);
               } catch (JsonProcessingException | JsonValidationException e) {
                 throw new RuntimeException("Failed to create template for URI: " + currentUri, e);
               }
@@ -169,7 +173,7 @@ public class PassportFromApiSeeder {
     request.setCreatedTime(LocalDateTime.now());
 
     PassportDto createdPassport =
-        passportService.createPassportUsingDictionary(dictionary, request);
+        passportService.createPassportUsingDictionary(platform, dictionary, request);
 
     List<String> uris = appProperties.getUriList();
     for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {

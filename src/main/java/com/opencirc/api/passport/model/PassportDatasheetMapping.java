@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +29,7 @@ public class PassportDatasheetMapping {
   @GeneratedValue
   @UuidGenerator
   @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
-  private UUID id;
+  private String id;
 
   /** passport id. */
   @ManyToOne(fetch = FetchType.LAZY)

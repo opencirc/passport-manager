@@ -4,18 +4,20 @@ import com.opencirc.api.passport.dto.GeneratedApiKeyDto;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.service.ApiKeyService;
-import com.opencirc.api.passport.util.StringUtil;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
+import org.springframework.stereotype.Component;
 
+@Component
 @Command(group = "API Key Commands")
 @Slf4j
+@RequiredArgsConstructor
 public class ApiKeyCommand {
 
   /** Injecting ApiKeyService. */
@@ -23,15 +25,6 @@ public class ApiKeyCommand {
 
   /** Format to show API keys to user in terminal. */
   private static final String API_TOKEN_DISPLAY_FORMAT = "%-40s %-20s %-25s%n";
-
-  /**
-   * Constructor.
-   *
-   * @param apiKeyService
-   */
-  public ApiKeyCommand(ApiKeyService apiKeyService) {
-    this.apiKeyService = apiKeyService;
-  }
 
   /**
    * Creates a new API key for the specified user.
@@ -67,13 +60,6 @@ public class ApiKeyCommand {
         throw new InvalidInputException("Name is required.");
       }
 
-      UUID userUuid;
-      try {
-        userUuid = StringUtil.validateUuid(userId.trim());
-      } catch (IllegalArgumentException e) {
-        throw new InvalidInputException("Invalid user-id. Expected a UUID.");
-      }
-
       LocalDate formattedExpirationDate = null;
       if (expirationDate != null && !expirationDate.isBlank()) {
         try {
@@ -90,7 +76,7 @@ public class ApiKeyCommand {
       }
 
       GeneratedApiKeyDto generatedApiKey =
-          apiKeyService.createApiKey(userUuid, formattedExpirationDate, name.trim());
+          apiKeyService.createApiKey(userId.trim(), formattedExpirationDate, name.trim());
 
       System.out.println("API Key created successfully");
       System.out.println("Key: " + generatedApiKey.getApiKey().getId());
@@ -129,17 +115,8 @@ public class ApiKeyCommand {
       return;
     }
 
-    UUID userUuid;
     try {
-      userUuid = StringUtil.validateUuid(userId.trim());
-    } catch (IllegalArgumentException e) {
-      log.warn("Invalid user ID format: {}", userId);
-      System.err.println("Invalid UUID format: " + userId);
-      return;
-    }
-
-    try {
-      List<ApiKey> tokens = apiKeyService.getApiTokens(userUuid);
+      List<ApiKey> tokens = apiKeyService.getApiTokens(userId.trim());
       if (tokens.isEmpty()) {
         System.out.println("No API tokens found for user: " + userId);
         return;
@@ -190,17 +167,8 @@ public class ApiKeyCommand {
       return;
     }
 
-    UUID uuid;
     try {
-      uuid = StringUtil.validateUuid(keyId.trim());
-    } catch (IllegalArgumentException e) {
-      log.warn("Invalid key ID format: {}", keyId);
-      System.err.println("Invalid UUID format: " + keyId);
-      return;
-    }
-
-    try {
-      boolean deleted = apiKeyService.deleteApiToken(uuid);
+      boolean deleted = apiKeyService.deleteApiToken(keyId);
       if (deleted) {
         System.out.println("Deleted API token: " + keyId);
       } else {

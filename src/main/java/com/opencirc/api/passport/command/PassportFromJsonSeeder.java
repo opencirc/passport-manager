@@ -9,6 +9,7 @@ import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.PassportService;
@@ -39,6 +40,12 @@ public class PassportFromJsonSeeder {
 
   /** Stores the templates. */
   private final Map<String, BsddClassTemplateDto> templatesByUri = new ConcurrentHashMap<>();
+
+  /** The platform in which data dictionary is present. */
+  private final DataDictionaryPlatform platform = DataDictionaryPlatform.BSDD;
+
+  /** The data dictionary used for seeding passport templates. */
+  private final DataDictionary dictionary = DataDictionary.IFC;
 
   /** List to store the uri. */
   private List<String> uriList;
@@ -157,7 +164,7 @@ public class PassportFromJsonSeeder {
     request.setParentId(parentId);
     request.setCreatedTime(LocalDateTime.now());
     PassportDto createdPassport =
-        passportService.createPassportUsingDictionary(DataDictionary.BSDD, request);
+        passportService.createPassportUsingDictionary(platform, dictionary, request);
 
     // Recursively create child passports
     for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {

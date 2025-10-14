@@ -1,24 +1,29 @@
 package com.opencirc.api.passport.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
+import com.opencirc.api.passport.dao.DatasheetPropertyRepository;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
+import com.opencirc.api.passport.dto.DatasheetPropertyDto;
 import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
+import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
@@ -39,6 +44,9 @@ public class PassportService {
 
   /** Injecting DatasheetRepository class. */
   private final DatasheetRepository datasheetRepository;
+
+  /** Injecting DatasheetPropertyRepository class. */
+  private final DatasheetPropertyRepository datasheetPropertyRepository;
 
   /** Injecting PassportRepository class. */
   private final PassportRepository passportRepository;
@@ -67,12 +75,14 @@ public class PassportService {
    */
   public PassportService(
       DatasheetRepository datasheetRepository,
+      DatasheetPropertyRepository datasheetPropertyRepository,
       PassportRepository passportRepository,
       PassportDatasheetMappingRepository passportDatasheetMappingRepository,
       DictionaryAdapterFactory dictionaryAdapterFactory,
       ObjectMapper objectMapper,
       AppProperties appProperties) {
     this.datasheetRepository = datasheetRepository;
+    this.datasheetPropertyRepository = datasheetPropertyRepository;
     this.passportRepository = passportRepository;
     this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
     this.dictionaryAdapterFactory = dictionaryAdapterFactory;
@@ -83,15 +93,18 @@ public class PassportService {
   /**
    * Creates template Entry.
    *
-   * @param dictionary
+   * @param dictionaryPlatform
    * @param data
    * @return Passport DTO from passport
    */
   public PassportDto createPassportUsingDictionary(
-      DataDictionary dictionary, CreatePassportRequestDto data) throws InvalidInputException {
+      DataDictionaryPlatform dictionaryPlatform,
+      DataDictionary dictionary,
+      CreatePassportRequestDto data)
+      throws InvalidInputException {
     JsonNode datasheetData = data.getDatasheetData();
     try {
-      validatePassportData(dictionary, datasheetData);
+      validatePassportData(dictionaryPlatform, datasheetData);
     } catch (JsonValidationException e) {
       throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
     }
@@ -124,10 +137,25 @@ public class PassportService {
       rawPassport.setParentId(parentId);
     }
 
+    String code = datasheetData.hasNonNull("code") ? datasheetData.get("code").asText() : null;
+    String name = datasheetData.hasNonNull("name") ? datasheetData.get("name").asText() : null;
+    String description =
+        datasheetData.hasNonNull("definition") ? datasheetData.get("definition").asText() : null;
+    String platformId =
+        datasheetData.hasNonNull("dictionaryUri")
+            ? datasheetData.get("dictionaryUri").asText()
+            : null;
+
     Datasheet datasheet = new Datasheet();
+    datasheet.setPlatform(dictionaryPlatform);
+    datasheet.setDictionary(dictionary);
+    datasheet.setCode(code);
+    datasheet.setName(name);
+    datasheet.setDescription(description);
+    datasheet.setPlatformId(platformId);
     datasheet.setData(datasheetData);
     datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
-    datasheet.setDataDictionary(dictionary);
+    datasheet.setPlatform(dictionaryPlatform);
     datasheet.setCreatedById(createdById);
 
     if (createdById == null || createdById.isBlank()) {
@@ -138,6 +166,33 @@ public class PassportService {
       datasheet.setCreatedBy(data.getCreatedBy());
     }
     datasheet = datasheetRepository.save(datasheet);
+
+    JsonNode propertiesNode = datasheetData.path("classProperties");
+    if (propertiesNode.isArray()) {
+      List<DatasheetProperty> propertyList = new ArrayList<>();
+
+      for (JsonNode propNode : propertiesNode) {
+        String propCode = propNode.hasNonNull("code") ? propNode.get("code").asText() : null;
+        String propGroup =
+            propNode.hasNonNull("propertySet") ? propNode.get("propertySet").asText() : null;
+        String propType =
+            propNode.hasNonNull("dataType") ? propNode.get("dataType").asText() : null;
+
+        DatasheetProperty datasheetProperty = new DatasheetProperty();
+        datasheetProperty.setDatasheet(datasheet);
+        datasheetProperty.setPropertyCode(propCode);
+        datasheetProperty.setPropertyGroup(propGroup);
+        datasheetProperty.setPropertyType(propType);
+        datasheetProperty.setDefinition(propNode);
+        datasheetProperty.setPlatformId(null);
+
+        propertyList.add(datasheetProperty);
+      }
+
+      // Batch insert for performance
+      datasheetPropertyRepository.saveAll(propertyList);
+    }
+
     Passport passport = passportRepository.save(rawPassport);
     PassportDatasheetMapping passportDatasheet = new PassportDatasheetMapping();
     passportDatasheet.setPassport(passport);
@@ -185,20 +240,37 @@ public class PassportService {
     }
 
     Map<String, PassportDto> dtoById = new LinkedHashMap<>();
+    Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
+
     for (PassportDatasheetResultMapDto row : resultRows) {
       PassportDto passportDto =
           dtoById.computeIfAbsent(row.getPassportId(), key -> buildPassportDto(row));
 
-      if (row.getDatasheetId() != null
-          && passportDto.getDatasheets().stream()
-              .noneMatch(ds -> Objects.equals(ds.getId(), row.getDatasheetId()))) {
-        passportDto.getDatasheets().add(buildDatasheetDto(row));
+      if (row.getDatasheetId() != null) {
+        DatasheetDto datasheetDto =
+            datasheetDtoMap.computeIfAbsent(row.getDatasheetId(), key -> buildDatasheetDto(row));
+
+        if (row.getDatasheetPropertyId() != null) {
+          DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
+
+          if (propertyDto != null
+              && datasheetDto.getDatasheetProperties().stream()
+                  .noneMatch(p -> Objects.equals(p.getId(), propertyDto.getId()))) {
+            datasheetDto.getDatasheetProperties().add(propertyDto);
+          }
+        }
+
+        if (passportDto.getDatasheets().stream()
+            .noneMatch(ds -> Objects.equals(ds.getId(), datasheetDto.getId()))) {
+          passportDto.getDatasheets().add(datasheetDto);
+        }
       }
     }
 
-    // Assign parent-child relationship
     for (PassportDatasheetResultMapDto row : resultRows) {
-      if (row.getParentId() != null && dtoById.containsKey(row.getParentId())) {
+      if (row.getParentId() != null
+          && dtoById.containsKey(row.getParentId())
+          && dtoById.containsKey(row.getPassportId())) {
         PassportDto child = dtoById.get(row.getPassportId());
         PassportDto parent = dtoById.get(row.getParentId());
         child.setParent(parent);
@@ -227,9 +299,19 @@ public class PassportService {
 
       if (row.getDatasheetId() != null) {
         datasheetDtoMap.putIfAbsent(row.getDatasheetId(), buildDatasheetDto(row));
-        passportDto.getDatasheets().add(datasheetDtoMap.get(row.getDatasheetId()));
-      }
+        DatasheetDto datasheetDto = datasheetDtoMap.get(row.getDatasheetId());
+        if (row.getDatasheetPropertyId() != null) {
+          DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
 
+          if (propertyDto != null
+              && datasheetDto.getDatasheetProperties().stream()
+                  .noneMatch(p -> Objects.equals(p.getId(), propertyDto.getId()))) {
+            datasheetDto.getDatasheetProperties().add(propertyDto);
+          }
+        }
+
+        passportDto.getDatasheets().add(datasheetDto);
+      }
       passportDtoList.add(passportDto);
     }
 
@@ -239,12 +321,13 @@ public class PassportService {
   /**
    * Validate the passport, throw if there is an error.
    *
-   * @param dictionary
+   * @param dictionaryPlatform
    * @param passportData
    */
-  private void validatePassportData(DataDictionary dictionary, JsonNode passportData)
+  private void validatePassportData(
+      DataDictionaryPlatform dictionaryPlatform, JsonNode passportData)
       throws JsonValidationException {
-    dictionaryAdapterFactory.getAdapter(dictionary).validatePassportData(passportData);
+    dictionaryAdapterFactory.getAdapter(dictionaryPlatform).validatePassportData(passportData);
   }
 
   /**
@@ -252,7 +335,7 @@ public class PassportService {
    *
    * @return Passport DTO list from passport
    */
-  public List<PassportDto> getRootPassports() {
+  public List<PassportDto> getRootPassports(DataDictionaryPlatform dictionaryPlatform) {
     List<Passport> passports = passportRepository.getRootPassports();
     if (passports == null) {
       throw new HttpServerErrorException(
@@ -279,23 +362,34 @@ public class PassportService {
     try {
       DatasheetDto dto = new DatasheetDto();
       dto.setId(row.getDatasheetId());
+
+      dto.setPlatform(
+          row.getPlatform() != null ? DataDictionaryPlatform.fromValue(row.getPlatform()) : null);
+
+      dto.setDictionary(
+          row.getDictionary() != null ? DataDictionary.fromValue(row.getDictionary()) : null);
+
+      dto.setCode(row.getDatasheetCode());
+      dto.setName(row.getDatasheetName());
+      dto.setDescription(row.getDatasheetDescription());
+      dto.setPlatformId(row.getDatasheetPlatformId());
+      dto.setDataCategory(
+          row.getDataCategory() != null ? DataCategory.fromValue(row.getDataCategory()) : null);
+
       JsonNode dataNode = null;
       String data = row.getData();
       if (data != null && !data.isBlank()) {
         dataNode = objectMapper.readTree(data);
       }
       dto.setData(dataNode);
-      dto.setDataCategory(
-          row.getDataCategory() != null ? DataCategory.fromValue(row.getDataCategory()) : null);
-      dto.setDataDictionary(
-          row.getDataDictionary() != null
-              ? DataDictionary.fromValue(row.getDataDictionary())
-              : null);
+
       dto.setCreatedById(row.getDatasheetCreatedById());
       dto.setCreatedBy(parseCreatedBy(row.getDatasheetCreatedBy()));
       if (row.getDatasheetCreatedTime() != null) {
         dto.setCreatedTime(row.getDatasheetCreatedTime());
       }
+      dto.setDatasheetProperties(new ArrayList<>());
+
       return dto;
     } catch (JsonProcessingException e) {
       throw new RuntimeException(
@@ -305,6 +399,46 @@ public class PassportService {
               + row.getPassportId(),
           e);
     }
+  }
+
+  private DatasheetPropertyDto buildDatasheetProperty(PassportDatasheetResultMapDto row) {
+    List<DatasheetPropertyDto> properties = new ArrayList<>();
+    DatasheetPropertyDto propertyDto = new DatasheetPropertyDto();
+
+    if (row.getDatasheetPropertyId() != null) {
+      propertyDto.setId(row.getDatasheetPropertyId());
+      propertyDto.setDatasheetId(row.getDatasheetId());
+      propertyDto.setPropertyCode(row.getDatasheetPropertyCode());
+      propertyDto.setPlatformId(row.getDatasheetPropertyPlatformId());
+      propertyDto.setPropertyGroup(row.getDatasheetPropertyGroup());
+      propertyDto.setPropertyType(row.getDatasheetPropertyType());
+
+      // parse JSON definition
+      JsonNode definitionNode = null;
+      String definition =
+          row.getDatasheetPropertyDefinition() != null
+              ? row.getDatasheetPropertyDefinition().toString()
+              : null;
+      if (definition != null && !definition.isBlank()) {
+        try {
+          definitionNode = objectMapper.readTree(definition);
+        } catch (JsonMappingException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        } catch (JsonProcessingException e) {
+          throw new RuntimeException(
+              "Error parsing datasheet JSON for datasheet property Id="
+                  + row.getDatasheetPropertyId()
+                  + ", datasheet Id ="
+                  + row.getPassportId(),
+              e);
+        }
+      }
+      propertyDto.setDefinition(definitionNode);
+
+      properties.add(propertyDto);
+    }
+    return propertyDto;
   }
 
   private CreatedByDto parseCreatedBy(String createdByJson) {

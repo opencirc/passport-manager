@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +30,7 @@ public class User {
   @GeneratedValue
   @UuidGenerator
   @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
-  private UUID id;
+  private String id;
 
   /** First Name of the user. */
   @Column(name = "first_name", nullable = false)

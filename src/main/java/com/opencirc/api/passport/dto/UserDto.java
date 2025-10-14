@@ -3,7 +3,6 @@ package com.opencirc.api.passport.dto;
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +15,7 @@ import lombok.ToString;
 public class UserDto {
 
   /** Unique identifier for user. */
-  private UUID id;
+  private String id;
 
   /** Email. */
   private String email;
@@ -44,7 +43,7 @@ public class UserDto {
    */
   public static UserDto from(UserPrincipal userPrincipal) {
     UserDto userDto = new UserDto();
-    userDto.setId(UUID.fromString(userPrincipal.getUserId()));
+    userDto.setId(userPrincipal.getUserId());
     userDto.setEmail(userPrincipal.getEmail());
     userDto.setFullName(userPrincipal.getFullName());
     userDto.setRole(userPrincipal.getRole());

@@ -4,12 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
-import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.TemplateType;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
@@ -46,7 +43,7 @@ public class DataDictionaryCommands {
   /**
    * Shell command to fetch template from the required data dictionary.
    *
-   * @param dictionary
+   * @param dictionaryPlatform
    * @param type
    * @param uri
    * @param raw
@@ -54,16 +51,17 @@ public class DataDictionaryCommands {
    */
   @Command(description = "Fetch template from Data Dictionary.")
   public String fetchTemplate(
-      @Option(longNames = "dictionaryType", required = true) String dictionary,
+      @Option(longNames = "dictionaryType", required = true) String dictionaryPlatform,
       @Option(longNames = "type", required = true) String type,
       @Option(longNames = "uri", required = true) String uri,
       @Option(longNames = "raw", defaultValue = "false") boolean raw) {
 
     try {
       if (raw) {
-        return generateRawTemplate(DataDictionary.fromValue(dictionary), uri, type);
+        return generateRawTemplate(DataDictionaryPlatform.fromValue(dictionaryPlatform), uri, type);
       } else {
-        return generateProcessedTemplate(DataDictionary.fromValue(dictionary), uri, type);
+        return generateProcessedTemplate(
+            DataDictionaryPlatform.fromValue(dictionaryPlatform), uri, type);
       }
     } catch (Exception e) {
       return "Error fetching template: " + e.getMessage();
@@ -73,38 +71,32 @@ public class DataDictionaryCommands {
   /**
    * Gets the processed template.
    *
-   * @param dictionary
+   * @param dictionaryPlatform
    * @param type
    * @param uri
    * @return template
    */
-  private String generateProcessedTemplate(DataDictionary dictionary, String uri, String type)
+  private String generateProcessedTemplate(
+      DataDictionaryPlatform dictionaryPlatform, String uri, String type)
       throws JsonValidationException, JsonProcessingException {
 
     Object response = null;
-
-    if (TemplateType.CLASS.getValue().equalsIgnoreCase(type)) {
-      response = dataDictionaryService.createClassTemplate(dictionary, uri, true);
-    } else if (TemplateType.PROPERTY.getValue().equalsIgnoreCase(type)) {
-      List<String> uriList = new ArrayList<>();
-      uriList.add(uri);
-      response = dataDictionaryService.createTemplateWithProperties(dictionary, uriList);
-    }
-
+    response = dataDictionaryService.createClassTemplate(dictionaryPlatform, uri, true);
     return formatJsonResponse(response);
   }
 
   /**
    * Gets the raw template fetched from given data dictionary.
    *
-   * @param dictionary
+   * @param dictionaryPlatform
    * @param type
    * @param uri
    * @return template
    */
-  private String generateRawTemplate(DataDictionary dictionary, String uri, String type)
+  private String generateRawTemplate(
+      DataDictionaryPlatform dictionaryPlatform, String uri, String type)
       throws JsonProcessingException {
-    DictionaryAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionary);
+    DictionaryAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionaryPlatform);
     return formatJsonResponse(adapter.fetchRawTemplate(uri, type));
   }
 

@@ -9,7 +9,7 @@ import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
-import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.mapping.DictionaryMapping;
@@ -235,7 +235,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
    */
   private void formPropertyTemplate(ArrayNode propertiesArray, JsonNode template) {
     ObjectNode mappedNode =
-        dictionaryMapping.mapTemplateFieldsToStandards(template, DataDictionary.BSDD);
+        dictionaryMapping.mapTemplateFieldsToStandards(template, DataDictionaryPlatform.BSDD);
     mappedNode.put(AppConstants.ACTUAL_VALUE, "");
     propertiesArray.add(mappedNode);
   }

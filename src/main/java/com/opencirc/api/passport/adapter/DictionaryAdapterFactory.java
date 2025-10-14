@@ -1,7 +1,7 @@
 package com.opencirc.api.passport.adapter;
 
 import com.opencirc.api.passport.adapter.bsdd.BsddAdapter;
-import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class DictionaryAdapterFactory {
 
   /** Map that has all the map name and its instances. */
-  private final Map<DataDictionary, DictionaryAdapter<?>> adapterMap;
+  private final Map<DataDictionaryPlatform, DictionaryAdapter<?>> adapterMap;
 
   /**
    * Instantiates DictionaryAdapterFactory.
@@ -24,22 +24,23 @@ public class DictionaryAdapterFactory {
    */
   public DictionaryAdapterFactory(List<DictionaryAdapter<?>> adapters) {
     adapterMap = new HashMap<>();
-    adapterMap.put(DataDictionary.BSDD, findAdapter(adapters, BsddAdapter.class));
+    adapterMap.put(DataDictionaryPlatform.BSDD, findAdapter(adapters, BsddAdapter.class));
   }
 
   /**
    * Returns the appropriate instance based on the given dictionary name.
    *
-   * @param dictionary The dictionary library
+   * @param dictionaryPlatform The dictionary library
    * @param <T> The specific dictionary type
    * @return The corresponding dictionary instance.
    * @throws IllegalArgumentException
    */
   @SuppressWarnings("unchecked")
-  public <T> DictionaryAdapter<T> getAdapter(DataDictionary dictionary) {
-    DictionaryAdapter<?> adapter = adapterMap.get(dictionary);
+  public <T> DictionaryAdapter<T> getAdapter(DataDictionaryPlatform dictionaryPlatform) {
+    DictionaryAdapter<?> adapter = adapterMap.get(dictionaryPlatform);
     if (adapter == null) {
-      throw new UnsupportedOperationException("No adapter found for dictionary: " + dictionary);
+      throw new UnsupportedOperationException(
+          "No adapter found for dictionary: " + dictionaryPlatform);
     }
     return (DictionaryAdapter<T>) adapter;
   }

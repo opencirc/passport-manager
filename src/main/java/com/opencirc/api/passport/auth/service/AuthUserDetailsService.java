@@ -5,7 +5,6 @@ import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.util.StringUtil;
 import java.util.Optional;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -47,7 +46,7 @@ public class AuthUserDetailsService implements UserDetailsService {
    * @return User details
    */
   public UserDetails loadUserById(String userId) {
-    Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
+    Optional<User> userOptional = userRepository.findById(userId);
     User user =
         userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found : " + userId));
 
