@@ -65,8 +65,7 @@ public class ApiKeyService {
    * @throws InvalidInputException if userId is invalid or expiration date is invalid
    */
   @Transactional
-  public final GeneratedApiKeyDto createApiKey(
-      String userId, LocalDate expirationDate, String name) {
+  public GeneratedApiKeyDto createApiKey(String userId, LocalDate expirationDate, String name) {
 
     if (userId == null) {
       throw new InvalidInputException("User ID must not be null.");
