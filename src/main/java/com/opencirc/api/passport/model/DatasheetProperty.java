@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,6 +36,7 @@ public class DatasheetProperty {
   @JoinColumn(name = "datasheet_id", referencedColumnName = "id", nullable = false)
   @OnDelete(action = OnDeleteAction.CASCADE)
   @ToString.Exclude
+  @JsonBackReference
   private Datasheet datasheet;
 
   /** Code of the class. */

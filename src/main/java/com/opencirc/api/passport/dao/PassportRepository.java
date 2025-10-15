@@ -159,8 +159,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   @Query(
       "SELECT p FROM Passport p "
           + "LEFT JOIN FETCH p.datasheetMappings dm "
-          + "LEFT JOIN FETCH dm.datasheet "
-          + "LEFT JOIN FETCH d.datasheetProperties dp "
+          + "LEFT JOIN FETCH dm.datasheet d "
           + "WHERE p.status = 'ACTIVE' AND p.parentId IS NULL ")
   List<Passport> getRootPassports();
 }

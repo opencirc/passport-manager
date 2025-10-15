@@ -117,17 +117,12 @@ public class PassportController {
   /**
    * Endpoint to fetch all the root passports.
    *
-   * @param platform - name of the data dictionary platform
    * @return the passports without parent
    * @throws JsonValidationException
    */
   @Operation(summary = "Get all the root passports available")
-  @GetMapping("/api/passport/root/{platform}")
-  public ResponseEntity<List<PassportDto>> getRootPassports(
-      @Parameter(description = "name of the platform", required = true, in = ParameterIn.PATH)
-          @PathVariable
-          String platform) {
-    return ResponseEntity.ok(
-        passportService.getRootPassports(DataDictionaryPlatform.fromValue(platform)));
+  @GetMapping("/api/passport/root")
+  public ResponseEntity<List<PassportDto>> getRootPassports() {
+    return ResponseEntity.ok(passportService.getRootPassports());
   }
 }

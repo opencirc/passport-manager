@@ -133,7 +133,7 @@ public class PassportService {
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
-      if (!passportRepository.existsById(parentId)) {
+      if (passportRepository.findPassport(parentId, Passport.Status.ACTIVE).isEmpty()) {
         throw new HttpServerErrorException(
             HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
       }
@@ -203,7 +203,9 @@ public class PassportService {
     datasheet.setData(dataJson);
     datasheet = datasheetRepository.save(datasheet);
 
-    datasheetPropertyRepository.saveAll(propertyList);
+    if (!propertyList.isEmpty()) {
+      datasheetPropertyRepository.saveAll(propertyList);
+    }
 
     PassportDatasheetMapping mapping = new PassportDatasheetMapping();
     mapping.setPassport(passport);
@@ -345,7 +347,7 @@ public class PassportService {
    *
    * @return Passport DTO list from passport
    */
-  public List<PassportDto> getRootPassports(DataDictionaryPlatform dictionaryPlatform) {
+  public List<PassportDto> getRootPassports() {
     List<Passport> passports = passportRepository.getRootPassports();
     if (passports == null) {
       throw new HttpServerErrorException(
@@ -412,36 +414,39 @@ public class PassportService {
   }
 
   private DatasheetPropertyDto buildDatasheetProperty(PassportDatasheetResultMapDto row) {
+
+    if (row.getDatasheetPropertyId() == null) {
+      return null;
+    }
+
     DatasheetPropertyDto propertyDto = new DatasheetPropertyDto();
 
-    if (row.getDatasheetPropertyId() != null) {
-      propertyDto.setId(row.getDatasheetPropertyId());
-      propertyDto.setDatasheetId(row.getDatasheetId());
-      propertyDto.setPropertyCode(row.getDatasheetPropertyCode());
-      propertyDto.setPlatformId(row.getDatasheetPropertyPlatformId());
-      propertyDto.setPropertyGroup(row.getDatasheetPropertyGroup());
-      propertyDto.setPropertyType(row.getDatasheetPropertyType());
+    propertyDto.setId(row.getDatasheetPropertyId());
+    propertyDto.setDatasheetId(row.getDatasheetId());
+    propertyDto.setPropertyCode(row.getDatasheetPropertyCode());
+    propertyDto.setPlatformId(row.getDatasheetPropertyPlatformId());
+    propertyDto.setPropertyGroup(row.getDatasheetPropertyGroup());
+    propertyDto.setPropertyType(row.getDatasheetPropertyType());
 
-      // parse JSON definition
-      JsonNode definitionNode = null;
-      String definition =
-          row.getDatasheetPropertyDefinition() != null
-              ? row.getDatasheetPropertyDefinition().toString()
-              : null;
-      if (definition != null && !definition.isBlank()) {
-        try {
-          definitionNode = objectMapper.readTree(definition);
-        } catch (JsonProcessingException e) {
-          throw new RuntimeException(
-              "Error parsing datasheet JSON for datasheet property Id="
-                  + row.getDatasheetPropertyId()
-                  + ", datasheet Id ="
-                  + row.getDatasheetId(),
-              e);
-        }
+    JsonNode definitionNode = null;
+    String definition =
+        row.getDatasheetPropertyDefinition() != null
+            ? row.getDatasheetPropertyDefinition().toString()
+            : null;
+    if (definition != null && !definition.isBlank()) {
+      try {
+        definitionNode = objectMapper.readTree(definition);
+      } catch (JsonProcessingException e) {
+        throw new RuntimeException(
+            "Error parsing datasheet JSON for datasheet property Id="
+                + row.getDatasheetPropertyId()
+                + ", datasheet Id ="
+                + row.getDatasheetId(),
+            e);
       }
-      propertyDto.setDefinition(definitionNode);
     }
+    propertyDto.setDefinition(definitionNode);
+
     return propertyDto;
   }
 
