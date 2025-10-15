@@ -412,7 +412,6 @@ public class PassportService {
   }
 
   private DatasheetPropertyDto buildDatasheetProperty(PassportDatasheetResultMapDto row) {
-    List<DatasheetPropertyDto> properties = new ArrayList<>();
     DatasheetPropertyDto propertyDto = new DatasheetPropertyDto();
 
     if (row.getDatasheetPropertyId() != null) {
@@ -437,13 +436,11 @@ public class PassportService {
               "Error parsing datasheet JSON for datasheet property Id="
                   + row.getDatasheetPropertyId()
                   + ", datasheet Id ="
-                  + row.getPassportId(),
+                  + row.getDatasheetId(),
               e);
         }
       }
       propertyDto.setDefinition(definitionNode);
-
-      properties.add(propertyDto);
     }
     return propertyDto;
   }

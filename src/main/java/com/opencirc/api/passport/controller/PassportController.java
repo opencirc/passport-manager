@@ -122,7 +122,7 @@ public class PassportController {
    * @throws JsonValidationException
    */
   @Operation(summary = "Get all the root passports available")
-  @GetMapping("/api/passport/{platform}")
+  @GetMapping("/api/passport/root/{platform}")
   public ResponseEntity<List<PassportDto>> getRootPassports(
       @Parameter(description = "name of the platform", required = true, in = ParameterIn.PATH)
           @PathVariable
