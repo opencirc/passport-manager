@@ -41,6 +41,6 @@ public class PassportDatasheetMapping {
   /** datasheet id. */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "datasheet_id", referencedColumnName = "id")
-  @JsonManagedReference
+  @JsonManagedReference("datasheet")
   private Datasheet datasheet;
 }

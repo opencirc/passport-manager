@@ -206,11 +206,11 @@ public class PassportService {
   }
 
   private CreatedByDto getOrDefaultCreatedBy(String createdById, CreatedByDto createdBy) {
-    if (createdById == null || createdById.isBlank()) {
-      return new CreatedByDto(
-          appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail());
+    if (createdBy != null) {
+      return createdBy;
     }
-    return createdBy;
+    return new CreatedByDto(
+        appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail());
   }
 
   /**
@@ -318,7 +318,10 @@ public class PassportService {
           }
         }
 
-        passportDto.getDatasheets().add(datasheetDto);
+        if (passportDto.getDatasheets().stream()
+            .noneMatch(ds -> Objects.equals(ds.getId(), datasheetDto.getId()))) {
+          passportDto.getDatasheets().add(datasheetDto);
+        }
       }
       passportDtoList.add(passportDto);
     }
