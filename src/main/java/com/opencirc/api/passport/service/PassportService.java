@@ -123,13 +123,7 @@ public class PassportService {
     passport.setStatus(Passport.Status.ACTIVE);
     passport.setCreatedById(data.getCreatedById());
 
-    if (data.getCreatedById() == null || data.getCreatedById().isBlank()) {
-      passport.setCreatedBy(
-          new CreatedByDto(
-              appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail()));
-    } else {
-      passport.setCreatedBy(data.getCreatedBy());
-    }
+    passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
@@ -161,13 +155,7 @@ public class PassportService {
     datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
     datasheet.setCreatedById(data.getCreatedById());
 
-    if (data.getCreatedById() == null || data.getCreatedById().isBlank()) {
-      datasheet.setCreatedBy(
-          new CreatedByDto(
-              appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail()));
-    } else {
-      datasheet.setCreatedBy(data.getCreatedBy());
-    }
+    datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
     ObjectNode dataJson = JsonNodeFactory.instance.objectNode();
     List<DatasheetProperty> propertyList = new ArrayList<>();
@@ -215,6 +203,14 @@ public class PassportService {
     passport.setDatasheetMappings(List.of(mapping));
 
     return PassportDto.from(passport);
+  }
+
+  private CreatedByDto getOrDefaultCreatedBy(String createdById, CreatedByDto createdBy) {
+    if (createdById == null || createdById.isBlank()) {
+      return new CreatedByDto(
+          appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail());
+    }
+    return createdBy;
   }
 
   /**
@@ -438,9 +434,9 @@ public class PassportService {
         definitionNode = objectMapper.readTree(definition);
       } catch (JsonProcessingException e) {
         throw new RuntimeException(
-            "Error parsing datasheet JSON for datasheet property Id="
+            "Error parsing datasheet property JSON for datasheetPropertyId="
                 + row.getDatasheetPropertyId()
-                + ", datasheet Id ="
+                + ", datasheetId="
                 + row.getDatasheetId(),
             e);
       }
