@@ -15,24 +15,30 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnTransformer;
 
 /** Model for passports table. */
-@Entity
-@Table(name = "passports")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@Entity
+@Table(name = "passports")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"datasheetMappings"})
 public class Passport {
 
   /** Unique Id for Passport. */
   @Id
+  @EqualsAndHashCode.Include
   @Column(name = "id")
   private String id;
 
@@ -66,7 +72,7 @@ public class Passport {
   /** Mapping of Passport. */
   @OneToMany(mappedBy = "passport", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JsonManagedReference
-  private List<PassportDatasheetMapping> datasheetMappings;
+  private Set<PassportDatasheetMapping> datasheetMappings = new HashSet<>();
 
   /** Enum representing the status of a Passport. */
   public enum Status {

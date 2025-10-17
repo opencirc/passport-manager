@@ -18,20 +18,26 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.UuidGenerator;
 
 /** Model for datasheet table. */
-@Entity
-@Table(name = "datasheets")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "datasheets")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Datasheet {
 
@@ -39,6 +45,7 @@ public class Datasheet {
   @Id
   @GeneratedValue
   @UuidGenerator
+  @EqualsAndHashCode.Include
   @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
   private String id;
 
@@ -94,12 +101,13 @@ public class Datasheet {
 
   /** Mapping to Passports. */
   @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @ToString.Exclude
   private List<PassportDatasheetMapping> datasheetMappings;
 
   /** Mapping to DatasheetProperties. */
   @ToString.Exclude
   @OneToMany(mappedBy = "datasheet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  private List<DatasheetProperty> datasheetProperties;
+  private Set<DatasheetProperty> datasheetProperties = new HashSet<>();
 
   /** Enum representing the category of a data. */
   public enum DataCategory {

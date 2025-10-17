@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,31 +10,36 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.UuidGenerator;
 
 /** DTO for Passport Datasheet table. */
-@Entity
-@Table(name = "passport_datasheet_mappings")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@Entity
+@Table(name = "passport_datasheet_mappings")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"passport", "datasheet"})
 public class PassportDatasheetMapping {
 
   /** Unique id for mapping relation. */
   @Id
   @GeneratedValue
   @UuidGenerator
+  @EqualsAndHashCode.Include
   @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
   private String id;
 
   /** passport id. */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "passport_id", referencedColumnName = "id")
-  @JsonBackReference
+  @JsonManagedReference("passport")
   private Passport passport;
 
   /** datasheet id. */

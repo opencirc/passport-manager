@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -157,52 +158,57 @@ public class PassportService {
 
     datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
-    ObjectNode dataJson = JsonNodeFactory.instance.objectNode();
-    List<DatasheetProperty> propertyList = new ArrayList<>();
+    datasheet = datasheetRepository.save(datasheet);
 
+    List<DatasheetProperty> propertyList = new ArrayList<>();
     JsonNode propertiesNode = datasheetData.path("classProperties");
     if (propertiesNode.isArray()) {
       for (JsonNode propNode : propertiesNode) {
-        String propCode =
-            propNode.hasNonNull("propertyCode") ? propNode.get("propertyCode").asText() : null;
-
-        JsonNode actualValueNode = propNode.path("actualValue");
-
-        if (propCode != null) {
-          dataJson.set(
-              propCode, actualValueNode.isMissingNode() ? NullNode.instance : actualValueNode);
-        }
-
         DatasheetProperty property = new DatasheetProperty();
-        String propGroup =
-            propNode.hasNonNull("propertySet") ? propNode.get("propertySet").asText() : null;
-        property.setPropertyCode(propCode);
-        property.setPropertyGroup(propGroup);
-        String propType =
-            propNode.hasNonNull("dataType") ? propNode.get("dataType").asText() : null;
-        property.setPropertyType(propType);
+
+        property.setPropertyCode(getText(propNode, "propertyCode"));
+        property.setPropertyGroup(getText(propNode, "propertySet"));
+        property.setPropertyType(getText(propNode, "dataType"));
         property.setDefinition(propNode);
         property.setPlatformId(platformId);
         property.setDatasheet(datasheet);
         propertyList.add(property);
       }
     }
+    propertyList = datasheetPropertyRepository.saveAll(propertyList);
+
+    ObjectNode dataJson = JsonNodeFactory.instance.objectNode();
+    Map<String, DatasheetProperty> propertyByCode =
+        propertyList.stream()
+            .filter(p -> p.getPropertyCode() != null)
+            .collect(Collectors.toMap(DatasheetProperty::getPropertyCode, p -> p));
+
+    for (JsonNode propNode : propertiesNode) {
+      String propCode = getText(propNode, "propertyCode");
+      JsonNode actualValueNode = propNode.path("actualValue");
+      DatasheetProperty property = propertyByCode.get(propCode);
+      if (property != null) {
+        dataJson.set(
+            property.getId().toString(),
+            actualValueNode.isMissingNode() ? NullNode.instance : actualValueNode);
+      }
+    }
 
     datasheet.setData(dataJson);
     datasheet = datasheetRepository.save(datasheet);
-
-    if (!propertyList.isEmpty()) {
-      datasheetPropertyRepository.saveAll(propertyList);
-    }
 
     PassportDatasheetMapping mapping = new PassportDatasheetMapping();
     mapping.setPassport(passport);
     mapping.setDatasheet(datasheet);
     mapping = passportDatasheetMappingRepository.save(mapping);
 
-    passport.setDatasheetMappings(List.of(mapping));
+    passport.setDatasheetMappings(Set.of(mapping));
 
     return PassportDto.from(passport);
+  }
+
+  private String getText(JsonNode node, String field) {
+    return node.hasNonNull(field) ? node.get(field).asText() : null;
   }
 
   private CreatedByDto getOrDefaultCreatedBy(String createdById, CreatedByDto createdBy) {
