@@ -473,8 +473,7 @@ public class PassportService {
    * the values map, it will be set to null.
    *
    * @param passportId passport ID
-   * @param group datasheet group name
-   * @param values map of property values
+   * @param updateDataRequestDto
    * @return updated Passport dto
    */
   @Transactional
