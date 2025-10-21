@@ -3,6 +3,7 @@ package com.opencirc.api.passport.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.InvalidInputException;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -124,5 +126,28 @@ public class PassportController {
   @GetMapping("/api/passport/root")
   public ResponseEntity<List<PassportDto>> getRootPassports() {
     return ResponseEntity.ok(passportService.getRootPassports());
+  }
+
+  /**
+   * Endpoint to update the properties for the given passport and property group.
+   *
+   * @return the updated passport
+   * @throws JsonValidationException
+   */
+  @Operation(summary = "Updates the property in the datasheet")
+  @PutMapping(
+      value = "/api/passport/{passportId}/data",
+      produces = {"application/json"},
+      consumes = {"application/json"})
+  public ResponseEntity<PassportDto> updateData(
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              description = "Property values to be updated in the datasheet")
+          @RequestBody
+          UpdateDataRequestDto request,
+      @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
+          @PathVariable
+          String passportId) {
+
+    return ResponseEntity.ok(passportService.updateData(passportId, request));
   }
 }

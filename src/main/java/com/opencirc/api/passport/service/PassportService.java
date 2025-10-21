@@ -19,6 +19,7 @@ import com.opencirc.api.passport.dto.DatasheetDto;
 import com.opencirc.api.passport.dto.DatasheetPropertyDto;
 import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.InvalidInputException;
@@ -42,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PassportService {
@@ -464,5 +466,78 @@ public class PassportService {
     } catch (JsonProcessingException e) {
       throw new RuntimeException("Error parsing createdBy JSON", e);
     }
+  }
+
+  /**
+   * Updates datasheet property values for the given passport and group. If a property is missing in
+   * the values map, it will be set to null.
+   *
+   * @param passportId passport ID
+   * @param group datasheet group name
+   * @param values map of property values
+   * @return updated Passport dto
+   */
+  @Transactional
+  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto) {
+    Passport passport =
+        passportRepository
+            .findPassport(passportId, Passport.Status.ACTIVE)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+
+    Map<String, Object> updatedProperties = new LinkedHashMap<>();
+
+    for (PassportDatasheetMapping mapping : passport.getDatasheetMappings()) {
+      Datasheet datasheet = mapping.getDatasheet();
+      ObjectNode dataNode =
+          datasheet.getData() != null
+              ? datasheet.getData().deepCopy()
+              : JsonNodeFactory.instance.objectNode();
+
+      boolean changed = false;
+
+      List<DatasheetProperty> propertyGroupList =
+          datasheet.getDatasheetProperties().stream()
+              .filter(prop -> updateDataRequestDto.getGroup().equals(prop.getPropertyGroup()))
+              .toList();
+
+      for (DatasheetProperty property : propertyGroupList) {
+        String propCode = property.getPropertyCode();
+        String propId = property.getId();
+
+        Object newValue =
+            updateDataRequestDto.getValues().containsKey(propCode)
+                ? updateDataRequestDto.getValues().get(propCode)
+                : null;
+
+        JsonNode newValueNode =
+            newValue == null ? NullNode.getInstance() : objectMapper.valueToTree(newValue);
+
+        JsonNode currentValue = dataNode.get(propId);
+
+        if (!Objects.equals(currentValue, newValueNode)) {
+          dataNode.set(propId, newValueNode);
+          changed = true;
+        }
+
+        updatedProperties.put(propCode, newValue);
+      }
+      if (changed) {
+        datasheet.setData(dataNode);
+        datasheet = datasheetRepository.save(datasheet);
+      }
+    }
+
+    if (updatedProperties.isEmpty()) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND,
+          "No properties found for group: " + updateDataRequestDto.getGroup());
+    }
+    passport =
+        passportRepository
+            .findPassport(passportId, Passport.Status.ACTIVE)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+    return PassportDto.from(passport);
   }
 }
