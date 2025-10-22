@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.CreatedByDto;
@@ -104,7 +103,7 @@ public class Datasheet {
   /** Mapping to Passports. */
   @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @ToString.Exclude
-  @JsonBackReference
+  @JsonManagedReference("datasheet")
   private List<PassportDatasheetMapping> datasheetMappings;
 
   /** Mapping to DatasheetProperties. */
