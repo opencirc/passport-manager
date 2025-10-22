@@ -33,7 +33,7 @@ public class PassportDatasheetMapping {
   @GeneratedValue
   @UuidGenerator
   @EqualsAndHashCode.Include
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+  @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
   /** passport id. */

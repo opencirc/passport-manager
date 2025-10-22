@@ -8,32 +8,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/** Datasheet Property DTO. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 public class DatasheetPropertyDto {
 
-  /** Unique Id for Datasheet Property. */
   @JsonProperty private String id;
 
-  /** Code of the class. */
-  @JsonProperty private String propertyCode;
+  @JsonProperty private String code;
 
-  /** Id of the datasheet. */
   @JsonProperty private String datasheetId;
 
-  /** Platform Id. */
   @JsonProperty private String platformId;
 
-  /** Group of the property. */
-  @JsonProperty private String propertyGroup;
+  @JsonProperty private String groupTag;
 
-  /** Type. */
   @JsonProperty private String propertyType;
 
-  /** Property Definition. */
   @JsonProperty private JsonNode definition;
 
   /**
@@ -46,9 +38,9 @@ public class DatasheetPropertyDto {
     DatasheetPropertyDto datasheetPropertyDto = new DatasheetPropertyDto();
     datasheetPropertyDto.setId(property.getId());
     datasheetPropertyDto.setDatasheetId(property.getDatasheet().getId());
-    datasheetPropertyDto.setPropertyCode(property.getPropertyCode());
+    datasheetPropertyDto.setCode(property.getCode());
     datasheetPropertyDto.setPlatformId(property.getPlatformId());
-    datasheetPropertyDto.setPropertyGroup(property.getPropertyGroup());
+    datasheetPropertyDto.setGroupTag(property.getGroupTag());
     datasheetPropertyDto.setPropertyType(property.getPropertyType());
     datasheetPropertyDto.setDefinition(property.getDefinition());
     return datasheetPropertyDto;

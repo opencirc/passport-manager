@@ -28,7 +28,7 @@ public class DatasheetProperty {
   @Id
   @GeneratedValue
   @UuidGenerator
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+  @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
   /** Datasheet id. */
@@ -41,15 +41,15 @@ public class DatasheetProperty {
 
   /** Code of the class. */
   @Column(name = "code")
-  private String propertyCode;
+  private String code;
 
   /** Uri of the platform. */
   @Column(name = "platform_id")
   private String platformId;
 
   /** PropertySet to which a property belongs. */
-  @Column(name = "property_group")
-  private String propertyGroup;
+  @Column(name = "group_tag")
+  private String groupTag;
 
   /** Type. */
   @Column(name = "property_type")

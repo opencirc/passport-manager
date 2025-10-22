@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS public.datasheet_property (
     id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
     code VARCHAR(50),
     platform_id VARCHAR(100),
-    property_group VARCHAR(50),
+    group_tag VARCHAR(50),
     property_type VARCHAR(200),
     definition JSONB,
     datasheet_id VARCHAR(100) NOT NULL,
@@ -58,8 +58,8 @@ CREATE INDEX IF NOT EXISTS idx_datasheet_property_code
 CREATE INDEX IF NOT EXISTS idx_datasheet_property_platform_id 
     ON public.datasheet_property(platform_id);
 
-CREATE INDEX IF NOT EXISTS idx_datasheet_property_group 
-    ON public.datasheet_property(property_group);
+CREATE INDEX IF NOT EXISTS idx_datasheet_property_group_tag
+    ON public.datasheet_property(group_tag);
 
 CREATE INDEX IF NOT EXISTS idx_datasheet_property_datasheet_id 
     ON public.datasheet_property(datasheet_id);

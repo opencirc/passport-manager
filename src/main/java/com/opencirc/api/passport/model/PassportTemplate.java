@@ -32,7 +32,7 @@ public class PassportTemplate {
   @Id
   @GeneratedValue
   @UuidGenerator
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+  @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
   /** Name of the Template. */

@@ -165,8 +165,8 @@ public class PassportService {
       for (JsonNode propNode : propertiesNode) {
         DatasheetProperty property = new DatasheetProperty();
 
-        property.setPropertyCode(getText(propNode, "propertyCode"));
-        property.setPropertyGroup(getText(propNode, "propertySet"));
+        property.setCode(getText(propNode, "propertyCode"));
+        property.setGroupTag(getText(propNode, "propertySet"));
         property.setPropertyType(getText(propNode, "dataType"));
         property.setDefinition(propNode);
         property.setPlatformId(platformId);
@@ -179,13 +179,13 @@ public class PassportService {
     ObjectNode dataJson = JsonNodeFactory.instance.objectNode();
     Map<String, DatasheetProperty> propertyByCode =
         propertyList.stream()
-            .filter(p -> p.getPropertyCode() != null)
-            .collect(Collectors.toMap(DatasheetProperty::getPropertyCode, p -> p));
+            .filter(property -> property.getCode() != null)
+            .collect(Collectors.toMap(DatasheetProperty::getCode, property -> property));
 
-    for (JsonNode propNode : propertiesNode) {
-      String propCode = getText(propNode, "propertyCode");
-      JsonNode actualValueNode = propNode.path("actualValue");
-      DatasheetProperty property = propertyByCode.get(propCode);
+    for (JsonNode propertyNode : propertiesNode) {
+      String propertyCode = getText(propertyNode, "propertyCode");
+      JsonNode actualValueNode = propertyNode.path("actualValue");
+      DatasheetProperty property = propertyByCode.get(propertyCode);
       if (property != null) {
         dataJson.set(
             property.getId().toString(),
@@ -268,13 +268,13 @@ public class PassportService {
 
           if (propertyDto != null
               && datasheetDto.getDatasheetProperties().stream()
-                  .noneMatch(p -> Objects.equals(p.getId(), propertyDto.getId()))) {
+                  .noneMatch(property -> Objects.equals(property.getId(), propertyDto.getId()))) {
             datasheetDto.getDatasheetProperties().add(propertyDto);
           }
         }
 
         if (passportDto.getDatasheets().stream()
-            .noneMatch(ds -> Objects.equals(ds.getId(), datasheetDto.getId()))) {
+            .noneMatch(datasheet -> Objects.equals(datasheet.getId(), datasheetDto.getId()))) {
           passportDto.getDatasheets().add(datasheetDto);
         }
       }
@@ -318,13 +318,13 @@ public class PassportService {
 
           if (propertyDto != null
               && datasheetDto.getDatasheetProperties().stream()
-                  .noneMatch(p -> Objects.equals(p.getId(), propertyDto.getId()))) {
+                  .noneMatch(property -> Objects.equals(property.getId(), propertyDto.getId()))) {
             datasheetDto.getDatasheetProperties().add(propertyDto);
           }
         }
 
         if (passportDto.getDatasheets().stream()
-            .noneMatch(ds -> Objects.equals(ds.getId(), datasheetDto.getId()))) {
+            .noneMatch(datasheet -> Objects.equals(datasheet.getId(), datasheetDto.getId()))) {
           passportDto.getDatasheets().add(datasheetDto);
         }
       }
@@ -427,9 +427,9 @@ public class PassportService {
 
     propertyDto.setId(row.getDatasheetPropertyId());
     propertyDto.setDatasheetId(row.getDatasheetId());
-    propertyDto.setPropertyCode(row.getDatasheetPropertyCode());
+    propertyDto.setCode(row.getDatasheetCode());
     propertyDto.setPlatformId(row.getDatasheetPropertyPlatformId());
-    propertyDto.setPropertyGroup(row.getDatasheetPropertyGroup());
+    propertyDto.setGroupTag(row.getDatasheetPropertyGroupTag());
     propertyDto.setPropertyType(row.getDatasheetPropertyType());
 
     JsonNode definitionNode = null;

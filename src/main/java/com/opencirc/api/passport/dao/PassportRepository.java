@@ -71,7 +71,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
                    dp.id AS datasheetPropertyId,
                    dp.code AS datasheetPropertyCode,
                    dp.platform_id AS datasheetPropertyPlatformId,
-                   dp.property_group AS datasheetPropertyGroup,
+                   dp.group_tag AS datasheetPropertyGroupTag,
                    dp.property_type AS datasheetPropertyType,
                    dp.definition AS datasheetPropertyDefinition
             FROM PassportTree pt
@@ -116,7 +116,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
                    dp.datasheet_id AS datasheetPropertyDatasheetId,
                    dp.code AS datasheetPropertyCode,
                    dp.platform_id AS datasheetPropertyPlatformId,
-                   dp.property_group AS datasheetPropertyGroup,
+                   dp.group_tag AS datasheetPropertyGroupTag,
                    dp.property_type AS datasheetPropertyType,
                    dp.definition AS datasheetPropertyDefinition
 
