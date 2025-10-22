@@ -31,12 +31,12 @@ import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -164,9 +164,12 @@ public class PassportService {
     JsonNode propertiesNode = datasheetData.path("classProperties");
     if (propertiesNode.isArray()) {
       for (JsonNode propNode : propertiesNode) {
+        String propCode = getText(propNode, "propertyCode");
+        if (propCode == null || propCode.isBlank()) {
+          continue;
+        }
         DatasheetProperty property = new DatasheetProperty();
-
-        property.setCode(getText(propNode, "propertyCode"));
+        property.setCode(propCode);
         property.setGroupTag(getText(propNode, "propertySet"));
         property.setPropertyType(getText(propNode, "dataType"));
         property.setDefinition(propNode);
@@ -189,7 +192,7 @@ public class PassportService {
       DatasheetProperty property = propertyByCode.get(propertyCode);
       if (property != null) {
         dataJson.set(
-            property.getId().toString(),
+            property.getCode().toString(),
             actualValueNode.isMissingNode() ? NullNode.instance : actualValueNode);
       }
     }
@@ -202,8 +205,10 @@ public class PassportService {
     mapping.setDatasheet(datasheet);
     mapping = passportDatasheetMappingRepository.save(mapping);
 
-    passport.setDatasheetMappings(Set.of(mapping));
-
+    if (passport.getDatasheetMappings() == null) {
+      passport.setDatasheetMappings(new HashSet<>());
+    }
+    passport.getDatasheetMappings().add(mapping);
     return PassportDto.from(passport);
   }
 
@@ -428,7 +433,7 @@ public class PassportService {
 
     propertyDto.setId(row.getDatasheetPropertyId());
     propertyDto.setDatasheetId(row.getDatasheetId());
-    propertyDto.setCode(row.getDatasheetCode());
+    propertyDto.setCode(row.getDatasheetPropertyCode());
     propertyDto.setPlatformId(row.getDatasheetPropertyPlatformId());
     propertyDto.setGroupTag(row.getDatasheetPropertyGroupTag());
     propertyDto.setPropertyType(row.getDatasheetPropertyType());
