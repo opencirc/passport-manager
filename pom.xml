@@ -134,6 +134,13 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -159,13 +166,13 @@
                 <version>2.43.0</version>
                 <configuration>
                     <java>
-                        <!-- Use the Google Java Format engine to comply with
+						<!-- Use the Google Java Format engine to comply with
                         google_checks.xml -->
                         <googleJavaFormat>
                             <version>1.22.0</version>
                             <style>GOOGLE</style>
                         </googleJavaFormat>
-                        <!-- Also fix imports consistently -->
+						<!-- Also fix imports consistently -->
                         <removeUnusedImports />
                         <importOrder>
                             <order>com</order>
