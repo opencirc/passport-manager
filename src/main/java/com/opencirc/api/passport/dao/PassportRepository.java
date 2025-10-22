@@ -22,7 +22,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   @Query(
       "SELECT DISTINCT p FROM Passport p "
           + "LEFT JOIN FETCH p.datasheetMappings dm "
-          + "LEFT JOIN FETCH dm.datasheet d "
+          + "LEFT JOIN FETCH dm.datasheet "
           + "WHERE p.id = :id AND p.status = :status")
   Optional<Passport> findPassport(@Param("id") String id, @Param("status") Passport.Status status);
 
@@ -94,7 +94,6 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
           """
             SELECT p.id AS passportId,
                    p.name AS passportName,
-                   ds.id AS datasheetId,
                    p.status AS status,
                    p.parent_id AS parentId,
                    p.created_by_id AS passportCreatedById,
@@ -156,7 +155,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
    * @return passports
    */
   @Query(
-      "SELECT p FROM Passport p "
+      "SELECT DISTINCT p FROM Passport p "
           + "LEFT JOIN FETCH p.datasheetMappings dm "
           + "LEFT JOIN FETCH dm.datasheet d "
           + "WHERE p.status = 'ACTIVE' AND p.parentId IS NULL ")

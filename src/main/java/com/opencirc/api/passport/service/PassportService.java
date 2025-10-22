@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -201,7 +202,7 @@ public class PassportService {
     mapping.setDatasheet(datasheet);
     mapping = passportDatasheetMappingRepository.save(mapping);
 
-    passport.getDatasheetMappings().add(mapping);
+    passport.setDatasheetMappings(Set.of(mapping));
 
     return PassportDto.from(passport);
   }
