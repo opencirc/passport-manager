@@ -432,24 +432,24 @@ public class PassportService {
     propertyDto.setGroupTag(row.getDatasheetPropertyGroupTag());
     propertyDto.setPropertyType(row.getDatasheetPropertyType());
 
-    JsonNode definitionNode = null;
-    String definition =
-        row.getDatasheetPropertyDefinition() != null
-            ? row.getDatasheetPropertyDefinition().toString()
-            : null;
+    String definition = row.getDatasheetPropertyDefinition();
     if (definition != null && !definition.isBlank()) {
       try {
-        definitionNode = objectMapper.readTree(definition);
+        JsonNode definitionNode = objectMapper.readTree(definition);
+        propertyDto.setDefinition(definitionNode);
       } catch (JsonProcessingException e) {
         throw new RuntimeException(
-            "Error parsing datasheet property JSON for datasheetPropertyId="
+            "Error parsing datasheet property JSON for datasheetPropertyId = "
                 + row.getDatasheetPropertyId()
-                + ", datasheetId="
-                + row.getDatasheetId(),
+                + ", datasheetId = "
+                + row.getDatasheetId()
+                + ", passportId = "
+                + row.getPassportId(),
             e);
       }
+    } else {
+      propertyDto.setDefinition(null);
     }
-    propertyDto.setDefinition(definitionNode);
 
     return propertyDto;
   }
