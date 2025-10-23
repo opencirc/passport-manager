@@ -507,24 +507,20 @@ public class PassportService {
 
       for (DatasheetProperty property : propertyGroupList) {
         String propertyCode = property.getCode();
-        String propertyId = property.getId();
 
-        Object newValue =
-            updateDataRequestDto.getValues().containsKey(propertyCode)
-                ? updateDataRequestDto.getValues().get(propertyCode)
-                : null;
+        if (updateDataRequestDto.getValues().containsKey(propertyCode)) {
+          Object newValue = updateDataRequestDto.getValues().get(propertyCode);
+          JsonNode newValueNode =
+              newValue == null ? NullNode.getInstance() : objectMapper.valueToTree(newValue);
+          JsonNode currentValue = dataNode.get(propertyCode);
 
-        JsonNode newValueNode =
-            newValue == null ? NullNode.getInstance() : objectMapper.valueToTree(newValue);
+          if (!Objects.equals(currentValue, newValueNode)) {
+            dataNode.set(propertyCode, newValueNode);
+            changed = true;
+          }
 
-        JsonNode currentValue = dataNode.get(propertyId);
-
-        if (!Objects.equals(currentValue, newValueNode)) {
-          dataNode.set(propertyId, newValueNode);
-          changed = true;
+          updatedProperties.put(propertyCode, newValue);
         }
-
-        updatedProperties.put(propertyCode, newValue);
       }
       if (changed) {
         datasheet.setData(dataNode);
@@ -537,11 +533,7 @@ public class PassportService {
           HttpStatus.NOT_FOUND,
           "No properties found for group: " + updateDataRequestDto.getGroup());
     }
-    passport =
-        passportRepository
-            .findPassport(passportId, Passport.Status.ACTIVE)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+
     return PassportDto.from(passport);
   }
 }
