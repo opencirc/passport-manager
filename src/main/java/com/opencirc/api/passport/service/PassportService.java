@@ -493,7 +493,8 @@ public class PassportService {
 
     var mappings = passport.getDatasheetMappings();
     if (mappings == null || mappings.isEmpty()) {
-      mappings = java.util.Set.of();
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "Passport does not have any datasheet mappings: " + passportId);
     }
 
     for (PassportDatasheetMapping mapping : mappings) {
@@ -541,7 +542,7 @@ public class PassportService {
     if (updatedProperties.isEmpty()) {
       throw new ResponseStatusException(
           HttpStatus.NOT_FOUND,
-          "No properties found for group: " + updateDataRequestDto.getGroup());
+          "No properties found to update : " + updateDataRequestDto.getGroup());
     }
 
     return PassportDto.from(passport);
