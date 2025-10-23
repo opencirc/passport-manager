@@ -474,7 +474,8 @@ public class PassportService {
   }
 
   /**
-   * Updates datasheet property values for the given passport and group.
+   * Updates datasheet property values for the given passport and group. Only properties present in
+   * {@code updateDataRequestDto.values} are updated.
    *
    * @param passportId passport ID
    * @param updateDataRequestDto
@@ -490,7 +491,12 @@ public class PassportService {
 
     Map<String, Object> updatedProperties = new LinkedHashMap<>();
 
-    for (PassportDatasheetMapping mapping : passport.getDatasheetMappings()) {
+    var mappings = passport.getDatasheetMappings();
+    if (mappings == null || mappings.isEmpty()) {
+      mappings = java.util.Set.of();
+    }
+
+    for (PassportDatasheetMapping mapping : mappings) {
       Datasheet datasheet = mapping.getDatasheet();
       ObjectNode dataNode =
           datasheet.getData() != null
@@ -498,9 +504,14 @@ public class PassportService {
               : JsonNodeFactory.instance.objectNode();
 
       boolean changed = false;
+      var properties = datasheet.getDatasheetProperties();
+
+      if (properties == null || properties.isEmpty()) {
+        continue;
+      }
 
       List<DatasheetProperty> propertyGroupList =
-          datasheet.getDatasheetProperties().stream()
+          properties.stream()
               .filter(property -> updateDataRequestDto.getGroup().equals(property.getGroupTag()))
               .toList();
 
