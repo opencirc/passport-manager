@@ -474,8 +474,7 @@ public class PassportService {
   }
 
   /**
-   * Updates datasheet property values for the given passport and group. If a property is missing in
-   * the values map, it will be set to null.
+   * Updates datasheet property values for the given passport and group.
    *
    * @param passportId passport ID
    * @param updateDataRequestDto
@@ -511,7 +510,7 @@ public class PassportService {
         if (updateDataRequestDto.getValues().containsKey(propertyCode)) {
           Object newValue = updateDataRequestDto.getValues().get(propertyCode);
           JsonNode newValueNode =
-              newValue == null ? NullNode.getInstance() : objectMapper.valueToTree(newValue);
+              newValue == null ? NullNode.instance : objectMapper.valueToTree(newValue);
           JsonNode currentValue = dataNode.get(propertyCode);
 
           if (!Objects.equals(currentValue, newValueNode)) {
