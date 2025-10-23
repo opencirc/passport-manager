@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.dao;
 
-import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
+import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.model.Passport;
 import java.util.List;
 import java.util.Optional;
