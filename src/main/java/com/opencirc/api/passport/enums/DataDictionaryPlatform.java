@@ -2,14 +2,14 @@ package com.opencirc.api.passport.enums;
 
 import java.util.Arrays;
 
-/** Enum for Data Dictionary. */
-public enum DataDictionary {
+/** Enum for Data Dictionary platform. */
+public enum DataDictionaryPlatform {
 
-  /** IFC. */
-  IFC("ifc"),
+  /** BsDD. */
+  BSDD("bsdd"),
 
   /** Lexicon. */
-  TABLE6("table6");
+  LEXICON("lexicon");
 
   /** Dictionary name in string. */
   private final String value;
@@ -19,7 +19,7 @@ public enum DataDictionary {
    *
    * @param dictionaryValue the string representation of the dictionary
    */
-  DataDictionary(String dictionaryValue) {
+  DataDictionaryPlatform(String dictionaryValue) {
     this.value = dictionaryValue;
   }
 
@@ -49,10 +49,10 @@ public enum DataDictionary {
    * @return the corresponding dictionary enum
    * @throws IllegalArgumentException
    */
-  public static DataDictionary fromValue(String value) {
-    return Arrays.stream(DataDictionary.values())
+  public static DataDictionaryPlatform fromValue(String value) {
+    return Arrays.stream(DataDictionaryPlatform.values())
         .filter(dataDictionary -> dataDictionary.value.equalsIgnoreCase(value))
         .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("Invalid dictionary : " + value));
+        .orElseThrow(() -> new IllegalArgumentException("Invalid dictionary platform: " + value));
   }
 }

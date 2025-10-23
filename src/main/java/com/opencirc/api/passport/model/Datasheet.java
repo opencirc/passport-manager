@@ -1,8 +1,10 @@
 package com.opencirc.api.passport.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -17,21 +19,26 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.UuidGenerator;
 
 /** Model for datasheet table. */
-@Entity
-@Table(name = "datasheets")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "datasheets")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class Datasheet {
 
@@ -39,23 +46,45 @@ public class Datasheet {
   @Id
   @GeneratedValue
   @UuidGenerator
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
-  private UUID id;
+  @EqualsAndHashCode.Include
+  @Column(name = "id", updatable = false, nullable = false)
+  private String id;
 
-  /** Template information in JSON format. */
-  @Column(name = "data", columnDefinition = "jsonb")
-  @ColumnTransformer(write = "?::jsonb")
-  private JsonNode data;
+  /** Name of the data dictionary platform. */
+  @Column(name = "platform")
+  @Enumerated(EnumType.STRING)
+  private DataDictionaryPlatform platform;
+
+  /** Name of the data dictionary from which template is fetched. */
+  @Column(name = "dictionary")
+  @Enumerated(EnumType.STRING)
+  private DataDictionary dictionary;
+
+  /** Code of the class. */
+  @Column(name = "code")
+  private String code;
+
+  /** Name of the class. */
+  @Column(name = "name")
+  private String name;
+
+  /** Description of the class. */
+  @Column(name = "description")
+  private String description;
+
+  /** Uri of the platform. */
+  @Column(name = "platform_id")
+  private String platformId;
 
   /** Data category (Unique or Generic). */
   @Column(name = "data_category")
   @Enumerated(EnumType.STRING)
   private DataCategory dataCategory;
 
-  /** Name of the data dictionary from which template is fetched. */
-  @Column(name = "data_dictionary")
-  @Enumerated(EnumType.STRING)
-  private DataDictionary dataDictionary;
+  /** Template information in JSON format. */
+  @Column(name = "data", columnDefinition = "jsonb")
+  @ColumnTransformer(write = "?::jsonb")
+  private JsonNode data;
 
   /** Id of the user who created the datasheet. */
   @Column(name = "created_by_id")
@@ -73,7 +102,15 @@ public class Datasheet {
 
   /** Mapping to Passports. */
   @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @ToString.Exclude
+  @JsonManagedReference("datasheet")
   private List<PassportDatasheetMapping> datasheetMappings;
+
+  /** Mapping to DatasheetProperties. */
+  @ToString.Exclude
+  @JsonManagedReference
+  @OneToMany(mappedBy = "datasheet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  private Set<DatasheetProperty> datasheetProperties = new HashSet<>();
 
   /** Enum representing the category of a data. */
   public enum DataCategory {

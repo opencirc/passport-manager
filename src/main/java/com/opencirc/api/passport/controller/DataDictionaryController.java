@@ -2,7 +2,7 @@ package com.opencirc.api.passport.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +44,7 @@ public class DataDictionaryController {
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
     return dataDictionaryService.searchClassesByText(
-        DataDictionary.fromValue(dictionaryName), query);
+        DataDictionaryPlatform.fromValue(dictionaryName), query);
   }
 
   /**
@@ -82,7 +82,7 @@ public class DataDictionaryController {
           Boolean withProperties)
       throws JsonValidationException, JsonProcessingException {
     return dataDictionaryService.createClassTemplate(
-        DataDictionary.fromValue(dictionaryName), classUri, withProperties);
+        DataDictionaryPlatform.fromValue(dictionaryName), classUri, withProperties);
   }
 
   /**
@@ -102,7 +102,8 @@ public class DataDictionaryController {
           String dictionaryName,
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
-    return dataDictionaryService.listProperties(DataDictionary.fromValue(dictionaryName), query);
+    return dataDictionaryService.listProperties(
+        DataDictionaryPlatform.fromValue(dictionaryName), query);
   }
 
   /**
@@ -128,6 +129,6 @@ public class DataDictionaryController {
           List<String> propertiesUriList)
       throws JsonValidationException {
     return dataDictionaryService.createTemplateWithProperties(
-        DataDictionary.fromValue(dictionaryName), propertiesUriList);
+        DataDictionaryPlatform.fromValue(dictionaryName), propertiesUriList);
   }
 }

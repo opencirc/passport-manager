@@ -9,28 +9,32 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.UuidGenerator;
 
 /** DTO for Passport Datasheet table. */
-@Entity
-@Table(name = "passport_datasheet_mappings")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@Entity
+@Table(name = "passport_datasheet_mappings")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"passport", "datasheet"})
 public class PassportDatasheetMapping {
 
   /** Unique id for mapping relation. */
   @Id
   @GeneratedValue
   @UuidGenerator
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
-  private UUID id;
+  @EqualsAndHashCode.Include
+  @Column(name = "id", updatable = false, nullable = false)
+  private String id;
 
   /** passport id. */
   @ManyToOne(fetch = FetchType.LAZY)
@@ -41,5 +45,6 @@ public class PassportDatasheetMapping {
   /** datasheet id. */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "datasheet_id", referencedColumnName = "id")
+  @JsonBackReference("datasheet")
   private Datasheet datasheet;
 }

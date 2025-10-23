@@ -10,7 +10,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
 import com.opencirc.api.passport.constants.test.TestConstants;
-import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
+import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;

@@ -8,7 +8,6 @@ import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.service.ApiKeyService;
 import com.opencirc.api.passport.service.JwtService;
 import com.opencirc.api.passport.service.PasswordService;
-import com.opencirc.api.passport.util.StringUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -18,7 +17,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -136,21 +134,13 @@ public class JwtFilter extends OncePerRequestFilter {
       String apiKeyHeader)
       throws IOException, ServletException {
 
-    UUID apiKeyUuid;
-    try {
-      apiKeyUuid = StringUtil.validateUuid(apiKeyHeader);
-    } catch (IllegalArgumentException ex) {
-      sendErrorResponse(
-          response, HttpServletResponse.SC_BAD_REQUEST, AppConstants.ERR_INVALID_CREDENTIALS);
-      return;
-    }
-    if (apiKeyUuid == null) {
+    if (apiKeyHeader == null) {
       sendErrorResponse(
           response, HttpServletResponse.SC_BAD_REQUEST, AppConstants.ERR_INVALID_CREDENTIALS);
       return;
     }
 
-    ApiKey apiKey = apiKeyService.findById(apiKeyUuid);
+    ApiKey apiKey = apiKeyService.findById(apiKeyHeader);
 
     if (apiKey == null) {
       sendErrorResponse(

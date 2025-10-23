@@ -2,7 +2,6 @@ package com.opencirc.api.passport.dao;
 
 import com.opencirc.api.passport.model.User;
 import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<User, String> {
 
   /**
    * Fetches a user by email.
@@ -46,5 +45,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   @Transactional
   @Modifying
   @Query("UPDATE User u SET u.refreshToken = :refreshToken" + " WHERE u.id = :id")
-  void updateRefreshTokenById(@Param("id") UUID id, @Param("refreshToken") String refreshToken);
+  void updateRefreshTokenById(@Param("id") String id, @Param("refreshToken") String refreshToken);
 }

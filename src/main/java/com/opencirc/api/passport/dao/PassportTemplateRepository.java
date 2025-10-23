@@ -1,10 +1,9 @@
 package com.opencirc.api.passport.dao;
 
 import com.opencirc.api.passport.model.PassportTemplate;
-import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PassportTemplateRepository extends JpaRepository<PassportTemplate, UUID> {
+public interface PassportTemplateRepository extends JpaRepository<PassportTemplate, String> {
 
   /**
    * Finds the template by id.
@@ -12,5 +11,5 @@ public interface PassportTemplateRepository extends JpaRepository<PassportTempla
    * @param id
    * @return passport template
    */
-  PassportTemplate findFirstById(UUID id);
+  PassportTemplate findFirstById(String id);
 }

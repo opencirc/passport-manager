@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Function;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -200,8 +199,7 @@ public class JwtService {
    * @return user details
    */
   public User extractUserFromToken(String token) {
-    Optional<User> user =
-        userRepository.findById(UUID.fromString(extractUserId(extractUserId(token))));
+    Optional<User> user = userRepository.findById(extractUserId(token));
     return user.orElseThrow(() -> new UsernameNotFoundException("Invalid token, user not found"));
   }
 
@@ -216,7 +214,7 @@ public class JwtService {
     UserDetails userDetails = authUserDetailsService.loadUserById(userId);
     User user =
         userRepository
-            .findById(UUID.fromString(userId))
+            .findById(userId)
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     if (userDetails == null || !validateToken(refreshToken, userDetails)) {
       throw new AuthenticationException("Invalid refresh token");

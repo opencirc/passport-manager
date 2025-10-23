@@ -17,7 +17,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Optional;
-import java.util.UUID;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -191,7 +190,7 @@ public class AuthService {
       String refreshToken =
           jwtService.generateToken(userId, properties.getRefreshTokenExpiryTime());
 
-      userRepository.updateRefreshTokenById(UUID.fromString(userId), refreshToken);
+      userRepository.updateRefreshTokenById(userId, refreshToken);
 
       jwtService.generateTokenCookie(
           response,
@@ -261,7 +260,7 @@ public class AuthService {
     String userId = jwtService.extractUserId(refreshToken);
     User existingUser =
         userRepository
-            .findById(UUID.fromString(userId))
+            .findById(userId)
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     existingUser.setRefreshToken(null);
     userRepository.save(existingUser);
@@ -295,7 +294,7 @@ public class AuthService {
     }
 
     String userId = jwtService.extractUserId(token);
-    Optional<User> user = userRepository.findById(UUID.fromString(userId));
+    Optional<User> user = userRepository.findById(userId);
     return user.map(UserDto::from).orElse(null);
   }
 }

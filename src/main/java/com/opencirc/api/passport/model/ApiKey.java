@@ -7,7 +7,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,7 +29,7 @@ public class ApiKey {
   @GeneratedValue
   @UuidGenerator
   @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
-  private UUID id;
+  private String id;
 
   /** Hashed secret associated with this API key. */
   @Column(nullable = false)
@@ -38,7 +37,7 @@ public class ApiKey {
 
   /** UUID of the user who owns this API key. */
   @Column(name = "user_id", nullable = false)
-  private UUID userId;
+  private String userId;
 
   /** User-defined display name for the API key. */
   @Column(name = "name", length = 100, nullable = false)

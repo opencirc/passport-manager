@@ -18,7 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -124,8 +123,7 @@ public class PassportTemplateService {
    * @return template
    */
   public PassportTemplateDto getPassportTemplate(String id) {
-    UUID uuid = UUID.fromString(id);
-    PassportTemplate template = passportTemplateRepository.findFirstById(uuid);
+    PassportTemplate template = passportTemplateRepository.findFirstById(id);
 
     if (template == null) {
       throw new ResourceNotFoundException("Passport template not found for ID: " + id);

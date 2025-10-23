@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.PassportService;
@@ -39,7 +40,7 @@ public class PassportController {
    */
   @Operation(summary = "Creates Passport and validates it")
   @PostMapping(
-      value = "/api/passport/dictionary/{dictionary}",
+      value = "/api/passport/dictionary/{platform}/{dictionary}",
       produces = {"application/json"},
       consumes = {"application/json"})
   public ResponseEntity<PassportDto> createPassportUsingDictionary(
@@ -49,13 +50,18 @@ public class PassportController {
                       + "populated with actual data to create the Passport")
           @RequestBody
           CreatePassportRequestDto data,
+      @Parameter(description = "Dictionary Platform", required = true, in = ParameterIn.PATH)
+          @PathVariable("platform")
+          String platform,
       @Parameter(description = "Dictionary", required = true, in = ParameterIn.PATH)
           @PathVariable("dictionary")
           String dictionaryName)
       throws InvalidInputException, JsonValidationException {
     return ResponseEntity.ok(
         passportService.createPassportUsingDictionary(
-            DataDictionary.fromValue(dictionaryName), data));
+            DataDictionaryPlatform.fromValue(platform),
+            DataDictionary.fromValue(dictionaryName),
+            data));
   }
 
   /**
@@ -115,7 +121,7 @@ public class PassportController {
    * @throws JsonValidationException
    */
   @Operation(summary = "Get all the root passports available")
-  @GetMapping("/api/passport")
+  @GetMapping("/api/passport/root")
   public ResponseEntity<List<PassportDto>> getRootPassports() {
     return ResponseEntity.ok(passportService.getRootPassports());
   }

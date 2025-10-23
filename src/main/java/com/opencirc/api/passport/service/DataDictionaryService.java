@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.adapter.DictionaryAdapter;
 import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
-import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import java.util.List;
 import java.util.Map;
@@ -20,12 +20,13 @@ public class DataDictionaryService {
   /**
    * Search and retrieves the class based on the text.
    *
-   * @param dictionary
+   * @param dictionaryPlatform
    * @param text
    * @return class Details
    */
-  public List<Map<String, String>> searchClassesByText(DataDictionary dictionary, String text) {
-    DictionaryAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionary);
+  public List<Map<String, String>> searchClassesByText(
+      DataDictionaryPlatform dictionaryPlatform, String text) {
+    DictionaryAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionaryPlatform);
     List<Map<String, String>> classMap = adapter.listClass(text);
     return classMap;
   }
@@ -33,16 +34,17 @@ public class DataDictionaryService {
   /**
    * Search and retrieves the class along with the properties.
    *
-   * @param dictionary
+   * @param dictionaryPlatform
    * @param uri
    * @param <T> The specific dictionary type
    * @param withProperties
    * @return class with properties in json format
    * @throws JsonProcessingException
    */
-  public <T> T createClassTemplate(DataDictionary dictionary, String uri, boolean withProperties)
+  public <T> T createClassTemplate(
+      DataDictionaryPlatform dictionaryPlatform, String uri, boolean withProperties)
       throws JsonValidationException, JsonProcessingException {
-    DictionaryAdapter<T> adapter = dictionaryAdapterFactory.getAdapter(dictionary);
+    DictionaryAdapter<T> adapter = dictionaryAdapterFactory.getAdapter(dictionaryPlatform);
     return adapter.createClassTemplate(uri, withProperties);
   }
 
@@ -53,7 +55,7 @@ public class DataDictionaryService {
    * @param text
    * @return properties in json format
    */
-  public List<Map<String, String>> listProperties(DataDictionary dictionary, String text) {
+  public List<Map<String, String>> listProperties(DataDictionaryPlatform dictionary, String text) {
     DictionaryAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionary);
     return adapter.listProperties(text);
   }
@@ -61,13 +63,14 @@ public class DataDictionaryService {
   /**
    * Creates the template with the listed properties.
    *
-   * @param dictionary
+   * @param dictionaryPlatform
    * @param propertiesUriList
    * @return template with properties in json format
    */
   public ObjectNode createTemplateWithProperties(
-      DataDictionary dictionary, List<String> propertiesUriList) throws JsonValidationException {
-    DictionaryAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionary);
+      DataDictionaryPlatform dictionaryPlatform, List<String> propertiesUriList)
+      throws JsonValidationException {
+    DictionaryAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionaryPlatform);
     return adapter.getPropertyTemplateWithDetails(propertiesUriList);
   }
 }

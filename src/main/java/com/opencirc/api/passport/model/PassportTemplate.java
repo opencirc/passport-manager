@@ -10,7 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,8 +32,8 @@ public class PassportTemplate {
   @Id
   @GeneratedValue
   @UuidGenerator
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
-  private UUID id;
+  @Column(name = "id", updatable = false, nullable = false)
+  private String id;
 
   /** Name of the Template. */
   @Column(name = "name")

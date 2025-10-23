@@ -14,7 +14,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -65,7 +64,8 @@ public class ApiKeyService {
    * @return a DTO containing the persisted API key metadata and the raw secret
    * @throws InvalidInputException if userId is invalid or expiration date is invalid
    */
-  public final GeneratedApiKeyDto createApiKey(UUID userId, LocalDate expirationDate, String name) {
+  @Transactional
+  public GeneratedApiKeyDto createApiKey(String userId, LocalDate expirationDate, String name) {
 
     if (userId == null) {
       throw new InvalidInputException("User ID must not be null.");
@@ -112,7 +112,7 @@ public class ApiKeyService {
    * @return list of ApiKey instances
    */
   @Transactional(readOnly = true)
-  public List<ApiKey> getApiTokens(UUID userId) {
+  public List<ApiKey> getApiTokens(String userId) {
     if (userId == null) {
       throw new InvalidInputException("User ID must not be null");
     }
@@ -129,7 +129,7 @@ public class ApiKeyService {
    * @return result
    */
   @Transactional
-  public boolean deleteApiToken(UUID keyId) {
+  public boolean deleteApiToken(String keyId) {
     if (keyId == null) {
       throw new InvalidInputException("Key ID must not be null");
     }
@@ -152,7 +152,7 @@ public class ApiKeyService {
    * @param id the API key UUID
    * @return Optional containing the ApiKey if found
    */
-  public ApiKey findById(UUID id) {
+  public ApiKey findById(String id) {
     return apiKeyRepository.findById(id).orElse(null);
   }
 }
