@@ -1,4 +1,4 @@
-package com.opencirc.api.passport.dto;
+package com.opencirc.api.passport.dto.query;
 
 import java.time.LocalDateTime;
 

@@ -17,9 +17,9 @@ import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
 import com.opencirc.api.passport.dto.DatasheetPropertyDto;
-import com.opencirc.api.passport.dto.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
+import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.InvalidInputException;
@@ -502,29 +502,29 @@ public class PassportService {
 
       List<DatasheetProperty> propertyGroupList =
           datasheet.getDatasheetProperties().stream()
-              .filter(prop -> updateDataRequestDto.getGroup().equals(prop.getPropertyGroup()))
+              .filter(property -> updateDataRequestDto.getGroup().equals(property.getGroupTag()))
               .toList();
 
       for (DatasheetProperty property : propertyGroupList) {
-        String propCode = property.getPropertyCode();
-        String propId = property.getId();
+        String propertyCode = property.getCode();
+        String propertyId = property.getId();
 
         Object newValue =
-            updateDataRequestDto.getValues().containsKey(propCode)
-                ? updateDataRequestDto.getValues().get(propCode)
+            updateDataRequestDto.getValues().containsKey(propertyCode)
+                ? updateDataRequestDto.getValues().get(propertyCode)
                 : null;
 
         JsonNode newValueNode =
             newValue == null ? NullNode.getInstance() : objectMapper.valueToTree(newValue);
 
-        JsonNode currentValue = dataNode.get(propId);
+        JsonNode currentValue = dataNode.get(propertyId);
 
         if (!Objects.equals(currentValue, newValueNode)) {
-          dataNode.set(propId, newValueNode);
+          dataNode.set(propertyId, newValueNode);
           changed = true;
         }
 
-        updatedProperties.put(propCode, newValue);
+        updatedProperties.put(propertyCode, newValue);
       }
       if (changed) {
         datasheet.setData(dataNode);
