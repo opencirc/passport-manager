@@ -75,7 +75,7 @@ public interface PassportDatasheetResultMapDto {
   String getDatasheetPropertyPlatformId();
 
   /** Returns the group where the property belongs to. */
-  String getDatasheetPropertyGroup();
+  String getDatasheetPropertyGroupTag();
 
   /** Returns the type. */
   String getDatasheetPropertyType();

@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,18 +33,18 @@ public class PassportDatasheetMapping {
   @GeneratedValue
   @UuidGenerator
   @EqualsAndHashCode.Include
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+  @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
   /** passport id. */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "passport_id", referencedColumnName = "id")
-  @JsonManagedReference("passport")
+  @JsonBackReference
   private Passport passport;
 
   /** datasheet id. */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "datasheet_id", referencedColumnName = "id")
-  @JsonManagedReference("datasheet")
+  @JsonBackReference("datasheet")
   private Datasheet datasheet;
 }

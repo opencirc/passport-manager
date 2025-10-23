@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -46,7 +47,7 @@ public class Datasheet {
   @GeneratedValue
   @UuidGenerator
   @EqualsAndHashCode.Include
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+  @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
   /** Name of the data dictionary platform. */
@@ -102,10 +103,12 @@ public class Datasheet {
   /** Mapping to Passports. */
   @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @ToString.Exclude
+  @JsonManagedReference("datasheet")
   private List<PassportDatasheetMapping> datasheetMappings;
 
   /** Mapping to DatasheetProperties. */
   @ToString.Exclude
+  @JsonManagedReference
   @OneToMany(mappedBy = "datasheet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   private Set<DatasheetProperty> datasheetProperties = new HashSet<>();
 

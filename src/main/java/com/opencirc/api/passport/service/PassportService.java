@@ -32,12 +32,12 @@ import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -166,10 +166,13 @@ public class PassportService {
     JsonNode propertiesNode = datasheetData.path("classProperties");
     if (propertiesNode.isArray()) {
       for (JsonNode propNode : propertiesNode) {
+        String propCode = getText(propNode, "propertyCode");
+        if (propCode == null || propCode.isBlank()) {
+          continue;
+        }
         DatasheetProperty property = new DatasheetProperty();
-
-        property.setPropertyCode(getText(propNode, "propertyCode"));
-        property.setPropertyGroup(getText(propNode, "propertySet"));
+        property.setCode(propCode);
+        property.setGroupTag(getText(propNode, "propertySet"));
         property.setPropertyType(getText(propNode, "dataType"));
         property.setDefinition(propNode);
         property.setPlatformId(platformId);
@@ -182,16 +185,16 @@ public class PassportService {
     ObjectNode dataJson = JsonNodeFactory.instance.objectNode();
     Map<String, DatasheetProperty> propertyByCode =
         propertyList.stream()
-            .filter(p -> p.getPropertyCode() != null)
-            .collect(Collectors.toMap(DatasheetProperty::getPropertyCode, p -> p));
+            .filter(property -> property.getCode() != null)
+            .collect(Collectors.toMap(DatasheetProperty::getCode, property -> property));
 
-    for (JsonNode propNode : propertiesNode) {
-      String propCode = getText(propNode, "propertyCode");
-      JsonNode actualValueNode = propNode.path("actualValue");
-      DatasheetProperty property = propertyByCode.get(propCode);
+    for (JsonNode propertyNode : propertiesNode) {
+      String propertyCode = getText(propertyNode, "propertyCode");
+      JsonNode actualValueNode = propertyNode.path("actualValue");
+      DatasheetProperty property = propertyByCode.get(propertyCode);
       if (property != null) {
         dataJson.set(
-            property.getId().toString(),
+            property.getCode().toString(),
             actualValueNode.isMissingNode() ? NullNode.instance : actualValueNode);
       }
     }
@@ -204,8 +207,10 @@ public class PassportService {
     mapping.setDatasheet(datasheet);
     mapping = passportDatasheetMappingRepository.save(mapping);
 
-    passport.setDatasheetMappings(Set.of(mapping));
-
+    if (passport.getDatasheetMappings() == null) {
+      passport.setDatasheetMappings(new HashSet<>());
+    }
+    passport.getDatasheetMappings().add(mapping);
     return PassportDto.from(passport);
   }
 
@@ -271,13 +276,13 @@ public class PassportService {
 
           if (propertyDto != null
               && datasheetDto.getDatasheetProperties().stream()
-                  .noneMatch(p -> Objects.equals(p.getId(), propertyDto.getId()))) {
+                  .noneMatch(property -> Objects.equals(property.getId(), propertyDto.getId()))) {
             datasheetDto.getDatasheetProperties().add(propertyDto);
           }
         }
 
         if (passportDto.getDatasheets().stream()
-            .noneMatch(ds -> Objects.equals(ds.getId(), datasheetDto.getId()))) {
+            .noneMatch(datasheet -> Objects.equals(datasheet.getId(), datasheetDto.getId()))) {
           passportDto.getDatasheets().add(datasheetDto);
         }
       }
@@ -321,13 +326,13 @@ public class PassportService {
 
           if (propertyDto != null
               && datasheetDto.getDatasheetProperties().stream()
-                  .noneMatch(p -> Objects.equals(p.getId(), propertyDto.getId()))) {
+                  .noneMatch(property -> Objects.equals(property.getId(), propertyDto.getId()))) {
             datasheetDto.getDatasheetProperties().add(propertyDto);
           }
         }
 
         if (passportDto.getDatasheets().stream()
-            .noneMatch(ds -> Objects.equals(ds.getId(), datasheetDto.getId()))) {
+            .noneMatch(datasheet -> Objects.equals(datasheet.getId(), datasheetDto.getId()))) {
           passportDto.getDatasheets().add(datasheetDto);
         }
       }
@@ -430,29 +435,29 @@ public class PassportService {
 
     propertyDto.setId(row.getDatasheetPropertyId());
     propertyDto.setDatasheetId(row.getDatasheetId());
-    propertyDto.setPropertyCode(row.getDatasheetPropertyCode());
+    propertyDto.setCode(row.getDatasheetPropertyCode());
     propertyDto.setPlatformId(row.getDatasheetPropertyPlatformId());
-    propertyDto.setPropertyGroup(row.getDatasheetPropertyGroup());
+    propertyDto.setGroupTag(row.getDatasheetPropertyGroupTag());
     propertyDto.setPropertyType(row.getDatasheetPropertyType());
 
-    JsonNode definitionNode = null;
-    String definition =
-        row.getDatasheetPropertyDefinition() != null
-            ? row.getDatasheetPropertyDefinition().toString()
-            : null;
+    String definition = row.getDatasheetPropertyDefinition();
     if (definition != null && !definition.isBlank()) {
       try {
-        definitionNode = objectMapper.readTree(definition);
+        JsonNode definitionNode = objectMapper.readTree(definition);
+        propertyDto.setDefinition(definitionNode);
       } catch (JsonProcessingException e) {
         throw new RuntimeException(
-            "Error parsing datasheet property JSON for datasheetPropertyId="
+            "Error parsing datasheet property JSON for datasheetPropertyId = "
                 + row.getDatasheetPropertyId()
-                + ", datasheetId="
-                + row.getDatasheetId(),
+                + ", datasheetId = "
+                + row.getDatasheetId()
+                + ", passportId = "
+                + row.getPassportId(),
             e);
       }
+    } else {
+      propertyDto.setDefinition(null);
     }
-    propertyDto.setDefinition(definitionNode);
 
     return propertyDto;
   }

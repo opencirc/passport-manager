@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table
 CREATE TABLE IF NOT EXISTS public.users (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::VARCHAR,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 
 -- Datasheets table
 CREATE TABLE IF NOT EXISTS public.datasheets (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::VARCHAR,
     platform VARCHAR(30),
     dictionary VARCHAR(30),
     code VARCHAR(100),
@@ -41,10 +41,10 @@ CREATE INDEX IF NOT EXISTS idx_datasheets_created_by_id ON public.datasheets(cre
 
 -- Datasheet Property table
 CREATE TABLE IF NOT EXISTS public.datasheet_property (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::VARCHAR,
     code VARCHAR(50),
     platform_id VARCHAR(100),
-    property_group VARCHAR(50),
+    group_tag VARCHAR(50),
     property_type VARCHAR(200),
     definition JSONB,
     datasheet_id VARCHAR(100) NOT NULL,
@@ -58,8 +58,8 @@ CREATE INDEX IF NOT EXISTS idx_datasheet_property_code
 CREATE INDEX IF NOT EXISTS idx_datasheet_property_platform_id 
     ON public.datasheet_property(platform_id);
 
-CREATE INDEX IF NOT EXISTS idx_datasheet_property_group 
-    ON public.datasheet_property(property_group);
+CREATE INDEX IF NOT EXISTS idx_datasheet_property_group_tag
+    ON public.datasheet_property(group_tag);
 
 CREATE INDEX IF NOT EXISTS idx_datasheet_property_datasheet_id 
     ON public.datasheet_property(datasheet_id);
@@ -79,7 +79,7 @@ CREATE INDEX IF NOT EXISTS idx_passports_created_by_id ON public.passports(creat
 
 -- Passport-Datasheet mappings
 CREATE TABLE IF NOT EXISTS public.passport_datasheet_mappings (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::VARCHAR,
     passport_id VARCHAR(100) NOT NULL,
     datasheet_id VARCHAR(100) NOT NULL,
     CONSTRAINT fk_passport FOREIGN KEY (passport_id) REFERENCES public.passports (id) ON DELETE CASCADE,
@@ -92,7 +92,7 @@ CREATE INDEX IF NOT EXISTS idx_pdm_datasheet_id ON public.passport_datasheet_map
 
 -- Passport templates
 CREATE TABLE IF NOT EXISTS public.passport_templates (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::VARCHAR,
     name VARCHAR(255),
     template JSONB,
     created_by_id VARCHAR(255),
@@ -104,7 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_templates_created_by_id ON public.passport_templa
 
 -- Passport logs
 CREATE TABLE IF NOT EXISTS public.passport_logs (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::VARCHAR,
     passport_id VARCHAR(100) NOT NULL,
     data JSON NOT NULL,
     created_by_id VARCHAR(255),
@@ -118,7 +118,7 @@ CREATE INDEX IF NOT EXISTS idx_passport_logs_passport_id ON public.passport_logs
 
 -- Passport lifecycles
 CREATE TABLE IF NOT EXISTS public.passport_lifecycles (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::VARCHAR,
     passport_id VARCHAR(100) NOT NULL,
     event_type VARCHAR(255) NOT NULL,
     data JSON NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS public.jwt_configs (
 
 -- Api keys
 CREATE TABLE IF NOT EXISTS public.api_keys (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::VARCHAR,
     secret TEXT NOT NULL,
     user_id VARCHAR(100) NOT NULL,
     name VARCHAR(100) NOT NULL,
