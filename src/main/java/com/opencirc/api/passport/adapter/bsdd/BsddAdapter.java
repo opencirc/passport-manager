@@ -16,6 +16,11 @@ import com.opencirc.api.passport.mapping.DictionaryMapping;
 import com.opencirc.api.passport.service.CacheService;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -284,49 +289,41 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
   public String validatePassportData(JsonNode propertyNode) throws JsonValidationException {
 
     String errorMessage = null;
-    if (properties != null) {
-      if (propertyNode == null || !propertyNode.isObject()) {
-        return "Invalid property node found (not an object). Skipping...";
-      }
-      ObjectNode property = (ObjectNode) propertyNode;
-
-      String propName = property.has("name") ? property.get("name").asText() : null;
-      String dataType = property.has("dataType") ? property.get("dataType").asText() : null;
-      JsonNode actualValueNode = property.get("actualValue");
-      JsonNode allowedValuesNode = property.get("allowedValues");
-
-      Double maxExclusive =
-          property.has("MaxExclusive") ? property.get("MaxExclusive").asDouble() : null;
-      Double maxInclusive =
-          property.has("MaxInclusive") ? property.get("MaxInclusive").asDouble() : null;
-      Double minExclusive =
-          property.has("MinExclusive") ? property.get("MinExclusive").asDouble() : null;
-      Double minInclusive =
-          property.has("MinInclusive") ? property.get("MinInclusive").asDouble() : null;
-
-      if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
-
-        errorMessage = validateDataType(propName, dataType, actualValueNode);
-
-        if (errorMessage == null && allowedValuesNode != null && allowedValuesNode.isArray()) {
-          errorMessage =
-              validateAllowedValues(propName, (ArrayNode) allowedValuesNode, actualValueNode);
-        }
-        if (errorMessage == null && "Real".equals(dataType)) {
-          errorMessage =
-              validateRangeChecks(
-                  propName,
-                  actualValueNode,
-                  maxExclusive,
-                  maxInclusive,
-                  minExclusive,
-                  minInclusive);
-        }
-      } else {
-        return "Missing or empty 'actualValue' for property: " + propName;
-      }
+    if (propertyNode == null || !propertyNode.isObject()) {
+      return "Invalid property node found (not an object). Skipping...";
     }
+    ObjectNode property = (ObjectNode) propertyNode;
 
+    String propName = property.has("name") ? property.get("name").asText() : null;
+    String dataType = property.has("dataType") ? property.get("dataType").asText() : null;
+    JsonNode actualValueNode = property.get("actualValue");
+    JsonNode allowedValuesNode = property.get("allowedValues");
+
+    Double maxExclusive =
+        property.has("MaxExclusive") ? property.get("MaxExclusive").asDouble() : null;
+    Double maxInclusive =
+        property.has("MaxInclusive") ? property.get("MaxInclusive").asDouble() : null;
+    Double minExclusive =
+        property.has("MinExclusive") ? property.get("MinExclusive").asDouble() : null;
+    Double minInclusive =
+        property.has("MinInclusive") ? property.get("MinInclusive").asDouble() : null;
+
+    if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
+
+      errorMessage = validateDataType(propName, dataType, actualValueNode);
+
+      if (errorMessage == null && allowedValuesNode != null && allowedValuesNode.isArray()) {
+        errorMessage =
+            validateAllowedValues(propName, (ArrayNode) allowedValuesNode, actualValueNode);
+      }
+      if (errorMessage == null && "Real".equals(dataType)) {
+        errorMessage =
+            validateRangeChecks(
+                propName, actualValueNode, maxExclusive, maxInclusive, minExclusive, minInclusive);
+      }
+    } else {
+      return "Missing or empty 'actualValue' for property: " + propName;
+    }
     return errorMessage;
   }
 
@@ -380,11 +377,6 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
           return propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
         }
         break;
-      case "String":
-        if (!(actualValue instanceof String)) {
-          return propName + " : Invalid data type. Expected String, but got: " + actualValue;
-        }
-        break;
       case "Character":
         if (actualValue.length() != 1) {
           return propName
@@ -397,6 +389,28 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
         if (!(actualValue instanceof String)) {
           return propName + " : Invalid data type. Expected Time (String), but got: " + actualValue;
         }
+        boolean valid = false;
+
+        try {
+          LocalDate.parse(actualValue, DateTimeFormatter.ISO_LOCAL_DATE);
+          valid = true;
+        } catch (DateTimeParseException e1) {
+          try {
+            Instant.parse(actualValue);
+            valid = true;
+          } catch (DateTimeParseException e2) {
+            try {
+              OffsetDateTime.parse(actualValue, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+              valid = true;
+            } catch (DateTimeParseException e3) {
+              valid = false;
+            }
+          }
+        }
+        if (!valid) {
+          return propName + " : Invalid ISO 8601 date/time format. Value: " + actualValue;
+        }
+
         break;
       default:
         return propName + " : Unknown data type: " + dataType;
