@@ -286,7 +286,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     String errorMessage = null;
     if (properties != null) {
       if (propertyNode == null || !propertyNode.isObject()) {
-        errorMessage = "Invalid property node found (not an object). Skipping...";
+        return "Invalid property node found (not an object). Skipping...";
       }
       ObjectNode property = (ObjectNode) propertyNode;
 
@@ -323,7 +323,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
                   minInclusive);
         }
       } else {
-        errorMessage = "Missing or empty 'actualValue' for property: " + propName;
+        return "Missing or empty 'actualValue' for property: " + propName;
       }
     }
 
@@ -359,54 +359,47 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
         try {
           Integer.parseInt(actualValue);
         } catch (NumberFormatException e) {
-          errorMessage =
-              propName + " : Invalid data type. Expected Integer, but got: " + actualValue;
+          return propName + " : Invalid data type. Expected Integer, but got: " + actualValue;
         }
         break;
       case "Boolean":
         if (!"true".equalsIgnoreCase(actualValue) && !"false".equalsIgnoreCase(actualValue)) {
-          errorMessage =
-              propName + " : Invalid data type. Expected Boolean, but got: " + actualValue;
+          return propName + " : Invalid data type. Expected Boolean, but got: " + actualValue;
         }
         break;
       case "Real":
         try {
           Double.parseDouble(actualValue.replace("\"", ""));
           if (!actualValue.contains(".")) {
-            errorMessage =
-                propName
-                    + " : Invalid Real number. A valid Real number should contain"
-                    + " a decimal point.";
+            return propName
+                + " : Invalid Real number. A valid Real number should contain"
+                + " a decimal point.";
           }
 
         } catch (NumberFormatException e) {
-          errorMessage =
-              propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
+          return propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
         }
         break;
       case "String":
         if (!(actualValue instanceof String)) {
-          errorMessage =
-              propName + " : Invalid data type. Expected String, but got: " + actualValue;
+          return propName + " : Invalid data type. Expected String, but got: " + actualValue;
         }
         break;
       case "Character":
         if (actualValue.length() != 1) {
-          errorMessage =
-              propName
-                  + " : Invalid data type. Expected Character "
-                  + "(Single character string), but got: "
-                  + actualValue;
+          return propName
+              + " : Invalid data type. Expected Character "
+              + "(Single character string), but got: "
+              + actualValue;
         }
         break;
       case "Time":
         if (!(actualValue instanceof String)) {
-          errorMessage =
-              propName + " : Invalid data type. Expected Time (String), but got: " + actualValue;
+          return propName + " : Invalid data type. Expected Time (String), but got: " + actualValue;
         }
         break;
       default:
-        errorMessage = propName + " : Unknown data type: " + dataType;
+        return propName + " : Unknown data type: " + dataType;
     }
     return errorMessage;
   }
