@@ -3,6 +3,7 @@ package com.opencirc.api.passport.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -114,7 +115,7 @@ public class PassportService {
     try {
       validatePassportData(dictionaryPlatform, datasheetData);
     } catch (JsonValidationException e) {
-      throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+      throw new InvalidInputException(e.getMessage());
     }
 
     int customLength = AppConstants.CUID_LENGTH;
@@ -351,7 +352,43 @@ public class PassportService {
   private void validatePassportData(
       DataDictionaryPlatform dictionaryPlatform, JsonNode passportData)
       throws JsonValidationException {
-    dictionaryAdapterFactory.getAdapter(dictionaryPlatform).validatePassportData(passportData);
+    if (passportData == null
+        || passportData.isNull()
+        || passportData.isObject() && passportData.size() == 0) {
+      throw new InvalidInputException("Input JSON node is null");
+    }
+    List<String> errorMessages = new ArrayList<>();
+    ArrayNode properties = null;
+    try {
+      if (passportData.has("classType")
+          && "Class".equals(passportData.path("classType").asText())) {
+        if (passportData.has("classProperties")) {
+          properties = (ArrayNode) passportData.get("classProperties");
+        }
+
+      } else if (passportData.has("properties")) {
+        if (passportData.get("properties").isArray()) {
+          properties = (ArrayNode) passportData.get("properties");
+        }
+
+      } else {
+        throw new InvalidInputException("Invalid Template");
+      }
+    } catch (ClassCastException e) {
+      throw new InvalidInputException("Expected an array node for properties");
+    }
+    for (JsonNode property : properties) {
+      String error =
+          dictionaryAdapterFactory.getAdapter(dictionaryPlatform).validatePassportData(property);
+      if (error != null) {
+        errorMessages.add(error);
+      }
+    }
+
+    if (!errorMessages.isEmpty()) {
+      throw new JsonValidationException(
+          "Validation failed with the following errors: " + errorMessages);
+    }
   }
 
   /**
@@ -480,9 +517,11 @@ public class PassportService {
    * @param passportId passport ID
    * @param updateDataRequestDto
    * @return updated Passport dto
+   * @throws JsonValidationException
    */
   @Transactional
-  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto) {
+  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto)
+      throws JsonValidationException {
     Passport passport =
         passportRepository
             .findPassport(passportId, Passport.Status.ACTIVE)
@@ -499,6 +538,9 @@ public class PassportService {
 
     for (PassportDatasheetMapping mapping : mappings) {
       Datasheet datasheet = mapping.getDatasheet();
+      if (datasheet == null) {
+        continue;
+      }
       ObjectNode dataNode =
           datasheet.getData() != null
               ? datasheet.getData().deepCopy()
@@ -515,23 +557,40 @@ public class PassportService {
           properties.stream()
               .filter(property -> updateDataRequestDto.getGroup().equals(property.getGroupTag()))
               .toList();
-
+      List<String> errorMessages = new ArrayList<>();
       for (DatasheetProperty property : propertyGroupList) {
         String propertyCode = property.getCode();
 
         if (updateDataRequestDto.getValues().containsKey(propertyCode)) {
           Object newValue = updateDataRequestDto.getValues().get(propertyCode);
+          ObjectNode propertyDefinition = (ObjectNode) property.getDefinition();
           JsonNode newValueNode =
               newValue == null ? NullNode.instance : objectMapper.valueToTree(newValue);
+
+          propertyDefinition.set("actualValue", newValueNode);
+
+          String error = null;
+          error =
+              dictionaryAdapterFactory
+                  .getAdapter(datasheet.getPlatform())
+                  .validatePassportData(property.getDefinition());
+          if (error != null) {
+            errorMessages.add(error);
+            continue;
+          }
+
           JsonNode currentValue = dataNode.get(propertyCode);
 
           if (!Objects.equals(currentValue, newValueNode)) {
             dataNode.set(propertyCode, newValueNode);
             changed = true;
+            updatedProperties.put(propertyCode, newValue);
           }
-
-          updatedProperties.put(propertyCode, newValue);
         }
+      }
+      if (!errorMessages.isEmpty()) {
+        throw new InvalidInputException(
+            "Validation failed with the following errors: " + errorMessages);
       }
       if (changed) {
         datasheet.setData(dataNode);
@@ -541,8 +600,8 @@ public class PassportService {
 
     if (updatedProperties.isEmpty()) {
       throw new ResponseStatusException(
-          HttpStatus.NOT_FOUND,
-          "No properties found to update : " + updateDataRequestDto.getGroup());
+          HttpStatus.BAD_REQUEST,
+          "No valid properties found for group : " + updateDataRequestDto.getGroup());
     }
 
     return PassportDto.from(passport);
