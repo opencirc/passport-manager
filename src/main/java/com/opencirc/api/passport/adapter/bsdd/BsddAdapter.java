@@ -16,6 +16,11 @@ import com.opencirc.api.passport.mapping.DictionaryMapping;
 import com.opencirc.api.passport.service.CacheService;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -277,88 +282,49 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
   /**
    * Validates template entries against allowed values and ranges.
    *
-   * @param jsonNode The JSON node containing template data.
+   * @param propertyNode The JSON node containing template data.
    * @throws JsonValidationException If validation fails.
    */
   @Override
-  public void validatePassportData(JsonNode jsonNode) throws JsonValidationException {
+  public String validatePassportData(JsonNode propertyNode) throws JsonValidationException {
 
-    if (jsonNode == null || jsonNode.isNull() || jsonNode.isObject() && jsonNode.size() == 0) {
-      throw new InvalidInputException("Input JSON node is null");
+    String errorMessage = null;
+    if (propertyNode == null || !propertyNode.isObject()) {
+      return "Invalid property node found (not an object). Skipping...";
     }
+    ObjectNode property = (ObjectNode) propertyNode;
 
-    ArrayNode properties = null;
-    try {
-      if (jsonNode.has("classType") && "Class".equals(jsonNode.path("classType").asText())) {
-        if (jsonNode.has("classProperties")) {
-          properties = (ArrayNode) jsonNode.get("classProperties");
-        }
+    String propName = property.has("name") ? property.get("name").asText() : null;
+    String dataType = property.has("dataType") ? property.get("dataType").asText() : null;
+    JsonNode actualValueNode = property.get("actualValue");
+    JsonNode allowedValuesNode = property.get("allowedValues");
 
-      } else if (jsonNode.has("properties")) {
-        if (jsonNode.get("properties").isArray()) {
-          properties = (ArrayNode) jsonNode.get("properties");
-        }
+    Double maxExclusive =
+        property.has("MaxExclusive") ? property.get("MaxExclusive").asDouble() : null;
+    Double maxInclusive =
+        property.has("MaxInclusive") ? property.get("MaxInclusive").asDouble() : null;
+    Double minExclusive =
+        property.has("MinExclusive") ? property.get("MinExclusive").asDouble() : null;
+    Double minInclusive =
+        property.has("MinInclusive") ? property.get("MinInclusive").asDouble() : null;
 
-      } else {
-        throw new InvalidInputException("Invalid Template");
+    if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
+
+      errorMessage = validateDataType(propName, dataType, actualValueNode);
+
+      if (errorMessage == null && allowedValuesNode != null && allowedValuesNode.isArray()) {
+        errorMessage =
+            validateAllowedValues(propName, (ArrayNode) allowedValuesNode, actualValueNode);
       }
-    } catch (ClassCastException e) {
-      throw new InvalidInputException("Expected an array node for properties");
-    }
-
-    List<String> errorMessages = new ArrayList<>();
-    if (properties != null) {
-      for (JsonNode propertyNode : properties) {
-        if (propertyNode == null || !propertyNode.isObject()) {
-          errorMessages.add("Invalid property node found (not an object). Skipping...");
-          continue;
-        }
-        ObjectNode property = (ObjectNode) propertyNode;
-
-        String propName = property.has("name") ? property.get("name").asText() : null;
-        String dataType = property.has("dataType") ? property.get("dataType").asText() : null;
-        JsonNode actualValueNode = property.get("actualValue");
-        JsonNode allowedValuesNode = property.get("allowedValues");
-
-        Double maxExclusive =
-            property.has("MaxExclusive") ? property.get("MaxExclusive").asDouble() : null;
-        Double maxInclusive =
-            property.has("MaxInclusive") ? property.get("MaxInclusive").asDouble() : null;
-        Double minExclusive =
-            property.has("MinExclusive") ? property.get("MinExclusive").asDouble() : null;
-        Double minInclusive =
-            property.has("MinInclusive") ? property.get("MinInclusive").asDouble() : null;
-
-        if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
-
-          validateDataType(propName, dataType, actualValueNode, errorMessages);
-
-          if (allowedValuesNode != null && allowedValuesNode.isArray()) {
-            validateAllowedValues(
-                propName, (ArrayNode) allowedValuesNode, actualValueNode, errorMessages);
-          }
-          if ("Real".equals(dataType)) {
+      if (errorMessage == null && "Real".equals(dataType)) {
+        errorMessage =
             validateRangeChecks(
-                propName,
-                actualValueNode,
-                maxExclusive,
-                maxInclusive,
-                minExclusive,
-                minInclusive,
-                errorMessages);
-          }
-        } else {
-          errorMessages.add("Missing or empty 'actualValue' for property: " + propName);
-        }
+                propName, actualValueNode, maxExclusive, maxInclusive, minExclusive, minInclusive);
       }
+    } else {
+      return "Missing or empty 'actualValue' for property: " + propName;
     }
-
-    if (!errorMessages.isEmpty()) {
-      throw new JsonValidationException(
-          "Validation failed with the following errors : "
-              + "\n\t- "
-              + String.join(",\n\t- ", errorMessages));
-    }
+    return errorMessage;
   }
 
   /**
@@ -381,70 +347,81 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     }
   }
 
-  private static void validateDataType(
-      String propName, String dataType, JsonNode actualValueNode, List<String> errorMessages) {
+  private static String validateDataType(
+      String propName, String dataType, JsonNode actualValueNode) {
     String actualValue = actualValueNode.asText();
-
+    String errorMessage = null;
     switch (dataType) {
       case "Integer":
         try {
           Integer.parseInt(actualValue);
         } catch (NumberFormatException e) {
-          errorMessages.add(
-              propName + " : Invalid data type. Expected Integer, but got: " + actualValue);
+          return propName + " : Invalid data type. Expected Integer, but got: " + actualValue;
         }
         break;
       case "Boolean":
         if (!"true".equalsIgnoreCase(actualValue) && !"false".equalsIgnoreCase(actualValue)) {
-          errorMessages.add(
-              propName + " : Invalid data type. Expected Boolean, but got: " + actualValue);
+          return propName + " : Invalid data type. Expected Boolean, but got: " + actualValue;
         }
         break;
       case "Real":
         try {
           Double.parseDouble(actualValue.replace("\"", ""));
           if (!actualValue.contains(".")) {
-            errorMessages.add(
-                propName
-                    + " : Invalid Real number. A valid Real number should contain"
-                    + " a decimal point.");
+            return propName
+                + " : Invalid Real number. A valid Real number should contain"
+                + " a decimal point.";
           }
 
         } catch (NumberFormatException e) {
-          errorMessages.add(
-              propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue);
-        }
-        break;
-      case "String":
-        if (!(actualValue instanceof String)) {
-          errorMessages.add(
-              propName + " : Invalid data type. Expected String, but got: " + actualValue);
+          return propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
         }
         break;
       case "Character":
         if (actualValue.length() != 1) {
-          errorMessages.add(
-              propName
-                  + " : Invalid data type. Expected Character "
-                  + "(Single character string), but got: "
-                  + actualValue);
+          return propName
+              + " : Invalid data type. Expected Character "
+              + "(Single character string), but got: "
+              + actualValue;
         }
         break;
       case "Time":
         if (!(actualValue instanceof String)) {
-          errorMessages.add(
-              propName + " : Invalid data type. Expected Time (String), but got: " + actualValue);
+          return propName + " : Invalid data type. Expected Time (String), but got: " + actualValue;
         }
+        boolean valid = false;
+
+        try {
+          LocalDate.parse(actualValue, DateTimeFormatter.ISO_LOCAL_DATE);
+          valid = true;
+        } catch (DateTimeParseException e1) {
+          try {
+            Instant.parse(actualValue);
+            valid = true;
+          } catch (DateTimeParseException e2) {
+            try {
+              OffsetDateTime.parse(actualValue, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+              valid = true;
+            } catch (DateTimeParseException e3) {
+              valid = false;
+            }
+          }
+        }
+        if (!valid) {
+          return propName + " : Invalid ISO 8601 date/time format. Value: " + actualValue;
+        }
+
         break;
       default:
-        errorMessages.add(propName + " : Unknown data type: " + dataType);
+        return propName + " : Unknown data type: " + dataType;
     }
+    return errorMessage;
   }
 
-  private static void validateAllowedValues(
-      String propName, ArrayNode allowedValues, JsonNode actualValue, List<String> errorMessages) {
+  private static String validateAllowedValues(
+      String propName, ArrayNode allowedValues, JsonNode actualValue) {
     boolean isValid = false;
-
+    String errorMessage = null;
     for (JsonNode allowedValueNode : allowedValues) {
       String value = allowedValueNode.get("value").asText();
 
@@ -455,62 +432,64 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     }
 
     if (!isValid) {
-      errorMessages.add(
-          propName + " : Actual value: " + actualValue + " is not within the allowed values.");
+      errorMessage =
+          propName + " : Actual value: " + actualValue + " is not within the allowed values.";
     }
+    return errorMessage;
   }
 
-  private static void validateRangeChecks(
+  private static String validateRangeChecks(
       String propName,
       Object actualValue,
       Double maxExclusive,
       Double maxInclusive,
       Double minExclusive,
-      Double minInclusive,
-      List<String> errorMessages) {
+      Double minInclusive) {
     double realValue = 0.0;
+    String errorMessage = null;
     try {
       realValue = Double.parseDouble(actualValue.toString().trim().replace("\"", ""));
     } catch (NumberFormatException e) {
-      errorMessages.add(
-          propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue);
+      errorMessage =
+          propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
     }
 
     if (maxExclusive != null && realValue >= maxExclusive) {
-      errorMessages.add(
+      errorMessage =
           propName
               + " : Actual value: "
               + realValue
               + " exceeds MaxExclusive limit: "
-              + maxExclusive);
+              + maxExclusive;
     }
 
     if (maxInclusive != null && realValue > maxInclusive) {
-      errorMessages.add(
+      errorMessage =
           propName
               + " : Actual value: "
               + realValue
               + " exceeds MaxInclusive limit: "
-              + maxInclusive);
+              + maxInclusive;
     }
 
     if (minExclusive != null && realValue <= minExclusive) {
-      errorMessages.add(
+      errorMessage =
           propName
               + " : Actual value: "
               + realValue
               + " is below MinExclusive limit: "
-              + minExclusive);
+              + minExclusive;
     }
 
     if (minInclusive != null && realValue < minInclusive) {
-      errorMessages.add(
+      errorMessage =
           propName
               + " : Actual value: "
               + realValue
               + " is below MinInclusive limit: "
-              + minInclusive);
+              + minInclusive;
     }
+    return errorMessage;
   }
 
   /**

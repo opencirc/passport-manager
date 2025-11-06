@@ -55,7 +55,7 @@ public interface DictionaryAdapter<T> {
    *
    * @param jsonNode
    */
-  void validatePassportData(JsonNode jsonNode) throws JsonValidationException;
+  String validatePassportData(JsonNode jsonNode) throws JsonValidationException;
 
   /**
    * Validates the given URI.
