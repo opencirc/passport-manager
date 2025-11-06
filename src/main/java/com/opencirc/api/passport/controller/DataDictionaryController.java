@@ -28,7 +28,7 @@ public class DataDictionaryController {
   @Autowired private DataDictionaryService dataDictionaryService;
 
   /**
-   * Returns list of classes fetched from bsDD.
+   * Returns list of classes fetched from bsdd.
    *
    * @param dictionaryName
    * @param query
@@ -86,7 +86,7 @@ public class DataDictionaryController {
   }
 
   /**
-   * Returns list of properties fetched from bsDD.
+   * Returns list of properties fetched from bsdd.
    *
    * @param dictionaryName
    * @param query
