@@ -117,7 +117,7 @@ INSERT INTO public.datasheets (
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'passport_status') THEN
-        CREATE TYPE passport_status AS ENUM ('ACTIVE', 'INACTIVE');
+        CREATE TYPE passport_status AS ENUM ('active', 'inactive');
     END IF;
 END $$;
 

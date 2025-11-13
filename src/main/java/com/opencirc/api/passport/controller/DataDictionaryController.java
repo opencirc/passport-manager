@@ -30,44 +30,44 @@ public class DataDictionaryController {
   /**
    * Returns list of classes fetched from bsDD.
    *
-   * @param dictionaryName
+   * @param platform
    * @param query
    * @return list of class and its details
    */
   @GetMapping(
-      value = "/api/dataDictionary/{dictionary}/class/search/{query}",
+      value = "/api/dataDictionary/{platform}/class/search/{query}",
       produces = {"application/json"})
   @Operation(summary = "Get list of classes for the query text")
   public List<Map<String, String>> searchClass(
-      @Parameter(description = "The dictionary", required = true) @PathVariable("dictionary")
-          String dictionaryName,
+      @Parameter(description = "The platform", required = true) @PathVariable("platform")
+          String platform,
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
     return dataDictionaryService.searchClassesByText(
-        DataDictionaryPlatform.fromValue(dictionaryName), query);
+        DataDictionaryPlatform.fromValue(platform), query);
   }
 
   /**
    * Returns Class Template with or without properties from the data dictionary using the provided
    * URI.
    *
-   * @param dictionaryName
+   * @param platform
    * @param classUri
    * @param withProperties
    * @return the template with all the relevant properties
    */
   @Operation(summary = "Get class from DD for the requested uri")
   @PostMapping(
-      value = "/api/dataDictionary/{dictionary}/class",
+      value = "/api/dataDictionary/{platform}/class",
       produces = {"application/json"})
   public Object getClass(
       @Parameter(
-              description = "Name of dictionary",
+              description = "Name of dictionary platform",
               required = true,
               example = "bsdd",
               in = ParameterIn.PATH)
-          @PathVariable("dictionary")
-          String dictionaryName,
+          @PathVariable("platform")
+          String platform,
       @Parameter(
               description = "URI for the classification",
               example =
@@ -82,46 +82,45 @@ public class DataDictionaryController {
           Boolean withProperties)
       throws JsonValidationException, JsonProcessingException {
     return dataDictionaryService.createClassTemplate(
-        DataDictionaryPlatform.fromValue(dictionaryName), classUri, withProperties);
+        DataDictionaryPlatform.fromValue(platform), classUri, withProperties);
   }
 
   /**
    * Returns list of properties fetched from bsDD.
    *
-   * @param dictionaryName
+   * @param platform
    * @param query
    * @return the template with all the relevant properties
    */
   @Operation(summary = "Lists all the properties name and its URI matching the text")
   @GetMapping(
-      value = "/api/dataDictionary/{dictionary}/property/search/{query}",
+      value = "/api/dataDictionary/{platform}/property/search/{query}",
       produces = {"application/json"})
   public List<Map<String, String>> listProperties(
-      @Parameter(description = "The dictionary", required = true, example = "bsdd")
-          @PathVariable("dictionary")
-          String dictionaryName,
+      @Parameter(description = "The platform", required = true, example = "bsdd")
+          @PathVariable("platform")
+          String platform,
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
-    return dataDictionaryService.listProperties(
-        DataDictionaryPlatform.fromValue(dictionaryName), query);
+    return dataDictionaryService.listProperties(DataDictionaryPlatform.fromValue(platform), query);
   }
 
   /**
    * Create template with selected properties.
    *
-   * @param dictionaryName
+   * @param platform
    * @param propertiesUriList
    * @return the template with all the relevant properties
    */
   @Operation(summary = "Create template with selected properties")
   @PostMapping(
-      value = "/api/dataDictionary/{dictionary}/properties",
+      value = "/api/dataDictionary/{platform}/properties",
       produces = {"application/json"},
       consumes = {"application/json"})
   public ObjectNode createTemplateWithProperties(
-      @Parameter(description = "Name of library", required = true, example = "bsdd")
-          @PathVariable("dictionary")
-          String dictionaryName,
+      @Parameter(description = "Name of the platform", required = true, example = "bsdd")
+          @PathVariable("platform")
+          String platform,
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
               description = "List of Property URI",
               required = true)
@@ -129,6 +128,6 @@ public class DataDictionaryController {
           List<String> propertiesUriList)
       throws JsonValidationException {
     return dataDictionaryService.createTemplateWithProperties(
-        DataDictionaryPlatform.fromValue(dictionaryName), propertiesUriList);
+        DataDictionaryPlatform.fromValue(platform), propertiesUriList);
   }
 }

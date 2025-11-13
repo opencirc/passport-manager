@@ -149,7 +149,7 @@ public class SecurityConfig {
       CorsConfiguration corsConfiguration = new CorsConfiguration();
       corsConfiguration.setAllowCredentials(true);
       corsConfiguration.setAllowedOrigins(
-          Arrays.asList("http://localhost:3001", "http://localhost:3002"));
+          Arrays.asList("http://localhost:3001", "http://localhost:3002", "http://localhost:3000"));
       corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
       corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
       corsConfiguration.setMaxAge(Duration.ofMinutes(AppConstants.CORS_MAX_AGE));

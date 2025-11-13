@@ -1,29 +1,5 @@
 [ {
   "classType" : "Class",
-  "referenceCode" : "EG000001",
-  "relatedIfcEntityNames" : [ "IfcCableSegment", "IfcCableCarrierSegment", "IfcDuctsegment" ],
-  "hierarchy" : [ {
-    "level" : 1,
-    "name" : "Cables and wires (unassembled)",
-    "code" : "EG000001",
-    "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000001"
-  } ],
-  "dictionaryUri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
-  "activationDateUtc" : "2025-01-31T00:00:00Z",
-  "code" : "EG000001",
-  "creatorLanguageCode" : "EN",
-  "countriesOfUse" : [ ],
-  "definition" : "Electrical conductors used for power, signal, and data transmission without pre-attached connectors.",
-  "name" : "Cables and wires (unassembled)",
-  "uri" : "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EG000001",
-  "replacedObjectCodes" : [ ],
-  "replacingObjectCodes" : [ ],
-  "revisionNumber" : 0,
-  "status" : "Active",
-  "subdivisionsOfUse" : [ ],
-  "versionDateUtc" : "2025-01-30T00:00:00Z"
-}, {
-  "classType" : "Class",
   "referenceCode" : "EC000020",
   "relatedIfcEntityNames" : [ "IfcOutlet" ],
   "parentClassReference" : {

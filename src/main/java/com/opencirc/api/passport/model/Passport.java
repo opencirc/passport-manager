@@ -13,7 +13,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -67,7 +67,7 @@ public class Passport {
 
   /** Time of passport creation. */
   @Column(name = "created_time", updatable = false, insertable = false)
-  private LocalDateTime createdTime;
+  private OffsetDateTime createdTime;
 
   /** Mapping of Passport. */
   @OneToMany(mappedBy = "passport", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -78,10 +78,10 @@ public class Passport {
   public enum Status {
 
     /** Indicates that the passport is active. */
-    ACTIVE("active"),
+    active("active"),
 
     /** Indicates that the passport is inactive. */
-    INACTIVE("inactive");
+    inactive("inactive");
 
     /** Represents the status in string. */
     private final String value;

@@ -47,8 +47,8 @@ public class PassportTemplateService {
   public PassportTemplateDto createTemplateFromPassport(
       String passportId, boolean dryRun, String templateName) {
     Optional<Passport> passport =
-        passportRepository.findPassport(passportId, Passport.Status.ACTIVE);
-    if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.ACTIVE) {
+        passportRepository.findPassport(passportId, Passport.Status.active);
+    if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.active) {
       throw new ResourceNotFoundException("Active passport not found");
     }
 

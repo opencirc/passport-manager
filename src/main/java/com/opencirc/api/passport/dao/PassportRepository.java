@@ -66,6 +66,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
                    ds.platform_id AS datasheetPlatformId,
                    ds.data_category AS dataCategory,
                    ds.data AS data,
+                   ds.created_by AS datasheetCreatedBy,
                    ds.created_by_id AS datasheetCreatedById,
                    ds.created_time AS datasheetCreatedTime,
                    dp.id AS datasheetPropertyId,
@@ -78,7 +79,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
             LEFT JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
             LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
-            WHERE pt.status = 'ACTIVE'
+            WHERE pt.status = 'active'
             """,
       nativeQuery = true)
   Optional<List<PassportDatasheetResultMapDto>> findPassportWithDescendants(
@@ -93,7 +94,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   @Query(
       value =
           """
-            SELECT p.id AS passportId,
+            SELECT DISTINCT p.id AS passportId,
                    p.name AS passportName,
                    p.status AS status,
                    p.parent_id AS parentId,
@@ -110,6 +111,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
                    ds.data_category AS dataCategory,
                    ds.data AS data,
                    ds.created_by_id AS datasheetCreatedById,
+                   ds.created_by AS datasheetCreatedBy,
                    ds.created_time AS datasheetCreatedTime,
                    dp.id AS datasheetPropertyId,
                    dp.datasheet_id AS datasheetPropertyDatasheetId,
@@ -123,7 +125,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
             LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
             LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
-            WHERE p.parent_id = :passport_id AND p.status = 'ACTIVE'
+            WHERE p.parent_id = :passport_id AND p.status = 'active'
             """,
       nativeQuery = true)
   Optional<List<PassportDatasheetResultMapDto>> findImmediateChildren(
@@ -160,6 +162,6 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
           + "LEFT JOIN FETCH p.datasheetMappings dm "
           + "LEFT JOIN FETCH dm.datasheet d "
           + "LEFT JOIN FETCH d.datasheetProperties "
-          + "WHERE p.status = 'ACTIVE' AND p.parentId IS NULL ")
+          + "WHERE p.status = 'active' AND p.parentId IS NULL ")
   List<Passport> getRootPassports();
 }

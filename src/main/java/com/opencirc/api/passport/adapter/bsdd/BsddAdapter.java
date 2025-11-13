@@ -352,6 +352,12 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     String actualValue = actualValueNode.asText();
     String errorMessage = null;
     switch (dataType) {
+      case "String":
+        if (!(actualValue instanceof String)) {
+          return propName + " : Invalid data type. Expected String, but got: " + actualValue;
+        }
+        break;
+
       case "Integer":
         try {
           Integer.parseInt(actualValue);

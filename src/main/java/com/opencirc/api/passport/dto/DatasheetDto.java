@@ -1,13 +1,12 @@
 package com.opencirc.api.passport.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -53,12 +52,10 @@ public class DatasheetDto {
   @JsonProperty private String createdById;
 
   /** Metadata of the user who created datasheet. */
-  @JsonProperty
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private CreatedByDto createdBy;
+  @JsonProperty private CreatedByDto createdBy;
 
   /** Time when datasheet is created. */
-  @JsonProperty private LocalDateTime createdTime;
+  @JsonProperty private OffsetDateTime createdTime;
 
   /** Linked datasheet Properties. */
   private List<DatasheetPropertyDto> datasheetProperties;
