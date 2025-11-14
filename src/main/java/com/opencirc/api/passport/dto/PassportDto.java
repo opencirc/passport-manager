@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.opencirc.api.passport.model.Passport;
 import java.time.OffsetDateTime;
@@ -34,9 +33,7 @@ public class PassportDto {
   @JsonProperty private String createdById;
 
   /** Metadata of the user who created Passport. */
-  @JsonProperty
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private CreatedByDto createdBy;
+  @JsonProperty private CreatedByDto createdBy;
 
   /** Time of passport creation. */
   @JsonProperty private OffsetDateTime createdTime;

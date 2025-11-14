@@ -18,7 +18,6 @@ import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.DataDictionaryService;
 import com.opencirc.api.passport.service.PassportService;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -169,8 +168,6 @@ public class PassportFromApiSeeder {
     request.setCreatedById(userId);
     request.setCreatedBy(createdByDto);
     request.setParentId(parentId);
-
-    request.setCreatedTime(LocalDateTime.now());
 
     PassportDto createdPassport =
         passportService.createPassportUsingDictionary(platform, dictionary, request);

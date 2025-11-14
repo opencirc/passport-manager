@@ -61,7 +61,15 @@ public class AuthController {
       }
     }
 
-    if (token == null || !authService.validateToken(token)) {
+    boolean isAuthenticated = false;
+
+    if (token != null && authService.validateToken(token)) {
+      isAuthenticated = true;
+
+    } else if (authService.validateApiKeySecret(request)) {
+      isAuthenticated = true;
+    }
+    if (!isAuthenticated) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(new StatusResponseDto("Not authenticated"));
     }
@@ -114,12 +122,21 @@ public class AuthController {
    * @return response with JWT token (new access token)
    */
   @PostMapping("/logout")
-  public ResponseEntity<?> logout(
-      @CookieValue(value = "refresh_token", required = false) String refreshToken,
-      HttpServletResponse response)
+  public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response)
       throws AuthenticationException {
     try {
-      authService.logout(refreshToken, response);
+      Cookie[] cookies = request.getCookies();
+      String token = null;
+
+      if (cookies != null) {
+        for (Cookie cookie : cookies) {
+          if ("refresh_token".equals(cookie.getName())) {
+            token = cookie.getValue();
+            break;
+          }
+        }
+      }
+      authService.logout(token, response);
       return ResponseEntity.ok(new StatusResponseDto("Logged out"));
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN)

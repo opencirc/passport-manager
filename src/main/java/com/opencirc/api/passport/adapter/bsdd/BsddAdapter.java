@@ -348,44 +348,43 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
   }
 
   private static String validateDataType(
-      String propName, String dataType, JsonNode actualValueNode) {
+      String propertyName, String dataType, JsonNode actualValueNode) {
     String actualValue = actualValueNode.asText();
     String errorMessage = null;
     switch (dataType) {
       case "String":
-        if (!(actualValue instanceof String)) {
-          return propName + " : Invalid data type. Expected String, but got: " + actualValue;
-        }
         break;
 
       case "Integer":
         try {
           Integer.parseInt(actualValue);
         } catch (NumberFormatException e) {
-          return propName + " : Invalid data type. Expected Integer, but got: " + actualValue;
+          return propertyName + " : Invalid data type. Expected Integer, but got: " + actualValue;
         }
         break;
       case "Boolean":
         if (!"true".equalsIgnoreCase(actualValue) && !"false".equalsIgnoreCase(actualValue)) {
-          return propName + " : Invalid data type. Expected Boolean, but got: " + actualValue;
+          return propertyName + " : Invalid data type. Expected Boolean, but got: " + actualValue;
         }
         break;
       case "Real":
         try {
           Double.parseDouble(actualValue.replace("\"", ""));
           if (!actualValue.contains(".")) {
-            return propName
+            return propertyName
                 + " : Invalid Real number. A valid Real number should contain"
                 + " a decimal point.";
           }
 
         } catch (NumberFormatException e) {
-          return propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
+          return propertyName
+              + " : Invalid data type. Expected Real (Double), but got: "
+              + actualValue;
         }
         break;
       case "Character":
         if (actualValue.length() != 1) {
-          return propName
+          return propertyName
               + " : Invalid data type. Expected Character "
               + "(Single character string), but got: "
               + actualValue;
@@ -393,7 +392,9 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
         break;
       case "Time":
         if (!(actualValue instanceof String)) {
-          return propName + " : Invalid data type. Expected Time (String), but got: " + actualValue;
+          return propertyName
+              + " : Invalid data type. Expected Time (String), but got: "
+              + actualValue;
         }
         boolean valid = false;
 
@@ -414,18 +415,18 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
           }
         }
         if (!valid) {
-          return propName + " : Invalid ISO 8601 date/time format. Value: " + actualValue;
+          return propertyName + " : Invalid ISO 8601 date/time format. Value: " + actualValue;
         }
 
         break;
       default:
-        return propName + " : Unknown data type: " + dataType;
+        return propertyName + " : Unknown data type: " + dataType;
     }
     return errorMessage;
   }
 
   private static String validateAllowedValues(
-      String propName, ArrayNode allowedValues, JsonNode actualValue) {
+      String propertyName, ArrayNode allowedValues, JsonNode actualValue) {
     boolean isValid = false;
     String errorMessage = null;
     for (JsonNode allowedValueNode : allowedValues) {
@@ -439,7 +440,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
 
     if (!isValid) {
       errorMessage =
-          propName + " : Actual value: " + actualValue + " is not within the allowed values.";
+          propertyName + " : Actual value: " + actualValue + " is not within the allowed values.";
     }
     return errorMessage;
   }

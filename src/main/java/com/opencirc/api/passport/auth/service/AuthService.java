@@ -8,15 +8,17 @@ import com.opencirc.api.passport.dto.LoginRequestDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.exception.InvalidInputException;
+import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
+import com.opencirc.api.passport.service.ApiKeyService;
 import com.opencirc.api.passport.service.JwtService;
 import com.opencirc.api.passport.service.PasswordService;
 import com.opencirc.api.passport.util.StringUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Optional;
+import java.time.Instant;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -50,6 +52,9 @@ public class AuthService {
   /** Injecting AuthUserDetailsService class. */
   private final AuthUserDetailsService authUserDetailsService;
 
+  /** Injecting ApiKeyService class. */
+  private final ApiKeyService apiKeyService;
+
   /**
    * Constructor.
    *
@@ -66,13 +71,15 @@ public class AuthService {
       PasswordService passwordService,
       AuthenticationManager authenticationManager,
       JwtService jwtService,
-      AuthUserDetailsService authUserDetailsService) {
+      AuthUserDetailsService authUserDetailsService,
+      ApiKeyService apiKeyService) {
     this.userRepository = userRepository;
     this.properties = properties;
     this.passwordService = passwordService;
     this.authenticationManager = authenticationManager;
     this.jwtService = jwtService;
     this.authUserDetailsService = authUserDetailsService;
+    this.apiKeyService = apiKeyService;
   }
 
   /**
@@ -288,13 +295,53 @@ public class AuthService {
         }
       }
     }
+    User user = null;
 
-    if (token == null || !validateToken(token)) {
-      return null;
+    if (token != null && validateToken(token)) {
+      String userId = jwtService.extractUserId(token);
+      user = userRepository.findById(userId).orElse(null);
+
+    } else if (validateApiKeySecret(request)) {
+      String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
+      ApiKey apiKey = apiKeyService.findById(apiKeyHeader);
+      if (apiKey != null && apiKey.getUserId() != null) {
+        user = userRepository.findById(apiKey.getUserId().toString()).orElse(null);
+      }
     }
 
-    String userId = jwtService.extractUserId(token);
-    Optional<User> user = userRepository.findById(userId);
-    return user.map(UserDto::from).orElse(null);
+    return user != null ? UserDto.from(user) : null;
+  }
+
+  /**
+   * Validates API Key.
+   *
+   * @param apiKeyHeader
+   * @param apiSecretHeader
+   * @return true, if validation success
+   */
+  public boolean validateApiKeySecret(HttpServletRequest request) {
+    String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
+    String apiSecretHeader = request.getHeader(AppConstants.HEADER_API_SECRET);
+    if (apiKeyHeader == null || apiKeyHeader.isBlank()) {
+      return false;
+    }
+    if (apiSecretHeader == null || apiSecretHeader.isBlank()) {
+      return false;
+    }
+    ApiKey apiKey = apiKeyService.findById(apiKeyHeader);
+    if (apiKey == null) {
+      return false;
+    }
+
+    if (!passwordService.verifyPassword(apiSecretHeader.trim(), apiKey.getSecret())) {
+      return false;
+    }
+
+    if (apiKey.getExpirationTime() != null
+        && !Instant.now().isBefore(apiKey.getExpirationTime().toInstant())) {
+      return false;
+    }
+
+    return true;
   }
 }

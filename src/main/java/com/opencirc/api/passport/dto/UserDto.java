@@ -61,6 +61,11 @@ public class UserDto {
     UserDto userDto = new UserDto();
     userDto.setId(user.getId());
     userDto.setEmail(user.getEmail());
+    userDto.setActive(user.isActive());
+    userDto.setFirstName(user.getFirstName());
+    userDto.setLastName(user.getLastName());
+    userDto.setFullName(user.getFullName());
+    userDto.setRole(user.getRole());
     return userDto;
   }
 }

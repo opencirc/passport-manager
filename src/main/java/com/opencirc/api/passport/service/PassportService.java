@@ -31,6 +31,7 @@ import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -127,7 +128,7 @@ public class PassportService {
     passport.setName(data.getPassportName());
     passport.setStatus(Passport.Status.active);
     passport.setCreatedById(data.getCreatedById());
-
+    passport.setCreatedTime(OffsetDateTime.now());
     passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
     String parentId = data.getParentId();
@@ -159,7 +160,7 @@ public class PassportService {
     datasheet.setPlatformId(platformId);
     datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
     datasheet.setCreatedById(data.getCreatedById());
-
+    datasheet.setCreatedTime(OffsetDateTime.now());
     datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
     datasheet = datasheetRepository.save(datasheet);
@@ -283,7 +284,8 @@ public class PassportService {
         if (row.getDatasheetPropertyId() != null) {
           boolean alreadyExists =
               datasheetDto.getDatasheetProperties().stream()
-                  .anyMatch(prop -> Objects.equals(prop.getId(), row.getDatasheetPropertyId()));
+                  .anyMatch(
+                      property -> Objects.equals(property.getId(), row.getDatasheetPropertyId()));
           if (!alreadyExists) {
             DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
             if (propertyDto != null) {
