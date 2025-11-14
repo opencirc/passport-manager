@@ -117,7 +117,7 @@ public class AuthController {
   /**
    * Endpoint to Logout.
    *
-   * @param refreshToken - Existing JWT refresh token
+   * @param request
    * @param response
    * @return response with JWT token (new access token)
    */

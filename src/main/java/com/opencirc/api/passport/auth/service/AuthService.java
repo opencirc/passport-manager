@@ -315,8 +315,7 @@ public class AuthService {
   /**
    * Validates API Key.
    *
-   * @param apiKeyHeader
-   * @param apiSecretHeader
+   * @param request
    * @return true, if validation success
    */
   public boolean validateApiKeySecret(HttpServletRequest request) {
