@@ -53,7 +53,7 @@ public class DataDictionaryController {
    * URI.
    *
    * @param platform
-   * @param classUri
+   * @param getClassRequest
    * @param withProperties
    * @return the template with all the relevant properties
    */
