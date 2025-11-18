@@ -2,6 +2,7 @@ package com.opencirc.api.passport.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.opencirc.api.passport.dto.GetClassRequestDto;
 import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
@@ -74,7 +75,7 @@ public class DataDictionaryController {
                   "https://identifier.buildingsmart.org/uri/"
                       + "molio/cciconstruction/1.0/class/A-A__")
           @RequestBody
-          String classUri,
+          GetClassRequestDto getClassRequest,
       @Parameter(
               description = "Whether to return the class with properties",
               in = ParameterIn.QUERY)
@@ -82,7 +83,7 @@ public class DataDictionaryController {
           Boolean withProperties)
       throws JsonValidationException, JsonProcessingException {
     return dataDictionaryService.createClassTemplate(
-        DataDictionaryPlatform.fromValue(platform), classUri, withProperties);
+        DataDictionaryPlatform.fromValue(platform), getClassRequest.getUri(), withProperties);
   }
 
   /**
