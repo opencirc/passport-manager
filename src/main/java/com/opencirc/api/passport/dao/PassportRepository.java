@@ -25,7 +25,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
           + "LEFT JOIN FETCH dm.datasheet d "
           + "LEFT JOIN FETCH d.datasheetProperties "
           + "WHERE p.id = :id AND p.status = :status")
-  Optional<Passport> findPassport(@Param("id") String id, @Param("status") Passport.Status status);
+  Optional<Passport> findPassport(@Param("id") String id, @Param("status") String status);
 
   /**
    * Retrieves a passport with its descendants.
@@ -78,7 +78,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
             LEFT JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
             LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
-            WHERE pt.status = 'ACTIVE'
+            WHERE pt.status = 'active'
             """,
       nativeQuery = true)
   Optional<List<PassportDatasheetResultMapDto>> findPassportWithDescendants(
@@ -123,7 +123,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
             LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
             LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
-            WHERE p.parent_id = :passport_id AND p.status = 'ACTIVE'
+            WHERE p.parent_id = :passport_id AND p.status = 'active'
             """,
       nativeQuery = true)
   Optional<List<PassportDatasheetResultMapDto>> findImmediateChildren(
@@ -160,6 +160,46 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
           + "LEFT JOIN FETCH p.datasheetMappings dm "
           + "LEFT JOIN FETCH dm.datasheet d "
           + "LEFT JOIN FETCH d.datasheetProperties "
-          + "WHERE p.status = 'ACTIVE' AND p.parentId IS NULL ")
+          + "WHERE p.status = 'active' AND p.parentId IS NULL ")
   List<Passport> getRootPassports();
+
+  @Query(
+      value =
+          """
+                SELECT
+    p.id AS passportId,
+    p.name AS passportName,
+    p.status AS status,
+    p.parent_id AS parentId,
+    p.created_by_id AS passportCreatedById,
+    p.created_by AS passportCreatedBy,
+    p.created_time AS passportCreatedTime,
+    ds.id AS datasheetId,
+    ds.platform AS platform,
+    ds.dictionary AS dictionary,
+    ds.code AS datasheetCode,
+    ds.name AS datasheetName,
+    ds.description AS datasheetDescription,
+    ds.platform_id AS datasheetPlatformId,
+    ds.data_category AS dataCategory,
+    ds.data AS data,
+    ds.created_by_id AS datasheetCreatedById,
+    ds.created_time AS datasheetCreatedTime,
+    dp.id AS datasheetPropertyId,
+    dp.datasheet_id AS datasheetPropertyDatasheetId,
+    dp.code AS datasheetPropertyCode,
+    dp.platform_id AS datasheetPropertyPlatformId,
+    dp.group_tag AS datasheetPropertyGroupTag,
+    dp.property_type AS datasheetPropertyType,
+    dp.definition AS datasheetPropertyDefinition
+FROM passports p
+LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
+LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
+LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
+                WHERE ds.platform = :platform
+                AND ds.code = :code
+                AND p.status = 'active'
+                """,
+      nativeQuery = true)
+  Optional<List<PassportDatasheetResultMapDto>> findPassportsByCode(String platform, String code);
 }

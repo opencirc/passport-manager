@@ -7,8 +7,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -48,8 +46,7 @@ public class Passport {
 
   /** Status of Passport. */
   @Column(name = "status")
-  @Enumerated(EnumType.STRING)
-  private Status status;
+  private String status;
 
   /** Id of Parent Passport. */
   @Column(name = "parent_id")

@@ -25,7 +25,7 @@ public class PassportDto {
   @JsonProperty private String name;
 
   /** Status of Passport. */
-  @JsonProperty private Passport.Status status;
+  @JsonProperty private String status;
 
   /** Id of Parent Passport. */
   @JsonProperty

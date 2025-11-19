@@ -3,10 +3,7 @@ package com.opencirc.api.passport.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,10 +23,10 @@ public class DatasheetDto {
   @JsonProperty private String id;
 
   /** Name of the data dictionary platform. */
-  @JsonProperty private DataDictionaryPlatform platform;
+  @JsonProperty private String platform;
 
   /** Name of the data dictionary. */
-  @JsonProperty private DataDictionary dictionary;
+  @JsonProperty private String dictionary;
 
   /** Code of the class. */
   @JsonProperty private String code;
@@ -44,7 +41,7 @@ public class DatasheetDto {
   @JsonProperty private String platformId;
 
   /** Data category (Unique or Generic). */
-  @JsonProperty private DataCategory dataCategory;
+  @JsonProperty private String dataCategory;
 
   /** Template information in JSON format. */
   @JsonProperty private JsonNode data;

@@ -124,14 +124,14 @@ public class PassportService {
     Passport passport = new Passport();
     passport.setId(cuid.toString());
     passport.setName(data.getPassportName());
-    passport.setStatus(Passport.Status.ACTIVE);
+    passport.setStatus(Passport.Status.ACTIVE.getValue());
     passport.setCreatedById(data.getCreatedById());
 
     passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
-      if (passportRepository.findPassport(parentId, Passport.Status.ACTIVE).isEmpty()) {
+      if (passportRepository.findPassport(parentId, Passport.Status.ACTIVE.getValue()).isEmpty()) {
         throw new HttpServerErrorException(
             HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
       }
@@ -150,13 +150,13 @@ public class PassportService {
             : null;
 
     Datasheet datasheet = new Datasheet();
-    datasheet.setPlatform(dictionaryPlatform);
-    datasheet.setDictionary(dictionary);
+    datasheet.setPlatform(dictionaryPlatform.getValue());
+    datasheet.setDictionary(dictionary.getValue());
     datasheet.setCode(code);
     datasheet.setName(name);
     datasheet.setDescription(description);
     datasheet.setPlatformId(platformId);
-    datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
+    datasheet.setDataCategory((DataCategory.fromValue(data.getDataCategory())).getValue());
     datasheet.setCreatedById(data.getCreatedById());
 
     datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
@@ -236,7 +236,7 @@ public class PassportService {
   public PassportDto getPassport(String passportId) throws JsonProcessingException {
 
     Optional<Passport> optionalPassport =
-        passportRepository.findPassport(passportId, Passport.Status.ACTIVE);
+        passportRepository.findPassport(passportId, Passport.Status.ACTIVE.getValue());
     if (optionalPassport.isEmpty()) {
       throw new HttpServerErrorException(
           HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId);
@@ -409,7 +409,7 @@ public class PassportService {
     PassportDto dto = new PassportDto();
     dto.setId(row.getPassportId());
     dto.setName(row.getPassportName());
-    dto.setStatus(Passport.Status.fromValue(row.getStatus()));
+    dto.setStatus(row.getStatus());
     dto.setCreatedById(row.getPassportCreatedById());
     dto.setCreatedBy(parseCreatedBy(row.getPassportCreatedBy()));
     if (row.getPassportCreatedTime() != null) {
@@ -424,18 +424,15 @@ public class PassportService {
       DatasheetDto dto = new DatasheetDto();
       dto.setId(row.getDatasheetId());
 
-      dto.setPlatform(
-          row.getPlatform() != null ? DataDictionaryPlatform.fromValue(row.getPlatform()) : null);
+      dto.setPlatform(row.getPlatform());
 
-      dto.setDictionary(
-          row.getDictionary() != null ? DataDictionary.fromValue(row.getDictionary()) : null);
+      dto.setDictionary(row.getDictionary());
 
       dto.setCode(row.getDatasheetCode());
       dto.setName(row.getDatasheetName());
       dto.setDescription(row.getDatasheetDescription());
       dto.setPlatformId(row.getDatasheetPlatformId());
-      dto.setDataCategory(
-          row.getDataCategory() != null ? DataCategory.fromValue(row.getDataCategory()) : null);
+      dto.setDataCategory(row.getDataCategory());
 
       JsonNode dataNode = null;
       String data = row.getData();
@@ -524,7 +521,7 @@ public class PassportService {
       throws JsonValidationException {
     Passport passport =
         passportRepository
-            .findPassport(passportId, Passport.Status.ACTIVE)
+            .findPassport(passportId, Passport.Status.ACTIVE.getValue())
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
 
@@ -572,7 +569,7 @@ public class PassportService {
           String error = null;
           error =
               dictionaryAdapterFactory
-                  .getAdapter(datasheet.getPlatform())
+                  .getAdapter(DataDictionaryPlatform.fromValue(datasheet.getPlatform()))
                   .validatePassportData(property.getDefinition());
           if (error != null) {
             errorMessages.add(error);
@@ -605,5 +602,49 @@ public class PassportService {
     }
 
     return PassportDto.from(passport);
+  }
+
+  /**
+   * Retrieves the passports with the given parent ID.
+   *
+   * @param platform
+   * @param code
+   * @return a list of {@link PassportDto} objects
+   * @throws JsonProcessingException
+   */
+  public List<PassportDto> listPassportsByCode(String platform, String code)
+      throws JsonProcessingException {
+
+    List<PassportDatasheetResultMapDto> resultRows =
+        passportRepository.findPassportsByCode(platform, code).orElse(Collections.emptyList());
+
+    Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
+    List<PassportDto> passportDtoList = new ArrayList<>();
+
+    for (PassportDatasheetResultMapDto row : resultRows) {
+      PassportDto passportDto = buildPassportDto(row);
+
+      if (row.getDatasheetId() != null) {
+        datasheetDtoMap.putIfAbsent(row.getDatasheetId(), buildDatasheetDto(row));
+        DatasheetDto datasheetDto = datasheetDtoMap.get(row.getDatasheetId());
+        if (row.getDatasheetPropertyId() != null) {
+          DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
+
+          if (propertyDto != null
+              && datasheetDto.getDatasheetProperties().stream()
+                  .noneMatch(property -> Objects.equals(property.getId(), propertyDto.getId()))) {
+            datasheetDto.getDatasheetProperties().add(propertyDto);
+          }
+        }
+
+        if (passportDto.getDatasheets().stream()
+            .noneMatch(datasheet -> Objects.equals(datasheet.getId(), datasheetDto.getId()))) {
+          passportDto.getDatasheets().add(datasheetDto);
+        }
+      }
+      passportDtoList.add(passportDto);
+    }
+
+    return passportDtoList;
   }
 }
