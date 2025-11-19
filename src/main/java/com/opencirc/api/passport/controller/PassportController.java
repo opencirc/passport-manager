@@ -155,7 +155,7 @@ public class PassportController {
   }
 
   /**
-   * Endpoint to fetch the list of passports corresponds to the input code.
+   * Endpoint to fetch the list of passports corresponding to the specified platform and code.
    *
    * @param platform
    * @param code

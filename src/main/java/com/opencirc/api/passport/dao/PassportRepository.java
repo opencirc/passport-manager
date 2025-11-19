@@ -163,6 +163,13 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
           + "WHERE p.status = 'active' AND p.parentId IS NULL ")
   List<Passport> getRootPassports();
 
+  /**
+   * Retrieves passports for the specified platform and code.
+   *
+   * @param platform
+   * @param code
+   * @return passports
+   */
   @Query(
       value =
           """

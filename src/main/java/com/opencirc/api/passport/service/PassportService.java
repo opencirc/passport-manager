@@ -605,7 +605,7 @@ public class PassportService {
   }
 
   /**
-   * Retrieves the passports with the given parent ID.
+   * Retrieves all passports associated with the specified platform and code.
    *
    * @param platform
    * @param code
