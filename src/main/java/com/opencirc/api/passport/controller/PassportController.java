@@ -158,7 +158,7 @@ public class PassportController {
    * Endpoint to fetch the list of passports corresponding to the specified platform and code.
    *
    * @param platform
-   * @param code
+   * @param code - class code
    * @return the list of passports
    * @throws JsonValidationException
    */
@@ -171,6 +171,8 @@ public class PassportController {
       @Parameter(description = "Code", required = true, in = ParameterIn.PATH) @PathVariable
           String code)
       throws JsonProcessingException, JsonValidationException {
-    return ResponseEntity.ok(passportService.listPassportsByCode(platform, code));
+    return ResponseEntity.ok(
+        passportService.listPassportsByCode(
+            DataDictionaryPlatform.fromValue(platform).getValue(), code));
   }
 }
