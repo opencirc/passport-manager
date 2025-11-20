@@ -48,7 +48,8 @@ public class PassportTemplateService {
       String passportId, boolean dryRun, String templateName) {
     Optional<Passport> passport =
         passportRepository.findPassport(passportId, Passport.Status.ACTIVE.getValue());
-    if (passport.isEmpty() || passport.get().getStatus() != Passport.Status.ACTIVE.getValue()) {
+    if (passport.isEmpty()
+        || !Passport.Status.ACTIVE.getValue().equals(passport.get().getStatus())) {
       throw new ResourceNotFoundException("Active passport not found");
     }
 
@@ -72,7 +73,7 @@ public class PassportTemplateService {
 
     for (PassportDatasheetMapping passportDatasheetMapping : passport.getDatasheetMappings()) {
       Datasheet datasheet = passportDatasheetMapping.getDatasheet();
-      if (datasheet.getDataCategory() == Datasheet.DataCategory.UNIQUE.getValue()) {
+      if (Datasheet.DataCategory.UNIQUE.getValue().equals(datasheet.getDataCategory())) {
         continue;
       }
       JsonNode dataNode = datasheet.getData();

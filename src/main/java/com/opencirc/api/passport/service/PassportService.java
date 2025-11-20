@@ -313,34 +313,7 @@ public class PassportService {
     List<PassportDatasheetResultMapDto> resultRows =
         passportRepository.findImmediateChildren(passportId).orElse(Collections.emptyList());
 
-    Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
-    List<PassportDto> passportDtoList = new ArrayList<>();
-
-    for (PassportDatasheetResultMapDto row : resultRows) {
-      PassportDto passportDto = buildPassportDto(row);
-
-      if (row.getDatasheetId() != null) {
-        datasheetDtoMap.putIfAbsent(row.getDatasheetId(), buildDatasheetDto(row));
-        DatasheetDto datasheetDto = datasheetDtoMap.get(row.getDatasheetId());
-        if (row.getDatasheetPropertyId() != null) {
-          DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
-
-          if (propertyDto != null
-              && datasheetDto.getDatasheetProperties().stream()
-                  .noneMatch(property -> Objects.equals(property.getId(), propertyDto.getId()))) {
-            datasheetDto.getDatasheetProperties().add(propertyDto);
-          }
-        }
-
-        if (passportDto.getDatasheets().stream()
-            .noneMatch(datasheet -> Objects.equals(datasheet.getId(), datasheetDto.getId()))) {
-          passportDto.getDatasheets().add(datasheetDto);
-        }
-      }
-      passportDtoList.add(passportDto);
-    }
-
-    return passportDtoList;
+    return assemblePassportsFromResultRows(resultRows);
   }
 
   /**
@@ -618,6 +591,17 @@ public class PassportService {
     List<PassportDatasheetResultMapDto> resultRows =
         passportRepository.findPassportsByCode(platform, code).orElse(Collections.emptyList());
 
+    return assemblePassportsFromResultRows(resultRows);
+  }
+
+  /**
+   * This method sets the result sets to passport dto.
+   *
+   * @param resultRows
+   * @return the list of passports
+   */
+  private List<PassportDto> assemblePassportsFromResultRows(
+      List<PassportDatasheetResultMapDto> resultRows) {
     Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
     List<PassportDto> passportDtoList = new ArrayList<>();
 

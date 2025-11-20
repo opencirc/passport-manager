@@ -164,8 +164,8 @@ public class PassportController {
    */
   @Operation(summary = "Get all passports with the given code from the specified platform")
   @GetMapping("/api/passport/{platform}/{code}/all")
-  public ResponseEntity<List<PassportDto>> listPassportsByCategory(
-      @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
+  public ResponseEntity<List<PassportDto>> listPassportsByPlatformAndCode(
+      @Parameter(description = "Platform name", required = true, in = ParameterIn.PATH)
           @PathVariable
           String platform,
       @Parameter(description = "Code", required = true, in = ParameterIn.PATH) @PathVariable
