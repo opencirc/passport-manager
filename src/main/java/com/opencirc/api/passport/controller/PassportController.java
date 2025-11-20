@@ -160,6 +160,7 @@ public class PassportController {
    * @param platform
    * @param code - class code
    * @return the list of passports
+   * @throws JsonProcessingException
    * @throws JsonValidationException
    */
   @Operation(summary = "Get all passports with the given code from the specified platform")
