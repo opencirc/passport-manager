@@ -19,6 +19,7 @@ import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
 import com.opencirc.api.passport.dto.DatasheetPropertyDto;
 import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.PlatformTreeStructureDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -31,6 +32,7 @@ import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -605,5 +607,61 @@ public class PassportService {
     }
 
     return PassportDto.from(passport);
+  }
+
+  /**
+   * Method to parse and form the tree structure of the platform.
+   *
+   * @return the list of PlatformTreeStructureDto
+   * @throws JsonProcessingException
+   */
+  public List<PlatformTreeStructureDto> getPlatformTreeStructure() {
+
+    final String path = appProperties.getTable6StructureJsonPath();
+    try (InputStream inputStream = getClass().getResourceAsStream(path)) {
+
+      if (inputStream == null) {
+        throw new IllegalStateException("File not found at classpath location: " + path);
+      }
+
+      JsonNode root = objectMapper.readTree(inputStream);
+      if (root == null) {
+        throw new IllegalStateException("File at " + path + " must contain a valid json");
+      }
+
+      JsonNode classes = root.get("Classes");
+      if (classes == null) {
+        throw new IllegalStateException("Json has no class");
+      }
+
+      Map<String, PlatformTreeStructureDto> nodeMap = new LinkedHashMap<>();
+      for (JsonNode classNode : classes) {
+        String code = classNode.get("Code").asText();
+        String name = classNode.get("Name").asText();
+
+        nodeMap.put(code, new PlatformTreeStructureDto(code, name, new ArrayList<>()));
+      }
+
+      List<PlatformTreeStructureDto> roots = new ArrayList<>();
+
+      for (JsonNode classNode : classes) {
+        String code = classNode.get("Code").asText();
+        JsonNode parent = classNode.get("ParentClassCode");
+
+        PlatformTreeStructureDto node = nodeMap.get(code);
+
+        if (parent == null || parent.isNull() || parent.asText().isBlank()) {
+          roots.add(node);
+        } else {
+          PlatformTreeStructureDto parentNode = nodeMap.get(parent.asText());
+          if (parentNode != null) {
+            parentNode.addChild(node);
+          }
+        }
+      }
+      return roots;
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to process JSON. " + e.getMessage(), e);
+    }
   }
 }

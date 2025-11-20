@@ -3,6 +3,7 @@ package com.opencirc.api.passport.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.PlatformTreeStructureDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.DataDictionaryPlatform;
@@ -152,5 +153,17 @@ public class PassportController {
       throws InvalidInputException, JsonValidationException {
 
     return ResponseEntity.ok(passportService.updateData(passportId, request));
+  }
+
+  /**
+   * Endpoint to get the tree structure of the platform.
+   *
+   * @return the list of PlatformTreeStructureDto
+   * @throws JsonProcessingException
+   */
+  @GetMapping("/api/getPlatformTreeStructure")
+  public ResponseEntity<List<PlatformTreeStructureDto>> getPlatformTreeStructure()
+      throws JsonProcessingException {
+    return ResponseEntity.ok(passportService.getPlatformTreeStructure());
   }
 }
