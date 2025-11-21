@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -159,11 +160,11 @@ public class PassportController {
    * Endpoint to get the tree structure of the platform.
    *
    * @return the list of PlatformTreeStructureDto
-   * @throws JsonProcessingException
+   * @throws IOException
    */
   @GetMapping("/api/getPlatformTreeStructure")
   public ResponseEntity<List<PlatformTreeStructureDto>> getPlatformTreeStructure()
-      throws JsonProcessingException {
+      throws IOException {
     return ResponseEntity.ok(passportService.getPlatformTreeStructure());
   }
 }
