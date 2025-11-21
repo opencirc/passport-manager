@@ -642,7 +642,7 @@ public class PassportService {
     JsonNode classes = root.get("Classes");
 
     if (classes == null) {
-      throw new IllegalStateException("Template JSON has no Class. ");
+      throw new IllegalStateException("Template JSON has no 'Classes' field.");
     }
 
     Map<String, PlatformTreeStructureDto> nodeMap = new LinkedHashMap<>();
@@ -655,8 +655,15 @@ public class PassportService {
     }
 
     for (JsonNode classNode : classes) {
-      String code = classNode.get("Code").asText();
-      String parentCode = classNode.get("ParentClassCode").asText(null);
+      JsonNode codeNode = classNode.get("Code");
+      if (codeNode == null || codeNode.isNull()) {
+        throw new IllegalStateException("Class node missing required 'Code' field");
+      }
+      String code = codeNode.asText();
+
+      JsonNode parentCodeNode = classNode.get("ParentClassCode");
+      String parentCode =
+          (parentCodeNode != null && !parentCodeNode.isNull()) ? parentCodeNode.asText() : null;
 
       PlatformTreeStructureDto node = nodeMap.get(code);
 
@@ -666,6 +673,8 @@ public class PassportService {
         PlatformTreeStructureDto parent = nodeMap.get(parentCode);
         if (parent != null) {
           parent.addChild(node);
+        } else {
+          roots.add(node);
         }
       }
     }
