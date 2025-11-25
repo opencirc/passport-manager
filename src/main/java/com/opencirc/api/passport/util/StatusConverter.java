@@ -4,7 +4,7 @@ import com.opencirc.api.passport.model.Passport.Status;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
+@Converter
 public class StatusConverter implements AttributeConverter<Status, String> {
 
   @Override
@@ -13,7 +13,7 @@ public class StatusConverter implements AttributeConverter<Status, String> {
   }
 
   @Override
-  public Status convertToEntityAttribute(String dbValue) {
-    return Status.fromValue(dbValue);
+  public Status convertToEntityAttribute(String statusValue) {
+    return statusValue != null ? Status.fromValue(statusValue) : null;
   }
 }

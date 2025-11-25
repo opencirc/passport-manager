@@ -4,16 +4,16 @@ import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
+@Converter
 public class DataCategoryConverter implements AttributeConverter<DataCategory, String> {
 
   @Override
-  public String convertToDatabaseColumn(DataCategory val) {
-    return val != null ? val.getValue() : null;
+  public String convertToDatabaseColumn(DataCategory value) {
+    return value != null ? value.getValue() : null;
   }
 
   @Override
-  public DataCategory convertToEntityAttribute(String db) {
-    return DataCategory.fromValue(db);
+  public DataCategory convertToEntityAttribute(String categoryValue) {
+    return categoryValue != null ? DataCategory.fromValue(categoryValue) : null;
   }
 }

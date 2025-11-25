@@ -4,7 +4,7 @@ import com.opencirc.api.passport.enums.DataDictionary;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
+@Converter
 public class DataDictionaryConverter implements AttributeConverter<DataDictionary, String> {
 
   @Override
@@ -13,7 +13,7 @@ public class DataDictionaryConverter implements AttributeConverter<DataDictionar
   }
 
   @Override
-  public DataDictionary convertToEntityAttribute(String dbValue) {
-    return DataDictionary.fromValue(dbValue);
+  public DataDictionary convertToEntityAttribute(String dictionaryValue) {
+    return dictionaryValue != null ? DataDictionary.fromValue(dictionaryValue) : null;
   }
 }

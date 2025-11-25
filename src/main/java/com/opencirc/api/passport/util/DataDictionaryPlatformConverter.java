@@ -4,7 +4,7 @@ import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
+@Converter
 public class DataDictionaryPlatformConverter
     implements AttributeConverter<DataDictionaryPlatform, String> {
 
@@ -14,7 +14,7 @@ public class DataDictionaryPlatformConverter
   }
 
   @Override
-  public DataDictionaryPlatform convertToEntityAttribute(String dbValue) {
-    return DataDictionaryPlatform.fromValue(dbValue);
+  public DataDictionaryPlatform convertToEntityAttribute(String platformValue) {
+    return platformValue != null ? DataDictionaryPlatform.fromValue(platformValue) : null;
   }
 }

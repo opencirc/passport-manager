@@ -73,7 +73,7 @@ public class PassportTemplateService {
 
     for (PassportDatasheetMapping passportDatasheetMapping : passport.getDatasheetMappings()) {
       Datasheet datasheet = passportDatasheetMapping.getDatasheet();
-      if (Datasheet.DataCategory.UNIQUE.getValue().equals(datasheet.getDataCategory())) {
+      if (Datasheet.DataCategory.UNIQUE.equals(datasheet.getDataCategory())) {
         continue;
       }
       JsonNode dataNode = datasheet.getData();
