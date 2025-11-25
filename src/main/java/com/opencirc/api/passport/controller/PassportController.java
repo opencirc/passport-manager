@@ -173,7 +173,6 @@ public class PassportController {
           String code)
       throws JsonProcessingException, JsonValidationException {
     return ResponseEntity.ok(
-        passportService.listPassportsByCode(
-            DataDictionaryPlatform.fromValue(platform).getValue(), code));
+        passportService.listPassportsByCode(DataDictionaryPlatform.fromValue(platform), code));
   }
 }

@@ -124,14 +124,14 @@ public class PassportService {
     Passport passport = new Passport();
     passport.setId(cuid.toString());
     passport.setName(data.getPassportName());
-    passport.setStatus(Passport.Status.ACTIVE.getValue());
+    passport.setStatus(Passport.Status.ACTIVE);
     passport.setCreatedById(data.getCreatedById());
 
     passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
-      if (passportRepository.findPassport(parentId, Passport.Status.ACTIVE.getValue()).isEmpty()) {
+      if (passportRepository.findPassport(parentId, Passport.Status.ACTIVE).isEmpty()) {
         throw new HttpServerErrorException(
             HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
       }
@@ -150,13 +150,13 @@ public class PassportService {
             : null;
 
     Datasheet datasheet = new Datasheet();
-    datasheet.setPlatform(dictionaryPlatform.getValue());
-    datasheet.setDictionary(dictionary.getValue());
+    datasheet.setPlatform(dictionaryPlatform);
+    datasheet.setDictionary(dictionary);
     datasheet.setCode(code);
     datasheet.setName(name);
     datasheet.setDescription(description);
     datasheet.setPlatformId(platformId);
-    datasheet.setDataCategory((DataCategory.fromValue(data.getDataCategory())).getValue());
+    datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
     datasheet.setCreatedById(data.getCreatedById());
 
     datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
@@ -236,7 +236,7 @@ public class PassportService {
   public PassportDto getPassport(String passportId) throws JsonProcessingException {
 
     Optional<Passport> optionalPassport =
-        passportRepository.findPassport(passportId, Passport.Status.ACTIVE.getValue());
+        passportRepository.findPassport(passportId, Passport.Status.ACTIVE);
     if (optionalPassport.isEmpty()) {
       throw new HttpServerErrorException(
           HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId);
@@ -494,7 +494,7 @@ public class PassportService {
       throws JsonValidationException {
     Passport passport =
         passportRepository
-            .findPassport(passportId, Passport.Status.ACTIVE.getValue())
+            .findPassport(passportId, Passport.Status.ACTIVE)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
 
@@ -542,7 +542,7 @@ public class PassportService {
           String error = null;
           error =
               dictionaryAdapterFactory
-                  .getAdapter(DataDictionaryPlatform.fromValue(datasheet.getPlatform()))
+                  .getAdapter(datasheet.getPlatform())
                   .validatePassportData(property.getDefinition());
           if (error != null) {
             errorMessages.add(error);
@@ -585,11 +585,13 @@ public class PassportService {
    * @return a list of {@link PassportDto} objects
    * @throws JsonProcessingException
    */
-  public List<PassportDto> listPassportsByCode(String platform, String code)
+  public List<PassportDto> listPassportsByCode(DataDictionaryPlatform platform, String code)
       throws JsonProcessingException {
 
     List<PassportDatasheetResultMapDto> resultRows =
-        passportRepository.findPassportsByCode(platform, code).orElse(Collections.emptyList());
+        passportRepository
+            .findPassportsByCode(platform.getValue(), code)
+            .orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
   }

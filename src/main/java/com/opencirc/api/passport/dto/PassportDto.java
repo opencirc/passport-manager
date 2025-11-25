@@ -56,7 +56,7 @@ public class PassportDto {
     PassportDto dto = new PassportDto();
     dto.setId(passport.getId());
     dto.setName(passport.getName());
-    dto.setStatus(passport.getStatus());
+    dto.setStatus(passport.getStatus().getValue());
     dto.setCreatedById(passport.getCreatedById());
     dto.setCreatedBy(passport.getCreatedBy());
     dto.setCreatedTime(passport.getCreatedTime());

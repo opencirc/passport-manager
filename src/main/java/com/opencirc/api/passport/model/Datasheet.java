@@ -3,7 +3,12 @@ package com.opencirc.api.passport.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.DataDictionaryPlatform;
 import com.opencirc.api.passport.util.CreatedByDtoConverter;
+import com.opencirc.api.passport.util.DataCategoryConverter;
+import com.opencirc.api.passport.util.DataDictionaryConverter;
+import com.opencirc.api.passport.util.DataDictionaryPlatformConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -48,11 +53,13 @@ public class Datasheet {
 
   /** Name of the data dictionary platform. */
   @Column(name = "platform")
-  private String platform;
+  @Convert(converter = DataDictionaryPlatformConverter.class)
+  private DataDictionaryPlatform platform;
 
   /** Name of the data dictionary from which template is fetched. */
   @Column(name = "dictionary")
-  private String dictionary;
+  @Convert(converter = DataDictionaryConverter.class)
+  private DataDictionary dictionary;
 
   /** Code of the class. */
   @Column(name = "code")
@@ -72,7 +79,8 @@ public class Datasheet {
 
   /** Data category (Unique or Generic). */
   @Column(name = "data_category")
-  private String dataCategory;
+  @Convert(converter = DataCategoryConverter.class)
+  private DataCategory dataCategory;
 
   /** Template information in JSON format. */
   @Column(name = "data", columnDefinition = "jsonb")

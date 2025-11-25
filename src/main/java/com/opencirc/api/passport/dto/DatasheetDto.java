@@ -69,13 +69,13 @@ public class DatasheetDto {
   public static DatasheetDto from(Datasheet datasheet) {
     DatasheetDto datasheetDto = new DatasheetDto();
     datasheetDto.id = datasheet.getId();
-    datasheetDto.platform = datasheet.getPlatform();
-    datasheetDto.dictionary = datasheet.getDictionary();
+    datasheetDto.platform = datasheet.getPlatform().getValue();
+    datasheetDto.dictionary = datasheet.getDictionary().getValue();
     datasheetDto.code = datasheet.getCode();
     datasheetDto.name = datasheet.getName();
     datasheetDto.description = datasheet.getDescription();
     datasheetDto.platformId = datasheet.getPlatformId();
-    datasheetDto.dataCategory = datasheet.getDataCategory();
+    datasheetDto.dataCategory = datasheet.getDataCategory().getValue();
     datasheetDto.data = datasheet.getData();
     datasheetDto.createdById = datasheet.getCreatedById();
     datasheetDto.createdBy = datasheet.getCreatedBy();

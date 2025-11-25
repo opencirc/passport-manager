@@ -25,7 +25,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
           + "LEFT JOIN FETCH dm.datasheet d "
           + "LEFT JOIN FETCH d.datasheetProperties "
           + "WHERE p.id = :id AND p.status = :status")
-  Optional<Passport> findPassport(@Param("id") String id, @Param("status") String status);
+  Optional<Passport> findPassport(@Param("id") String id, @Param("status") Passport.Status status);
 
   /**
    * Retrieves a passport with its descendants.
