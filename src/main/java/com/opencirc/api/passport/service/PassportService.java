@@ -641,7 +641,7 @@ public class PassportService {
     return passportDtoList;
   }
 
-  /*
+  /**
    * Method to parse and form the tree structure of the platform.
    *
    * @return the list of PlatformTreeStructureDto

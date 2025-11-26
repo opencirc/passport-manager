@@ -176,9 +176,9 @@ public class PassportController {
       throws JsonProcessingException, JsonValidationException {
     return ResponseEntity.ok(
         passportService.listPassportsByCode(DataDictionaryPlatform.fromValue(platform), code));
-    }
-    
-  /**   
+  }
+
+  /**
    * Endpoint to get the tree structure of the platform.
    *
    * @return the list of PlatformTreeStructureDto
