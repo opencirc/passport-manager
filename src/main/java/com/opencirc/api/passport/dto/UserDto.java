@@ -2,7 +2,6 @@ package com.opencirc.api.passport.dto;
 
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.model.User.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +29,7 @@ public class UserDto {
   private String fullName;
 
   /** Role of the user. */
-  private Role role;
+  private String role;
 
   /** Holds info if the user is active.. */
   private boolean active;
@@ -46,7 +45,7 @@ public class UserDto {
     userDto.setId(userPrincipal.getUserId());
     userDto.setEmail(userPrincipal.getEmail());
     userDto.setFullName(userPrincipal.getFullName());
-    userDto.setRole(userPrincipal.getRole());
+    userDto.setRole(userPrincipal.getRole() != null ? userPrincipal.getRole().getValue() : null);
     userDto.setActive(userPrincipal.isEnabled());
     return userDto;
   }
@@ -61,6 +60,11 @@ public class UserDto {
     UserDto userDto = new UserDto();
     userDto.setId(user.getId());
     userDto.setEmail(user.getEmail());
+    userDto.setActive(user.isActive());
+    userDto.setFirstName(user.getFirstName());
+    userDto.setLastName(user.getLastName());
+    userDto.setFullName(user.getFullName());
+    userDto.setRole(user.getRole() != null ? user.getRole().getValue() : null);
     return userDto;
   }
 }

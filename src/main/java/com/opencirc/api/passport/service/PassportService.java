@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -133,7 +135,7 @@ public class PassportService {
     passport.setName(data.getPassportName());
     passport.setStatus(Passport.Status.ACTIVE);
     passport.setCreatedById(data.getCreatedById());
-
+    passport.setCreatedTime(OffsetDateTime.now());
     passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
     String parentId = data.getParentId();
@@ -165,7 +167,7 @@ public class PassportService {
     datasheet.setPlatformId(platformId);
     datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
     datasheet.setCreatedById(data.getCreatedById());
-
+    datasheet.setCreatedTime(OffsetDateTime.now());
     datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
 
     datasheet = datasheetRepository.save(datasheet);
@@ -268,45 +270,40 @@ public class PassportService {
           HttpStatus.NOT_FOUND, "No active passports found with children");
     }
 
-    Map<String, PassportDto> dtoById = new LinkedHashMap<>();
-    Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
+    Map<String, PassportDto> passportMap = new LinkedHashMap<>();
 
     for (PassportDatasheetResultMapDto row : resultRows) {
       PassportDto passportDto =
-          dtoById.computeIfAbsent(row.getPassportId(), key -> buildPassportDto(row));
+          passportMap.computeIfAbsent(row.getPassportId(), key -> buildPassportDto(row));
 
       if (row.getDatasheetId() != null) {
         DatasheetDto datasheetDto =
-            datasheetDtoMap.computeIfAbsent(row.getDatasheetId(), key -> buildDatasheetDto(row));
+            passportDto.getDatasheets().stream()
+                .filter(datasheet -> Objects.equals(datasheet.getId(), row.getDatasheetId()))
+                .findFirst()
+                .orElseGet(
+                    () -> {
+                      DatasheetDto newDatasheet = buildDatasheetDto(row);
+                      passportDto.getDatasheets().add(newDatasheet);
+                      return newDatasheet;
+                    });
 
         if (row.getDatasheetPropertyId() != null) {
-          DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
-
-          if (propertyDto != null
-              && datasheetDto.getDatasheetProperties().stream()
-                  .noneMatch(property -> Objects.equals(property.getId(), propertyDto.getId()))) {
-            datasheetDto.getDatasheetProperties().add(propertyDto);
+          boolean alreadyExists =
+              datasheetDto.getDatasheetProperties().stream()
+                  .anyMatch(
+                      property -> Objects.equals(property.getId(), row.getDatasheetPropertyId()));
+          if (!alreadyExists) {
+            DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
+            if (propertyDto != null) {
+              datasheetDto.getDatasheetProperties().add(propertyDto);
+            }
           }
         }
-
-        if (passportDto.getDatasheets().stream()
-            .noneMatch(datasheet -> Objects.equals(datasheet.getId(), datasheetDto.getId()))) {
-          passportDto.getDatasheets().add(datasheetDto);
-        }
       }
     }
 
-    for (PassportDatasheetResultMapDto row : resultRows) {
-      if (row.getParentId() != null
-          && dtoById.containsKey(row.getParentId())
-          && dtoById.containsKey(row.getPassportId())) {
-        PassportDto child = dtoById.get(row.getPassportId());
-        PassportDto parent = dtoById.get(row.getParentId());
-        child.setParent(parent);
-      }
-    }
-
-    return new ArrayList<>(dtoById.values());
+    return new ArrayList<>(passportMap.values());
   }
 
   /**
@@ -388,12 +385,13 @@ public class PassportService {
   private PassportDto buildPassportDto(PassportDatasheetResultMapDto row) {
     PassportDto dto = new PassportDto();
     dto.setId(row.getPassportId());
+    dto.setParentId(row.getParentId());
     dto.setName(row.getPassportName());
     dto.setStatus(row.getStatus());
     dto.setCreatedById(row.getPassportCreatedById());
     dto.setCreatedBy(parseCreatedBy(row.getPassportCreatedBy()));
     if (row.getPassportCreatedTime() != null) {
-      dto.setCreatedTime(row.getPassportCreatedTime());
+      dto.setCreatedTime(row.getPassportCreatedTime().atOffset(ZoneOffset.UTC));
     }
     dto.setDatasheets(new ArrayList<>());
     return dto;
@@ -424,7 +422,7 @@ public class PassportService {
       dto.setCreatedById(row.getDatasheetCreatedById());
       dto.setCreatedBy(parseCreatedBy(row.getDatasheetCreatedBy()));
       if (row.getDatasheetCreatedTime() != null) {
-        dto.setCreatedTime(row.getDatasheetCreatedTime());
+        dto.setCreatedTime(row.getDatasheetCreatedTime().atOffset(ZoneOffset.UTC));
       }
       dto.setDatasheetProperties(new ArrayList<>());
 
@@ -611,34 +609,44 @@ public class PassportService {
    */
   private List<PassportDto> assemblePassportsFromResultRows(
       List<PassportDatasheetResultMapDto> resultRows) {
-    Map<String, DatasheetDto> datasheetDtoMap = new LinkedHashMap<>();
-    List<PassportDto> passportDtoList = new ArrayList<>();
+
+    Map<String, PassportDto> passportMap = new LinkedHashMap<>();
 
     for (PassportDatasheetResultMapDto row : resultRows) {
-      PassportDto passportDto = buildPassportDto(row);
+
+      PassportDto passportDto =
+          passportMap.computeIfAbsent(row.getPassportId(), id -> buildPassportDto(row));
 
       if (row.getDatasheetId() != null) {
-        datasheetDtoMap.putIfAbsent(row.getDatasheetId(), buildDatasheetDto(row));
-        DatasheetDto datasheetDto = datasheetDtoMap.get(row.getDatasheetId());
-        if (row.getDatasheetPropertyId() != null) {
-          DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
 
-          if (propertyDto != null
-              && datasheetDto.getDatasheetProperties().stream()
-                  .noneMatch(property -> Objects.equals(property.getId(), propertyDto.getId()))) {
+        DatasheetDto datasheetDto =
+            passportDto.getDatasheets().stream()
+                .filter(datasheet -> Objects.equals(datasheet.getId(), row.getDatasheetId()))
+                .findFirst()
+                .orElseGet(
+                    () -> {
+                      DatasheetDto newDatasheet = buildDatasheetDto(row);
+                      passportDto.getDatasheets().add(newDatasheet);
+                      return newDatasheet;
+                    });
+
+        if (row.getDatasheetPropertyId() != null) {
+
+          boolean exists =
+              datasheetDto.getDatasheetProperties().stream()
+                  .anyMatch(
+                      datasheetProperty ->
+                          Objects.equals(datasheetProperty.getId(), row.getDatasheetPropertyId()));
+
+          if (!exists) {
+            DatasheetPropertyDto propertyDto = buildDatasheetProperty(row);
             datasheetDto.getDatasheetProperties().add(propertyDto);
           }
         }
-
-        if (passportDto.getDatasheets().stream()
-            .noneMatch(datasheet -> Objects.equals(datasheet.getId(), datasheetDto.getId()))) {
-          passportDto.getDatasheets().add(datasheetDto);
-        }
       }
-      passportDtoList.add(passportDto);
     }
 
-    return passportDtoList;
+    return new ArrayList<>(passportMap.values());
   }
 
   /**

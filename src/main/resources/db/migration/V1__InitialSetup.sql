@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     role VARCHAR(50) NOT NULL,
     is_active BOOLEAN NOT NULL,
     refresh_token VARCHAR(255),
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_time TIMESTAMP(6) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Datasheets table
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS public.datasheets (
     data JSONB,
     created_by_id VARCHAR(255),
     created_by jsonb NOT NULL,
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_time TIMESTAMP(6) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_datasheets_platform ON public.datasheets(platform);
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS public.passports (
     parent_id VARCHAR(100),
     created_by_id VARCHAR(255),
     created_by jsonb NOT NULL,
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_time TIMESTAMP(6) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_passports_created_by_id ON public.passports(created_by_id);
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS public.passport_templates (
     template JSONB,
     created_by_id VARCHAR(255),
     created_by jsonb NOT NULL,
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_time TIMESTAMP(6) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_templates_created_by_id ON public.passport_templates(created_by_id);
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS public.passport_logs (
     data JSON NOT NULL,
     created_by_id VARCHAR(255),
     created_by jsonb NOT NULL,
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_time TIMESTAMP(6) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (passport_id) REFERENCES public.passports(id) ON DELETE CASCADE
 );
 
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS public.passport_lifecycles (
     data JSON NOT NULL,
     created_by_id VARCHAR(255),
     created_by jsonb NOT NULL,
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_time TIMESTAMP(6) WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
      FOREIGN KEY (passport_id) REFERENCES public.passports(id) ON DELETE CASCADE
 );
 

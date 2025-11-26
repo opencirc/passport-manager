@@ -1,9 +1,8 @@
 package com.opencirc.api.passport.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.opencirc.api.passport.model.Passport;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -28,20 +27,16 @@ public class PassportDto {
   @JsonProperty private String status;
 
   /** Id of Parent Passport. */
-  @JsonProperty
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private PassportDto parent;
+  @JsonProperty private String parentId;
 
   /** Id of the user who created Passport. */
   @JsonProperty private String createdById;
 
   /** Metadata of the user who created Passport. */
-  @JsonProperty
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private CreatedByDto createdBy;
+  @JsonProperty private CreatedByDto createdBy;
 
   /** Time of passport creation. */
-  @JsonProperty private LocalDateTime createdTime;
+  @JsonProperty private OffsetDateTime createdTime;
 
   /** Linked datasheets. */
   private List<DatasheetDto> datasheets;
@@ -60,6 +55,7 @@ public class PassportDto {
     dto.setCreatedById(passport.getCreatedById());
     dto.setCreatedBy(passport.getCreatedBy());
     dto.setCreatedTime(passport.getCreatedTime());
+    dto.setParentId(passport.getParentId());
 
     if (passport.getDatasheetMappings() != null) {
       dto.setDatasheets(

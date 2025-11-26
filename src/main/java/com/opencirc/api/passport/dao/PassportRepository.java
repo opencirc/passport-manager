@@ -66,6 +66,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
                    ds.platform_id AS datasheetPlatformId,
                    ds.data_category AS dataCategory,
                    ds.data AS data,
+                   ds.created_by AS datasheetCreatedBy,
                    ds.created_by_id AS datasheetCreatedById,
                    ds.created_time AS datasheetCreatedTime,
                    dp.id AS datasheetPropertyId,
@@ -93,7 +94,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   @Query(
       value =
           """
-            SELECT p.id AS passportId,
+            SELECT DISTINCT p.id AS passportId,
                    p.name AS passportName,
                    p.status AS status,
                    p.parent_id AS parentId,
@@ -110,6 +111,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
                    ds.data_category AS dataCategory,
                    ds.data AS data,
                    ds.created_by_id AS datasheetCreatedById,
+                   ds.created_by AS datasheetCreatedBy,
                    ds.created_time AS datasheetCreatedTime,
                    dp.id AS datasheetPropertyId,
                    dp.datasheet_id AS datasheetPropertyDatasheetId,

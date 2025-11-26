@@ -2,7 +2,7 @@ package com.opencirc.api.passport.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,5 +34,5 @@ public class CreatePassportRequestDto {
   private CreatedByDto createdBy;
 
   /** Time of creation. */
-  private LocalDateTime createdTime;
+  private OffsetDateTime createdTime;
 }

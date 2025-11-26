@@ -14,7 +14,6 @@ import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.PassportService;
 import java.io.InputStream;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -162,7 +161,6 @@ public class PassportFromJsonSeeder {
     request.setCreatedById(userId);
     request.setCreatedBy(createdByDto);
     request.setParentId(parentId);
-    request.setCreatedTime(LocalDateTime.now());
     PassportDto createdPassport =
         passportService.createPassportUsingDictionary(platform, dictionary, request);
 
