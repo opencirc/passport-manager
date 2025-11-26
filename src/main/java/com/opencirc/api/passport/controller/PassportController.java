@@ -3,6 +3,7 @@ package com.opencirc.api.passport.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.PlatformTreeStructureDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.DataDictionaryPlatform;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -152,5 +154,39 @@ public class PassportController {
       throws InvalidInputException, JsonValidationException {
 
     return ResponseEntity.ok(passportService.updateData(passportId, request));
+  }
+
+  /**
+   * Endpoint to fetch the list of passports corresponding to the specified platform and code.
+   *
+   * @param platform
+   * @param code - class code
+   * @return the list of passports
+   * @throws JsonProcessingException
+   * @throws JsonValidationException
+   */
+  @Operation(summary = "Get all passports with the given code from the specified platform")
+  @GetMapping("/api/passport/{platform}/{code}/all")
+  public ResponseEntity<List<PassportDto>> listPassportsByPlatformAndCode(
+      @Parameter(description = "Platform name", required = true, in = ParameterIn.PATH)
+          @PathVariable
+          String platform,
+      @Parameter(description = "Code", required = true, in = ParameterIn.PATH) @PathVariable
+          String code)
+      throws JsonProcessingException, JsonValidationException {
+    return ResponseEntity.ok(
+        passportService.listPassportsByCode(DataDictionaryPlatform.fromValue(platform), code));
+  }
+
+  /**
+   * Endpoint to get the tree structure of the platform.
+   *
+   * @return the list of PlatformTreeStructureDto
+   * @throws IOException
+   */
+  @GetMapping("/api/getPlatformTreeStructure")
+  public ResponseEntity<List<PlatformTreeStructureDto>> getPlatformTreeStructure()
+      throws IOException {
+    return ResponseEntity.ok(passportService.getPlatformTreeStructure());
   }
 }

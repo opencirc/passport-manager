@@ -21,9 +21,11 @@ WORKDIR /app
 # Copy the application JAR file into the container
 COPY --from=builder /app/target/*.jar /app/app.jar
 
+# create data directory
+RUN mkdir -p /app/data
+
 # Expose port 8080
 EXPOSE 8080
-
 
 # Run the Spring Boot application
 ENTRYPOINT ["java","-jar","/app/app.jar"]

@@ -14,19 +14,19 @@ import org.springframework.stereotype.Component;
 public class AppProperties {
 
   /** URL for searching class in BsDD. */
-  @Value("${bsDD.class.searchText.url}")
+  @Value("${bsdd.class.searchText.url}")
   private String bsddClassSearchTextUrl;
 
   /** URL for fetching class details in BsDD. */
-  @Value("${bsDD.classDetails.url}")
+  @Value("${bsdd.classDetails.url}")
   private String bsddClassDetailsUrl;
 
   /** URL for fetching properties with detail BsDD. */
-  @Value("${bsDD.propertiesWithDetail.url}")
+  @Value("${bsdd.propertiesWithDetail.url}")
   private String bsddPropertiesWithDetailUrl;
 
   /** URL for text based search in bsdd. */
-  @Value("${bsDD.textSearch.url}")
+  @Value("${bsdd.textSearch.url}")
   private String bsddTextSearchUrl;
 
   /** Access token expiration time. */
@@ -84,6 +84,14 @@ public class AppProperties {
   /** Secret key to compute Hmac. */
   @Value("${api.secret.key}")
   private String apiSecretKey;
+
+  /** Path to get table6 structure json. */
+  @Value("${bsdd.table6.structure.template.path}")
+  private String table6StructureJsonPath;
+
+  /** Path to get table6 structure json. */
+  @Value("${bsdd.table6.structure.output.cached.path}")
+  private String table6StructureOutputCachedPath;
 
   /**
    * Getter for refresh token.

@@ -65,15 +65,15 @@ public class TestPassportController {
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
-    registry.add("bsDD.classDetails.url", () -> "http://localhost:8089" + "/api/Class/v1");
+    registry.add("bsdd.classDetails.url", () -> "http://localhost:8089" + "/api/Class/v1");
     registry.add(
-        "bsDD.propertiesWithDetail.url", () -> "http://localhost:8089" + "/api/Property/v4");
+        "bsdd.propertiesWithDetail.url", () -> "http://localhost:8089" + "/api/Property/v4");
   }
 
   /**
    * Sets up necessary configurations and mocks before each test execution. Initializes REST Assured
    * with the test server port, opens Mockito annotations, mocks the authentication context,
-   * generates a mock JWT token, and stubs the bsDD API response.
+   * generates a mock JWT token, and stubs the bsdd API response.
    *
    * @param wmInfo
    */

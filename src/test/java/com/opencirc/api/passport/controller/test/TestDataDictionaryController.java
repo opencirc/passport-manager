@@ -61,15 +61,15 @@ public class TestDataDictionaryController {
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
-    registry.add("bsDD.classDetails.url", () -> "http://localhost:8089" + "/api/Class/v1");
+    registry.add("bsdd.classDetails.url", () -> "http://localhost:8089" + "/api/Class/v1");
     registry.add(
-        "bsDD.propertiesWithDetail.url", () -> "http://localhost:8089" + "/api/Property/v4");
+        "bsdd.propertiesWithDetail.url", () -> "http://localhost:8089" + "/api/Property/v4");
   }
 
   /**
    * Sets up necessary configurations and mocks before each test execution. Initializes REST Assured
    * with the test server port, opens Mockito annotations, mocks the authentication context,
-   * generates a mock JWT token, and stubs the bsDD API response.
+   * generates a mock JWT token, and stubs the bsdd API response.
    *
    * @param wmInfo
    */
@@ -132,10 +132,10 @@ public class TestDataDictionaryController {
   }
 
   /**
-   * Tests the functionality of fetching data from the bsDD API.
+   * Tests the functionality of fetching data from the bsdd API.
    *
    * <p>Verifies that the data retrieval works correctly and the expected response is returned when
-   * the bsDD API is called with valid parameters.
+   * the bsdd API is called with valid parameters.
    */
   @Test
   public void shouldReturnClassWithPropertiesWhenUriIsValid() throws JsonValidationException {
