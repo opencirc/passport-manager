@@ -21,6 +21,7 @@ services:
       - ./src:/app/src
       - ./pom.xml:/app/pom.xml
       - ./target:/app/target
+      - ./data:/app/data
       - maven-repo:/root/.m2
     networks:
       - spring-net
