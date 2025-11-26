@@ -1,19 +1,16 @@
 package com.opencirc.api.passport.util;
 
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter
-public class DataCategoryConverter implements AttributeConverter<DataCategory, String> {
+@Converter(autoApply = true)
+public class DataCategoryConverter extends GenericEnumConverter<DataCategory> {
 
-  @Override
-  public String convertToDatabaseColumn(DataCategory value) {
-    return value != null ? value.getValue() : null;
-  }
-
-  @Override
-  public DataCategory convertToEntityAttribute(String categoryValue) {
-    return categoryValue != null ? DataCategory.fromValue(categoryValue) : null;
+  /**
+   * Creates a DataCategoryConverter by passing the DataCategory enum class to the generic
+   * converter.
+   */
+  public DataCategoryConverter() {
+    super(DataCategory.class);
   }
 }

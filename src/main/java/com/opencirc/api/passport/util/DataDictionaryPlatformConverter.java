@@ -1,20 +1,16 @@
 package com.opencirc.api.passport.util;
 
 import com.opencirc.api.passport.enums.DataDictionaryPlatform;
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter
-public class DataDictionaryPlatformConverter
-    implements AttributeConverter<DataDictionaryPlatform, String> {
+@Converter(autoApply = true)
+public class DataDictionaryPlatformConverter extends GenericEnumConverter<DataDictionaryPlatform> {
 
-  @Override
-  public String convertToDatabaseColumn(DataDictionaryPlatform platform) {
-    return platform != null ? platform.getValue() : null;
-  }
-
-  @Override
-  public DataDictionaryPlatform convertToEntityAttribute(String platformValue) {
-    return platformValue != null ? DataDictionaryPlatform.fromValue(platformValue) : null;
+  /**
+   * Creates a DataDictionaryPlatformConverter by passing the DataDictionaryPlatform enum class to
+   * the generic converter.
+   */
+  public DataDictionaryPlatformConverter() {
+    super(DataDictionaryPlatform.class);
   }
 }
