@@ -61,14 +61,10 @@ public class AuthController {
       }
     }
 
-    boolean isAuthenticated = false;
+    boolean isAuthenticated =
+        (token != null && authService.validateToken(token))
+            || authService.validateApiKeySecret(request);
 
-    if (token != null && authService.validateToken(token)) {
-      isAuthenticated = true;
-
-    } else if (authService.validateApiKeySecret(request)) {
-      isAuthenticated = true;
-    }
     if (!isAuthenticated) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(new StatusResponseDto("Not authenticated"));

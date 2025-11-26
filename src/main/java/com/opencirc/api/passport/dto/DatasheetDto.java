@@ -3,7 +3,6 @@ package com.opencirc.api.passport.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;

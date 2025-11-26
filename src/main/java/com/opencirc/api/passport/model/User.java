@@ -1,10 +1,10 @@
 package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.opencirc.api.passport.util.RoleConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -51,7 +51,7 @@ public class User {
 
   /** Users's role. */
   @Column(nullable = false)
-  @Enumerated(EnumType.STRING)
+  @Convert(converter = RoleConverter.class)
   private Role role;
 
   /** Holds info if the user is active. */

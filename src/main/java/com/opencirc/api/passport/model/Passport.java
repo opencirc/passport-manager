@@ -77,10 +77,10 @@ public class Passport {
   public enum Status {
 
     /** Indicates that the passport is active. */
-    active("active"),
+    ACTIVE("active"),
 
     /** Indicates that the passport is inactive. */
-    inactive("inactive");
+    INACTIVE("inactive");
 
     /** Represents the status in string. */
     private final String value;

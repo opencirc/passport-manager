@@ -294,7 +294,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     }
     ObjectNode property = (ObjectNode) propertyNode;
 
-    String propName = property.has("name") ? property.get("name").asText() : null;
+    String propertyName = property.has("name") ? property.get("name").asText() : null;
     String dataType = property.has("dataType") ? property.get("dataType").asText() : null;
     JsonNode actualValueNode = property.get("actualValue");
     JsonNode allowedValuesNode = property.get("allowedValues");
@@ -310,19 +310,24 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
 
     if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
 
-      errorMessage = validateDataType(propName, dataType, actualValueNode);
+      errorMessage = validateDataType(propertyName, dataType, actualValueNode);
 
       if (errorMessage == null && allowedValuesNode != null && allowedValuesNode.isArray()) {
         errorMessage =
-            validateAllowedValues(propName, (ArrayNode) allowedValuesNode, actualValueNode);
+            validateAllowedValues(propertyName, (ArrayNode) allowedValuesNode, actualValueNode);
       }
       if (errorMessage == null && "Real".equals(dataType)) {
         errorMessage =
             validateRangeChecks(
-                propName, actualValueNode, maxExclusive, maxInclusive, minExclusive, minInclusive);
+                propertyName,
+                actualValueNode,
+                maxExclusive,
+                maxInclusive,
+                minExclusive,
+                minInclusive);
       }
     } else {
-      return "Missing or empty 'actualValue' for property: " + propName;
+      return "Missing or empty 'actualValue' for property: " + propertyName;
     }
     return errorMessage;
   }
@@ -446,7 +451,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
   }
 
   private static String validateRangeChecks(
-      String propName,
+      String propertyName,
       Object actualValue,
       Double maxExclusive,
       Double maxInclusive,
@@ -458,12 +463,12 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
       realValue = Double.parseDouble(actualValue.toString().trim().replace("\"", ""));
     } catch (NumberFormatException e) {
       errorMessage =
-          propName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
+          propertyName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
     }
 
     if (maxExclusive != null && realValue >= maxExclusive) {
       errorMessage =
-          propName
+          propertyName
               + " : Actual value: "
               + realValue
               + " exceeds MaxExclusive limit: "
@@ -472,7 +477,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
 
     if (maxInclusive != null && realValue > maxInclusive) {
       errorMessage =
-          propName
+          propertyName
               + " : Actual value: "
               + realValue
               + " exceeds MaxInclusive limit: "
@@ -481,7 +486,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
 
     if (minExclusive != null && realValue <= minExclusive) {
       errorMessage =
-          propName
+          propertyName
               + " : Actual value: "
               + realValue
               + " is below MinExclusive limit: "
@@ -490,7 +495,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
 
     if (minInclusive != null && realValue < minInclusive) {
       errorMessage =
-          propName
+          propertyName
               + " : Actual value: "
               + realValue
               + " is below MinInclusive limit: "
