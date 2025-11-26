@@ -45,7 +45,7 @@ public class UserDto {
     userDto.setId(userPrincipal.getUserId());
     userDto.setEmail(userPrincipal.getEmail());
     userDto.setFullName(userPrincipal.getFullName());
-    userDto.setRole(userPrincipal.getRole().getValue());
+    userDto.setRole(userPrincipal.getRole() != null ? userPrincipal.getRole().getValue() : null);
     userDto.setActive(userPrincipal.isEnabled());
     return userDto;
   }
@@ -64,7 +64,7 @@ public class UserDto {
     userDto.setFirstName(user.getFirstName());
     userDto.setLastName(user.getLastName());
     userDto.setFullName(user.getFullName());
-    userDto.setRole(user.getRole().getValue());
+    userDto.setRole(user.getRole() != null ? user.getRole().getValue() : null);
     return userDto;
   }
 }
