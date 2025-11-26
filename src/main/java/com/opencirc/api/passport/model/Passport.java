@@ -3,12 +3,11 @@ package com.opencirc.api.passport.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.util.CreatedByDtoConverter;
+import com.opencirc.api.passport.util.StatusConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -48,7 +47,7 @@ public class Passport {
 
   /** Status of Passport. */
   @Column(name = "status")
-  @Enumerated(EnumType.STRING)
+  @Convert(converter = StatusConverter.class)
   private Status status;
 
   /** Id of Parent Passport. */

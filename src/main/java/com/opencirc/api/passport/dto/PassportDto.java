@@ -25,7 +25,7 @@ public class PassportDto {
   @JsonProperty private String name;
 
   /** Status of Passport. */
-  @JsonProperty private Passport.Status status;
+  @JsonProperty private String status;
 
   /** Id of Parent Passport. */
   @JsonProperty
@@ -56,7 +56,7 @@ public class PassportDto {
     PassportDto dto = new PassportDto();
     dto.setId(passport.getId());
     dto.setName(passport.getName());
-    dto.setStatus(passport.getStatus());
+    dto.setStatus(passport.getStatus().getValue());
     dto.setCreatedById(passport.getCreatedById());
     dto.setCreatedBy(passport.getCreatedBy());
     dto.setCreatedTime(passport.getCreatedTime());
