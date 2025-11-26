@@ -85,6 +85,14 @@ public class AppProperties {
   @Value("${api.secret.key}")
   private String apiSecretKey;
 
+  /** Path to get table6 structure json. */
+  @Value("${bsdd.table6.structure.template.path}")
+  private String table6StructureJsonPath;
+
+  /** Path to get table6 structure json. */
+  @Value("${bsdd.table6.structure.output.cached.path}")
+  private String table6StructureOutputCachedPath;
+
   /**
    * Getter for refresh token.
    *
