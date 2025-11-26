@@ -48,8 +48,7 @@ public class PassportTemplateService {
       String passportId, boolean dryRun, String templateName) {
     Optional<Passport> passport =
         passportRepository.findPassport(passportId, Passport.Status.ACTIVE);
-    if (passport.isEmpty()
-        || !Passport.Status.ACTIVE.getValue().equals(passport.get().getStatus())) {
+    if (passport.isEmpty() || !Passport.Status.ACTIVE.equals(passport.get().getStatus())) {
       throw new ResourceNotFoundException("Active passport not found");
     }
 
