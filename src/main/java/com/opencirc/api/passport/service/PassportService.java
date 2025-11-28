@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
@@ -522,18 +523,14 @@ public class PassportService {
               : JsonNodeFactory.instance.objectNode();
 
       boolean changed = false;
-      var properties = datasheet.getDatasheetProperties();
+      Set<DatasheetProperty> propertyList = datasheet.getDatasheetProperties();
 
-      if (properties == null || properties.isEmpty()) {
+      if (propertyList == null || propertyList.isEmpty()) {
         continue;
       }
 
-      List<DatasheetProperty> propertyGroupList =
-          properties.stream()
-              .filter(property -> updateDataRequestDto.getGroup().equals(property.getGroupTag()))
-              .toList();
       List<String> errorMessages = new ArrayList<>();
-      for (DatasheetProperty property : propertyGroupList) {
+      for (DatasheetProperty property : propertyList) {
         String propertyCode = property.getCode();
 
         if (updateDataRequestDto.getValues().containsKey(propertyCode)) {
@@ -574,9 +571,7 @@ public class PassportService {
     }
 
     if (updatedProperties.isEmpty()) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "No valid properties found for group : " + updateDataRequestDto.getGroup());
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No valid properties found");
     }
 
     return PassportDto.from(passport);
