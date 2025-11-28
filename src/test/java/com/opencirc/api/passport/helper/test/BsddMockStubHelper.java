@@ -457,7 +457,7 @@ public class BsddMockStubHelper {
 }
           """;
 
-    String datasheetJson = "{\n" + "  \"br18P297stk4\": true,\n" + "}";
+    String datasheetJson = "{\n" + "  \"br18P297stk4\": true\n" + "}";
 
     LocalDateTime timestamp = LocalDateTime.of(2025, 6, 10, 12, 0);
 

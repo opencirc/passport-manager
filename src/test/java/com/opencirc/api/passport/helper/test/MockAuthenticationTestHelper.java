@@ -20,12 +20,12 @@ public class MockAuthenticationTestHelper {
    * @param authUserDetailsService
    * @param authenticationManager
    */
-  public void mockUserDetailsDB(
+  public void mockUserDetails(
       AuthUserDetailsService authUserDetailsService, AuthenticationManager authenticationManager) {
     User mockUser = new User();
     mockUser.setId("87510a3c-4357-47bc-80a1-9ed02285fbae");
     mockUser.setFirstName(TestConstants.TEST_FIRSTNAME);
-    mockUser.setFirstName(TestConstants.TEST_LASTNAME);
+    mockUser.setLastName(TestConstants.TEST_LASTNAME);
     mockUser.setPassword("Password123!");
     mockUser.setEmail("admin@test.com");
     mockUser.setActive(true);

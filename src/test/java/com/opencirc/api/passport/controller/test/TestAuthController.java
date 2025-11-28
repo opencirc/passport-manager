@@ -40,7 +40,7 @@ public class TestAuthController {
     RestAssured.port = port;
     MockitoAnnotations.openMocks(this);
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
   }
 
   /**

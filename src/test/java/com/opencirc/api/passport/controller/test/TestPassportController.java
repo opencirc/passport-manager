@@ -16,12 +16,15 @@ import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -78,7 +81,7 @@ public class TestPassportController {
     MockitoAnnotations.openMocks(this);
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
     generateMockJwtToken();
   }
 
@@ -325,5 +328,43 @@ public class TestPassportController {
         .body("[0].id", equalTo(passportId))
         .body("[1].parentId", equalTo(passportId))
         .body("[1].id", equalTo("aanq3ejcczzbzk7x3kngi79mmkdl4ooigm8n"));
+  }
+
+  /**
+   * Tests the successful updation of a property value in a passport with valid input.
+   *
+   * @throws JsonProcessingException
+   * @throws JsonMappingException
+   */
+  @Test
+  public void shouldUpdateData() throws Exception {
+
+    String passportId = "w1yi7790bs0mutg7i8kumbv9t6pdrf83wqan";
+    Map<String, Object> values = new HashMap<String, Object>();
+    String randomValue = String.format("%.3f", Math.round((Math.random() * 10) * 1000.0) / 1000.0);
+    values.put("EF000228", randomValue);
+    UpdateDataRequestDto updateDataRequest = new UpdateDataRequestDto(values);
+
+    Response response =
+        RestAssured.given()
+            .log()
+            .all()
+            .cookie("access_token", jwtToken)
+            .contentType(ContentType.JSON)
+            .body(updateDataRequest)
+            .pathParam("passportId", passportId)
+            .when()
+            .put("/api/passport/{passportId}/data")
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .contentType(ContentType.JSON)
+            .log()
+            .all()
+            .extract()
+            .response();
+    response
+        .then()
+        .body("id", equalTo(passportId))
+        .body("datasheets[0].data.EF000228", equalTo(randomValue));
   }
 }

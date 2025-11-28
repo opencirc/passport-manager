@@ -78,7 +78,7 @@ public class TestPassportTemplateController {
     MockitoAnnotations.openMocks(this);
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
 
     generateMockJwtToken();
   }
