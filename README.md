@@ -73,15 +73,15 @@ To use the API, login using the test admin credentials:
 
 Once logged in, you will receive a JWT access and refresh token which must be included in requests via cookies or headers.
 
->>>>
+>>
 ```bash
 access_token = <received JWT access token>
 refresh_token = <received JWT refresh token>
 ```
->>>>
+>>
 
 > **With Api Keys :**
->>Add the below keys in the request header
+>>Add the below keys in the request header in the `X-Api-Key` and `X-Api-Secret` fields.
 >>
 ```bash
 X-Api-Key: fa76a9d9-caa7-41ba-b929-f468620fa023
