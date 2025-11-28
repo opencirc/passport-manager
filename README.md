@@ -91,9 +91,66 @@ X-Api-Secret: API_sRynttcLE0OfRM3kFi1RXFdP_34b0c0ed5ed2
 
 You can pass them either through Request header.
 
-**6. Testing the API**
+**6. CLI Tool Commands**
 
-Once the application is running, you can start testing the REST API endpoints. Here's how to interact with the application:
+> This application also provides a CLI tool to manage users, API keys, templates, and seed the database.
+
+>> **6.1 Register a New User:**
+
+>>>
+```bash
+register --email <email> --password <password> --firstName <firstName> --lastName <lastName> --role <user/admin>
+```
+>>>
+
+>>> --role : Defaults to user
+
+>>> --password : Use at least 12 characters with a mix of uppercase, lowercase, digits, or symbols.
+
+>> **6.2 Create API Key Command:**
+
+>>>
+```bash
+create-api-key --user-id <<user id>> --expiration-date (optional) <Expiration date in yyyy-MM-dd  --name  name of the token
+```
+>>>
+
+>> **6.3 List API Keys:**
+
+>>>
+```bash
+list-api-tokens --user-id <<user id>>
+```
+>>>
+
+>> **6.4 Data Dictionary Command:**
+
+>>>
+```bash
+fetch-template --dictionaryType <<bsdd/lexicon>> --type <<class/property>> --uri <<URI of the template>> --raw <<true/false>>
+```
+>>>
+
+>>> --raw : default is false
+
+>>>>true: returns the template without added fields
+
+>>>>false: returns processed templates with added fields
+
+
+>> **6.5 Seeder Commands:**
+
+>>> Seed initial data into the database:
+
+>>>
+```bash
+seed --type USER                 # Adds only user data
+seed --type PASSPORT_FROM_API    # Adds passport data fetched from external API templates
+seed --type PASSPORT_FROM_JSON   # Adds passport data from pre-saved bsdd_templates.json
+seed --type ALL                  # Adds both user and passport data using templates from bsdd_templates.json
+seed                             # Defaults to ALL
+```
+>>>
 
 
 **7.Common Issues and Troubleshooting**
