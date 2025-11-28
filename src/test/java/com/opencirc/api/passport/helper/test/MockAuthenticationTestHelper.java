@@ -7,7 +7,6 @@ import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.model.User;
-import java.util.UUID;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,12 +22,12 @@ public class MockAuthenticationTestHelper {
    */
   public void mockUserDetailsDB(
       AuthUserDetailsService authUserDetailsService, AuthenticationManager authenticationManager) {
-    UUID existingUserId = UUID.fromString("87510a3c-4357-47bc-80a1-9ed02285fbae");
     User mockUser = new User();
-    mockUser.setId(existingUserId);
-    mockUser.setUsername(TestConstants.TEST_USERNAME_1);
-    mockUser.setPassword("user1password");
-    mockUser.setEmail("user1@example.com");
+    mockUser.setId("87510a3c-4357-47bc-80a1-9ed02285fbae");
+    mockUser.setFirstName(TestConstants.TEST_FIRSTNAME);
+    mockUser.setFirstName(TestConstants.TEST_LASTNAME);
+    mockUser.setPassword("Password123!");
+    mockUser.setEmail("admin@test.com");
     mockUser.setActive(true);
     mockUser.setRole(User.Role.USER);
 
@@ -48,8 +47,8 @@ public class MockAuthenticationTestHelper {
         .thenAnswer(
             invocation -> {
               UsernamePasswordAuthenticationToken authRequest = invocation.getArgument(0);
-              if (authRequest.getName().equals(TestConstants.TEST_USERNAME_1)
-                  && authRequest.getCredentials().equals("user1password")) {
+              if (authRequest.getPrincipal().equals(TestConstants.TEST_EMAIL)
+                  && authRequest.getCredentials().equals("Password123!")) {
                 return mockAuthenticationToken;
               } else {
                 throw new BadCredentialsException("Invalid credentials");

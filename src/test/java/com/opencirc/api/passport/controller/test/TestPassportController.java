@@ -15,18 +15,13 @@ import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
-import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
-import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -88,7 +83,7 @@ public class TestPassportController {
   }
 
   private void generateMockJwtToken() {
-    String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
+    String requestBody = "{\"email\": \"admin@test.com\", \"password\": \"Password123!\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
     if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
@@ -107,43 +102,56 @@ public class TestPassportController {
   @Test
   public void givenValidBsddDataWhenCreatePassportThenReturnCreatedPassportWithCorrectDetails()
       throws JsonValidationException, JsonMappingException, JsonProcessingException {
-    String dictionary = "bsdd";
+    String dictionary = "ifc";
+    String platform = "bsdd";
     String jsonBody =
         """
-                                {
-                    "classType": "Class",
-                    "referenceCode": "A-A__",
-                    "relatedIfcEntityNames": [
-                        "IfcSpace"
-                    ],
-                    "parentClassReference": {
-                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/uocs",
-                        "name": "Use of Construction Spaces",
-                        "code": "uocs"
-                    },
-                    "classProperties": [
-                        {
-                            "dataType": "Boolean",
-                            "name": "Handicap Accessible",
-                            "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
-                            "actualValue": "true"
-                        }
-                    ],
-                    "definition": "space designed for human dwelling and related activities",
-                    "name": "Space for human dwelling",
-                    "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
-                    "status": "Active",
-                    "templateName": "testTemplate",
-                    "dataCategory": "Unique"
-                }
+                               {
+    "classType": "Class",
+    "referenceCode": "",
+    "relatedIfcEntityNames": [
+        "IfcWasteTerminal"
+    ],
+    "parentClassReference": {
+        "uri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1/class/br18B2T6.5.2",
+        "name": "Logistik",
+        "code": "br18B2T6.5.2"
+    },
+    "classProperties": [
+        {
+            "name": "KlimapåvirkningBe18Tabel6",
+            "uri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1/class/br18B2T6.5.2.1/prop/Klimapåvirkning/br18P297stk4",
+            "description": "BR 18, bilag 2, tabel 6 Bygningsdele til beregning af klimapåvirkning 10.01.2024,",
+            "definition": "BR 18, bilag 2, tabel 6 Bygningsdele til beregning af klimapåvirkning 10.01.2024,",
+            "dataType": "Boolean",
+            "propertyCode": "br18P297stk4",
+            "propertyDictionaryName": "Tabel6",
+            "dictionaryUri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1",
+            "propertyUri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1/prop/br18P297stk4",
+            "propertySet": "Klimapåvirkning",
+            "status": "Active",
+            "propertyValueKind": "Single",
+            "actualValue": "true"
+        }
+    ],
+    "dictionaryUri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1",
+    "activationDateUtc": "9999-12-31T23:59:59Z",
+    "code": "br18B2T6.5.2.1",
+    "definition": "Affald er en del af Logistik som kategoriseres under: VVS-anlæg",
+    "name": "Affald",
+    "uri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1/class/br18B2T6.5.2.1",
+    "status": "Preview",
+    "subdivisionsOfUse": [],
+    "versionDateUtc": "2025-11-13T00:00:00Z"
+}
                                 """;
 
     CreatePassportRequestDto createPassportRequest = new CreatePassportRequestDto();
-    createPassportRequest.setCreatedTime(LocalDateTime.now());
     createPassportRequest.setDataCategory(DataCategory.GENERIC.getValue());
     createPassportRequest.setDatasheetData(objectMapper.readTree(jsonBody));
     createPassportRequest.setPassportName("Dwelling Space");
-    createPassportRequest.setCreatedBy("Test");
+    createPassportRequest.setCreatedBy(new CreatedByDto("test admin", "admin@test.com"));
+    createPassportRequest.setCreatedById("717753dc-ba6c-4a8d-87c9-cce878986553");
 
     Response response =
         RestAssured.given()
@@ -153,8 +161,9 @@ public class TestPassportController {
             .contentType(ContentType.JSON)
             .body(createPassportRequest)
             .pathParam("dictionary", dictionary)
+            .pathParam("platform", platform)
             .when()
-            .post("/api/passport/dictionary/{dictionary}")
+            .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
             .statusCode(HttpStatus.SC_SUCCESS)
             .contentType(ContentType.JSON)
@@ -162,27 +171,19 @@ public class TestPassportController {
             .all()
             .extract()
             .response();
-
     response
         .then()
         .body("name", equalTo("Dwelling Space"))
-        .body("datasheets[0].data.classType", equalTo("Class"))
-        .body("datasheets[0].data.referenceCode", equalTo("A-A__"))
-        .body("datasheets[0].data.relatedIfcEntityNames[0]", equalTo("IfcSpace"))
-        .body("datasheets[0].data.classProperties[0].name", equalTo("Handicap Accessible"))
-        .body("datasheets[0].data.classProperties[0].actualValue", equalTo("true"))
-        .body(
-            "datasheets[0].data.definition",
-            equalTo("space designed for human dwelling and related activities"));
+        .body("datasheets[0].data.br18P297stk4", equalTo("true"));
   }
 
   /** Tests the behaviour of the createPassport method when an empty JSON body is provided. */
   @Test
   public void shouldFailToCreatePassportWhenJsonBodyIsEmpty() throws JsonValidationException {
-    String dictionary = "bsdd";
+    String dictionary = "ifc";
+    String platform = "bsdd";
     CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
-    requestDto.setCreatedTime(LocalDateTime.now());
-    requestDto.setCreatedBy("Test");
+    requestDto.setCreatedBy(new CreatedByDto("test admin", "admin@test.com"));
     requestDto.setPassportName("Empty Passport");
 
     Response response =
@@ -193,8 +194,9 @@ public class TestPassportController {
             .contentType(ContentType.JSON)
             .body(requestDto)
             .pathParam("dictionary", dictionary)
+            .pathParam("platform", platform)
             .when()
-            .post("/api/passport/dictionary/{dictionary}")
+            .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
             .statusCode(HttpStatus.SC_BAD_REQUEST)
             .log()
@@ -215,8 +217,8 @@ public class TestPassportController {
   @Test
   public void shouldFailToCreatePassportWhenJsonBodyIsInvalid()
       throws JsonValidationException, JsonMappingException, JsonProcessingException {
-    String dictionary = "bsdd";
-
+    String dictionary = "ifc";
+    String platform = "bsdd";
     JsonNode invalidNode =
         objectMapper.readTree(
             """
@@ -226,8 +228,7 @@ public class TestPassportController {
         """);
 
     CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
-    requestDto.setCreatedTime(LocalDateTime.now());
-    requestDto.setCreatedBy("Test");
+    requestDto.setCreatedBy(new CreatedByDto("test admin", "admin@test.com"));
     requestDto.setPassportName("Invalid Passport");
     requestDto.setDataCategory(DataCategory.GENERIC.getValue());
     requestDto.setDatasheetData(invalidNode);
@@ -240,8 +241,9 @@ public class TestPassportController {
             .contentType(ContentType.JSON)
             .body(requestDto)
             .pathParam("dictionary", dictionary)
+            .pathParam("platform", platform)
             .when()
-            .post("/api/passport/dictionary/{dictionary}")
+            .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
             .statusCode(HttpStatus.SC_BAD_REQUEST)
             .log()
@@ -262,29 +264,16 @@ public class TestPassportController {
   @Test
   public void shouldReturnPassportDetailsWhenPassportIdIsValid() throws Exception {
 
-    String passportId = "w6jqrmihmjcqf098dslae1ppsx3hdg7l4wgb";
-
-    Passport passport = new Passport();
-    passport.setId(passportId);
-    passport.setStatus(Passport.Status.ACTIVE);
-    passport.setName("Dwelling Space");
-    PassportDatasheetMapping datasheetMapping = new PassportDatasheetMapping();
-    Datasheet datasheet = new Datasheet();
-    datasheet.setData(generateDatasheetData());
-    datasheetMapping.setDatasheet(datasheet);
-    datasheetMapping.setPassport(passport);
-    datasheetMapping.setId(UUID.fromString("cd4d3ec2-0c8a-45bf-888f-81fdbd9eaa37"));
-    passport.setDatasheetMappings(List.of(datasheetMapping));
-
+    String passportId = "w1yi7790bs0mutg7i8kumbv9t6pdrf83wqan";
     Response response =
         RestAssured.given()
             .log()
             .all()
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
-            .pathParam("id", passportId)
+            .pathParam("passportId", passportId)
             .when()
-            .get("/api/passport/{id}")
+            .get("/api/passport/{passportId}")
             .then()
             .statusCode(HttpStatus.SC_OK)
             .contentType(ContentType.JSON)
@@ -292,18 +281,12 @@ public class TestPassportController {
             .all()
             .extract()
             .response();
-
     // Assertions
     response
         .then()
         .body("id", equalTo(passportId))
-        .body("name", equalTo("Dwelling Space"))
-        .body("datasheets[0].data.classType", equalTo("Class"))
-        .body("datasheets[0].data.classProperties[0].name", equalTo("Handicap Accessible"))
-        .body("datasheets[0].data.classProperties[0].actualValue", equalTo("true"))
-        .body(
-            "datasheets[0].data.definition",
-            equalTo("space designed for human dwelling and related activities"));
+        .body("name", equalTo("Passport1"))
+        .body("datasheets[0].code", equalTo("br18B2T6.5.2"));
   }
 
   /**
@@ -317,7 +300,7 @@ public class TestPassportController {
   @Test
   public void shouldReturnPassportDetailsWithChildrenWhenPassportIdIsValid() throws Exception {
 
-    String passportId = "w6jqrmihmjcqf098dslae1ppsx3hdg7l4wgb";
+    String passportId = "w1yi7790bs0mutg7i8kumbv9t6pdrf83wqan";
 
     Response response =
         RestAssured.given()
@@ -325,9 +308,9 @@ public class TestPassportController {
             .all()
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
-            .pathParam("id", passportId)
+            .pathParam("passportId", passportId)
             .when()
-            .get("/api/passport/{id}/children")
+            .get("/api/passport/{passportId}/children")
             .then()
             .statusCode(HttpStatus.SC_OK)
             .contentType(ContentType.JSON)
@@ -340,42 +323,7 @@ public class TestPassportController {
     response
         .then()
         .body("[0].id", equalTo(passportId))
-        .body("[0].datasheets[0].data.classProperties[0].name", equalTo("Handicap Accessible"))
-        .body("[1].parent.id", equalTo(passportId))
-        .body("[1].id", equalTo("i29r9y3zkyjqkek7wkzjvpk1zkyeq98g1t3t"));
-  }
-
-  private JsonNode generateDatasheetData() throws JsonMappingException, JsonProcessingException {
-
-    String jsonBody =
-        """
-                {
-            "id": "c98fbb40-5c9e-4daf-a2ae-961b1aa75adb",
-            "data": {
-                "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
-                "code": "A-A__",
-                "name": "Space for human dwelling",
-                "status": "Active",
-                "classType": "Class",
-                "classProperties": [
-                    {
-                        "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
-                        "code": "HandicapAccessible",
-                        "name": "Handicap Accessible",
-                        "status": "Active",
-                        "dataType": "Boolean",
-                        "definition": "Indication that this object is designed to be accessible by the handicapped.",
-                        "actualValue": ""
-                    }
-                ]
-            },
-            "dataCategory": null,
-            "dataDictionary": null,
-            "createdBy": "abc@example.com",
-            "createdTime": "2025-06-10T12:00:00"
-        }
-                """;
-
-    return objectMapper.readTree(jsonBody);
+        .body("[1].parentId", equalTo(passportId))
+        .body("[1].id", equalTo("aanq3ejcczzbzk7x3kngi79mmkdl4ooigm8n"));
   }
 }

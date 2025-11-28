@@ -12,6 +12,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
+import com.opencirc.api.passport.dto.GetClassRequestDto;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
@@ -85,7 +86,7 @@ public class TestDataDictionaryController {
   }
 
   private void generateMockJwtToken() {
-    String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
+    String requestBody = "{\"email\": \"admin@test.com\", \"password\": \"Password123!\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
     if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
@@ -101,7 +102,7 @@ public class TestDataDictionaryController {
    */
   @Test
   public void shouldReturnMatchingClassWhenSearchQueryIsValid() {
-    String dictionary = "bsdd";
+    String platform = "bsdd";
     String query = "EC004131";
 
     BsddMockStubHelper.stubSearchClassApiResponse();
@@ -113,7 +114,7 @@ public class TestDataDictionaryController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .when()
-            .get("/api/data-dictionary/{dictionary}/class/search/{query}", dictionary, query)
+            .get("/api/dataDictionary/{platform}/class/search/{query}", platform, query)
             .then()
             .statusCode(TestConstants.STATUS_SUCCESS)
             .contentType(ContentType.JSON)
@@ -141,7 +142,8 @@ public class TestDataDictionaryController {
   public void shouldReturnClassWithPropertiesWhenUriIsValid() throws JsonValidationException {
     String classUri =
         "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__";
-    String dictionary = "bsdd";
+    GetClassRequestDto getClassRequest = new GetClassRequestDto(classUri);
+    String platform = "bsdd";
     boolean withProperties = true;
     BsddMockStubHelper.stubGetClassApiResponse();
 
@@ -152,9 +154,9 @@ public class TestDataDictionaryController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .queryParam("withProperties", withProperties)
-            .body(classUri)
+            .body(getClassRequest)
             .when()
-            .post("/api/data-dictionary/{dictionary}/class", dictionary)
+            .post("/api/dataDictionary/{platform}/class", platform)
             .then()
             .statusCode(TestConstants.STATUS_SUCCESS)
             .contentType(ContentType.JSON)
@@ -176,7 +178,8 @@ public class TestDataDictionaryController {
   @Test
   public void shouldReturnErrorWhenClassUriIsInvalid() {
     String classUri = "invaliuri";
-    String dictionary = "bsdd";
+    GetClassRequestDto getClassRequest = new GetClassRequestDto(classUri);
+    String platform = "bsdd";
     boolean withProperties = false;
 
     Response response =
@@ -186,9 +189,9 @@ public class TestDataDictionaryController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .queryParam("withProperties", withProperties)
-            .body("\"" + classUri + "\"")
+            .body(getClassRequest)
             .when()
-            .post("/api/data-dictionary/{dictionary}/class", dictionary)
+            .post("/api/dataDictionary/{platform}/class", platform)
             .then()
             .statusCode(HttpStatus.SC_BAD_REQUEST)
             .contentType(ContentType.JSON)
@@ -206,7 +209,7 @@ public class TestDataDictionaryController {
    */
   @Test
   public void shouldReturnMatchingPropertiesWhenQueryIsValid() {
-    String dictionary = "bsdd";
+    String platform = "bsdd";
     String query = "temperature";
     BsddMockStubHelper.stubListPropertiesApiResponse();
 
@@ -217,7 +220,7 @@ public class TestDataDictionaryController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .when()
-            .get("/api/data-dictionary/{dictionary}/property/search/{query}", dictionary, query)
+            .get("/api/dataDictionary/{platform}/property/search/{query}", platform, query)
             .then()
             .statusCode(TestConstants.STATUS_SUCCESS)
             .contentType(ContentType.JSON)
@@ -250,7 +253,7 @@ public class TestDataDictionaryController {
 
     List<String> propertiesUriList = new ArrayList<>();
     propertiesUriList.add("https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008");
-    String dictionary = "bsdd";
+    String platform = "bsdd";
 
     BsddMockStubHelper.stubGetPropertiesApiResponse();
 
@@ -262,7 +265,7 @@ public class TestDataDictionaryController {
             .contentType(ContentType.JSON)
             .body(propertiesUriList)
             .when()
-            .post("/api/data-dictionary/{dictionary}/properties", dictionary)
+            .post("/api/dataDictionary/{platform}/properties", platform)
             .then()
             .statusCode(TestConstants.STATUS_SUCCESS)
             .contentType(ContentType.JSON)

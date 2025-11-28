@@ -53,7 +53,7 @@ public class TestAuthController {
     Response response =
         given()
             .contentType(ContentType.JSON)
-            .body("{\"username\": \"user1\", \"password\": \"user1password\"}")
+            .body("{\"email\": \"admin@test.com\", \"password\": \"Password123!\"}")
             .when()
             .post("/api/auth/login");
     response.then().statusCode(TestConstants.STATUS_SUCCESS).contentType(ContentType.JSON);
@@ -73,7 +73,7 @@ public class TestAuthController {
     String invalidCredentials =
         """
                 {
-                    "username": "user1d",
+                    "email": "random",
                     "password": "wrongpassword"
                 }
                 """;

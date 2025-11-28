@@ -11,7 +11,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -196,141 +196,216 @@ public class BsddMockStubHelper {
    */
   public static class TestPassportDatasheetResultMapDto implements PassportDatasheetResultMapDto {
 
-    /** Unique identifier for the passport. */
     private final String passportId;
 
-    /** Name of the passport. */
     private final String passportName;
 
-    /** Current status of the passport. */
     private final String status;
 
-    /** Identifier of the parent passport, if this passport is a child; may be null. */
     private final String parentId;
 
-    /** Unique identifier for the associated datasheet. */
+    private final String passportCreatedById;
+
+    private final String passportCreatedBy;
+
+    private final LocalDateTime passportCreatedTime;
+
     private final String datasheetId;
 
-    /** JSON string containing the datasheet information. */
-    private final String data;
+    private final String platform;
 
-    /** URI of the data dictionary. */
-    private final String dataDictionary;
+    private final String dictionary;
 
-    /** Category of the data. */
+    private final String datasheetCode;
+
+    private final String datasheetName;
+
+    private final String datasheetDescription;
+
+    private final String datasheetPlatformId;
+
     private final String dataCategory;
 
-    /** Created By. */
-    private final String createdBy;
+    private final String data;
 
-    /** Time of the creation. */
-    private final Timestamp createdTime;
+    private final String datasheetCreatedBy;
 
-    /**
-     * Constructor to initialize all fields of the mock DTO.
-     *
-     * @param passportId
-     * @param passportName
-     * @param status
-     * @param parentId
-     * @param datasheetId
-     * @param data
-     * @param dataDictionary
-     * @param dataCategory
-     * @param createdBy
-     * @param createdTime
-     */
-    public TestPassportDatasheetResultMapDto(
+    private final String datasheetCreatedById;
+
+    private final LocalDateTime datasheetCreatedTime;
+
+    private final String datasheetPropertyId;
+
+    private final String datasheetPropertyDatasheetId;
+
+    private final String datasheetPropertyCode;
+
+    private final String datasheetPropertyPlatformId;
+
+    private final String datasheetPropertyGroupTag;
+
+    private final String datasheetPropertyType;
+
+    private final String datasheetPropertyDefinition;
+
+    private TestPassportDatasheetResultMapDto(
         String passportId,
         String passportName,
         String status,
         String parentId,
+        String passportCreatedById,
+        String passportCreatedBy,
+        LocalDateTime passportCreatedTime,
         String datasheetId,
-        String data,
-        String dataDictionary,
+        String platform,
+        String dictionary,
+        String datasheetCode,
+        String datasheetName,
+        String datasheetDescription,
+        String datasheetPlatformId,
         String dataCategory,
-        String createdBy,
-        Timestamp createdTime) {
+        String data,
+        String datasheetCreatedBy,
+        String datasheetCreatedById,
+        LocalDateTime datasheetCreatedTime,
+        String datasheetPropertyId,
+        String datasheetPropertyDatasheetId,
+        String datasheetPropertyCode,
+        String datasheetPropertyPlatformId,
+        String datasheetPropertyGroupTag,
+        String datasheetPropertyType,
+        String datasheetPropertyDefinition) {
+      super();
       this.passportId = passportId;
       this.passportName = passportName;
       this.status = status;
       this.parentId = parentId;
+      this.passportCreatedById = passportCreatedById;
+      this.passportCreatedBy = passportCreatedBy;
+      this.passportCreatedTime = passportCreatedTime;
       this.datasheetId = datasheetId;
-      this.data = data;
-      this.dataDictionary = dataDictionary;
+      this.platform = platform;
+      this.dictionary = dictionary;
+      this.datasheetCode = datasheetCode;
+      this.datasheetName = datasheetName;
+      this.datasheetDescription = datasheetDescription;
+      this.datasheetPlatformId = datasheetPlatformId;
       this.dataCategory = dataCategory;
-      this.createdBy = createdBy;
-      this.createdTime = createdTime;
+      this.data = data;
+      this.datasheetCreatedBy = datasheetCreatedBy;
+      this.datasheetCreatedById = datasheetCreatedById;
+      this.datasheetCreatedTime = datasheetCreatedTime;
+      this.datasheetPropertyId = datasheetPropertyId;
+      this.datasheetPropertyDatasheetId = datasheetPropertyDatasheetId;
+      this.datasheetPropertyCode = datasheetPropertyCode;
+      this.datasheetPropertyPlatformId = datasheetPropertyPlatformId;
+      this.datasheetPropertyGroupTag = datasheetPropertyGroupTag;
+      this.datasheetPropertyType = datasheetPropertyType;
+      this.datasheetPropertyDefinition = datasheetPropertyDefinition;
     }
 
-    /**
-     * @return Passport ID
-     */
     public String getPassportId() {
       return passportId;
     }
 
-    /**
-     * @return Passport name
-     */
     public String getPassportName() {
       return passportName;
     }
 
-    /**
-     * @return Passport status
-     */
     public String getStatus() {
       return status;
     }
 
-    /**
-     * @return Parent passport ID
-     */
     public String getParentId() {
       return parentId;
     }
 
-    /**
-     * @return Datasheet ID
-     */
+    public String getPassportCreatedById() {
+      return passportCreatedById;
+    }
+
+    public String getPassportCreatedBy() {
+      return passportCreatedBy;
+    }
+
     public String getDatasheetId() {
       return datasheetId;
     }
 
-    /**
-     * @return Datasheet JSON data
-     */
-    public String getData() {
-      return data;
+    public String getPlatform() {
+      return platform;
     }
 
-    /**
-     * @return URI of the data dictionary
-     */
-    public String getDataDictionary() {
-      return dataDictionary;
+    public String getDictionary() {
+      return dictionary;
     }
 
-    /**
-     * @return Data category
-     */
+    public String getDatasheetCode() {
+      return datasheetCode;
+    }
+
+    public String getDatasheetName() {
+      return datasheetName;
+    }
+
+    public String getDatasheetDescription() {
+      return datasheetDescription;
+    }
+
+    public String getDatasheetPlatformId() {
+      return datasheetPlatformId;
+    }
+
     public String getDataCategory() {
       return dataCategory;
     }
 
-    /**
-     * @return User who created the record
-     */
-    public String getCreatedBy() {
-      return createdBy;
+    public String getData() {
+      return data;
     }
 
-    /**
-     * @return Timestamp of creation
-     */
-    public Timestamp getCreatedTime() {
-      return createdTime;
+    public String getDatasheetCreatedBy() {
+      return datasheetCreatedBy;
+    }
+
+    public String getDatasheetCreatedById() {
+      return datasheetCreatedById;
+    }
+
+    public LocalDateTime getPassportCreatedTime() {
+      return passportCreatedTime;
+    }
+
+    public String getDatasheetPropertyId() {
+      return datasheetPropertyId;
+    }
+
+    public String getDatasheetPropertyDatasheetId() {
+      return datasheetPropertyDatasheetId;
+    }
+
+    public String getDatasheetPropertyCode() {
+      return datasheetPropertyCode;
+    }
+
+    public String getDatasheetPropertyPlatformId() {
+      return datasheetPropertyPlatformId;
+    }
+
+    public String getDatasheetPropertyGroupTag() {
+      return datasheetPropertyGroupTag;
+    }
+
+    public String getDatasheetPropertyType() {
+      return datasheetPropertyType;
+    }
+
+    public String getDatasheetPropertyDefinition() {
+      return datasheetPropertyDefinition;
+    }
+
+    public LocalDateTime getDatasheetCreatedTime() {
+      return datasheetCreatedTime;
     }
   }
 
@@ -340,70 +415,144 @@ public class BsddMockStubHelper {
    * @return List of {@link PassportDatasheetResultMapDto} representing mock passport data
    */
   public static List<PassportDatasheetResultMapDto> createPassportChildrenStubData() {
-    String datasheetJson =
+    String propertyDescriptionJson =
         """
-            {
-              "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__",
-              "code": "A-A__",
-              "name": "Space for human dwelling",
-              "status": "Active",
-              "classType": "Class",
-              "classProperties": [
-                {
-                  "uri": "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
-                  "code": "HandicapAccessible",
-                  "name": "Handicap Accessible",
-                  "status": "Active",
-                  "dataType": "Boolean",
-                  "definition": "Indication that this object is designed to be accessible by the handicapped.",
-                  "actualValue": ""
-                }
-              ]
-            }
-            """;
+          {
+    "classType": "Class",
+    "referenceCode": "\"\"",
+    "relatedIfcEntityNames": [
+        "IfcWasteTerminal"
+    ],
+    "parentClassReference": {
+        "uri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1/class/br18B2T6.5.2",
+        "name": "Logistik",
+        "code": "br18B2T6.5.2"
+    },
+    "classProperties": [
+        {
+            "name": "KlimapåvirkningBe18Tabel6",
+            "uri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1/class/br18B2T6.5.2.1/prop/Klimapåvirkning/br18P297stk4",
+            "description": "BR 18, bilag 2, tabel 6 Bygningsdele til beregning af klimapåvirkning 10.01.2024,",
+            "definition": "BR 18, bilag 2, tabel 6 Bygningsdele til beregning af klimapåvirkning 10.01.2024,",
+            "dataType": "Boolean",
+            "propertyCode": "br18P297stk4",
+            "propertyDictionaryName": "Tabel6",
+            "dictionaryUri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1",
+            "propertyUri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1/prop/br18P297stk4",
+            "propertySet": "Klimapåvirkning",
+            "status": "Active",
+            "propertyValueKind": "Single",
+            "actualValue": "true"
+        }
+    ],
+    "dictionaryUri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1",
+    "activationDateUtc": "9999-12-31T23:59:59Z",
+    "code": "br18B2T6.5.2.1",
+    "definition": "Affald er en del af Logistik som kategoriseres under: VVS-anlæg",
+    "name": "Affald",
+    "uri": "https://identifier.buildingsmart.org/uri/dtu.construct/br18B2T6/1.1.1/class/br18B2T6.5.2.1",
+    "status": "Preview",
+    "subdivisionsOfUse": [],
+    "versionDateUtc": "2025-11-13T00:00:00Z"
+}
+          """;
 
-    Timestamp timestamp = Timestamp.valueOf("2025-06-10 12:00:00");
+    String datasheetJson = "{\n" + "  \"br18P297stk4\": true,\n" + "}";
+
+    LocalDateTime timestamp = LocalDateTime.of(2025, 6, 10, 12, 0);
 
     List<PassportDatasheetResultMapDto> stubData = new ArrayList<>();
 
+    // ---------------- Parent Passport ----------------
     stubData.add(
         new TestPassportDatasheetResultMapDto(
-            "oqj4p875porh0vpuqj1vob2jqgymchildren",
-            "Parent Passport",
+            "w1yi7790bs0mutg7i8kumbv9t6pdrf83wqan",
+            "Parent Passport1",
             "active",
             null,
-            "1",
-            datasheetJson,
-            null,
-            null,
-            "parent@example.com",
-            timestamp));
+            "87510a3c-4357-47bc-80a1-9ed02285fbae",
+            "admin@test.com",
+            timestamp,
+            "fb01f7dc-2294-4cd1-882c-ecae17c41ffa", // datasheetId
+            "bsdd", // platform
+            "ifc", // dictionary
+            "HandicapAccessible", // datasheetCode
+            "HandicapAccessible", // datasheetName
+            "HandicapAccessible", // datasheetDescription
+            "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible", // datasheetPlatformId
+            "generic", // dataCategory
+            datasheetJson, // data
+            "{\"email\": \"admin@test.com\",  \"fullName\": \"test admin\"}", // datasheetCreatedBy
+            "717753dc-ba6c-4a8d-87c9-cce878986553", // datasheetCreatedById
+            timestamp, // datasheetCreatedTime
+            "26c8cb81-3468-4c12-9ea0-b16b45b4712b", // datasheetPropertyId
+            "fb01f7dc-2294-4cd1-882c-ecae17c41ffa", // datasheetPropertyDatasheetId
+            "EF001391", // datasheetPropertyCode
+            "https://identifier.buildingsmart.org/uri/etim/etim/10.0", // datasheetPropertyPlatformId
+            "Electrical", // datasheetPropertyGroupTag
+            "Boolean", // datasheetPropertyType
+            propertyDescriptionJson // datasheetPropertyDefinition
+            ));
 
+    // ---------------- Child 1 ----------------
     stubData.add(
         new TestPassportDatasheetResultMapDto(
             "oqj4p875porh0vpuqj1vob2jqgymchild001",
             "Child Passport 1",
             "active",
-            "oqj4p875porh0vpuqj1vob2jqgymchildren",
-            "2",
+            "w1yi7790bs0mutg7i8kumbv9t6pdrf83wqan",
+            "87510a3c-4357-47bc-80a1-9ed02285fbae",
+            "admin@test.com",
+            timestamp,
+            "fb01f7dc-2294-4cd1-882c-ecae17c41ffa",
+            "bsdd",
+            "ifc",
+            "HandicapAccessible",
+            "HandicapAccessible",
+            "HandicapAccessible",
+            "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+            "generic",
             datasheetJson,
-            null,
-            null,
-            "child1@example.com",
-            timestamp));
+            "{\"email\": \"admin@test.com\",  \"fullName\": \"test admin\"}",
+            "717753dc-ba6c-4a8d-87c9-cce878986553",
+            timestamp,
+            "26c8cb81-3468-4c12-9ea0-b16b45b4712b",
+            "fb01f7dc-2294-4cd1-882c-ecae17c41ffa",
+            "EF001391", // datasheetPropertyCode
+            "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+            "Electrical",
+            "Boolean",
+            propertyDescriptionJson));
 
+    // ---------------- Child 2 ----------------
     stubData.add(
         new TestPassportDatasheetResultMapDto(
             "oqj4p875porh0vpuqj1vob2jqgymchild002",
             "Child Passport 2",
             "active",
-            "oqj4p875porh0vpuqj1vob2jqgymchildren",
-            "3",
+            "w1yi7790bs0mutg7i8kumbv9t6pdrf83wqan",
+            "87510a3c-4357-47bc-80a1-9ed02285fbae",
+            "admin@test.com",
+            timestamp,
+            "fb01f7dc-2294-4cd1-882c-ecae17c41ffa",
+            "bsdd",
+            "ifc",
+            "HandicapAccessible",
+            "HandicapAccessible",
+            "HandicapAccessible",
+            "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__/prop/Pset_SpaceCommon/uri/buildingsmart/ifc/4.3/prop/HandicapAccessible",
+            "generic",
             datasheetJson,
-            null,
-            null,
-            "child2@example.com",
-            timestamp));
+            "{\"email\": \"admin@test.com\",  \"fullName\": \"test admin\"}",
+            "717753dc-ba6c-4a8d-87c9-cce878986553",
+            timestamp,
+            "26c8cb81-3468-4c12-9ea0-b16b45b4712b",
+            "fb01f7dc-2294-4cd1-882c-ecae17c41ffa",
+            "EF001391", // datasheetPropertyCode
+            "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+            "Electrical",
+            "Boolean",
+            propertyDescriptionJson));
 
     return stubData;
   }

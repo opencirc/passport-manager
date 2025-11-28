@@ -84,7 +84,7 @@ public class TestPassportTemplateController {
   }
 
   private void generateMockJwtToken() {
-    String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
+    String requestBody = "{\"email\": \"admin@test.com\", \"password\": \"Password123!\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
     if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {

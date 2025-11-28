@@ -9,7 +9,11 @@ public final class TestConstants {
       "$2a$10$UyTGFBClronaghiklkmnxunwi6iK2st/LtInbJNq8hQSBVsXt/yRa";
 
   /** Test username. */
-  public static final String TEST_USERNAME_1 = "user1";
+  public static final String TEST_FIRSTNAME = "Test";
+
+  public static final String TEST_LASTNAME = "Admin";
+
+  public static final String TEST_EMAIL = "admin@test.com";
 
   /** Success status 200. */
   public static final int STATUS_SUCCESS = 200;
