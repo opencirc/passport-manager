@@ -5,7 +5,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.dto.*;
+import com.opencirc.api.passport.dto.BsddClassTemplateDto;
+import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
@@ -98,8 +102,6 @@ public class PassportFromJsonSeeder {
             .orElseThrow(
                 () ->
                     new IllegalStateException("No users found in the database. Seed users first."));
-
-    CreatedByDto createdByDto = CreatedByDto.from(user);
 
     if (uriList == null || uriList.isEmpty()) {
       throw new IllegalStateException(

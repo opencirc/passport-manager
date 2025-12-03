@@ -114,8 +114,8 @@ public class BsddClassTemplateDto {
 
        "name": "Number of poles",
        "uri": "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003/prop/Electrical/EF001391",
-       "description": "The number of poles is the number of current-carrying cores including neutral and earth.",
-       "definition": "The number of poles is the number of current-carrying cores including neutral and earth.",
+       "description": "The number of poles ... and earth.", (shortened)
+       "definition": "The number of poles ... and earth.", (shortened)
        "dataType": "Real",
        "example": "None",
        "predefinedValue": "None",

@@ -2,7 +2,10 @@ package com.opencirc.api.passport.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.context.UserContext;
-import com.opencirc.api.passport.dto.*;
+import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
+import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
