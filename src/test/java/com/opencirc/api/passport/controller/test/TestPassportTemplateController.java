@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
+import com.opencirc.api.passport.helper.test.TestConfig;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -34,7 +35,7 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = PassportManager.class)
+    classes = {PassportManager.class, TestConfig.class})
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
 @AutoConfigureMockMvc

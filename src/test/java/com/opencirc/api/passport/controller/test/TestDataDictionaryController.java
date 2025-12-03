@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.opencirc.api.passport.helper.test.TestConfig;
 import org.springframework.http.HttpStatus;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
@@ -36,7 +37,7 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = PassportManager.class)
+    classes = {PassportManager.class, TestConfig.class})
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
 public class TestDataDictionaryController {
