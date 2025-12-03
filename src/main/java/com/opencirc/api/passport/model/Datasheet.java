@@ -100,6 +100,7 @@ public class Datasheet {
   private Set<DatasheetProperty> datasheetProperties = new HashSet<>();
 
   /** Enum representing the category of data. */
+  @Getter
   public enum DataCategory {
     GENERIC("generic"),
 
@@ -110,11 +111,6 @@ public class Datasheet {
     /** Constructs a DataCategory enum with the specified string value. */
     DataCategory(String category) {
       this.value = category;
-    }
-
-    /** Gets the string value of the data category. */
-    public String getValue() {
-      return value;
     }
 
     /** Returns the string representation of the data category. */

@@ -1,21 +1,15 @@
 package com.opencirc.api.passport.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.opencirc.api.passport.dto.GetClassRequestDto;
 import com.opencirc.api.passport.enums.Platform;
-import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.PlatformService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Controller for operations related to a data dictionary. */
@@ -36,31 +30,6 @@ public class DataDictionaryController {
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
     return platformService.searchClassesByText(Platform.fromValue(platform), query);
-  }
-
-  /** Returns a Class Template with/without properties from the data dictionary using the URI. */
-  @Operation(summary = "Get class from platform for the requested uri")
-  @PostMapping(
-      value = "/api/dataDictionary/{platform}/class",
-      produces = {"application/json"})
-  public Object getClass(
-      @Parameter(
-              description = "Name of dictionary platform",
-              required = true,
-              example = "bsdd",
-              in = ParameterIn.PATH)
-          @PathVariable("platform")
-          String platform,
-      @Parameter(
-              description = "Code/URI for the classification",
-              example =
-                  "https://identifier.buildingsmart.org/uri/"
-                      + "molio/cciconstruction/1.0/class/A-A__")
-          @RequestBody
-          GetClassRequestDto getClassRequest)
-      throws JsonValidationException, JsonProcessingException {
-    return platformService.generateDatasheetFromPlatformId(
-        Platform.fromValue(platform), getClassRequest.getCode());
   }
 
   /** Returns a list of properties fetched from bsdd. */

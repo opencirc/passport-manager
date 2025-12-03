@@ -11,7 +11,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/** Data dictionary service class. */
+/** Platform service class for data dictionary operations. */
 @Service
 public class PlatformService {
 

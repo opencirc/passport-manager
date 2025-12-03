@@ -1,8 +1,10 @@
 package com.opencirc.api.passport.enums;
 
 import java.util.Arrays;
+import lombok.Getter;
 
 /** Enum for Data Dictionary. */
+@Getter
 public enum DataDictionary {
 
   /** IFC. */
@@ -17,11 +19,6 @@ public enum DataDictionary {
   /** Constructor. */
   DataDictionary(String dictionaryValue) {
     this.value = dictionaryValue;
-  }
-
-  /** Gets the dictionary value. */
-  public String getValue() {
-    return value;
   }
 
   /** Returns the string representation of the enum. */

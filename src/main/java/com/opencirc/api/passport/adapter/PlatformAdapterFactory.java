@@ -24,7 +24,6 @@ public class PlatformAdapterFactory {
   }
 
   /** Returns the appropriate instance based on the given dictionary name. */
-  @SuppressWarnings("unchecked")
   public PlatformAdapter getAdapter(Platform dictionaryPlatform) {
     PlatformAdapter adapter = adapterMap.get(dictionaryPlatform);
     if (adapter == null) {

@@ -34,7 +34,7 @@ public class DataDictionaryCommands {
     this.platformAdapterFactory = platformAdapterFactory;
   }
 
-  /** Shell command to fetch template from the required data dictionary. */
+  /** Shell command to fetch a template from the required data dictionary. */
   @Command(description = "Fetch template from Data Dictionary.")
   public String fetchTemplate(
       @Option(longNames = "platform", required = true) String platform,
@@ -53,19 +53,18 @@ public class DataDictionaryCommands {
   }
 
   /** Gets the processed template. */
-  private String generateDatasheetFromPlatformId(Platform dictionaryPlatform, String code)
+  private String generateDatasheetFromPlatformId(Platform dictionaryPlatform, String platformId)
       throws JsonValidationException, JsonProcessingException {
 
-    Object response;
-    response = platformService.generateDatasheetFromPlatformId(dictionaryPlatform, code);
+    var response = platformService.generateDatasheetFromPlatformId(dictionaryPlatform, platformId);
     return formatJsonResponse(response);
   }
 
   /** Gets the raw template fetched from the given data dictionary. */
-  private String generateRawTemplate(Platform dictionaryPlatform, String code)
+  private String generateRawTemplate(Platform dictionaryPlatform, String platformId)
       throws JsonProcessingException {
     PlatformAdapter adapter = platformAdapterFactory.getAdapter(dictionaryPlatform);
-    return formatJsonResponse(adapter.fetchRawTemplate(code));
+    return formatJsonResponse(adapter.fetchRawTemplate(platformId));
   }
 
   /** Formats the json. */

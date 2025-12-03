@@ -1,12 +1,10 @@
 package com.opencirc.api.passport.constants;
 
+/** AppConstants. */
 public final class AppConstants {
 
   /** AppConstants Constructor. */
   private AppConstants() {}
-
-  /** actualValue field to add in template. */
-  public static final String ACTUAL_VALUE = "actualValue";
 
   /** Text limit. */
   public static final String QP_BSDD_LIMIT = "limit";

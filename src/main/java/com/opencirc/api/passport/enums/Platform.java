@@ -1,8 +1,10 @@
 package com.opencirc.api.passport.enums;
 
 import java.util.Arrays;
+import lombok.Getter;
 
-/** Enum for Data Dictionary platform. */
+/** Enum for platforms. */
+@Getter
 public enum Platform {
 
   /** BsDD. */
@@ -17,11 +19,6 @@ public enum Platform {
   /** Constructor. */
   Platform(String dictionaryValue) {
     this.value = dictionaryValue;
-  }
-
-  /** Gets the dictionary value. */
-  public String getValue() {
-    return value;
   }
 
   /** Returns the string representation of the enum. */

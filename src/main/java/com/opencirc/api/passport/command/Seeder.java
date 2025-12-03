@@ -53,7 +53,6 @@ public class Seeder {
     /** Seed both user and passport data(From JSON). */
     ALL("all");
 
-    /** Dictionary name in string. -- GETTER -- Gets the dictionary value. */
     private final String value;
 
     /** Constructor. */

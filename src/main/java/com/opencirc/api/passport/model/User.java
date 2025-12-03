@@ -63,6 +63,7 @@ public class User {
   }
 
   /** Enum representing the roles. */
+  @Getter
   public enum Role {
 
     /** Administrator role. */
@@ -76,11 +77,6 @@ public class User {
     /** Constructs a Role enum with the specified string value. */
     Role(String value) {
       this.value = value;
-    }
-
-    /** Returns the string value of the role. */
-    public String getValue() {
-      return value;
     }
 
     /** Returns the string representation of the role. */

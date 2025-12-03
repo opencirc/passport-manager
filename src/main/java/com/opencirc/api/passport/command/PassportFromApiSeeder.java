@@ -6,14 +6,11 @@ import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.*;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
-import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.PassportService;
 import com.opencirc.api.passport.service.PlatformService;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -25,10 +22,8 @@ import org.springframework.stereotype.Component;
 public class PassportFromApiSeeder {
   private final AppProperties appProperties;
   private final UserRepository userRepository;
-  private final PlatformService platformService;
   private final PassportService passportService;
   private final Platform platform = Platform.BSDD;
-  private final Map<String, Datasheet> templateCache = new ConcurrentHashMap<>();
 
   /** Constructor-based dependency injection. */
   public PassportFromApiSeeder(
@@ -36,7 +31,6 @@ public class PassportFromApiSeeder {
       PassportService passportService,
       AppProperties appProperties,
       UserRepository userRepository) {
-    this.platformService = platformService;
     this.passportService = passportService;
     this.appProperties = appProperties;
     this.userRepository = userRepository;
@@ -80,16 +74,6 @@ public class PassportFromApiSeeder {
     if (level > appProperties.getMaximumLevel()) {
       return;
     }
-
-    templateCache.computeIfAbsent(
-        uri,
-        currentUri -> {
-          try {
-            return platformService.generateDatasheetFromPlatformId(platform, currentUri);
-          } catch (JsonProcessingException | JsonValidationException e) {
-            throw new RuntimeException("Failed to create template for URI: " + currentUri, e);
-          }
-        });
 
     CreatePassportRequestDto request = new CreatePassportRequestDto();
     request.setPlatformId(uri);

@@ -31,7 +31,7 @@ public class PassportCommands {
     this.userRepository = userRepository;
   }
 
-  /** Shell command to fetch template from the required data dictionary. */
+  /** Shell command to create a passport using a platform. */
   @Command(description = "Create passport using platform.")
   public String createPassportUsingPlatform(
       @Option(longNames = "userId", required = true) String userId,
