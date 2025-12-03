@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.opencirc.api.passport.helper.test.TestConfig;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
@@ -42,6 +44,10 @@ import org.springframework.web.client.RestTemplate;
 @ActiveProfiles("test")
 public class TestDataDictionaryController {
 
+  @Autowired
+  @Qualifier("testRestTemplate")
+  private RestTemplate restTemplate;
+
   /** Assigns random port number in which application runs. */
   @LocalServerPort private int port;
 
@@ -50,10 +56,6 @@ public class TestDataDictionaryController {
 
   /** AuthUserDetailsService mock bean. */
   @MockBean private AuthenticationManager authenticationManager;
-
-  @Autowired
-  @Qualifier("testRestTemplate")
-  private RestTemplate restTemplate;
 
   /** JWT token. */
   private String jwtToken = null;

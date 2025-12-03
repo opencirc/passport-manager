@@ -17,6 +17,9 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +43,9 @@ import org.springframework.web.client.RestTemplate;
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class TestPassportTemplateController {
+  @Autowired
+  @Qualifier("testRestTemplate")
+  private RestTemplate restTemplate;
 
   /** Assigns random port number in which application runs. */
   @LocalServerPort private int port;
@@ -49,10 +55,6 @@ public class TestPassportTemplateController {
 
   /** AuthUserDetailsService mock bean. */
   @MockBean private AuthenticationManager authenticationManager;
-
-  @Autowired
-  @Qualifier("testRestTemplate")
-  private RestTemplate restTemplate;
 
   /** JWT token. */
   private String jwtToken = null;
