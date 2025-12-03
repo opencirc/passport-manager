@@ -2,8 +2,6 @@ package com.opencirc.api.passport.exception;
 
 /** Thrown when authentication fails. */
 public class AuthenticationException extends RuntimeException {
-
-  /** Serialization version UID for AuthenticationException class. */
   private static final long serialVersionUID = 1L;
 
   /**

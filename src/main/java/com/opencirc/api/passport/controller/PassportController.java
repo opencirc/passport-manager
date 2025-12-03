@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Passport", description = "Operations related to Passport")
 public class PassportController {
 
-  /** Injecting PassportService class. */
   @Autowired private PassportService passportService;
 
   /** Create a passport. */

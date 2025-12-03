@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class DataDictionaryService {
 
-  /** Injecting PlatformAdapterFactory class. */
   @Autowired private PlatformAdapterFactory platformAdapterFactory;
 
   /** Search and retrieves the class based on the text. */

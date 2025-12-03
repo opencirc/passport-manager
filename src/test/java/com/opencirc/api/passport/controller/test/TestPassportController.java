@@ -57,7 +57,6 @@ public class TestPassportController {
   /** AuthUserDetailsService mock bean. */
   @MockBean private AuthenticationManager authenticationManager;
 
-  /** Injecting ObjectMapper bean. */
   @Autowired private ObjectMapper objectMapper;
 
   /** JWT token. */

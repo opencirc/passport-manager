@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+/** User repository. */
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
@@ -24,8 +25,6 @@ public interface UserRepository extends JpaRepository<User, String> {
 
   /**
    * Retrieves the first user ordered by ID in ascending order.
-   *
-   *     exist
    */
   Optional<User> findFirstByOrderByIdAsc();
 

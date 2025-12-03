@@ -7,6 +7,9 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import org.springframework.stereotype.Component;
 
+/**
+ * Converts CreatedByDto objects into JSON strings and vice versa.
+ */
 @Converter(autoApply = true)
 @Component
 public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, String> {
@@ -38,8 +41,6 @@ public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, S
 
   /**
    * Converts a JSON string retrieved from the database into a CreatedByDto object.
-   *
-   *     null} or empty
    */
   @Override
   public CreatedByDto convertToEntityAttribute(String dbData) {

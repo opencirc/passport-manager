@@ -57,7 +57,6 @@ public class PassportTemplateService {
    * Extracts template from the existing passport.
    */
   private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName) {
-    PassportTemplate template;
     ObjectNode rootNode = objectMapper.createObjectNode();
 
     for (PassportDatasheetMapping passportDatasheetMapping : passport.getDatasheetMappings()) {
@@ -71,15 +70,12 @@ public class PassportTemplateService {
       rootNode = (ObjectNode) newDataNode;
     }
     UserDto userDtoContext = userContext.getCurrentUser();
-    template =
-        PassportTemplate.builder()
+    return PassportTemplate.builder()
             .name(templateName)
             .template(rootNode)
             .createdById(userDtoContext.getId())
             .createdBy(new CreatedByDto(userDtoContext.getFullName(), userDtoContext.getEmail()))
             .build();
-
-    return template;
   }
 
   /**

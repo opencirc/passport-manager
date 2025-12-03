@@ -4,8 +4,6 @@ package com.opencirc.api.passport.exception;
  * Exception for invalid JSON.
  */
 public class JsonValidationException extends Exception {
-
-  /** Serialization version UID for JsonValidationException class. */
   private static final long serialVersionUID = 1L;
 
   /**

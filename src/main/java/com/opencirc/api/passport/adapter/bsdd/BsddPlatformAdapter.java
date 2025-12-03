@@ -55,7 +55,9 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
 
   private final CacheService cacheService;
 
-  /** Instantiating BsddPlatformAdapter. */
+  /**
+   * Constructor.
+   */
   @Autowired
   public BsddPlatformAdapter(
       RestTemplate injectedRestTemplate,
@@ -307,6 +309,9 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     }
   }
 
+  /**
+   * Validates the data type of the given actual value.
+   */
   private static String validateDataType(
       String propertyName, String dataType, JsonNode actualValueNode) {
     String actualValue = actualValueNode.asText();

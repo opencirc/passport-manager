@@ -51,7 +51,6 @@ public class TestDataDictionaryController {
   /** AuthUserDetailsService mock bean. */
   @MockBean private AuthenticationManager authenticationManager;
 
-  /** RestTemplate bean. */
   @Autowired
   @Qualifier("testRestTemplate")
   private RestTemplate restTemplate;

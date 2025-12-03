@@ -315,9 +315,9 @@ public class PassportService {
       throw new InvalidInputException("No properties found");
     }
 
+    var adapter = platformAdapterFactory.getAdapter(dictionaryPlatform);
     for (JsonNode property : properties) {
-      String error =
-          platformAdapterFactory.getAdapter(dictionaryPlatform).validatePassportData(property);
+      String error = adapter.validatePassportData(property);
       if (error != null) {
         errorMessages.add(error);
       }

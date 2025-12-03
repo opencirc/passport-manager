@@ -34,16 +34,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
-  /** Injecting UserRepository class. */
   @Autowired private UserRepository userRepository;
 
-  /** Injecting JwtConfigRepository class. */
   @Autowired private JwtConfigRepository jwtConfigRepository;
 
   /** Injecting Properties class. */
   private final AppProperties appProperties;
 
-  /** Injecting AuthUserDetailsService class. */
   @Autowired private AuthUserDetailsService authUserDetailsService;
 
   /** Secret key declaration. */
