@@ -16,7 +16,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import java.util.List;
 import java.util.Map;
-import org.apache.http.HttpStatus;
+import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -110,7 +110,7 @@ public class TestPassportTemplateController {
             .when()
             .post("/api/passport-template/{passportId}")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -143,7 +143,7 @@ public class TestPassportTemplateController {
             .when()
             .post("/api/passport-template/{passportId}")
             .then()
-            .statusCode(HttpStatus.SC_NOT_FOUND)
+            .statusCode(HttpStatus.NOT_FOUND.value())
             .extract()
             .response();
 
@@ -166,7 +166,7 @@ public class TestPassportTemplateController {
             .when()
             .get("/api/passport-template/{id}")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -195,7 +195,7 @@ public class TestPassportTemplateController {
             .when()
             .get("/api/passport-template/{id}")
             .then()
-            .statusCode(HttpStatus.SC_NOT_FOUND)
+            .statusCode(HttpStatus.NOT_FOUND.value())
             .log()
             .all()
             .extract()
@@ -222,7 +222,7 @@ public class TestPassportTemplateController {
             .when()
             .get("/api/passport-templates/all")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
+import org.springframework.http.HttpStatus;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
@@ -155,7 +155,7 @@ public class TestPassportController {
             .when()
             .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
-            .statusCode(HttpStatus.SC_SUCCESS)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -202,7 +202,7 @@ public class TestPassportController {
             .when()
             .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
-            .statusCode(HttpStatus.SC_BAD_REQUEST)
+            .statusCode(HttpStatus.BAD_REQUEST.value())
             .log()
             .all()
             .extract()
@@ -249,7 +249,7 @@ public class TestPassportController {
             .when()
             .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
-            .statusCode(HttpStatus.SC_BAD_REQUEST)
+            .statusCode(HttpStatus.BAD_REQUEST.value())
             .log()
             .all()
             .extract()
@@ -290,7 +290,7 @@ public class TestPassportController {
             .when()
             .get("/api/passport/{id}")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -331,7 +331,7 @@ public class TestPassportController {
             .when()
             .get("/api/passport/{id}/children")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()

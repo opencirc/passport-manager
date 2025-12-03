@@ -8,7 +8,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
+import org.springframework.http.HttpStatus;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -30,7 +30,7 @@ public class BsddMockStubHelper {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withStatus(HttpStatus.SC_OK)
+                    .withStatus(HttpStatus.OK.value())
                     .withBody(
                         """
                         {
@@ -68,7 +68,7 @@ public class BsddMockStubHelper {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withStatus(HttpStatus.SC_OK)
+                    .withStatus(HttpStatus.OK.value())
                     .withBody(
                         """
                     {
@@ -102,7 +102,7 @@ public class BsddMockStubHelper {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withStatus(HttpStatus.SC_SUCCESS)
+                    .withStatus(HttpStatus.OK.value())
                     .withBody(
                         """
                         {
@@ -155,7 +155,7 @@ public class BsddMockStubHelper {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withStatus(HttpStatus.SC_OK)
+                    .withStatus(HttpStatus.OK.value())
                     .withBody(
                         """
                     {
