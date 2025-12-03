@@ -12,29 +12,18 @@ import org.springframework.stereotype.Component;
  * library.
  */
 @Component
-public class DictionaryAdapterFactory {
+public class PlatformAdapterFactory {
 
   /** Map that has all the map name and its instances. */
   private final Map<Platform, PlatformAdapter<?>> adapterMap;
 
-  /**
-   * Instantiates DictionaryAdapterFactory.
-   *
-   * @param adapters
-   */
-  public DictionaryAdapterFactory(List<PlatformAdapter<?>> adapters) {
+  /** Instantiates PlatformAdapterFactory. */
+  public PlatformAdapterFactory(List<PlatformAdapter<?>> adapters) {
     adapterMap = new HashMap<>();
     adapterMap.put(Platform.BSDD, findAdapter(adapters, BsddPlatformAdapter.class));
   }
 
-  /**
-   * Returns the appropriate instance based on the given dictionary name.
-   *
-   * @param dictionaryPlatform The dictionary library
-   * @param <T> The specific dictionary type
-   * @return The corresponding dictionary instance.
-   * @throws IllegalArgumentException
-   */
+  /** Returns the appropriate instance based on the given dictionary name. */
   @SuppressWarnings("unchecked")
   public <T> PlatformAdapter<T> getAdapter(Platform dictionaryPlatform) {
     PlatformAdapter<?> adapter = adapterMap.get(dictionaryPlatform);

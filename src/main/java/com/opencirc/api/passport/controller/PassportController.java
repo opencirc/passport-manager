@@ -7,6 +7,7 @@ import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.PassportService;
@@ -138,7 +139,7 @@ public class PassportController {
       @Parameter(description = "Dictionary name", required = true, in = ParameterIn.PATH)
           @PathVariable
           String dictionary)
-      throws IOException {
+      throws IOException, InvalidDataDictionaryException {
     return ResponseEntity.ok(
         passportService.getDictionaryTreeStructure(
             Platform.fromValue(platform), DataDictionary.fromValue(dictionary)));

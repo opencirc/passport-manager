@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.adapter.bsdd;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -12,6 +11,7 @@ import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.mapping.DictionaryMapping;
@@ -27,7 +27,12 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
@@ -36,33 +41,21 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/** BSDD implementation of PlatformAdapter. */
 @Service
 public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto> {
 
-  /** Injecting Rest Template. */
   private final RestTemplate restTemplate;
 
-  /** Injecting Properties. */
   private final AppProperties appProperties;
 
-  /** Injecting ObjectMapper. */
   private final ObjectMapper objectMapper;
 
-  /** Injecting DictionaryMapping. */
   private final DictionaryMapping dictionaryMapping;
 
-  /** Injecting CacheService. */
   private final CacheService cacheService;
 
-  /**
-   * Instantiating BsddPlatformAdapter.
-   *
-   * @param injectedRestTemplate
-   * @param appProperties
-   * @param mapper
-   * @param dictionaryMapping
-   * @param cacheService
-   */
+  /** Instantiating BsddPlatformAdapter. */
   @Autowired
   public BsddPlatformAdapter(
       RestTemplate injectedRestTemplate,
@@ -95,8 +88,8 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     JsonNode responseBody = response.getBody();
 
     List<Map<String, String>> classList = new ArrayList<>();
-    int totalCount = responseBody.path("totalCount").asInt();
-    if (responseBody != null && totalCount > 0) {
+    int totalCount = responseBody != null ? responseBody.path("totalCount").asInt() : 0;
+    if (totalCount > 0) {
       for (JsonNode node : responseBody.get("classes")) {
         Map<String, String> classMap = new HashMap<>();
         classMap.put("name", node.path("name").asText());
@@ -108,17 +101,10 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     return classList;
   }
 
-  /**
-   * Fetches class template with property details.
-   *
-   * @param uri The class URI.
-   * @return The class template as a JsonNode.
-   * @throws JsonValidationException If the URI is invalid.
-   * @throws JsonProcessingException
-   */
+  /** Fetches class template with property details. */
   @Override
   public BsddClassTemplateDto createClassTemplate(String uri, boolean addProperties)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
 
     BsddClassTemplateDto classTemplateDto = getClassTemplate(uri, addProperties);
 
@@ -145,17 +131,9 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     return classTemplateDto;
   }
 
-  /**
-   * Fetches class template with property details.
-   *
-   * @param uri The class URI.
-   * @param addProperties
-   * @return The class template as a JsonNode.
-   * @throws JsonValidationException If the URI is invalid.
-   * @throws JsonProcessingException
-   */
+  /** Fetches class template with property details. */
   private BsddClassTemplateDto getClassTemplate(String uri, boolean addProperties)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
 
     if (!validateUri(uri)) {
       throw new InvalidInputException("Invalid URI : " + uri);
@@ -191,12 +169,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     return classTemplateDto;
   }
 
-  /**
-   * Retrieves the property template with its details.
-   *
-   * @param uriList
-   * @return property template in json format
-   */
+  /** Retrieves the property template with its details. */
   @Override
   public ObjectNode getPropertyTemplateWithDetails(List<String> uriList)
       throws JsonValidationException {
@@ -236,24 +209,14 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     return template;
   }
 
-  /**
-   * Maps the given template to standard fields and adds an actual value field.
-   *
-   * @param propertiesArray
-   * @param template
-   */
+  /** Maps the given template to standard fields and adds an actual value field. */
   private void formPropertyTemplate(ArrayNode propertiesArray, JsonNode template) {
     ObjectNode mappedNode = dictionaryMapping.mapTemplateFieldsToStandards(template, Platform.BSDD);
     mappedNode.put(AppConstants.ACTUAL_VALUE, "");
     propertiesArray.add(mappedNode);
   }
 
-  /**
-   * Fetches the properties.
-   *
-   * @param text
-   * @return list of properties
-   */
+  /** Fetches the properties. */
   @Override
   public List<Map<String, String>> listProperties(String text) {
     UriComponentsBuilder uriBuilder =
@@ -282,14 +245,9 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     return propertyList;
   }
 
-  /**
-   * Validates template entries against allowed values and ranges.
-   *
-   * @param propertyNode The JSON node containing template data.
-   * @throws JsonValidationException If validation fails.
-   */
+  /** Validates template entries against allowed values and ranges. */
   @Override
-  public String validatePassportData(JsonNode propertyNode) throws JsonValidationException {
+  public String validatePassportData(JsonNode propertyNode) {
 
     String errorMessage = null;
     if (propertyNode == null || !propertyNode.isObject()) {
@@ -312,9 +270,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
         property.has("MinInclusive") ? property.get("MinInclusive").asDouble() : null;
 
     if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
-
       errorMessage = validateDataType(propertyName, dataType, actualValueNode);
-
       if (errorMessage == null && allowedValuesNode != null && allowedValuesNode.isArray()) {
         errorMessage =
             validateAllowedValues(propertyName, (ArrayNode) allowedValuesNode, actualValueNode);
@@ -358,7 +314,6 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
   private static String validateDataType(
       String propertyName, String dataType, JsonNode actualValueNode) {
     String actualValue = actualValueNode.asText();
-    String errorMessage = null;
     switch (dataType) {
       case "String":
         break;
@@ -399,29 +354,29 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
         }
         break;
       case "Time":
-        if (!(actualValue instanceof String)) {
-          return propertyName
-              + " : Invalid data type. Expected Time (String), but got: "
-              + actualValue;
+        if (actualValue == null) {
+          return propertyName + " : Invalid data type. Expected Time (String), but got null";
         }
-        boolean valid = false;
+
+        boolean valid;
 
         try {
           LocalDate.parse(actualValue, DateTimeFormatter.ISO_LOCAL_DATE);
           valid = true;
-        } catch (DateTimeParseException e1) {
+        } catch (DateTimeParseException parseException) {
           try {
             Instant.parse(actualValue);
             valid = true;
-          } catch (DateTimeParseException e2) {
+          } catch (DateTimeParseException secondParseException) {
             try {
               OffsetDateTime.parse(actualValue, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
               valid = true;
-            } catch (DateTimeParseException e3) {
+            } catch (DateTimeParseException thirdParseException) {
               valid = false;
             }
           }
         }
+
         if (!valid) {
           return propertyName + " : Invalid ISO 8601 date/time format. Value: " + actualValue;
         }
@@ -430,7 +385,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
       default:
         return propertyName + " : Unknown data type: " + dataType;
     }
-    return errorMessage;
+    return null;
   }
 
   private static String validateAllowedValues(
@@ -507,15 +462,8 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     return errorMessage;
   }
 
-  /**
-   * Displays the template from the dictionary without any processing.
-   *
-   * @param uri
-   * @param type
-   * @return response
-   * @throws JsonProcessingException
-   */
-  public JsonNode fetchRawTemplate(String uri, String type) throws JsonProcessingException {
+  /** Displays the template from the dictionary without any processing. */
+  public JsonNode fetchRawTemplate(String uri, String type) {
     String uriPrefix = null;
     if (type.equalsIgnoreCase("class")) {
       uriPrefix = appProperties.getBsddClassDetailsUrl();
@@ -537,19 +485,13 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
 
   /** Retrieves the tree structure of the dictionary. */
   public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(DataDictionary dictionary)
-      throws JsonValidationException, IOException {
-    String cachePath =
-        switch (dictionary) {
-          case DataDictionary.TABLE6 -> appProperties.getTable6StructureOutputCachedPath();
-          default -> throw new IllegalArgumentException("Unsupported dictionary: " + dictionary);
-        };
+      throws IOException {
+    if (dictionary != DataDictionary.TABLE6) {
+      throw new InvalidDataDictionaryException("Unsupported dictionary: " + dictionary);
+    }
 
-    String templatePath =
-        switch (dictionary) {
-          case DataDictionary.TABLE6 -> appProperties.getTable6StructureJsonPath();
-          default -> throw new IllegalArgumentException("Unsupported dictionary: " + dictionary);
-        };
-
+    String cachePath = appProperties.getTable6StructureOutputCachedPath();
+    String templatePath = appProperties.getTable6StructureJsonPath();
     Path outputPath = Paths.get(cachePath).toAbsolutePath();
 
     if (Files.exists(outputPath)) {
@@ -576,6 +518,9 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     for (JsonNode classNode : classes) {
       String code = classNode.get("Code").asText();
       String name = classNode.get("Name").asText();
+      if (code == null || name == null || code.isBlank() || name.isBlank()) {
+        throw new IllegalStateException("Class node missing required 'Code' or 'Name' field");
+      }
       nodeMap.put(code, new DataDictionaryTreeStructureDto(code, name, new ArrayList<>()));
     }
 
@@ -604,7 +549,10 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
       }
     }
 
-    Files.createDirectories(outputPath.getParent());
+    Path parent = outputPath.getParent();
+    if (parent != null) {
+      Files.createDirectories(parent);
+    }
 
     objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath.toFile(), roots);
     return roots;

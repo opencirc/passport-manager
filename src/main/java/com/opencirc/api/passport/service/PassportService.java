@@ -7,18 +7,24 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
+import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.DatasheetPropertyRepository;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
-import com.opencirc.api.passport.dto.*;
+import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
+import com.opencirc.api.passport.dto.DatasheetDto;
+import com.opencirc.api.passport.dto.DatasheetPropertyDto;
+import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
@@ -46,6 +52,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
+/** Service class for Passport operations. */
 @Service
 public class PassportService {
 
@@ -64,46 +71,31 @@ public class PassportService {
   /** Injecting ObjectMapper bean. */
   private final ObjectMapper objectMapper;
 
-  /** Injecting DictionaryAdapterFactory class. */
-  private final DictionaryAdapterFactory dictionaryAdapterFactory;
+  /** Injecting PlatformAdapterFactory class. */
+  private final PlatformAdapterFactory platformAdapterFactory;
 
   /** Injecting AppProperties class. */
   private final AppProperties appProperties;
 
-  /**
-   * Constructor.
-   *
-   * @param datasheetRepository
-   * @param passportRepository
-   * @param passportDatasheetMappingRepository
-   * @param dictionaryAdapterFactory
-   * @param objectMapper
-   * @param appProperties
-   */
+  /** Constructor. */
   public PassportService(
       DatasheetRepository datasheetRepository,
       DatasheetPropertyRepository datasheetPropertyRepository,
       PassportRepository passportRepository,
       PassportDatasheetMappingRepository passportDatasheetMappingRepository,
-      DictionaryAdapterFactory dictionaryAdapterFactory,
+      PlatformAdapterFactory platformAdapterFactory,
       ObjectMapper objectMapper,
       AppProperties appProperties) {
     this.datasheetRepository = datasheetRepository;
     this.datasheetPropertyRepository = datasheetPropertyRepository;
     this.passportRepository = passportRepository;
     this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
-    this.dictionaryAdapterFactory = dictionaryAdapterFactory;
+    this.platformAdapterFactory = platformAdapterFactory;
     this.objectMapper = objectMapper;
     this.appProperties = appProperties;
   }
 
-  /**
-   * Creates template Entry.
-   *
-   * @param dictionaryPlatform
-   * @param data
-   * @return Passport DTO from passport
-   */
+  /** Creates template entry. */
   @Transactional
   public PassportDto createPassportUsingDictionary(
       Platform dictionaryPlatform, DataDictionary dictionary, CreatePassportRequestDto data)
@@ -125,7 +117,7 @@ public class PassportService {
     passport.setStatus(Passport.Status.ACTIVE);
     passport.setCreatedById(data.getCreatedById());
     passport.setCreatedTime(OffsetDateTime.now());
-    passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
+    passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedBy()));
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
@@ -157,7 +149,7 @@ public class PassportService {
     datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
     datasheet.setCreatedById(data.getCreatedById());
     datasheet.setCreatedTime(OffsetDateTime.now());
-    datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
+    datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedBy()));
 
     datasheet = datasheetRepository.save(datasheet);
 
@@ -193,7 +185,7 @@ public class PassportService {
       DatasheetProperty property = propertyByCode.get(propertyCode);
       if (property != null) {
         dataJson.set(
-            property.getCode().toString(),
+            property.getCode(),
             actualValueNode.isMissingNode() ? NullNode.instance : actualValueNode);
       }
     }
@@ -217,7 +209,7 @@ public class PassportService {
     return node.hasNonNull(field) ? node.get(field).asText() : null;
   }
 
-  private CreatedByDto getOrDefaultCreatedBy(String createdById, CreatedByDto createdBy) {
+  private CreatedByDto getOrDefaultCreatedBy(CreatedByDto createdBy) {
     if (createdBy != null) {
       return createdBy;
     }
@@ -225,14 +217,8 @@ public class PassportService {
         appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail());
   }
 
-  /**
-   * Retrieves passport.
-   *
-   * @param passportId
-   * @return Passport DTO from passport
-   */
-  public PassportDto getPassport(String passportId) throws JsonProcessingException {
-
+  /** Retrieves passport. */
+  public PassportDto getPassport(String passportId) {
     Optional<Passport> optionalPassport =
         passportRepository.findPassport(passportId, Passport.Status.ACTIVE);
     if (optionalPassport.isEmpty()) {
@@ -243,14 +229,8 @@ public class PassportService {
     return PassportDto.from(optionalPassport.get());
   }
 
-  /**
-   * Retrieves passport and its children for the given id.
-   *
-   * @param id
-   * @return a list of {@link PassportDto} objects
-   * @throws JsonProcessingException
-   */
-  public List<PassportDto> getPassportChildren(String id) throws JsonProcessingException {
+  /** Retrieves passport and its children for the given id. */
+  public List<PassportDto> getPassportChildren(String id) {
     List<PassportDatasheetResultMapDto> resultRows =
         passportRepository.findPassportWithDescendants(id).orElse(Collections.emptyList());
 
@@ -295,31 +275,20 @@ public class PassportService {
     return new ArrayList<>(passportMap.values());
   }
 
-  /**
-   * Retrieves the passports with the given parent ID.
-   *
-   * @param passportId
-   * @return a list of {@link PassportDto} objects
-   * @throws JsonProcessingException
-   */
-  public List<PassportDto> getImmediateChildren(String passportId) throws JsonProcessingException {
+  /** Retrieves the passports with the given parent ID. */
+  public List<PassportDto> getImmediateChildren(String passportId) {
     List<PassportDatasheetResultMapDto> resultRows =
         passportRepository.findImmediateChildren(passportId).orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
   }
 
-  /**
-   * Validate the passport, throw if there is an error.
-   *
-   * @param dictionaryPlatform
-   * @param passportData
-   */
+  /** Validate the passport, throw if there is an error. */
   private void validatePassportData(Platform dictionaryPlatform, JsonNode passportData)
       throws JsonValidationException {
     if (passportData == null
         || passportData.isNull()
-        || passportData.isObject() && passportData.size() == 0) {
+        || passportData.isObject() && passportData.isEmpty()) {
       throw new InvalidInputException("Input JSON node is null");
     }
     List<String> errorMessages = new ArrayList<>();
@@ -342,9 +311,13 @@ public class PassportService {
     } catch (ClassCastException e) {
       throw new InvalidInputException("Expected an array node for properties");
     }
+    if (properties == null) {
+      throw new InvalidInputException("No properties found");
+    }
+
     for (JsonNode property : properties) {
       String error =
-          dictionaryAdapterFactory.getAdapter(dictionaryPlatform).validatePassportData(property);
+          platformAdapterFactory.getAdapter(dictionaryPlatform).validatePassportData(property);
       if (error != null) {
         errorMessages.add(error);
       }
@@ -476,11 +449,6 @@ public class PassportService {
   /**
    * Updates datasheet property values for the given passport and group. Only properties present in
    * {@code updateDataRequestDto.values} are updated.
-   *
-   * @param passportId passport ID
-   * @param updateDataRequestDto
-   * @return updated Passport dto
-   * @throws JsonValidationException
    */
   @Transactional
   public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto)
@@ -528,9 +496,8 @@ public class PassportService {
 
           propertyDefinition.set("actualValue", newValueNode);
 
-          String error = null;
-          error =
-              dictionaryAdapterFactory
+          String error =
+              platformAdapterFactory
                   .getAdapter(datasheet.getPlatform())
                   .validatePassportData(property.getDefinition());
           if (error != null) {
@@ -553,7 +520,7 @@ public class PassportService {
       }
       if (changed) {
         datasheet.setData(dataNode);
-        datasheet = datasheetRepository.save(datasheet);
+        datasheetRepository.save(datasheet);
       }
     }
 
@@ -564,14 +531,8 @@ public class PassportService {
     return PassportDto.from(passport);
   }
 
-  /**
-   * Retrieves all passports associated with the specified code.
-   *
-   * @param code
-   * @return a list of {@link PassportDto} objects
-   * @throws JsonProcessingException
-   */
-  public List<PassportDto> listPassportsByCode(String code) throws JsonProcessingException {
+  /** Retrieves all passports associated with the specified code. */
+  public List<PassportDto> listPassportsByCode(String code) {
 
     List<PassportDatasheetResultMapDto> resultRows =
         passportRepository.findPassportsByCode(code).orElse(Collections.emptyList());
@@ -579,12 +540,7 @@ public class PassportService {
     return assemblePassportsFromResultRows(resultRows);
   }
 
-  /**
-   * This method sets the result sets to passport dto.
-   *
-   * @param resultRows
-   * @return the list of passports
-   */
+  /** This method sets the result sets to passport dto. */
   private List<PassportDto> assemblePassportsFromResultRows(
       List<PassportDatasheetResultMapDto> resultRows) {
 
@@ -627,14 +583,11 @@ public class PassportService {
     return new ArrayList<>(passportMap.values());
   }
 
-  /**
-   * Method to parse and form the tree structure of the platform.
-   *
-   * @return the list of DataDictionaryTreeStructureDto
-   */
+  /** Method to parse and form the tree structure of the platform. */
   public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(
-      Platform platform, DataDictionary dictionary) throws IOException {
-    var adapter = this.dictionaryAdapterFactory.getAdapter(platform);
+      Platform platform, DataDictionary dictionary)
+      throws IOException, InvalidDataDictionaryException {
+    var adapter = this.platformAdapterFactory.getAdapter(platform);
     return adapter.getDictionaryTreeStructure(dictionary);
   }
 }

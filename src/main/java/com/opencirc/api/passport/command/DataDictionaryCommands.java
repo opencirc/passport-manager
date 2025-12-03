@@ -2,8 +2,8 @@ package com.opencirc.api.passport.command;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
 import com.opencirc.api.passport.adapter.PlatformAdapter;
+import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
@@ -20,24 +20,24 @@ public class DataDictionaryCommands {
   /** Injecting DataDictionaryService. */
   private final DataDictionaryService dataDictionaryService;
 
-  /** Injecting DictionaryAdapterFactory. */
-  private final DictionaryAdapterFactory dictionaryAdapterFactory;
+  /** Injecting PlatformAdapterFactory. */
+  private final PlatformAdapterFactory platformAdapterFactory;
 
   /**
    * Instantiating DataDictionaryCommands.
    *
    * @param objectMapper
    * @param dataDictionaryService
-   * @param dictionaryAdapterFactory
+   * @param platformAdapterFactory
    */
   @Autowired
   public DataDictionaryCommands(
       ObjectMapper objectMapper,
       DataDictionaryService dataDictionaryService,
-      DictionaryAdapterFactory dictionaryAdapterFactory) {
+      PlatformAdapterFactory platformAdapterFactory) {
     this.objectMapper = objectMapper;
     this.dataDictionaryService = dataDictionaryService;
-    this.dictionaryAdapterFactory = dictionaryAdapterFactory;
+    this.platformAdapterFactory = platformAdapterFactory;
   }
 
   /**
@@ -93,7 +93,7 @@ public class DataDictionaryCommands {
    */
   private String generateRawTemplate(Platform dictionaryPlatform, String uri, String type)
       throws JsonProcessingException {
-    PlatformAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionaryPlatform);
+    PlatformAdapter<?> adapter = platformAdapterFactory.getAdapter(dictionaryPlatform);
     return formatJsonResponse(adapter.fetchRawTemplate(uri, type));
   }
 

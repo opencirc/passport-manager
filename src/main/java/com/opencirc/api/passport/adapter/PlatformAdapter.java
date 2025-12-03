@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Interface of Dictionary Adapter.
@@ -40,5 +42,5 @@ public interface PlatformAdapter<T> {
 
   /** Retrieves the tree structure of the dictionary. */
   List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(DataDictionary dictionary)
-      throws JsonValidationException, IOException;
+      throws IOException, InvalidDataDictionaryException;
 }

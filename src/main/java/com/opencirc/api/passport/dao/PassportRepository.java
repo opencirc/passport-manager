@@ -10,15 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Passport repository. */
 public interface PassportRepository extends JpaRepository<Passport, String> {
 
-  /**
-   * Retrieves passport.
-   *
-   * @param id
-   * @param status
-   * @return passports
-   */
+  /** Retrieves a Passport. */
   @Query(
       "SELECT DISTINCT p FROM Passport p "
           + "LEFT JOIN FETCH p.datasheetMappings dm "
@@ -27,12 +22,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
           + "WHERE p.id = :id AND p.status = :status")
   Optional<Passport> findPassport(@Param("id") String id, @Param("status") Passport.Status status);
 
-  /**
-   * Retrieves a passport with its descendants.
-   *
-   * @param passportId
-   * @return the passport with its descendants
-   */
+  /** Retrieves a passport with its descendants. */
   @Query(
       value =
           """
@@ -85,12 +75,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   Optional<List<PassportDatasheetResultMapDto>> findPassportWithDescendants(
       @Param("passport_id") String passportId);
 
-  /**
-   * Retrieves the immediate children of a passport.
-   *
-   * @param passportId
-   * @return the passports whose parent_id matches the given passport id
-   */
+  /** Retrieves the immediate children of a passport. */
   @Query(
       value =
           """
@@ -131,23 +116,13 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   Optional<List<PassportDatasheetResultMapDto>> findImmediateChildren(
       @Param("passport_id") String passportId);
 
-  /**
-   * Deactivates the passport.
-   *
-   * @param passportId
-   * @return status
-   */
+  /** Deactivates the passport. */
   @Modifying
   @Transactional
   @Query("UPDATE Passport p SET p.status = 'inactive'" + "WHERE p.id = :passport_id")
   int updateStatusToInactive(@Param("passport_id") String passportId);
 
-  /**
-   * Retrieves the parentId.
-   *
-   * @param passportId
-   * @return status
-   */
+  /** Retrieves the parentId. */
   @Transactional
   @Query("Select p.parentId from Passport p " + "WHERE p.id = :passport_id")
   String getParentId(@Param("passport_id") String passportId);
@@ -165,13 +140,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
           + "WHERE p.status = 'active' AND p.parentId IS NULL ")
   List<Passport> getRootPassports();
 
-  /**
-   * Retrieves passports for the specified platform and code.
-   *
-   * @param platform
-   * @param code
-   * @return passports
-   */
+  /** Retrieves passports for the specified platform and code. */
   @Query(
       value =
           """
