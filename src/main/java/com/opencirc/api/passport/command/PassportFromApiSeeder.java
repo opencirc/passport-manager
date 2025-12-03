@@ -3,13 +3,14 @@ package com.opencirc.api.passport.command;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.dto.*;
+import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.PassportService;
-import com.opencirc.api.passport.service.PlatformService;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,7 +28,6 @@ public class PassportFromApiSeeder {
 
   /** Constructor-based dependency injection. */
   public PassportFromApiSeeder(
-      PlatformService platformService,
       PassportService passportService,
       AppProperties appProperties,
       UserRepository userRepository) {

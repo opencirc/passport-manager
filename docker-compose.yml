@@ -81,10 +81,26 @@ services:
     networks:
       - spring-net
 
+  test_cache:
+    image: redis
+    container_name: cache
+    ports:
+      - 6381:6380
+    volumes:
+      - test_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spring-net
+
 volumes:
   db_data:
   test_db_data:
   redisdata:
+  test_redisdata:
   maven-repo:
 
 networks:
