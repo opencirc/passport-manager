@@ -1,27 +1,10 @@
 package com.opencirc.api.passport.constants;
 
+/** AppConstants. */
 public final class AppConstants {
 
   /** AppConstants Constructor. */
   private AppConstants() {}
-
-  /** DataCategory field to add in template. */
-  public static final String DATA_CATEGORY_FIELD = "dataCategory";
-
-  /** templateName field to add in template. */
-  public static final String TEMPLATE_NAME = "templateName";
-
-  /** actualValue field to add in template. */
-  public static final String ACTUAL_VALUE = "actualValue";
-
-  /** Text uri. */
-  public static final String URI = "Uri";
-
-  /** Text IncludeClassProperties. */
-  public static final String QP_BSDD_INCLUDECLASSPROP = "IncludeClassProperties";
-
-  /** Text classProperties. */
-  public static final String BSDD_FIELD_CLASSPROPERTIES = "classProperties";
 
   /** Text limit. */
   public static final String QP_BSDD_LIMIT = "limit";
@@ -31,21 +14,6 @@ public final class AppConstants {
 
   /** Text TypeFilter. */
   public static final String QP_BSDD_TYPEFILTER = "TypeFilter";
-
-  /** Text Authorization. */
-  public static final String JWT_AUTH = "Authorization";
-
-  /** Text Bearer. */
-  public static final String JWT_BEARER = "Bearer ";
-
-  /** Text length of bearer token. */
-  public static final int JWT_BEARER_LENGTH = 7;
-
-  /** Text accessToken. */
-  public static final String ACCESS_TOKEN = "accessToken";
-
-  /** Text accessToken. */
-  public static final String REFRESH_TOKEN = "refreshToken";
 
   /** Error message for invalid credentials. */
   public static final String ERR_INVALID_CREDENTIALS = "Invalid Credentials";

@@ -66,6 +66,7 @@ public class Passport {
   private Set<PassportDatasheetMapping> datasheetMappings = new HashSet<>();
 
   /** Enum representing the status of a Passport. */
+  @Getter
   public enum Status {
     ACTIVE("active"),
 
@@ -76,11 +77,6 @@ public class Passport {
     /** Constructs a Status enum with the specified string value. */
     Status(String value) {
       this.value = value;
-    }
-
-    /** Gets the string value of the status. */
-    public String getValue() {
-      return value;
     }
 
     /** Returns the string representation of the status. */

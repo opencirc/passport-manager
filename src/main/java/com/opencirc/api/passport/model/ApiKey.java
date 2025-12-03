@@ -35,7 +35,7 @@ public class ApiKey {
   @Column(nullable = false)
   private String secret;
 
-  /** UUID of the user who owns this API key. */
+  /** ID of the user who owns this API key, as UUID. */
   @Column(name = "user_id", nullable = false)
   private String userId;
 

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.springframework.http.HttpStatus;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
@@ -14,6 +13,7 @@ import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
+import com.opencirc.api.passport.helper.test.TestConfig;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -36,10 +37,14 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = PassportManager.class)
+    classes = {PassportManager.class, TestConfig.class})
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
 public class TestDataDictionaryController {
+
+  @Autowired
+  @Qualifier("testRestTemplate")
+  private RestTemplate restTemplate;
 
   /** Assigns random port number in which application runs. */
   @LocalServerPort private int port;
@@ -49,10 +54,6 @@ public class TestDataDictionaryController {
 
   /** AuthUserDetailsService mock bean. */
   @MockBean private AuthenticationManager authenticationManager;
-
-  @Autowired
-  @Qualifier("testRestTemplate")
-  private RestTemplate restTemplate;
 
   /** JWT token. */
   private String jwtToken = null;
@@ -81,7 +82,7 @@ public class TestDataDictionaryController {
   }
 
   private void generateMockJwtToken() {
-    String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
+    String requestBody = "{\"email\": \"user@test.com\", \"password\": \"user1password\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
     if (response.getStatusCode() == 200) {

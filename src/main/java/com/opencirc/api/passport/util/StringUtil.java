@@ -1,7 +1,6 @@
 package com.opencirc.api.passport.util;
 
 import com.opencirc.api.passport.exception.InvalidInputException;
-import java.util.UUID;
 
 public final class StringUtil {
 
@@ -27,13 +26,5 @@ public final class StringUtil {
     }
 
     return email.toLowerCase();
-  }
-
-  /** Safely parses a UUID string. */
-  public static UUID validateUuid(String key) {
-    if (key == null || key.isBlank()) {
-      return null;
-    }
-    return UUID.fromString(key);
   }
 }

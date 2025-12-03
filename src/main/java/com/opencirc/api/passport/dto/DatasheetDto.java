@@ -56,8 +56,7 @@ public class DatasheetDto {
     datasheetDto.name = datasheet.getName();
     datasheetDto.description = datasheet.getDescription();
     datasheetDto.platformId = datasheet.getPlatformId();
-    datasheetDto.dataCategory =
-        datasheet.getDataCategory() != null ? datasheet.getDataCategory().getValue() : null;
+    datasheetDto.dataCategory = datasheet.getDataCategory().getValue();
     datasheetDto.data = datasheet.getData();
     datasheetDto.createdById = datasheet.getCreatedById();
     datasheetDto.createdBy = datasheet.getCreatedBy();

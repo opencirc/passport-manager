@@ -14,7 +14,8 @@ import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
-import com.opencirc.api.passport.mapping.DictionaryMapping;
+import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.service.CacheService;
 import java.io.IOException;
 import java.net.URI;
@@ -30,6 +31,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,15 +45,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /** BSDD implementation of PlatformAdapter. */
 @Service
-public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto> {
+public class BsddPlatformAdapter implements PlatformAdapter {
 
   private final RestTemplate restTemplate;
 
   private final AppProperties appProperties;
 
   private final ObjectMapper objectMapper;
-
-  private final DictionaryMapping dictionaryMapping;
 
   private final CacheService cacheService;
 
@@ -61,19 +61,16 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
       RestTemplate injectedRestTemplate,
       AppProperties appProperties,
       ObjectMapper mapper,
-      DictionaryMapping dictionaryMapping,
       CacheService cacheService) {
     this.restTemplate = injectedRestTemplate;
     this.appProperties = appProperties;
     this.objectMapper = mapper;
     this.cacheService = cacheService;
-    this.dictionaryMapping = dictionaryMapping;
   }
 
   /** Fetches a list of classes matching the search text. */
   @Override
   public List<Map<String, String>> listClass(String text) {
-
     UriComponentsBuilder uriBuilder =
         UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassSearchTextUrl())
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
@@ -98,48 +95,50 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
 
   /** Fetches class template with property details. */
   @Override
-  public BsddClassTemplateDto createClassTemplate(String uri, boolean addProperties)
-      throws JsonValidationException {
+  public Datasheet generateDatasheetFromPlatformId(String uri) throws JsonValidationException {
 
-    BsddClassTemplateDto classTemplateDto = getClassTemplate(uri, addProperties);
+    BsddClassTemplateDto classTemplateDto = getClassTemplate(uri);
+    Datasheet datasheet = new Datasheet();
+    datasheet.setPlatform(Platform.BSDD);
+    datasheet.setDictionary(
+        classTemplateDto.getReferenceCode().startsWith("Ifc")
+            ? DataDictionary.IFC
+            : DataDictionary.TABLE6);
+    datasheet.setCode(classTemplateDto.getCode());
+    datasheet.setName(classTemplateDto.getName());
+    datasheet.setDescription(classTemplateDto.getDefinition());
+    datasheet.setPlatformId(uri);
 
-    if (addProperties
-        && classTemplateDto.getClassProperties() != null
-        && classTemplateDto.getClassProperties().isArray()) {
-
-      ArrayNode classProperties = (ArrayNode) classTemplateDto.getClassProperties();
-      ArrayNode updatedProperties = objectMapper.createArrayNode();
-
-      for (JsonNode propertyNode : classProperties) {
-        if (propertyNode.isObject()) {
-          try {
-            formPropertyTemplate(updatedProperties, propertyNode);
-          } catch (Exception e) {
-            throw new JsonValidationException("Invalid propertyNode: " + propertyNode, e);
-          }
+    if (classTemplateDto.getClassProperties() != null) {
+      datasheet.setDatasheetProperties(new HashSet<>());
+      for (var classProperty : classTemplateDto.getClassProperties()) {
+        if (classProperty.getPropertyCode() == null || classProperty.getPropertyCode().isBlank()) {
+          continue;
         }
-      }
 
-      classTemplateDto.setClassProperties(updatedProperties);
+        DatasheetProperty property = new DatasheetProperty();
+        property.setPlatformId(classProperty.getUri());
+        property.setCode(classProperty.getPropertyCode());
+        property.setGroupTag(classProperty.getPropertySet());
+        property.setPropertyType(classProperty.getDataType());
+        property.setDatasheet(datasheet);
+        datasheet.getDatasheetProperties().add(property);
+      }
     }
 
-    return classTemplateDto;
+    return datasheet;
   }
 
   /** Fetches class template with property details. */
-  private BsddClassTemplateDto getClassTemplate(String uri, boolean addProperties)
-      throws JsonValidationException {
+  private BsddClassTemplateDto getClassTemplate(String uri) throws JsonValidationException {
 
     if (!validateUri(uri)) {
       throw new InvalidInputException("Invalid URI : " + uri);
     }
     UriComponentsBuilder uriBuilder =
         UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassDetailsUrl())
-            .queryParam(AppConstants.URI, uri);
-
-    if (addProperties) {
-      uriBuilder.queryParam(AppConstants.QP_BSDD_INCLUDECLASSPROP, true);
-    }
+            .queryParam("Uri", uri)
+            .queryParam("IncludeClassProperties", true);
 
     String url = uriBuilder.toUriString();
 
@@ -162,53 +161,6 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     }
 
     return classTemplateDto;
-  }
-
-  /** Retrieves the property template with its details. */
-  @Override
-  public ObjectNode getPropertyTemplateWithDetails(List<String> uriList)
-      throws JsonValidationException {
-    ObjectNode template = objectMapper.createObjectNode();
-    ArrayNode propertiesArray = objectMapper.createArrayNode();
-
-    for (String uri : uriList) {
-      if (!validateUri(uri)) {
-        throw new JsonValidationException("Invalid URI : " + uri);
-      }
-
-      UriComponentsBuilder uriBuilder =
-          UriComponentsBuilder.fromHttpUrl(appProperties.getBsddPropertiesWithDetailUrl())
-              .queryParam(AppConstants.URI, uri);
-      String url = uriBuilder.toUriString();
-
-      JsonNode propertyTemplate = cacheService.getCachedTemplate(url, JsonNode.class);
-
-      if (propertyTemplate == null) {
-        try {
-          ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-          if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            throw new JsonValidationException(
-                "Failed to fetch template. HTTP Status: " + response.getStatusCode());
-          }
-          propertyTemplate = response.getBody();
-          cacheService.cacheTemplate(url, propertyTemplate);
-        } catch (RestClientException e) {
-          throw new JsonValidationException(
-              "Error fetching property template: " + e.getMessage(), e);
-        }
-      }
-      formPropertyTemplate(propertiesArray, propertyTemplate);
-    }
-
-    template.set("properties", propertiesArray);
-    return template;
-  }
-
-  /** Maps the given template to standard fields and adds an actual value field. */
-  private void formPropertyTemplate(ArrayNode propertiesArray, JsonNode template) {
-    ObjectNode mappedNode = dictionaryMapping.mapTemplateFieldsToStandards(template, Platform.BSDD);
-    mappedNode.put(AppConstants.ACTUAL_VALUE, "");
-    propertiesArray.add(mappedNode);
   }
 
   /** Fetches the properties. */
@@ -456,20 +408,12 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
   }
 
   /** Displays the template from the dictionary without any processing. */
-  public JsonNode fetchRawTemplate(String uri, String type) {
-    String uriPrefix;
-    if (type.equalsIgnoreCase("class")) {
-      uriPrefix = appProperties.getBsddClassDetailsUrl();
-    } else if (type.equalsIgnoreCase("property")) {
-      uriPrefix = appProperties.getBsddPropertiesWithDetailUrl();
-    } else {
-      throw new IllegalArgumentException("Invalid type: " + type);
-    }
-
+  public JsonNode fetchRawTemplate(String uri) {
+    String uriPrefix = appProperties.getBsddClassDetailsUrl();
     UriComponentsBuilder uriBuilder =
         UriComponentsBuilder.fromHttpUrl(uriPrefix)
-            .queryParam(AppConstants.URI, uri)
-            .queryParam(AppConstants.QP_BSDD_INCLUDECLASSPROP, true);
+            .queryParam("Uri", uri)
+            .queryParam("IncludeClassProperties", true);
     String url = uriBuilder.toUriString();
     ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
 

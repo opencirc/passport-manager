@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.command;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.config.AppProperties;
@@ -8,8 +9,10 @@ import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportDto;
+import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.PassportService;
@@ -92,16 +95,13 @@ public class PassportFromJsonSeeder {
   }
 
   /** Seed passports using the loaded templates. */
-  public void seed() {
+  public void seed() throws JsonValidationException, JsonProcessingException {
     User user =
         userRepository
             .findFirstByOrderByIdAsc()
             .orElseThrow(
                 () ->
-                    new IllegalStateException(
-                        "No users" + " found in the database. Seed users first."));
-
-    CreatedByDto createdByDto = CreatedByDto.fromUser(user);
+                    new IllegalStateException("No users found in the database. Seed users first."));
 
     if (uriList == null || uriList.isEmpty()) {
       throw new IllegalStateException(
@@ -112,20 +112,15 @@ public class PassportFromJsonSeeder {
 
     for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
       String uri = uriList.get(i % uriList.size());
-      createPassportRecursive(1, String.valueOf(i + 1), uri, i, null, user.getId(), createdByDto);
+      createPassportRecursive(1, String.valueOf(i + 1), uri, i, null, UserDto.from(user));
     }
     log.info("Passport seeding from JSON templates completed.");
   }
 
   /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
-      int level,
-      String nameSuffix,
-      String uri,
-      int uriIndex,
-      String parentId,
-      String userId,
-      CreatedByDto createdByDto) {
+      int level, String nameSuffix, String uri, int uriIndex, String parentId, UserDto author)
+      throws JsonValidationException, JsonProcessingException {
     if (level > appProperties.getMaximumLevel()) {
       return;
     }
@@ -134,17 +129,14 @@ public class PassportFromJsonSeeder {
     if (template == null) {
       throw new IllegalStateException("No template found for URI: " + uri);
     }
-    JsonNode templateNode = objectMapper.valueToTree(template);
 
     CreatePassportRequestDto request = new CreatePassportRequestDto();
-    request.setDatasheetData(templateNode);
+    request.setPlatformId(uri);
     request.setDataCategory(DataCategory.GENERIC.getValue());
-    request.setPassportName("Passport" + nameSuffix);
-    request.setCreatedById(userId);
-    request.setCreatedBy(createdByDto);
+    request.setName("Passport" + nameSuffix);
     request.setParentId(parentId);
     PassportDto createdPassport =
-        passportService.createPassportUsingDictionary(platform, dictionary, request);
+        passportService.createPassportUsingPlatform(platform, request, author);
 
     // Recursively create child passports
     for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
@@ -155,8 +147,7 @@ public class PassportFromJsonSeeder {
           uriList.get(nextUriIndex),
           nextUriIndex,
           createdPassport.getId(),
-          userId,
-          createdByDto);
+          author);
     }
   }
 }

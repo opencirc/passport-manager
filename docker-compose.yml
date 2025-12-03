@@ -47,6 +47,25 @@ services:
     networks:
       - spring-net
 
+  test_db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: opencirc
+      POSTGRES_DB: opencirc
+    ports:
+      - 5436:5432
+    volumes:
+      - test_db_data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - spring-net
+
   cache:
     image: redis
     container_name: cache
@@ -62,9 +81,26 @@ services:
     networks:
       - spring-net
 
+  test_cache:
+    image: redis
+    container_name: test_cache
+    ports:
+      - 6380:6379
+    volumes:
+      - test_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spring-net
+
 volumes:
   db_data:
+  test_db_data:
   redisdata:
+  test_redisdata:
   maven-repo:
 
 networks:

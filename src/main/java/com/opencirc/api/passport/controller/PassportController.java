@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.dto.PassportDto;
@@ -29,18 +30,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Controller for operations related to passports. */
 @RestController
-@Tag(name = "Passport", description = "Operations related to Passport")
+@Tag(name = "Passport", description = "Operations related to passports")
 public class PassportController {
 
   @Autowired private PassportService passportService;
 
-  /** Create a passport. */
-  @Operation(summary = "Creates Passport and validates it")
+  @Autowired private UserContext userContext;
+
+  /** Creates a passport using information from the provided platform. */
+  @Operation(summary = "Creates a passport using information from the provided platform.")
   @PostMapping(
-      value = "/api/passport/dictionary/{platform}/{dictionary}",
+      value = "/api/passport/platform/{platform}",
       produces = {"application/json"},
       consumes = {"application/json"})
-  public ResponseEntity<PassportDto> createPassportUsingDictionary(
+  public ResponseEntity<PassportDto> createPassportUsingPlatform(
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
               description =
                   "JSON template retrieved from external APIs, "
@@ -49,14 +52,11 @@ public class PassportController {
           CreatePassportRequestDto data,
       @Parameter(description = "Dictionary Platform", required = true, in = ParameterIn.PATH)
           @PathVariable("platform")
-          String platform,
-      @Parameter(description = "Dictionary", required = true, in = ParameterIn.PATH)
-          @PathVariable("dictionary")
-          String dictionaryName)
-      throws InvalidInputException, JsonValidationException {
+          String platform)
+      throws InvalidInputException, JsonValidationException, JsonProcessingException {
     return ResponseEntity.ok(
-        passportService.createPassportUsingDictionary(
-            Platform.fromValue(platform), DataDictionary.fromValue(dictionaryName), data));
+        passportService.createPassportUsingPlatform(
+            Platform.fromValue(platform), data, userContext.getCurrentUser()));
   }
 
   /** Fetch a passport. */
@@ -65,8 +65,7 @@ public class PassportController {
   public ResponseEntity<PassportDto> getPassport(
       @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
           @PathVariable
-          String passportId)
-      throws JsonProcessingException {
+          String passportId) {
     return ResponseEntity.ok(passportService.getPassport(passportId));
   }
 
@@ -76,8 +75,7 @@ public class PassportController {
   public ResponseEntity<List<PassportDto>> getWithChildren(
       @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
           @PathVariable
-          String passportId)
-      throws JsonProcessingException, JsonValidationException {
+          String passportId) {
     return ResponseEntity.ok(passportService.getPassportChildren(passportId));
   }
 
@@ -123,8 +121,7 @@ public class PassportController {
   @GetMapping("/api/passport/byCode/{code}")
   public ResponseEntity<List<PassportDto>> listPassportsByCode(
       @Parameter(description = "Code", required = true, in = ParameterIn.PATH) @PathVariable
-          String code)
-      throws JsonProcessingException {
+          String code) {
     return ResponseEntity.ok(passportService.listPassportsByCode(code));
   }
 

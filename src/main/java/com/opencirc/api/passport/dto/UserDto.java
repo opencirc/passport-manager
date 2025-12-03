@@ -7,31 +7,25 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/** UserDto class. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 public class UserDto {
 
-  /** Unique identifier for user. */
   private String id;
 
-  /** Email. */
   private String email;
 
-  /** FirstName of the user.. */
   private String firstName;
 
-  /** LastName of the user.. */
   private String lastName;
 
-  /** FullName of the user. */
   private String fullName;
 
-  /** Role of the user. */
   private String role;
 
-  /** Holds info if the user is active.. */
   private boolean active;
 
   /** Setting up values from UserPrincipal to User Dto. */

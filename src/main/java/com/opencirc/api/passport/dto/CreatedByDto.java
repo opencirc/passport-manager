@@ -21,16 +21,19 @@ public class CreatedByDto {
   /** Email. */
   @Email private String email;
 
-  /** Maps the User to CreatedByDto. */
-  public static CreatedByDto fromUser(User user) {
-    if (user == null) {
-      return null;
-    }
-    String name = user.getFullName();
-    String email = user.getEmail();
+  /** Maps the UserDto to CreatedByDto. */
+  public static CreatedByDto from(UserDto userDto) {
     CreatedByDto dto = new CreatedByDto();
-    dto.setFullName(name != null && !name.isBlank() ? name.trim() : null);
-    dto.setEmail(email != null ? email.trim() : null);
+    dto.setFullName(userDto.getFullName());
+    dto.setEmail(userDto.getEmail());
+    return dto;
+  }
+
+  /** Maps the User to CreatedByDto. */
+  public static CreatedByDto from(User user) {
+    CreatedByDto dto = new CreatedByDto();
+    dto.setFullName(user.getFullName());
+    dto.setEmail(user.getEmail());
     return dto;
   }
 }

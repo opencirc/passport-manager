@@ -2,7 +2,6 @@ package com.opencirc.api.passport.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -35,7 +34,7 @@ public class BsddClassTemplateDto {
 
   /** Dynamic set of class properties. */
   @JsonProperty("classProperties")
-  private JsonNode classProperties;
+  private List<ClassProperty> classProperties;
 
   /** Hierarchical structure of the class. */
   @JsonProperty("hierarchy")
@@ -100,6 +99,49 @@ public class BsddClassTemplateDto {
   /** Version date. */
   @JsonProperty("versionDateUtc")
   private OffsetDateTime versionDateUtc;
+
+  /** List of properties. */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @ToString
+  public static class ClassProperty {
+    /**
+     * Represents a property of a BSDD class.
+     *
+     * <p>Example API response using:</p>
+     * https://api.bsdd.buildingsmart.org/api/Class/v1?Uri=https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003&IncludeClassProperties=true
+     *
+     * <pre>
+     * "name": "Number of poles",
+     * "uri": "https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003/prop/Electrical/EF001391",
+     * "description": "The number of poles is the number of current-carrying cores."
+     * "definition": "The number of poles is the number of current-carrying cores."
+     * "dataType": "Real",
+     * "example": "None",
+     * "predefinedValue": "None",
+     * "propertyCode": "EF001391",
+     * "propertyDictionaryName": "ETIM",
+     * "propertyDictionaryUri": "https://identifier.buildingsmart.org/uri/etim/etim/10.0",
+     * "propertyUri": "https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF001391",
+     * "propertySet": "Electrical",
+     * "propertyStatus": "Active",
+     * "propertyValueKind": "Single"
+     * </pre>
+     *
+     * <p>We remove some properties not to get confused, as we will not use them</p>
+     */
+    @JsonProperty private String name;
+
+    @JsonProperty private String uri;
+    @JsonProperty private String description;
+    @JsonProperty private String dataType;
+    @JsonProperty private String predefinedValue;
+    @JsonProperty private String propertyCode;
+    @JsonProperty private String propertyDictionaryName;
+    @JsonProperty private String propertySet;
+    @JsonProperty private String propertyValueKind;
+  }
 
   /** Represents the parent class information. */
   public static class ParentClassReference {
