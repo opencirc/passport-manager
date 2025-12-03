@@ -205,10 +205,9 @@ FROM passports p
 LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
 LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
 LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
-                WHERE ds.platform = :platform
-                AND ds.code = :code
+                WHERE ds.code = :code
                 AND p.status = 'active'
                 """,
       nativeQuery = true)
-  Optional<List<PassportDatasheetResultMapDto>> findPassportsByCode(String platform, String code);
+  Optional<List<PassportDatasheetResultMapDto>> findPassportsByCode(String code);
 }

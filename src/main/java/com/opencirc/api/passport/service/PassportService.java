@@ -578,19 +578,18 @@ public class PassportService {
   }
 
   /**
-   * Retrieves all passports associated with the specified platform and code.
+   * Retrieves all passports associated with the specified code.
    *
-   * @param platform
    * @param code
    * @return a list of {@link PassportDto} objects
    * @throws JsonProcessingException
    */
-  public List<PassportDto> listPassportsByCode(DataDictionaryPlatform platform, String code)
+  public List<PassportDto> listPassportsByCode(String code)
       throws JsonProcessingException {
 
     List<PassportDatasheetResultMapDto> resultRows =
         passportRepository
-            .findPassportsByCode(platform.getValue(), code)
+            .findPassportsByCode(code)
             .orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
