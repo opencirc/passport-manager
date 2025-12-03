@@ -1,7 +1,5 @@
 package com.opencirc.api.passport.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.opencirc.api.passport.dto.PassportTemplateDto;
 import com.opencirc.api.passport.service.PassportTemplateService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,21 +15,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint for operations related to passport. */
+/** Endpoint for operations related to passport templates. */
 @RestController
 @Tag(name = "Passport template", description = "Operations related to Passport templates")
 public class PassportTemplateController {
 
-  /** Injecting PassportTemplateService class. */
   @Autowired private PassportTemplateService passportTemplateService;
 
   /**
-   * Endpoint to create a template from the existing passport.
-   *
-   * @param passportId
-   * @param dryRun
-   * @param templateName
-   * @return the template
+   * Create a template from an existing passport.
    */
   @Operation(summary = "Create a template from the existing passport")
   @PostMapping(
@@ -46,36 +38,28 @@ public class PassportTemplateController {
           boolean dryRun,
       @Parameter(description = "Provide name to extracted" + "template for future retrieval")
           @RequestBody
-          String templateName)
-      throws JsonProcessingException {
+          String templateName) {
     return ResponseEntity.ok(
         passportTemplateService.createTemplateFromPassport(passportId, dryRun, templateName));
   }
 
   /**
-   * Endpoint to retrieve passport template.
-   *
-   * @param templateId
-   * @return the template
+   * Retrieve a passport template.
    */
   @Operation(summary = "Retrieves the requested passport template")
   @GetMapping("/api/passportTemplate/{templateId}")
   public ResponseEntity<PassportTemplateDto> getTemplate(
       @Parameter(description = "Passport template ID", required = true) @PathVariable
-          String templateId)
-      throws JsonMappingException, JsonProcessingException {
+          String templateId) {
     return ResponseEntity.ok(passportTemplateService.getPassportTemplate(templateId));
   }
 
   /**
-   * Endpoint to list template from database.
-   *
-   * @return the template
+   * Retrieve all passport templates.
    */
   @Operation(summary = "Lists all the persisted passport templates")
   @GetMapping("/api/passportTemplate/all")
-  public ResponseEntity<List<PassportTemplateDto>> getAllTemplates()
-      throws JsonMappingException, JsonProcessingException {
+  public ResponseEntity<List<PassportTemplateDto>> getAllTemplates() {
     return ResponseEntity.ok(passportTemplateService.getAllPassportTemplates());
   }
 }

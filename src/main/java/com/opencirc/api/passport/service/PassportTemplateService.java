@@ -21,28 +21,22 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service class for PassportTemplate related operations.
+ */
 @Service
 public class PassportTemplateService {
 
-  /** Injecting PassportRepository class. */
   @Autowired private PassportRepository passportRepository;
 
-  /** Injecting PassportTemplateRepository class. */
   @Autowired private PassportTemplateRepository passportTemplateRepository;
 
-  /** Injecting UserContext class. */
   @Autowired private UserContext userContext;
 
-  /** Injecting ObjectMapper bean. */
   @Autowired private ObjectMapper objectMapper;
 
   /**
-   * Creates template from the existing passport.
-   *
-   * @param passportId
-   * @param dryRun
-   * @param templateName
-   * @return the template in json format
+   * Creates a template from the existing passport.
    */
   public PassportTemplateDto createTemplateFromPassport(
       String passportId, boolean dryRun, String templateName) {
@@ -61,13 +55,9 @@ public class PassportTemplateService {
 
   /**
    * Extracts template from the existing passport.
-   *
-   * @param passport
-   * @param templateName
-   * @return the template in JSON format
    */
   private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName) {
-    PassportTemplate template = new PassportTemplate();
+    PassportTemplate template;
     ObjectNode rootNode = objectMapper.createObjectNode();
 
     for (PassportDatasheetMapping passportDatasheetMapping : passport.getDatasheetMappings()) {
@@ -85,7 +75,7 @@ public class PassportTemplateService {
         PassportTemplate.builder()
             .name(templateName)
             .template(rootNode)
-            .createdById(userDtoContext.getId().toString())
+            .createdById(userDtoContext.getId())
             .createdBy(new CreatedByDto(userDtoContext.getFullName(), userDtoContext.getEmail()))
             .build();
 
@@ -117,10 +107,7 @@ public class PassportTemplateService {
   }
 
   /**
-   * Retrieves the template from database.
-   *
-   * @param id
-   * @return template
+   * Retrieves the template from the database.
    */
   public PassportTemplateDto getPassportTemplate(String id) {
     PassportTemplate template = passportTemplateRepository.findFirstById(id);

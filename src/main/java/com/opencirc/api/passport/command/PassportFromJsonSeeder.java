@@ -120,7 +120,7 @@ public class PassportFromJsonSeeder {
     for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
       String uri = uriList.get(i % uriList.size());
       createPassportRecursive(
-          1, String.valueOf(i + 1), uri, i, null, String.valueOf(user.getId()), createdByDto);
+          1, String.valueOf(i + 1), uri, i, null, user.getId(), createdByDto);
     }
     log.info("Passport seeding from JSON templates completed.");
   }

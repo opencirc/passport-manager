@@ -248,8 +248,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
   /** Validates template entries against allowed values and ranges. */
   @Override
   public String validatePassportData(JsonNode propertyNode) {
-
-    String errorMessage = null;
+    String errorMessage;
     if (propertyNode == null || !propertyNode.isObject()) {
       return "Invalid property node found (not an object). Skipping...";
     }
@@ -270,6 +269,9 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
         property.has("MinInclusive") ? property.get("MinInclusive").asDouble() : null;
 
     if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
+      if (dataType == null) {
+        return "Missing 'dataType' for property: " + propertyName;
+      }
       errorMessage = validateDataType(propertyName, dataType, actualValueNode);
       if (errorMessage == null && allowedValuesNode != null && allowedValuesNode.isArray()) {
         errorMessage =
@@ -322,12 +324,12 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
         try {
           Integer.parseInt(actualValue);
         } catch (NumberFormatException e) {
-          return propertyName + " : Invalid data type. Expected Integer, but got: " + actualValue;
+          return propertyName + ": Invalid data type. Expected Integer, but got: " + actualValue;
         }
         break;
       case "Boolean":
         if (!"true".equalsIgnoreCase(actualValue) && !"false".equalsIgnoreCase(actualValue)) {
-          return propertyName + " : Invalid data type. Expected Boolean, but got: " + actualValue;
+          return propertyName + ": Invalid data type. Expected Boolean, but got: " + actualValue;
         }
         break;
       case "Real":
@@ -335,27 +337,27 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
           Double.parseDouble(actualValue.replace("\"", ""));
           if (!actualValue.contains(".")) {
             return propertyName
-                + " : Invalid Real number. A valid Real number should contain"
+                + ": Invalid Real number. A valid Real number should contain"
                 + " a decimal point.";
           }
 
         } catch (NumberFormatException e) {
           return propertyName
-              + " : Invalid data type. Expected Real (Double), but got: "
+              + ": Invalid data type. Expected Real (Double), but got: "
               + actualValue;
         }
         break;
       case "Character":
         if (actualValue.length() != 1) {
           return propertyName
-              + " : Invalid data type. Expected Character "
+              + ": Invalid data type. Expected Character "
               + "(Single character string), but got: "
               + actualValue;
         }
         break;
       case "Time":
         if (actualValue == null) {
-          return propertyName + " : Invalid data type. Expected Time (String), but got null";
+          return propertyName + ": Invalid data type. Expected Time (String), but got null";
         }
 
         boolean valid;
@@ -378,12 +380,12 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
         }
 
         if (!valid) {
-          return propertyName + " : Invalid ISO 8601 date/time format. Value: " + actualValue;
+          return propertyName + ": Invalid ISO 8601 date/time format. Value: " + actualValue;
         }
 
         break;
       default:
-        return propertyName + " : Unknown data type: " + dataType;
+        return propertyName + ": Unknown data type: " + dataType;
     }
     return null;
   }
@@ -403,7 +405,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
 
     if (!isValid) {
       errorMessage =
-          propertyName + " : Actual value: " + actualValue + " is not within the allowed values.";
+          propertyName + ": Actual value: " + actualValue + " is not within the allowed values.";
     }
     return errorMessage;
   }
@@ -421,13 +423,13 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
       realValue = Double.parseDouble(actualValue.toString().trim().replace("\"", ""));
     } catch (NumberFormatException e) {
       errorMessage =
-          propertyName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
+          propertyName + ": Invalid data type. Expected Real (Double), but got: " + actualValue;
     }
 
     if (maxExclusive != null && realValue >= maxExclusive) {
       errorMessage =
           propertyName
-              + " : Actual value: "
+              + ": Actual value: "
               + realValue
               + " exceeds MaxExclusive limit: "
               + maxExclusive;
@@ -436,7 +438,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     if (maxInclusive != null && realValue > maxInclusive) {
       errorMessage =
           propertyName
-              + " : Actual value: "
+              + ": Actual value: "
               + realValue
               + " exceeds MaxInclusive limit: "
               + maxInclusive;
@@ -445,7 +447,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     if (minExclusive != null && realValue <= minExclusive) {
       errorMessage =
           propertyName
-              + " : Actual value: "
+              + ": Actual value: "
               + realValue
               + " is below MinExclusive limit: "
               + minExclusive;
@@ -454,7 +456,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     if (minInclusive != null && realValue < minInclusive) {
       errorMessage =
           propertyName
-              + " : Actual value: "
+              + ": Actual value: "
               + realValue
               + " is below MinInclusive limit: "
               + minInclusive;
@@ -464,7 +466,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
 
   /** Displays the template from the dictionary without any processing. */
   public JsonNode fetchRawTemplate(String uri, String type) {
-    String uriPrefix = null;
+    String uriPrefix;
     if (type.equalsIgnoreCase("class")) {
       uriPrefix = appProperties.getBsddClassDetailsUrl();
     } else if (type.equalsIgnoreCase("property")) {

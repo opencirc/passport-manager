@@ -105,7 +105,7 @@ public class PassportFromApiSeeder {
             uri,
             index,
             null,
-            String.valueOf(user.getId()),
+            user.getId(),
             createdByDto);
       }
       log.info("Passport seeding completed.");
