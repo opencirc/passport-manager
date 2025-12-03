@@ -18,15 +18,13 @@ import org.springframework.stereotype.Component;
 public class DictionaryMapping {
 
   /** Added with dictionary mappings. */
-  private Map<String, Map<String, String>> dictionaries = new HashMap<>();
+  private final Map<String, Map<String, String>> dictionaries = new HashMap<>();
 
   /** Injecting ObjectMapper. */
   private final ObjectMapper objectMapper;
 
   /**
    * DictionaryMapping constructor.
-   *
-   * @param mapper
    */
   public DictionaryMapping(ObjectMapper mapper) throws IOException {
     this.objectMapper = mapper;
@@ -36,7 +34,7 @@ public class DictionaryMapping {
   /** Stores the required Dictionary mappings. */
   private final Map<Platform, Map<String, String>> reverseCache = new HashMap<>();
 
-  /** Loads the field names from dictionary mapping property file. */
+  /** Loads the field names from a dictionary mapping property file. */
   private void loadDictionaryMappings() throws IOException {
     PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
     Resource[] resources = resolver.getResources("classpath:DataDictionary_Mapping/*.properties");
@@ -61,9 +59,6 @@ public class DictionaryMapping {
 
   /**
    * Fetches the relevant dictionary mapping.
-   *
-   * @param dictionaryName
-   * @return the dictionary mappings for the requested dictionary
    */
   public Map<String, String> getDictionaryMapping(Platform dictionaryName) {
     return dictionaries.get(dictionaryName.getValue());
@@ -71,10 +66,6 @@ public class DictionaryMapping {
 
   /**
    * Maps the keys of a template to their corresponding ISO standard keys.
-   *
-   * @param template
-   * @param dictionaryName
-   * @return an ObjectNode containing the mapped template
    */
   public ObjectNode mapTemplateFieldsToStandards(JsonNode template, Platform dictionaryName) {
     ObjectNode resultNode = objectMapper.createObjectNode();
@@ -98,10 +89,6 @@ public class DictionaryMapping {
 
   /**
    * Retrieves the mapping details for the specified data dictionary.
-   *
-   * @param dictionaryPlatform dictionary name
-   * @param dictionaryMappings fetched mappings
-   * @return map the matched field names
    */
   private Map<String, String> getReverseMapping(
       Platform dictionaryPlatform, Map<String, String> dictionaryMappings) {

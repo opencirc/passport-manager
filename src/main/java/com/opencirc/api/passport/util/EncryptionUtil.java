@@ -14,8 +14,6 @@ public class EncryptionUtil {
 
   /**
    * Generates Security Key to which helps JWT.
-   *
-   * @return security key
    */
   public static String generateSecureKey() {
     try {
@@ -29,9 +27,6 @@ public class EncryptionUtil {
 
   /**
    * Derives and hashes the key with the help of encryption key.
-   *
-   * @param encryptionKey
-   * @return security key
    */
   public static SecretKeySpec deriveKey(String encryptionKey) throws Exception {
     byte[] keyBytes = encryptionKey.getBytes("UTF-8");
@@ -42,10 +37,6 @@ public class EncryptionUtil {
 
   /**
    * Encrypts the data.
-   *
-   * @param data
-   * @param encryptionKey
-   * @return encrypted security key
    */
   public static String encrypt(String data, String encryptionKey) throws Exception {
     SecretKeySpec secretKey = deriveKey(encryptionKey);
@@ -57,10 +48,6 @@ public class EncryptionUtil {
 
   /**
    * Decrypts the data.
-   *
-   * @param encryptedData
-   * @param encryptionKey
-   * @return raw security key
    */
   public static String decrypt(String encryptedData, String encryptionKey) throws Exception {
     SecretKeySpec secretKey = deriveKey(encryptionKey);

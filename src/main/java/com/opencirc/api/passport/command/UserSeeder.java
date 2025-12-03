@@ -18,9 +18,6 @@ public class UserSeeder {
 
   /**
    * Constructor-based dependency injection for AuthService.
-   *
-   * @param authService
-   * @param appProperties
    */
   public UserSeeder(AuthService authService, AppProperties appProperties) {
     this.authService = authService;
@@ -29,8 +26,6 @@ public class UserSeeder {
 
   /**
    * Seeds predefined test users into the system.
-   *
-   * @throws RuntimeException if user seeding fails.
    */
   public void seed() {
 
@@ -41,10 +36,6 @@ public class UserSeeder {
 
   /**
    * Registers new user. Skips if user is already present.
-   *
-   * @param email
-   * @param firstName
-   * @param lastName
    */
   private void registerSafely(String email, String firstName, String lastName) {
     try {

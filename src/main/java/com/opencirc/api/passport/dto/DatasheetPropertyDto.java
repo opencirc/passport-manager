@@ -30,9 +30,6 @@ public class DatasheetPropertyDto {
 
   /**
    * Maps the DatasheetProperty values to dto.
-   *
-   * @param property
-   * @return datasheetPropertyDto
    */
   public static DatasheetPropertyDto from(DatasheetProperty property) {
     DatasheetPropertyDto datasheetPropertyDto = new DatasheetPropertyDto();

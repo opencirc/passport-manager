@@ -84,8 +84,6 @@ public class PassportTemplateService {
 
   /**
    * Clears the value from the passport to make it as template.
-   *
-   * @param node - passport json
    */
   private void clearActualValues(JsonNode node) {
     if (node.isObject()) {
@@ -120,8 +118,6 @@ public class PassportTemplateService {
 
   /**
    * Lists the templates.
-   *
-   * @return template
    */
   public List<PassportTemplateDto> getAllPassportTemplates() {
     List<PassportTemplate> templates = passportTemplateRepository.findAll();

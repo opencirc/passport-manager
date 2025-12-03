@@ -9,9 +9,6 @@ public class GeneratedApiKeyDto {
 
   /**
    * Constructor with parameters.
-   *
-   * @param apiKey
-   * @param rawSecret
    */
   public GeneratedApiKeyDto(ApiKey apiKey, String rawSecret) {
     this.apiKey = apiKey;

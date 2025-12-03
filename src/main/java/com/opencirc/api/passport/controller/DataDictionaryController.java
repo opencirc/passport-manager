@@ -20,20 +20,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint for operations related to data dictionary. */
+/** Controller for operations related to a data dictionary. */
 @RestController
 @Tag(name = "Data Dictionary", description = "Operations related to template from Data Dictionary")
 public class DataDictionaryController {
 
-  /** Injecting DataDictionaryService class. */
   @Autowired private DataDictionaryService dataDictionaryService;
 
   /**
-   * Returns list of classes fetched from bsdd.
-   *
-   * @param platform
-   * @param query
-   * @return list of class and its details
+   * Returns a list of classes fetched from bsdd.
    */
   @GetMapping(
       value = "/api/dataDictionary/{platform}/class/search/{query}",
@@ -48,13 +43,7 @@ public class DataDictionaryController {
   }
 
   /**
-   * Returns Class Template with or without properties from the data dictionary using the provided
-   * URI.
-   *
-   * @param platform
-   * @param getClassRequest
-   * @param withProperties
-   * @return the template with all the relevant properties
+   * Returns a Class Template with/without properties from the data dictionary using the URI.
    */
   @Operation(summary = "Get class from DD for the requested uri")
   @PostMapping(
@@ -86,11 +75,7 @@ public class DataDictionaryController {
   }
 
   /**
-   * Returns list of properties fetched from bsdd.
-   *
-   * @param platform
-   * @param query
-   * @return the template with all the relevant properties
+   * Returns a list of properties fetched from bsdd.
    */
   @Operation(summary = "Lists all the properties name and its URI matching the text")
   @GetMapping(
@@ -107,10 +92,6 @@ public class DataDictionaryController {
 
   /**
    * Create template with selected properties.
-   *
-   * @param platform
-   * @param propertiesUriList
-   * @return the template with all the relevant properties
    */
   @Operation(summary = "Create template with selected properties")
   @PostMapping(

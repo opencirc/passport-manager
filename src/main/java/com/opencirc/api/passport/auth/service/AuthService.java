@@ -31,39 +31,28 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service class for authentication related operations.
+ */
 @Service
 public class AuthService {
 
-  /** Injecting UserRepository class. */
   private final UserRepository userRepository;
 
-  /** Injecting Properties class. */
   private final AppProperties properties;
 
-  /** Injecting PasswordService class. */
   private final PasswordService passwordService;
 
-  /** Injecting AuthenticationManager class. */
   private final AuthenticationManager authenticationManager;
 
-  /** Injecting JwtService class. */
   private final JwtService jwtService;
 
-  /** Injecting AuthUserDetailsService class. */
   private final AuthUserDetailsService authUserDetailsService;
 
-  /** Injecting ApiKeyService class. */
   private final ApiKeyService apiKeyService;
 
   /**
    * Constructor.
-   *
-   * @param userRepository
-   * @param properties
-   * @param passwordService
-   * @param authenticationManager
-   * @param jwtService
-   * @param authUserDetailsService
    */
   public AuthService(
       UserRepository userRepository,
@@ -84,15 +73,6 @@ public class AuthService {
 
   /**
    * Register new user.
-   *
-   * @param email normalized email (trimmed, lowercased)
-   * @param password raw password
-   * @param firstName trimmed first name
-   * @param lastName trimmed last name
-   * @param role desired role (defaults to USER if null)
-   * @return the persisted User
-   * @throws InvalidInputException if email or password are invalid
-   * @throws AuthenticationException if email is already registered
    */
   @Transactional
   public User register(String email, String password, String firstName, String lastName, Role role)
@@ -124,10 +104,6 @@ public class AuthService {
 
   /**
    * Validates registration fields (email and password).
-   *
-   * @param email the user's email address
-   * @param password the user's password
-   * @throws InvalidInputException if any validation rule fails
    */
   private void validateRegistrationFields(String email, String password) {
     EmailValidator emailValidator = EmailValidator.getInstance();
@@ -141,9 +117,6 @@ public class AuthService {
    * Checks whether the given password meets the complexity criteria. The password must be at least
    * 12 characters and contain at least three of the following character types:Lower case, Upper
    * case, Digits, Special characters
-   *
-   * @param password
-   * @throws InvalidInputException if the password does not meet criteria
    */
   private void validatePassword(String password) {
     if (password == null || password.length() < 12) {
@@ -164,13 +137,7 @@ public class AuthService {
   }
 
   /**
-   * Login and verifies the user.
-   *
-   * @param loginRequest details with email, password
-   * @param response
-   * @return userDto the instance of UserDto
-   * @throws InvalidInputException
-   * @throws AuthenticationException
+   * Verifies the user and logs them in.
    */
   public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response) {
 
@@ -219,10 +186,6 @@ public class AuthService {
 
   /**
    * Refreshes the expired token.
-   *
-   * @param refreshToken - Existing JWT refresh token
-   * @param response
-   * @return JWT token (new access token)
    */
   public String refreshToken(String refreshToken, HttpServletResponse response)
       throws AuthenticationException {
@@ -241,9 +204,6 @@ public class AuthService {
 
   /**
    * Validates the token.
-   *
-   * @param token - JWT token
-   * @return result whether the token is valid or not
    */
   public boolean validateToken(String token) {
     try {
@@ -257,10 +217,7 @@ public class AuthService {
   }
 
   /**
-   * Logs out the user.
-   *
-   * @param refreshToken - JWT refresh token
-   * @param response
+   * Logs the user out.
    */
   public void logout(String refreshToken, HttpServletResponse response) {
     SecurityContextHolder.clearContext();
@@ -279,9 +236,6 @@ public class AuthService {
 
   /**
    * Gets the details of current logged in user.
-   *
-   * @param request - Http servlet request
-   * @return the instance of UserDto or null
    */
   public UserDto getCurrentUser(HttpServletRequest request) {
 
@@ -305,7 +259,7 @@ public class AuthService {
       String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
       ApiKey apiKey = apiKeyService.findById(apiKeyHeader);
       if (apiKey != null && apiKey.getUserId() != null) {
-        user = userRepository.findById(apiKey.getUserId().toString()).orElse(null);
+        user = userRepository.findById(apiKey.getUserId()).orElse(null);
       }
     }
 
@@ -314,9 +268,6 @@ public class AuthService {
 
   /**
    * Validates API Key.
-   *
-   * @param request
-   * @return true, if validation success
    */
   public boolean validateApiKeySecret(HttpServletRequest request) {
     String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
@@ -336,11 +287,7 @@ public class AuthService {
       return false;
     }
 
-    if (apiKey.getExpirationTime() != null
-        && !Instant.now().isBefore(apiKey.getExpirationTime().toInstant())) {
-      return false;
-    }
-
-    return true;
+    return apiKey.getExpirationTime() == null
+        || Instant.now().isBefore(apiKey.getExpirationTime().toInstant());
   }
 }

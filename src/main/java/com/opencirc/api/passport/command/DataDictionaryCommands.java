@@ -25,10 +25,6 @@ public class DataDictionaryCommands {
 
   /**
    * Instantiating DataDictionaryCommands.
-   *
-   * @param objectMapper
-   * @param dataDictionaryService
-   * @param platformAdapterFactory
    */
   @Autowired
   public DataDictionaryCommands(
@@ -42,12 +38,6 @@ public class DataDictionaryCommands {
 
   /**
    * Shell command to fetch template from the required data dictionary.
-   *
-   * @param dictionaryPlatform
-   * @param type
-   * @param uri
-   * @param raw
-   * @return template
    */
   @Command(description = "Fetch template from Data Dictionary.")
   public String fetchTemplate(
@@ -69,11 +59,6 @@ public class DataDictionaryCommands {
 
   /**
    * Gets the processed template.
-   *
-   * @param dictionaryPlatform
-   * @param type
-   * @param uri
-   * @return template
    */
   private String generateProcessedTemplate(Platform dictionaryPlatform, String uri, String type)
       throws JsonValidationException, JsonProcessingException {
@@ -85,11 +70,6 @@ public class DataDictionaryCommands {
 
   /**
    * Gets the raw template fetched from given data dictionary.
-   *
-   * @param dictionaryPlatform
-   * @param type
-   * @param uri
-   * @return template
    */
   private String generateRawTemplate(Platform dictionaryPlatform, String uri, String type)
       throws JsonProcessingException {
@@ -99,9 +79,6 @@ public class DataDictionaryCommands {
 
   /**
    * Formats the json.
-   *
-   * @param response string
-   * @return formatted template
    */
   private String formatJsonResponse(Object response) throws JsonProcessingException {
     return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);

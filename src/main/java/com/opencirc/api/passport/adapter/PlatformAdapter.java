@@ -13,8 +13,6 @@ import java.util.Map;
 
 /**
  * Interface of Dictionary Adapter.
- *
- * @param <T> the type of dictionary used by the adapter
  */
 public interface PlatformAdapter<T> {
 

@@ -11,8 +11,6 @@ public class JacksonConfig {
 
   /**
    * Configures Jackson to handle Java time types and serialize dates as ISO-8601 strings.
-   *
-   * @return a customizer that applies these settings to the Jackson builder.
    */
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {

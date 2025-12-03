@@ -77,8 +77,6 @@ public class PassportFromApiSeeder {
 
   /**
    * Seeds sample passports recursively using the predefined URI list.
-   *
-   * @throws RuntimeException if passport seeding fails.
    */
   public void seed() {
     try {

@@ -11,17 +11,11 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, String> {
 
   /**
    * Gets all API tokens for the given userId.
-   *
-   * @param userId
-   * @return list of ApiKey instances
    */
   List<ApiKey> findAllByUserId(String userId);
 
   /**
    * Finds an API key by its ID.
-   *
-   * @param id the API key UUID
-   * @return an Optional containing the ApiKey if found
    */
   Optional<ApiKey> findById(String id);
 }

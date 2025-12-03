@@ -21,10 +21,6 @@ public final class SecretGenerator {
 
   /**
    * Generates a random alphanumeric string.
-   *
-   * @param length
-   * @return random string
-   * @throws IllegalArgumentException if length <= 0
    */
   public static String generateRandomString(int length) {
     if (length <= 0) {
@@ -39,12 +35,6 @@ public final class SecretGenerator {
 
   /**
    * Generates an API token with the format: {prefix}_{randomString}_{macHex}.
-   *
-   * @param prefix
-   * @param length
-   * @param secretKey secret key used in MAC calculation
-   * @return generated API token
-   * @throws IllegalArgumentException if inputs are invalid
    */
   public static String generateApiToken(String prefix, int length, String secretKey) {
 
@@ -69,11 +59,6 @@ public final class SecretGenerator {
   /**
    * Computes HMAC-SHA256(input) using the given secret and returns a hex string, optionally
    * truncated to maxHexLen characters.
-   *
-   * @param input
-   * @param secretKey
-   * @param maxHexLength
-   * @return computed maxHex
    */
   private static String computeHmacSha256Hex(String input, String secretKey, int maxHexLength) {
     Objects.requireNonNull(input, "Input must not be null");

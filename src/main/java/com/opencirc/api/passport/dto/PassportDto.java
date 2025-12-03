@@ -43,9 +43,6 @@ public class PassportDto {
 
   /**
    * Setting up values from Passport to Passport Dto.
-   *
-   * @param passport
-   * @return passportDto
    */
   public static PassportDto from(Passport passport) {
     PassportDto dto = new PassportDto();

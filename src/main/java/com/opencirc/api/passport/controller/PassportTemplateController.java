@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint for operations related to passport templates. */
+/** Controller for operations related to passport templates. */
 @RestController
 @Tag(name = "Passport template", description = "Operations related to Passport templates")
 public class PassportTemplateController {

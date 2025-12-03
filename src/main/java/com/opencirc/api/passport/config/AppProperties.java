@@ -95,8 +95,6 @@ public class AppProperties {
 
   /**
    * Getter for refresh token.
-   *
-   * @return refresh token expiry time
    */
   public int getRefreshTokenExpiryTime() {
     return Integer.parseInt(refreshTokenExpiryTime);
@@ -104,8 +102,6 @@ public class AppProperties {
 
   /**
    * Getter for access token.
-   *
-   * @return access token expiry time
    */
   public int getAccessTokenExpiryTime() {
     return Integer.parseInt(accessTokenExpiryTime);
@@ -113,8 +109,6 @@ public class AppProperties {
 
   /**
    * Getter for Maximum level.
-   *
-   * @return Maximum level of the passports to be created
    */
   public int getMaximumLevel() {
     try {
@@ -126,8 +120,6 @@ public class AppProperties {
 
   /**
    * Getter for childrenPerLevel.
-   *
-   * @return Number of children for each passport
    */
   public int getChildrenPerLevel() {
     try {
@@ -140,8 +132,6 @@ public class AppProperties {
 
   /**
    * Getter for propertyCountToSelect.
-   *
-   * @return the number of properties to have in the template
    */
   public int getPropertyCountToSelect() {
     try {

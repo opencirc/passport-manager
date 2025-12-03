@@ -331,8 +331,6 @@ public class PassportService {
 
   /**
    * Retrieves all the root passports.
-   *
-   * @return Passport DTO list from passport
    */
   public List<PassportDto> getRootPassports() {
     List<Passport> passports = passportRepository.getRootPassports();
@@ -583,7 +581,7 @@ public class PassportService {
     return new ArrayList<>(passportMap.values());
   }
 
-  /** Method to parse and form the tree structure of the platform. */
+  /** Parse and form the tree structure of the platform. */
   public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(
       Platform platform, DataDictionary dictionary)
       throws IOException, InvalidDataDictionaryException {

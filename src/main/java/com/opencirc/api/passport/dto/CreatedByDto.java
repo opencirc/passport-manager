@@ -23,9 +23,6 @@ public class CreatedByDto {
 
   /**
    * Maps the User to CreatedByDto.
-   *
-   * @param user
-   * @return CreatedByDto
    */
   public static CreatedByDto fromUser(User user) {
     if (user == null) {

@@ -39,9 +39,6 @@ public class SecurityConfig {
 
   /**
    * Constructor.
-   *
-   * @param userDetailsService
-   * @param properties
    */
   public SecurityConfig(UserDetailsService userDetailsService, AppProperties properties) {
     this.userDetailsService = userDetailsService;
@@ -50,14 +47,6 @@ public class SecurityConfig {
 
   /**
    * JwtFilter bean.
-   *
-   * @param jwtService
-   * @param properties
-   * @param apiKeyService
-   * @param passwordService
-   * @param authUserDetailsService
-   * @param objectMapper
-   * @return JwtFilter
    */
   @Bean
   public JwtFilter jwtFilter(
@@ -78,8 +67,6 @@ public class SecurityConfig {
 
   /**
    * PasswordEncoder bean.
-   *
-   * @return passwordEncoder
    */
   @Bean
   public BCryptPasswordEncoder passwordEncoder() {
@@ -88,9 +75,6 @@ public class SecurityConfig {
 
   /**
    * Bean to get authenticationManager.
-   *
-   * @param config
-   * @return the instance of authentication manager
    */
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
@@ -100,9 +84,6 @@ public class SecurityConfig {
 
   /**
    * Bean of authenticationProvider.
-   *
-   * @param bcryptPasswordEncoder
-   * @return the instance of authentication provider
    */
   @Bean
   public AuthenticationProvider authenticationProvider(
@@ -115,10 +96,6 @@ public class SecurityConfig {
 
   /**
    * Configuring security filter chain.
-   *
-   * @param http
-   * @param jwtFilter
-   * @return instance of security filter chain
    */
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter)

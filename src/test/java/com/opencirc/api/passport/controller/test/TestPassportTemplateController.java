@@ -69,8 +69,6 @@ public class TestPassportTemplateController {
    * Sets up necessary configurations and mocks before each test execution. Initializes REST Assured
    * with the test server port, opens Mockito annotations, mocks the authentication context,
    * generates a mock JWT token, and stubs the bsdd API response.
-   *
-   * @param wmInfo
    */
   @BeforeEach
   void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {

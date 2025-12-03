@@ -36,9 +36,6 @@ public class UserDto {
 
   /**
    * Setting up values from UserPrincipal to User Dto.
-   *
-   * @param userPrincipal
-   * @return userDto
    */
   public static UserDto from(UserPrincipal userPrincipal) {
     UserDto userDto = new UserDto();
@@ -52,9 +49,6 @@ public class UserDto {
 
   /**
    * Setting up values from User to User Dto.
-   *
-   * @param user
-   * @return userDto
    */
   public static UserDto from(User user) {
     UserDto userDto = new UserDto();

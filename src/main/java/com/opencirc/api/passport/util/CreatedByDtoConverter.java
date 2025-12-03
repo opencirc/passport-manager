@@ -16,8 +16,6 @@ public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, S
 
   /**
    * Constructor.
-   *
-   * @param objectMapper
    */
   public CreatedByDtoConverter(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -25,10 +23,6 @@ public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, S
 
   /**
    * Converts a CreatedByDto object into its JSON string for storage in the database.
-   *
-   * @param createdByDto the {@link CreatedByDto} object to convert; may be {@code null}
-   * @return the JSON string representation of the object, or null if the attribute is null
-   * @throws IllegalArgumentException if serialization fails
    */
   @Override
   public String convertToDatabaseColumn(CreatedByDto createdByDto) {
@@ -45,10 +39,7 @@ public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, S
   /**
    * Converts a JSON string retrieved from the database into a CreatedByDto object.
    *
-   * @param dbData the JSON string stored in the database;
-   * @return the deserialized {@link CreatedByDto} object, or {@code null} if the input is {@code
    *     null} or empty
-   * @throws IllegalArgumentException if deserialization fails
    */
   @Override
   public CreatedByDto convertToEntityAttribute(String dbData) {

@@ -13,9 +13,6 @@ public class RedisConfig {
 
   /**
    * Created Redis template.
-   *
-   * @param redisConnectionFactory
-   * @return Redis template
    */
   @Bean
   public RedisTemplate<String, String> redisTemplate(

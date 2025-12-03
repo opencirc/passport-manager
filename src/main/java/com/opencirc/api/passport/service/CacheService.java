@@ -20,9 +20,6 @@ public class CacheService {
 
   /**
    * Initialising CacheService bean.
-   *
-   * @param redisTemplateParam
-   * @param objectMapperParam
    */
   public CacheService(
       @Qualifier("redisTemplate") RedisTemplate<String, String> redisTemplateParam,
@@ -33,10 +30,6 @@ public class CacheService {
 
   /**
    * Caches the template under the given key as a JSON string.
-   *
-   * @param key cache key
-   * @param template the template
-   * @param <T> type of the template being cached
    */
   public <T> void cacheTemplate(String key, T template) {
     if (key == null || key.trim().isEmpty()) {
@@ -55,11 +48,6 @@ public class CacheService {
 
   /**
    * Retrieves the cached template.
-   *
-   * @param key cache key
-   * @param <T> expected template type
-   * @param valueType class of the expected type
-   * @return the template instance
    */
   public <T> T getCachedTemplate(String key, Class<T> valueType) {
     if (key == null || key.trim().isEmpty()) {

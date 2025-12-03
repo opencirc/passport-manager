@@ -9,8 +9,6 @@ public abstract class GenericEnumConverter<E extends Enum<E>>
 
   /**
    * Creates a new converter for the specified enum class.
-   *
-   * @param enumClass
    */
   protected GenericEnumConverter(Class<E> enumClass) {
     this.enumClass = enumClass;
@@ -18,9 +16,6 @@ public abstract class GenericEnumConverter<E extends Enum<E>>
 
   /**
    * Converts an enum to its database value by calling {@code getValue()} on the enum.
-   *
-   * @param attribute the enum value to convert
-   * @return the database column value, or null if attribute is null
    */
   @Override
   public String convertToDatabaseColumn(E attribute) {
@@ -37,9 +32,6 @@ public abstract class GenericEnumConverter<E extends Enum<E>>
   /**
    * Converts a database value back into an enum instance by calling {@code fromValue(String)} on
    * the enum.
-   *
-   * @param enumValue the database value to convert
-   * @return the corresponding enum value, or null if enumValue is null
    */
   @Override
   public E convertToEntityAttribute(String enumValue) {

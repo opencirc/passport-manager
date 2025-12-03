@@ -8,8 +8,6 @@ public class StatusResponseDto {
 
   /**
    * Instantiates StatusResponseDto.
-   *
-   * @param message
    */
   public StatusResponseDto(String message) {
     this.message = message;
@@ -17,8 +15,6 @@ public class StatusResponseDto {
 
   /**
    * Returns the message.
-   *
-   * @return the message string
    */
   public String getMessage() {
     return message;
@@ -26,8 +22,6 @@ public class StatusResponseDto {
 
   /**
    * Sets the message.
-   *
-   * @param message the new message string
    */
   public void setMessage(String message) {
     this.message = message;

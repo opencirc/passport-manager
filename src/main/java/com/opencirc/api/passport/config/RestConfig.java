@@ -10,8 +10,6 @@ public class RestConfig {
 
   /**
    * Rest Template Bean Initialisation.
-   *
-   * @return {@link RestTemplate}
    */
   @Bean
   public RestTemplate restTemplate() {

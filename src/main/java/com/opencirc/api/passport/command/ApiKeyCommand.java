@@ -28,10 +28,6 @@ public class ApiKeyCommand {
 
   /**
    * Creates a new API key for the specified user.
-   *
-   * @param userId the UUID of the user (required)
-   * @param expirationDate optional expiration date in yyyy-MM-dd format
-   * @param name name of the token
    */
   @Command(
       command = "create-api-key",
@@ -94,8 +90,6 @@ public class ApiKeyCommand {
 
   /**
    * Lists all available API tokens for the specified user.
-   *
-   * @param userId the UUID of the user (required)
    */
   @Command(
       command = "list-api-tokens",
@@ -146,8 +140,6 @@ public class ApiKeyCommand {
 
   /**
    * Deletes the api token for the given key.
-   *
-   * @param keyId
    */
   @Command(
       command = "delete-api-token",

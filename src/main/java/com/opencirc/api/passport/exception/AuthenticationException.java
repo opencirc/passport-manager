@@ -7,9 +7,7 @@ public class AuthenticationException extends RuntimeException {
   private static final long serialVersionUID = 1L;
 
   /**
-   * AuthenticationException with message.
-   *
-   * @param message
+   * AuthenticationException with a message.
    */
   public AuthenticationException(String message) {
     super(message);
@@ -17,9 +15,6 @@ public class AuthenticationException extends RuntimeException {
 
   /**
    * AuthenticationException with message and cause.
-   *
-   * @param message
-   * @param cause
    */
   public AuthenticationException(String message, Throwable cause) {
     super(message, cause);

@@ -51,11 +51,6 @@ public class PassportFromJsonSeeder {
 
   /**
    * Constructor-based dependency injection.
-   *
-   * @param appProperties
-   * @param userRepository
-   * @param passportService
-   * @param objectMapper
    */
   public PassportFromJsonSeeder(
       AppProperties appProperties,
@@ -127,14 +122,6 @@ public class PassportFromJsonSeeder {
 
   /**
    * Recursively creates passports and their child passports.
-   *
-   * @param level
-   * @param nameSuffix
-   * @param uri
-   * @param uriIndex
-   * @param parentId
-   * @param userId
-   * @param createdByDto
    */
   private void createPassportRecursive(
       int level,

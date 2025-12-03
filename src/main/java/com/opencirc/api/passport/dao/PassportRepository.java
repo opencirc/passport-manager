@@ -129,8 +129,6 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
 
   /**
    * Retrieves passports without parent.
-   *
-   * @return passports
    */
   @Query(
       "SELECT DISTINCT p FROM Passport p "

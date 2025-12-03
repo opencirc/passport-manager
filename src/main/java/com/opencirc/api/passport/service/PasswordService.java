@@ -11,8 +11,6 @@ public class PasswordService {
 
   /**
    * Constructor.
-   *
-   * @param encoder BCryptPasswordEncoder bean injected by Spring
    */
   public PasswordService(BCryptPasswordEncoder encoder) {
     this.encoder = encoder;
@@ -20,9 +18,6 @@ public class PasswordService {
 
   /**
    * Hashes the given password.
-   *
-   * @param rawPassword
-   * @return hashedPassword
    */
   public String hashPassword(String rawPassword) {
     return encoder.encode(rawPassword);
@@ -30,10 +25,6 @@ public class PasswordService {
 
   /**
    * Verifies the given password.
-   *
-   * @param rawPassword
-   * @param hashedPassword
-   * @return the status
    */
   public boolean verifyPassword(String rawPassword, String hashedPassword) {
     return encoder.matches(rawPassword, hashedPassword);

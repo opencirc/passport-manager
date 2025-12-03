@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint for operations related to passport. */
+/** Controller for perations related to passport. */
 @RestController
 @Tag(name = "Passport", description = "Operations related to Passport")
 public class PassportController {
@@ -35,7 +35,7 @@ public class PassportController {
   /** Injecting PassportService class. */
   @Autowired private PassportService passportService;
 
-  /** Endpoint to create a passport. */
+  /** Create a passport. */
   @Operation(summary = "Creates Passport and validates it")
   @PostMapping(
       value = "/api/passport/dictionary/{platform}/{dictionary}",
@@ -60,7 +60,7 @@ public class PassportController {
             Platform.fromValue(platform), DataDictionary.fromValue(dictionaryName), data));
   }
 
-  /** Endpoint to fetch the passport. */
+  /** Fetch a passport. */
   @Operation(summary = "Retrieves the Passport")
   @GetMapping("/api/passport/{passportId}")
   public ResponseEntity<PassportDto> getPassport(
@@ -71,7 +71,7 @@ public class PassportController {
     return ResponseEntity.ok(passportService.getPassport(passportId));
   }
 
-  /** Endpoint to fetch the specified passport and its descendants. */
+  /** Fetch the specified passport and its descendants. */
   @Operation(summary = "Get Passport and its children for the given ID")
   @GetMapping("/api/passport/{passportId}/children")
   public ResponseEntity<List<PassportDto>> getWithChildren(
@@ -82,7 +82,7 @@ public class PassportController {
     return ResponseEntity.ok(passportService.getPassportChildren(passportId));
   }
 
-  /** Endpoint to fetch the immediate children of the specified passport. */
+  /** Fetch the immediate children of the specified passport. */
   @Operation(summary = "Get all passports with the given parent ID")
   @GetMapping("/api/passport/{passportId}/immediateChildren")
   public ResponseEntity<List<PassportDto>> getImmediateChildren(
@@ -93,14 +93,14 @@ public class PassportController {
     return ResponseEntity.ok(passportService.getImmediateChildren(passportId));
   }
 
-  /** Endpoint to fetch all the root passports. */
+  /** Fetch all the root passports. */
   @Operation(summary = "Get all the root passports available")
   @GetMapping("/api/passport/root")
   public ResponseEntity<List<PassportDto>> getRootPassports() {
     return ResponseEntity.ok(passportService.getRootPassports());
   }
 
-  /** Endpoint to update the properties for the given passport and property group. */
+  /** Update the properties for the given passport and property group. */
   @Operation(summary = "Updates the property in the datasheet")
   @PutMapping(
       value = "/api/passport/{passportId}/data",
@@ -120,7 +120,7 @@ public class PassportController {
     return ResponseEntity.ok(passportService.updateData(passportId, request));
   }
 
-  /** Endpoint to fetch the list of passports corresponding to the specified platform and code. */
+  /** Fetch the list of passports corresponding to the specified platform and code. */
   @Operation(summary = "Get all passports with the given code")
   @GetMapping("/api/passport/byCode/{code}")
   public ResponseEntity<List<PassportDto>> listPassportsByCode(
@@ -130,7 +130,7 @@ public class PassportController {
     return ResponseEntity.ok(passportService.listPassportsByCode(code));
   }
 
-  /** Endpoint to get the tree structure of the dictionary. */
+  /** Get the tree structure of the dictionary. */
   @GetMapping("/api/passport/platform/{platform}/dictionary/{dictionary}/treeStructure")
   public ResponseEntity<List<DataDictionaryTreeStructureDto>> getDictionaryTreeStructure(
       @Parameter(description = "Platform name", required = true, in = ParameterIn.PATH)

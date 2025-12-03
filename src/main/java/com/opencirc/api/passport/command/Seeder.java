@@ -25,10 +25,6 @@ public class Seeder {
 
   /**
    * Constructor-based dependency injection for seeder components.
-   *
-   * @param userSeeder
-   * @param passportFromApiSeeder
-   * @param passportFromJsonSeeder
    */
   public Seeder(
       UserSeeder userSeeder,
@@ -57,9 +53,6 @@ public class Seeder {
 
   /**
    * Executes the seeding process for the given type.
-   *
-   * @param seedType Seed type: USER | PASSPORT_FROM_API | PASSPORT_FROM_JSON | ALL
-   * @throws RuntimeException if seeding fails
    */
   @Command(
       command = "seed",

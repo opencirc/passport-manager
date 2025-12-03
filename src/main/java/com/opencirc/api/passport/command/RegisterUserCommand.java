@@ -18,8 +18,6 @@ public class RegisterUserCommand {
 
   /**
    * Constructor.
-   *
-   * @param authService
    */
   public RegisterUserCommand(AuthService authService) {
     this.authService = authService;
@@ -27,13 +25,6 @@ public class RegisterUserCommand {
 
   /**
    * Shell command to register a new user.
-   *
-   * @param email
-   * @param password
-   * @param firstName
-   * @param lastName
-   * @param role
-   * @return message
    */
   @Command(description = "Register a user.")
   public String register(

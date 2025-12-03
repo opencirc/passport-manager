@@ -17,9 +17,6 @@ public class MockAuthenticationTestHelper {
 
   /**
    * Mocks User data.
-   *
-   * @param authUserDetailsService
-   * @param authenticationManager
    */
   public void mockUserDetailsDB(
       AuthUserDetailsService authUserDetailsService, AuthenticationManager authenticationManager) {

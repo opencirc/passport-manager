@@ -12,8 +12,6 @@ public class UserContext {
 
   /**
    * Gets the user information of the currently authenticated user.
-   *
-   * @return the instance of UserDto
    */
   public UserDto getCurrentUser() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

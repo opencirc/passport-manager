@@ -49,13 +49,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   /**
    * Constructor to initialize JwtFilter dependencies.
-   *
-   * @param jwtService
-   * @param properties
-   * @param apiKeyService
-   * @param passwordService
-   * @param authUserDetailsService
-   * @param objectMapper
    */
   public JwtFilter(
       JwtService jwtService,
@@ -74,10 +67,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   /**
    * Processes incoming HTTP requests and validates authentication.
-   *
-   * @param request
-   * @param response
-   * @param filterChain
    */
   @Override
   protected void doFilterInternal(
@@ -121,11 +110,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   /**
    * Handles authentication using API key and secret headers.
-   *
-   * @param request
-   * @param response
-   * @param filterChain
-   * @param apiKeyHeader
    */
   private void handleApiKeyAuth(
       HttpServletRequest request,
@@ -174,7 +158,7 @@ public class JwtFilter extends OncePerRequestFilter {
             response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
         return;
       }
-      UserDetails userDetails = authUserDetailsService.loadUserById(apiKey.getUserId().toString());
+      UserDetails userDetails = authUserDetailsService.loadUserById(apiKey.getUserId());
 
       UsernamePasswordAuthenticationToken authToken =
           new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -195,10 +179,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   /**
    * Extracts the token from cookies.
-   *
-   * @param request
-   * @param tokenName
-   * @return token
    */
   private String extractTokenFromCookies(HttpServletRequest request, String tokenName) {
     if (request.getCookies() != null) {
@@ -213,10 +193,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   /**
    * Handles refresh token logic and generates a new access token.
-   *
-   * @param response
-   * @param refreshToken
-   * @return new access token
    */
   private String handleRefreshToken(HttpServletResponse response, String refreshToken) {
     try {
@@ -238,10 +214,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   /**
    * Extracts the user ID from the token.
-   *
-   * @param token
-   * @param response
-   * @return userId
    */
   private String extractUserIdFromToken(String token, HttpServletResponse response)
       throws IOException {
@@ -256,11 +228,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   /**
    * Authenticates the user using extracted user ID.
-   *
-   * @param request
-   * @param response
-   * @param accessToken
-   * @param userId
    */
   private void authenticateUser(
       HttpServletRequest request, HttpServletResponse response, String accessToken, String userId)
@@ -295,10 +262,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   /**
    * Sends an error response.
-   *
-   * @param response
-   * @param status
-   * @param message
    */
   private void sendErrorResponse(HttpServletResponse response, int status, String message)
       throws IOException {

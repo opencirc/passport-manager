@@ -51,8 +51,6 @@ public class JwtService {
 
   /**
    * Instantiating JwtService class.
-   *
-   * @param appProp
    */
   @Autowired
   public JwtService(AppProperties appProp) {
@@ -98,10 +96,6 @@ public class JwtService {
 
   /**
    * Generates token.
-   *
-   * @param userId
-   * @param expiryMinutes
-   * @return token
    */
   public String generateToken(String userId, int expiryMinutes) {
     Map<String, Object> claims = new HashMap<>();
@@ -116,8 +110,6 @@ public class JwtService {
 
   /**
    * Retrieves the secret key.
-   *
-   * @return secret key
    */
   private SecretKey getKey() {
     if (secretKey == null || secretKey.isEmpty()) {
@@ -133,9 +125,6 @@ public class JwtService {
 
   /**
    * Extracts the user ID.
-   *
-   * @param token JWT token
-   * @return User ID
    */
   public String extractUserId(String token) {
     return extractClaim(token, claims -> claims.get("userId", String.class));
@@ -143,11 +132,6 @@ public class JwtService {
 
   /**
    * Extracts the details based on claim resolver.
-   *
-   * @param token
-   * @param claimResolver
-   * @param <T>
-   * @return claims
    */
   private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
     final Claims claims = extractAllClaims(token);
@@ -156,9 +140,6 @@ public class JwtService {
 
   /**
    * Extracts all the details.
-   *
-   * @param token
-   * @return claims
    */
   private Claims extractAllClaims(String token) {
     return Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(token).getPayload();
@@ -166,10 +147,6 @@ public class JwtService {
 
   /**
    * Validates the token.
-   *
-   * @param token
-   * @param userDetails
-   * @return status
    */
   public boolean validateToken(String token, UserDetails userDetails) {
     if (!(userDetails instanceof UserPrincipal)) {
@@ -184,9 +161,6 @@ public class JwtService {
 
   /**
    * Checks if the token is still valid or expired.
-   *
-   * @param token
-   * @return status
    */
   private boolean isTokenExpired(String token) {
     return extractClaim(token, Claims::getExpiration).before(new Date());
@@ -194,9 +168,6 @@ public class JwtService {
 
   /**
    * Retrieves the user details from jwt token.
-   *
-   * @param token
-   * @return user details
    */
   public User extractUserFromToken(String token) {
     Optional<User> user = userRepository.findById(extractUserId(token));
@@ -205,9 +176,6 @@ public class JwtService {
 
   /**
    * Validates the refresh token. If it is valid, generates new access token .
-   *
-   * @param refreshToken
-   * @return access Token
    */
   public String generateAccessTokenUsingRefreshToken(String refreshToken) {
     String userId = extractUserId(refreshToken);
@@ -229,11 +197,6 @@ public class JwtService {
 
   /**
    * Sets a cookie with generated token.
-   *
-   * @param response
-   * @param token
-   * @param tokenType
-   * @param expiryTime
    */
   public void generateTokenCookie(
       HttpServletResponse response, String token, String tokenType, int expiryTime) {

@@ -23,9 +23,7 @@ public class DataDictionaryTreeStructureDto {
   private List<DataDictionaryTreeStructureDto> children = new ArrayList<>();
 
   /**
-   * Method to add child node to the parent node.
-   *
-   * @param child node
+   * Add a child node to the parent node.
    */
   public void addChild(DataDictionaryTreeStructureDto child) {
     children.add(child);

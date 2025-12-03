@@ -72,9 +72,6 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
 
   /**
    * Fetches a list of classes matching the search text.
-   *
-   * @param text The search text.
-   * @return A list of maps containing class details.
    */
   @Override
   public List<Map<String, String>> listClass(String text) {
@@ -295,9 +292,6 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
 
   /**
    * Validates whether the given URI is correctly formatted.
-   *
-   * @param uriString The URI string.
-   * @return True if valid, false otherwise.
    */
   public boolean validateUri(String uriString) {
     if (uriString == null || uriString.trim().isEmpty()) {

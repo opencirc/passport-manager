@@ -14,33 +14,23 @@ public interface UserRepository extends JpaRepository<User, String> {
 
   /**
    * Fetches a user by email.
-   *
-   * @param email
-   * @return User Entity
    */
   User findByEmail(String email);
 
   /**
    * Checks whether a user with the given email exists.
-   *
-   * @param email the email to check
-   * @return true if a user exists with the given email; false otherwise
    */
   boolean existsByEmail(String email);
 
   /**
    * Retrieves the first user ordered by ID in ascending order.
    *
-   * @return an Optional containing the first User if present, or an empty Optional if no users
    *     exist
    */
   Optional<User> findFirstByOrderByIdAsc();
 
   /**
    * Updates the refresh token.
-   *
-   * @param id
-   * @param refreshToken
    */
   @Transactional
   @Modifying

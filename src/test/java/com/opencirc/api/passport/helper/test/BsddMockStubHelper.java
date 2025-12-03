@@ -228,17 +228,6 @@ public class BsddMockStubHelper {
 
     /**
      * Constructor to initialize all fields of the mock DTO.
-     *
-     * @param passportId
-     * @param passportName
-     * @param status
-     * @param parentId
-     * @param datasheetId
-     * @param data
-     * @param dataDictionary
-     * @param dataCategory
-     * @param createdBy
-     * @param createdTime
      */
     public TestPassportDatasheetResultMapDto(
         String passportId,
@@ -264,70 +253,60 @@ public class BsddMockStubHelper {
     }
 
     /**
-     * @return Passport ID
      */
     public String getPassportId() {
       return passportId;
     }
 
     /**
-     * @return Passport name
      */
     public String getPassportName() {
       return passportName;
     }
 
     /**
-     * @return Passport status
      */
     public String getStatus() {
       return status;
     }
 
     /**
-     * @return Parent passport ID
      */
     public String getParentId() {
       return parentId;
     }
 
     /**
-     * @return Datasheet ID
      */
     public String getDatasheetId() {
       return datasheetId;
     }
 
     /**
-     * @return Datasheet JSON data
      */
     public String getData() {
       return data;
     }
 
     /**
-     * @return URI of the data dictionary
      */
     public String getDataDictionary() {
       return dataDictionary;
     }
 
     /**
-     * @return Data category
      */
     public String getDataCategory() {
       return dataCategory;
     }
 
     /**
-     * @return User who created the record
      */
     public String getCreatedBy() {
       return createdBy;
     }
 
     /**
-     * @return Timestamp of creation
      */
     public Timestamp getCreatedTime() {
       return createdTime;
@@ -336,8 +315,6 @@ public class BsddMockStubHelper {
 
   /**
    * Creates mock stub data representing a parent passport with children. *
-   *
-   * @return List of {@link PassportDatasheetResultMapDto} representing mock passport data
    */
   public static List<PassportDatasheetResultMapDto> createPassportChildrenStubData() {
     String datasheetJson =

@@ -18,20 +18,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint controller for authentication. */
+/** Controller for authentication operatinos. */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  /** Injecting AuthService class. */
   @Autowired private AuthService authService;
 
   /**
-   * Endpoint to Login.
-   *
-   * @param loginRequest details with email, password
-   * @param response
-   * @return response with JWT token (access and refresh tokens)
+   * Log in.
    */
   @PostMapping("/login")
   public ResponseEntity<UserDto> login(
@@ -43,9 +38,6 @@ public class AuthController {
 
   /**
    * Verifies the status of authentication.
-   *
-   * @param request
-   * @return response
    */
   @GetMapping("/status")
   public ResponseEntity<StatusResponseDto> checkAuth(HttpServletRequest request) {
@@ -75,9 +67,6 @@ public class AuthController {
 
   /**
    * Returns the currently authenticated user.
-   *
-   * @param request HTTP servlet request
-   * @return UserDto if authenticated, or null
    */
   @GetMapping("/currentUser")
   public ResponseEntity<UserDto> getCurrentUser(HttpServletRequest request) {
@@ -86,11 +75,7 @@ public class AuthController {
   }
 
   /**
-   * Endpoint to refresh expired token.
-   *
-   * @param refreshToken - Existing JWT refresh token
-   * @param response
-   * @return response with JWT token (new access token)
+   * Refresh an expired token.
    */
   @PostMapping("/refresh")
   public ResponseEntity<?> refreshToken(
@@ -111,11 +96,7 @@ public class AuthController {
   }
 
   /**
-   * Endpoint to Logout.
-   *
-   * @param request
-   * @param response
-   * @return response with JWT token (new access token)
+   * Log out.
    */
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response)

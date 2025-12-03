@@ -38,11 +38,6 @@ public class ApiKeyService {
 
   /**
    * Constructor.
-   *
-   * @param apiKeyRepository
-   * @param encoder
-   * @param properties
-   * @param userRepository
    */
   public ApiKeyService(
       ApiKeyRepository apiKeyRepository,
@@ -57,12 +52,6 @@ public class ApiKeyService {
 
   /**
    * Generates and stores a new API key for the specified user.
-   *
-   * @param userId
-   * @param expirationDate (yyyy-MM-dd)
-   * @param name
-   * @return a DTO containing the persisted API key metadata and the raw secret
-   * @throws InvalidInputException if userId is invalid or expiration date is invalid
    */
   @Transactional
   public GeneratedApiKeyDto createApiKey(String userId, LocalDate expirationDate, String name) {
@@ -107,9 +96,6 @@ public class ApiKeyService {
 
   /**
    * Lists all the api tokens for the userId.
-   *
-   * @param userId
-   * @return list of ApiKey instances
    */
   @Transactional(readOnly = true)
   public List<ApiKey> getApiTokens(String userId) {
@@ -124,9 +110,6 @@ public class ApiKeyService {
 
   /**
    * Deletes the api token for the given key.
-   *
-   * @param keyId
-   * @return result
    */
   @Transactional
   public boolean deleteApiToken(String keyId) {
@@ -148,9 +131,6 @@ public class ApiKeyService {
 
   /**
    * Fetch an API key by ID, returning null if not found.
-   *
-   * @param id the API key UUID
-   * @return Optional containing the ApiKey if found
    */
   public ApiKey findById(String id) {
     return apiKeyRepository.findById(id).orElse(null);

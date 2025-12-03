@@ -12,8 +12,6 @@ public class PassportManager {
 
   /**
    * Main class.
-   *
-   * @param args
    */
   public static void main(String[] args) {
 

@@ -13,16 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 public interface JwtConfigRepository extends JpaRepository<JwtConfig, String> {
   /**
    * Fetches the stored secret key.
-   *
-   * @return the instance of JwtConfig
    */
   @Query(value = "SELECT secret_key FROM jwt_configs LIMIT 1", nativeQuery = true)
   Optional<JwtConfig> getSecretKey();
 
   /**
    * Saves or updates the secret key and encryption key in the table.
-   *
-   * @param secretKey
    */
   @Modifying
   @Transactional

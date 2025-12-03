@@ -69,8 +69,6 @@ public class User {
 
   /**
    * Get the user's full name.
-   *
-   * @return first name + space + last name
    */
   public String getFullName() {
     return firstName + " " + lastName;
@@ -90,8 +88,6 @@ public class User {
 
     /**
      * Constructs a Role enum with the specified string value.
-     *
-     * @param value
      */
     Role(String value) {
       this.value = value;
@@ -99,8 +95,6 @@ public class User {
 
     /**
      * Returns the string value of the role.
-     *
-     * @return the role
      */
     public String getValue() {
       return value;
@@ -108,8 +102,6 @@ public class User {
 
     /**
      * Returns the string representation of the role.
-     *
-     * @return the role as a string
      */
     @Override
     public String toString() {
@@ -118,10 +110,6 @@ public class User {
 
     /**
      * Parses a string value to its corresponding enum.
-     *
-     * @param value the string value to convert
-     * @return the corresponding role
-     * @throws IllegalArgumentException
      */
     public static Role fromValue(String value) {
       return Arrays.stream(Role.values())

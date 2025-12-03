@@ -74,8 +74,6 @@ public class TestPassportController {
    * Sets up necessary configurations and mocks before each test execution. Initializes REST Assured
    * with the test server port, opens Mockito annotations, mocks the authentication context,
    * generates a mock JWT token, and stubs the bsdd API response.
-   *
-   * @param wmInfo
    */
   @BeforeEach
   void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
@@ -100,9 +98,6 @@ public class TestPassportController {
 
   /**
    * Tests the successful creation of a passport with valid JSON input.
-   *
-   * @throws JsonProcessingException
-   * @throws JsonMappingException
    */
   @Test
   public void givenValidBsddDataWhenCreatePassportThenReturnCreatedPassportWithCorrectDetails()
@@ -208,9 +203,6 @@ public class TestPassportController {
 
   /**
    * Tests the behaviour of the createPassport method when an invalid JSON body is provided.
-   *
-   * @throws JsonProcessingException
-   * @throws JsonMappingException
    */
   @Test
   public void shouldFailToCreatePassportWhenJsonBodyIsInvalid()
@@ -256,8 +248,6 @@ public class TestPassportController {
   /**
    * Tests retrieval of passport details by a valid passport ID.Verifies that the response contains
    * the correct passport ID, name, and associated datasheet information.
-   *
-   * @throws Exception if the request or data processing fails
    */
   @Test
   public void shouldReturnPassportDetailsWhenPassportIdIsValid() throws Exception {
@@ -311,8 +301,6 @@ public class TestPassportController {
    *
    * <p>Verifies that the response includes child passport objects, with correct parent-child
    * relationships and datasheet property values.
-   *
-   * @throws Exception if the request or data processing fails
    */
   @Test
   public void shouldReturnPassportDetailsWithChildrenWhenPassportIdIsValid() throws Exception {
