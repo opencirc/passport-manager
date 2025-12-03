@@ -76,7 +76,7 @@ public class TestDataDictionaryController {
     MockitoAnnotations.openMocks(this);
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
 
     generateMockJwtToken();
   }
@@ -85,7 +85,7 @@ public class TestDataDictionaryController {
     String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
-    if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
+    if (response.getStatusCode() == 200) {
       jwtToken = response.getCookie("access_token");
     } else {
       throw new AssertionError("Expected status 200, but got " + response.getStatusCode());
@@ -112,7 +112,7 @@ public class TestDataDictionaryController {
             .when()
             .get("/api/data-dictionary/{dictionary}/class/search/{query}", dictionary, query)
             .then()
-            .statusCode(TestConstants.STATUS_SUCCESS)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -153,7 +153,7 @@ public class TestDataDictionaryController {
             .when()
             .post("/api/data-dictionary/{dictionary}/class", dictionary)
             .then()
-            .statusCode(TestConstants.STATUS_SUCCESS)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -216,7 +216,7 @@ public class TestDataDictionaryController {
             .when()
             .get("/api/data-dictionary/{dictionary}/property/search/{query}", dictionary, query)
             .then()
-            .statusCode(TestConstants.STATUS_SUCCESS)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -261,7 +261,7 @@ public class TestDataDictionaryController {
             .when()
             .post("/api/data-dictionary/{dictionary}/properties", dictionary)
             .then()
-            .statusCode(TestConstants.STATUS_SUCCESS)
+            .statusCode(HttpStatus.SC_OK)
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -270,7 +270,7 @@ public class TestDataDictionaryController {
 
     response
         .then()
-        .statusCode(TestConstants.STATUS_SUCCESS)
+        .statusCode(HttpStatus.SC_OK)
         .contentType(ContentType.JSON)
         .body("properties[0].code", equalTo("EF000008"))
         .body("properties[0].name", equalTo("Width"))

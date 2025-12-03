@@ -43,7 +43,7 @@ public class CompanyHashService {
     }
   }
 
-  /** Retrieves hash from database. */
+  /** Retrieves the hash. */
   public String getCompanyHash() {
     return companyHash;
   }

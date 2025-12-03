@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.dao;
 
-import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
+import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import com.opencirc.api.passport.model.Passport;
 import java.util.List;
 import java.util.Optional;
@@ -72,7 +72,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
             WHERE pt.status = 'active'
             """,
       nativeQuery = true)
-  Optional<List<PassportDatasheetResultMapDto>> findPassportWithDescendants(
+  Optional<List<PassportDatasheetResultMapQueryResult>> findPassportWithDescendants(
       @Param("passport_id") String passportId);
 
   /** Retrieves the immediate children of a passport. */
@@ -113,7 +113,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
             WHERE p.parent_id = :passport_id AND p.status = 'active'
             """,
       nativeQuery = true)
-  Optional<List<PassportDatasheetResultMapDto>> findImmediateChildren(
+  Optional<List<PassportDatasheetResultMapQueryResult>> findImmediateChildren(
       @Param("passport_id") String passportId);
 
   /** Deactivates the passport. */
@@ -174,5 +174,5 @@ LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
                 AND p.status = 'active'
                 """,
       nativeQuery = true)
-  Optional<List<PassportDatasheetResultMapDto>> findPassportsByCode(String code);
+  Optional<List<PassportDatasheetResultMapQueryResult>> findPassportsByCode(String code);
 }

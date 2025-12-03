@@ -7,23 +7,24 @@ import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.model.User;
-import java.util.UUID;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+/** Helper class to mock authentication related operations. */
 public class MockAuthenticationTestHelper {
 
   /** Mocks User data. */
-  public void mockUserDetailsDB(
+  public void mockUserDetails(
       AuthUserDetailsService authUserDetailsService, AuthenticationManager authenticationManager) {
-    UUID existingUserId = UUID.fromString("87510a3c-4357-47bc-80a1-9ed02285fbae");
+    String existingUserId = "87510a3c-4357-47bc-80a1-9ed02285fbae";
     User mockUser = new User();
     mockUser.setId(existingUserId);
-    mockUser.setUsername(TestConstants.TEST_USERNAME_1);
+    mockUser.setFirstName("User");
+    mockUser.setLastName("One");
     mockUser.setPassword("user1password");
-    mockUser.setEmail("user1@example.com");
+    mockUser.setEmail("user1@test.com");
     mockUser.setActive(true);
     mockUser.setRole(User.Role.USER);
 
@@ -43,7 +44,7 @@ public class MockAuthenticationTestHelper {
         .thenAnswer(
             invocation -> {
               UsernamePasswordAuthenticationToken authRequest = invocation.getArgument(0);
-              if (authRequest.getName().equals(TestConstants.TEST_USERNAME_1)
+              if (authRequest.getName().equals("User")
                   && authRequest.getCredentials().equals("user1password")) {
                 return mockAuthenticationToken;
               } else {

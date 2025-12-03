@@ -17,7 +17,8 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import java.util.List;
 import java.util.Map;
-import org.apache.hc.core5.http.HttpStatus;
+
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -75,7 +76,7 @@ public class TestPassportTemplateController {
     MockitoAnnotations.openMocks(this);
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
 
     generateMockJwtToken();
   }
@@ -84,7 +85,7 @@ public class TestPassportTemplateController {
     String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
-    if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
+    if (response.getStatusCode() == 200) {
       jwtToken = response.getCookie("access_token");
     } else {
       throw new AssertionError("Expected status 200, but got " + response.getStatusCode());

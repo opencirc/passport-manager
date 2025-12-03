@@ -21,7 +21,7 @@ import com.opencirc.api.passport.dto.DatasheetDto;
 import com.opencirc.api.passport.dto.DatasheetPropertyDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
-import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
+import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
@@ -224,7 +224,7 @@ public class PassportService {
 
   /** Retrieves passport and its children for the given id. */
   public List<PassportDto> getPassportChildren(String id) {
-    List<PassportDatasheetResultMapDto> resultRows =
+    List<PassportDatasheetResultMapQueryResult> resultRows =
         passportRepository.findPassportWithDescendants(id).orElse(Collections.emptyList());
 
     if (resultRows.isEmpty()) {
@@ -234,7 +234,7 @@ public class PassportService {
 
     Map<String, PassportDto> passportMap = new LinkedHashMap<>();
 
-    for (PassportDatasheetResultMapDto row : resultRows) {
+    for (PassportDatasheetResultMapQueryResult row : resultRows) {
       PassportDto passportDto =
           passportMap.computeIfAbsent(row.getPassportId(), key -> buildPassportDto(row));
 
@@ -270,7 +270,7 @@ public class PassportService {
 
   /** Retrieves the passports with the given parent ID. */
   public List<PassportDto> getImmediateChildren(String passportId) {
-    List<PassportDatasheetResultMapDto> resultRows =
+    List<PassportDatasheetResultMapQueryResult> resultRows =
         passportRepository.findImmediateChildren(passportId).orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
@@ -332,7 +332,7 @@ public class PassportService {
     return passports.stream().map(PassportDto::from).collect(Collectors.toList());
   }
 
-  private PassportDto buildPassportDto(PassportDatasheetResultMapDto row) {
+  private PassportDto buildPassportDto(PassportDatasheetResultMapQueryResult row) {
     PassportDto dto = new PassportDto();
     dto.setId(row.getPassportId());
     dto.setParentId(row.getParentId());
@@ -347,7 +347,7 @@ public class PassportService {
     return dto;
   }
 
-  private DatasheetDto buildDatasheetDto(PassportDatasheetResultMapDto row) {
+  private DatasheetDto buildDatasheetDto(PassportDatasheetResultMapQueryResult row) {
     try {
       DatasheetDto dto = new DatasheetDto();
       dto.setId(row.getDatasheetId());
@@ -387,7 +387,7 @@ public class PassportService {
     }
   }
 
-  private DatasheetPropertyDto buildDatasheetProperty(PassportDatasheetResultMapDto row) {
+  private DatasheetPropertyDto buildDatasheetProperty(PassportDatasheetResultMapQueryResult row) {
 
     if (row.getDatasheetPropertyId() == null) {
       return null;
@@ -523,7 +523,7 @@ public class PassportService {
   /** Retrieves all passports associated with the specified code. */
   public List<PassportDto> listPassportsByCode(String code) {
 
-    List<PassportDatasheetResultMapDto> resultRows =
+    List<PassportDatasheetResultMapQueryResult> resultRows =
         passportRepository.findPassportsByCode(code).orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
@@ -531,11 +531,11 @@ public class PassportService {
 
   /** This method sets the result sets to passport dto. */
   private List<PassportDto> assemblePassportsFromResultRows(
-      List<PassportDatasheetResultMapDto> resultRows) {
+      List<PassportDatasheetResultMapQueryResult> resultRows) {
 
     Map<String, PassportDto> passportMap = new LinkedHashMap<>();
 
-    for (PassportDatasheetResultMapDto row : resultRows) {
+    for (PassportDatasheetResultMapQueryResult row : resultRows) {
 
       PassportDto passportDto =
           passportMap.computeIfAbsent(row.getPassportId(), id -> buildPassportDto(row));

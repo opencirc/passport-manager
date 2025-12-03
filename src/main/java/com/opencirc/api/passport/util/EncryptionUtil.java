@@ -12,7 +12,7 @@ public class EncryptionUtil {
   /** Encryption algorithm. */
   private static final String ENCRYPTION_ALGORITHM = "AES";
 
-  /** Generates Security Key to which helps JWT. */
+  /** GeGenerates a secure key for JWT token signing. */
   public static String generateSecureKey() {
     try {
       byte[] keyBytes = new byte[32];
