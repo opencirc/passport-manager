@@ -83,9 +83,9 @@ services:
 
   test_cache:
     image: redis
-    container_name: cache
+    container_name: test_cache
     ports:
-      - 6381:6380
+      - 6380:6379
     volumes:
       - test_redisdata:/data
     healthcheck:

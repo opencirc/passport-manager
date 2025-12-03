@@ -4,4 +4,5 @@
     "suppressions_1_2.dtd">
 
 <suppressions>
+    <suppress checks="MissingJavadocType" files="."/>
 </suppressions>
