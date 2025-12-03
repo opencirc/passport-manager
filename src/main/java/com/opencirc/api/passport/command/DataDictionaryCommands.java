@@ -2,9 +2,9 @@ package com.opencirc.api.passport.command;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencirc.api.passport.adapter.DictionaryAdapter;
-import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.adapter.PlatformAdapter;
+import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,35 +20,21 @@ public class DataDictionaryCommands {
   /** Injecting DataDictionaryService. */
   private final DataDictionaryService dataDictionaryService;
 
-  /** Injecting DictionaryAdapterFactory. */
-  private final DictionaryAdapterFactory dictionaryAdapterFactory;
+  /** Injecting PlatformAdapterFactory. */
+  private final PlatformAdapterFactory platformAdapterFactory;
 
-  /**
-   * Instantiating DataDictionaryCommands.
-   *
-   * @param objectMapper
-   * @param dataDictionaryService
-   * @param dictionaryAdapterFactory
-   */
+  /** Instantiating DataDictionaryCommands. */
   @Autowired
   public DataDictionaryCommands(
       ObjectMapper objectMapper,
       DataDictionaryService dataDictionaryService,
-      DictionaryAdapterFactory dictionaryAdapterFactory) {
+      PlatformAdapterFactory platformAdapterFactory) {
     this.objectMapper = objectMapper;
     this.dataDictionaryService = dataDictionaryService;
-    this.dictionaryAdapterFactory = dictionaryAdapterFactory;
+    this.platformAdapterFactory = platformAdapterFactory;
   }
 
-  /**
-   * Shell command to fetch template from the required data dictionary.
-   *
-   * @param dictionaryPlatform
-   * @param type
-   * @param uri
-   * @param raw
-   * @return template
-   */
+  /** Shell command to fetch template from the required data dictionary. */
   @Command(description = "Fetch template from Data Dictionary.")
   public String fetchTemplate(
       @Option(longNames = "dictionaryType", required = true) String dictionaryPlatform,
@@ -58,26 +44,17 @@ public class DataDictionaryCommands {
 
     try {
       if (raw) {
-        return generateRawTemplate(DataDictionaryPlatform.fromValue(dictionaryPlatform), uri, type);
+        return generateRawTemplate(Platform.fromValue(dictionaryPlatform), uri, type);
       } else {
-        return generateProcessedTemplate(
-            DataDictionaryPlatform.fromValue(dictionaryPlatform), uri, type);
+        return generateProcessedTemplate(Platform.fromValue(dictionaryPlatform), uri, type);
       }
     } catch (Exception e) {
       return "Error fetching template: " + e.getMessage();
     }
   }
 
-  /**
-   * Gets the processed template.
-   *
-   * @param dictionaryPlatform
-   * @param type
-   * @param uri
-   * @return template
-   */
-  private String generateProcessedTemplate(
-      DataDictionaryPlatform dictionaryPlatform, String uri, String type)
+  /** Gets the processed template. */
+  private String generateProcessedTemplate(Platform dictionaryPlatform, String uri, String type)
       throws JsonValidationException, JsonProcessingException {
 
     Object response = null;
@@ -85,27 +62,14 @@ public class DataDictionaryCommands {
     return formatJsonResponse(response);
   }
 
-  /**
-   * Gets the raw template fetched from given data dictionary.
-   *
-   * @param dictionaryPlatform
-   * @param type
-   * @param uri
-   * @return template
-   */
-  private String generateRawTemplate(
-      DataDictionaryPlatform dictionaryPlatform, String uri, String type)
+  /** Gets the raw template fetched from given data dictionary. */
+  private String generateRawTemplate(Platform dictionaryPlatform, String uri, String type)
       throws JsonProcessingException {
-    DictionaryAdapter<?> adapter = dictionaryAdapterFactory.getAdapter(dictionaryPlatform);
+    PlatformAdapter<?> adapter = platformAdapterFactory.getAdapter(dictionaryPlatform);
     return formatJsonResponse(adapter.fetchRawTemplate(uri, type));
   }
 
-  /**
-   * Formats the json.
-   *
-   * @param response string
-   * @return formatted template
-   */
+  /** Formats the json. */
   private String formatJsonResponse(Object response) throws JsonProcessingException {
     return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
   }

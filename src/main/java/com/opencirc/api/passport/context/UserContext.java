@@ -10,11 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserContext {
 
-  /**
-   * Gets the user information of the currently authenticated user.
-   *
-   * @return the instance of UserDto
-   */
+  /** Gets the user information of the currently authenticated user. */
   public UserDto getCurrentUser() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

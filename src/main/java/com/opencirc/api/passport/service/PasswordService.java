@@ -9,32 +9,17 @@ public class PasswordService {
   /** Injected BCryptPasswordEncoder used for hashing and verification. */
   private final BCryptPasswordEncoder encoder;
 
-  /**
-   * Constructor.
-   *
-   * @param encoder BCryptPasswordEncoder bean injected by Spring
-   */
+  /** Constructor. */
   public PasswordService(BCryptPasswordEncoder encoder) {
     this.encoder = encoder;
   }
 
-  /**
-   * Hashes the given password.
-   *
-   * @param rawPassword
-   * @return hashedPassword
-   */
+  /** Hashes the given password. */
   public String hashPassword(String rawPassword) {
     return encoder.encode(rawPassword);
   }
 
-  /**
-   * Verifies the given password.
-   *
-   * @param rawPassword
-   * @param hashedPassword
-   * @return the status
-   */
+  /** Verifies the given password. */
   public boolean verifyPassword(String rawPassword, String hashedPassword) {
     return encoder.matches(rawPassword, hashedPassword);
   }

@@ -3,7 +3,7 @@ package com.opencirc.api.passport.dto.query;
 import java.time.LocalDateTime;
 
 /** Interface to map the result set to passportDto. */
-public interface PassportDatasheetResultMapDto {
+public interface PassportDatasheetResultMapQueryResult {
 
   /** Returns the ID of the passport. */
   String getPassportId();

@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+/** UserPrincipal class. */
 public class UserPrincipal implements UserDetails {
 
   /** serial version. */
@@ -32,14 +33,10 @@ public class UserPrincipal implements UserDetails {
   /** Indicates whether the user account is enabled (active) or disabled. */
   private final boolean enabled;
 
-  /**
-   * Constructs a UserPrincipal from a User entity.
-   *
-   * @param user
-   */
+  /** Constructs a UserPrincipal from a User entity. */
   public UserPrincipal(User user) {
     Objects.requireNonNull(user, "User cannot be null");
-    this.userId = (user.getId() != null) ? user.getId().toString() : null;
+    this.userId = (user.getId() != null) ? user.getId() : null;
     this.email = user.getEmail();
     this.fullName = user.getFullName();
     this.password = user.getPassword();
@@ -47,50 +44,30 @@ public class UserPrincipal implements UserDetails {
     this.role = user.getRole();
   }
 
-  /**
-   * method to get authorities.
-   *
-   * @return authorities
-   */
+  /** Get authorities. */
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     String authority = (role != null) ? role.getValue() : "USER";
     return Collections.singleton(new SimpleGrantedAuthority(authority));
   }
 
-  /**
-   * method to get password.
-   *
-   * @return password
-   */
+  /** Get the password. */
   @Override
   public String getPassword() {
     return password;
   }
 
-  /**
-   * method to get userId.
-   *
-   * @return userId
-   */
+  /** Get userId. */
   public String getUserId() {
     return userId;
   }
 
-  /**
-   * Email getter.
-   *
-   * @return email
-   */
+  /** Get email. */
   public String getEmail() {
     return email;
   }
 
-  /**
-   * Gets fullName of the user.
-   *
-   * @return fullName
-   */
+  /** Gets fullName of the user. */
   public String getFullName() {
     return fullName;
   }
@@ -98,59 +75,37 @@ public class UserPrincipal implements UserDetails {
   /**
    * This method is required by UserDetails interface. Since this application identifies users by
    * their email address, the email is returned here instead of a username.
-   *
-   * @return the user's email
    */
   @Override
   public String getUsername() {
     return email;
   }
 
-  /**
-   * Gets the status of the account is expired or not.
-   *
-   * @return status
-   */
+  /** Gets the status of the account is expired or not. */
   @Override
   public boolean isAccountNonExpired() {
     return true;
   }
 
-  /**
-   * Gets the status of the account is locked or not.
-   *
-   * @return status
-   */
+  /** Gets the status of the account is locked or not. */
   @Override
   public boolean isAccountNonLocked() {
     return true;
   }
 
-  /**
-   * Gets the status of the credentials is expired or not.
-   *
-   * @return status
-   */
+  /** Gets the status of the credentials is expired or not. */
   @Override
   public boolean isCredentialsNonExpired() {
     return true;
   }
 
-  /**
-   * Gets the status of the account is enabled or not.
-   *
-   * @return status
-   */
+  /** Gets the status of the account is enabled or not. */
   @Override
   public boolean isEnabled() {
     return enabled;
   }
 
-  /**
-   * Gets the role of the user.
-   *
-   * @return role
-   */
+  /** Gets the role of the user. */
   public Role getRole() {
     return role;
   }

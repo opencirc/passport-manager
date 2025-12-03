@@ -23,13 +23,7 @@ public class Seeder {
   /** Passport seeder from stored JSON templates. */
   private final PassportFromJsonSeeder passportFromJsonSeeder;
 
-  /**
-   * Constructor-based dependency injection for seeder components.
-   *
-   * @param userSeeder
-   * @param passportFromApiSeeder
-   * @param passportFromJsonSeeder
-   */
+  /** Constructor-based dependency injection for seeder components. */
   public Seeder(
       UserSeeder userSeeder,
       PassportFromApiSeeder passportFromApiSeeder,
@@ -55,12 +49,7 @@ public class Seeder {
     ALL
   }
 
-  /**
-   * Executes the seeding process for the given type.
-   *
-   * @param seedType Seed type: USER | PASSPORT_FROM_API | PASSPORT_FROM_JSON | ALL
-   * @throws RuntimeException if seeding fails
-   */
+  /** Executes the seeding process for the given type. */
   @Command(
       command = "seed",
       description =

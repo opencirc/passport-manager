@@ -34,26 +34,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
-  /** Injecting UserRepository class. */
   @Autowired private UserRepository userRepository;
 
-  /** Injecting JwtConfigRepository class. */
   @Autowired private JwtConfigRepository jwtConfigRepository;
 
   /** Injecting Properties class. */
   private final AppProperties appProperties;
 
-  /** Injecting AuthUserDetailsService class. */
   @Autowired private AuthUserDetailsService authUserDetailsService;
 
   /** Secret key declaration. */
   private String secretKey = "";
 
-  /**
-   * Instantiating JwtService class.
-   *
-   * @param appProp
-   */
+  /** Instantiating JwtService class. */
   @Autowired
   public JwtService(AppProperties appProp) {
     this.appProperties = appProp;
@@ -96,13 +89,7 @@ public class JwtService {
     }
   }
 
-  /**
-   * Generates token.
-   *
-   * @param userId
-   * @param expiryMinutes
-   * @return token
-   */
+  /** Generates token. */
   public String generateToken(String userId, int expiryMinutes) {
     Map<String, Object> claims = new HashMap<>();
     claims.put("userId", userId);
@@ -114,11 +101,7 @@ public class JwtService {
         .compact();
   }
 
-  /**
-   * Retrieves the secret key.
-   *
-   * @return secret key
-   */
+  /** Retrieves the secret key. */
   private SecretKey getKey() {
     if (secretKey == null || secretKey.isEmpty()) {
       throw new RuntimeException("Secret key is missing or invalid");
@@ -131,46 +114,23 @@ public class JwtService {
     }
   }
 
-  /**
-   * Extracts the user ID.
-   *
-   * @param token JWT token
-   * @return User ID
-   */
+  /** Extracts the user ID. */
   public String extractUserId(String token) {
     return extractClaim(token, claims -> claims.get("userId", String.class));
   }
 
-  /**
-   * Extracts the details based on claim resolver.
-   *
-   * @param token
-   * @param claimResolver
-   * @param <T>
-   * @return claims
-   */
+  /** Extracts the details based on claim resolver. */
   private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
     final Claims claims = extractAllClaims(token);
     return claimResolver.apply(claims);
   }
 
-  /**
-   * Extracts all the details.
-   *
-   * @param token
-   * @return claims
-   */
+  /** Extracts all the details. */
   private Claims extractAllClaims(String token) {
     return Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(token).getPayload();
   }
 
-  /**
-   * Validates the token.
-   *
-   * @param token
-   * @param userDetails
-   * @return status
-   */
+  /** Validates the token. */
   public boolean validateToken(String token, UserDetails userDetails) {
     if (!(userDetails instanceof UserPrincipal)) {
       return false;
@@ -182,33 +142,18 @@ public class JwtService {
     return (userIdFromToken.equals(userPrincipal.getUserId()) && !isTokenExpired(token));
   }
 
-  /**
-   * Checks if the token is still valid or expired.
-   *
-   * @param token
-   * @return status
-   */
+  /** Checks if the token is still valid or expired. */
   private boolean isTokenExpired(String token) {
     return extractClaim(token, Claims::getExpiration).before(new Date());
   }
 
-  /**
-   * Retrieves the user details from jwt token.
-   *
-   * @param token
-   * @return user details
-   */
+  /** Retrieves the user details from jwt token. */
   public User extractUserFromToken(String token) {
     Optional<User> user = userRepository.findById(extractUserId(token));
     return user.orElseThrow(() -> new UsernameNotFoundException("Invalid token, user not found"));
   }
 
-  /**
-   * Validates the refresh token. If it is valid, generates new access token .
-   *
-   * @param refreshToken
-   * @return access Token
-   */
+  /** Validates the refresh token. If it is valid, generates new access token . */
   public String generateAccessTokenUsingRefreshToken(String refreshToken) {
     String userId = extractUserId(refreshToken);
     UserDetails userDetails = authUserDetailsService.loadUserById(userId);
@@ -227,14 +172,7 @@ public class JwtService {
     return newAccessToken;
   }
 
-  /**
-   * Sets a cookie with generated token.
-   *
-   * @param response
-   * @param token
-   * @param tokenType
-   * @param expiryTime
-   */
+  /** Sets a cookie with generated token. */
   public void generateTokenCookie(
       HttpServletResponse response, String token, String tokenType, int expiryTime) {
     ResponseCookie cookie =

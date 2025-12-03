@@ -21,29 +21,19 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/** Service class for PassportTemplate related operations. */
 @Service
 public class PassportTemplateService {
 
-  /** Injecting PassportRepository class. */
   @Autowired private PassportRepository passportRepository;
 
-  /** Injecting PassportTemplateRepository class. */
   @Autowired private PassportTemplateRepository passportTemplateRepository;
 
-  /** Injecting UserContext class. */
   @Autowired private UserContext userContext;
 
-  /** Injecting ObjectMapper bean. */
   @Autowired private ObjectMapper objectMapper;
 
-  /**
-   * Creates template from the existing passport.
-   *
-   * @param passportId
-   * @param dryRun
-   * @param templateName
-   * @return the template in json format
-   */
+  /** Creates a template from the existing passport. */
   public PassportTemplateDto createTemplateFromPassport(
       String passportId, boolean dryRun, String templateName) {
     Optional<Passport> passport =
@@ -59,15 +49,8 @@ public class PassportTemplateService {
     return PassportTemplateDto.from(extractedTemplate);
   }
 
-  /**
-   * Extracts template from the existing passport.
-   *
-   * @param passport
-   * @param templateName
-   * @return the template in JSON format
-   */
+  /** Extracts template from the existing passport. */
   private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName) {
-    PassportTemplate template = new PassportTemplate();
     ObjectNode rootNode = objectMapper.createObjectNode();
 
     for (PassportDatasheetMapping passportDatasheetMapping : passport.getDatasheetMappings()) {
@@ -81,22 +64,15 @@ public class PassportTemplateService {
       rootNode = (ObjectNode) newDataNode;
     }
     UserDto userDtoContext = userContext.getCurrentUser();
-    template =
-        PassportTemplate.builder()
-            .name(templateName)
-            .template(rootNode)
-            .createdById(userDtoContext.getId().toString())
-            .createdBy(new CreatedByDto(userDtoContext.getFullName(), userDtoContext.getEmail()))
-            .build();
-
-    return template;
+    return PassportTemplate.builder()
+        .name(templateName)
+        .template(rootNode)
+        .createdById(userDtoContext.getId())
+        .createdBy(new CreatedByDto(userDtoContext.getFullName(), userDtoContext.getEmail()))
+        .build();
   }
 
-  /**
-   * Clears the value from the passport to make it as template.
-   *
-   * @param node - passport json
-   */
+  /** Clears the value from the passport to make it as template. */
   private void clearActualValues(JsonNode node) {
     if (node.isObject()) {
       ObjectNode objectNode = (ObjectNode) node;
@@ -116,12 +92,7 @@ public class PassportTemplateService {
     }
   }
 
-  /**
-   * Retrieves the template from database.
-   *
-   * @param id
-   * @return template
-   */
+  /** Retrieves the template from the database. */
   public PassportTemplateDto getPassportTemplate(String id) {
     PassportTemplate template = passportTemplateRepository.findFirstById(id);
 
@@ -131,11 +102,7 @@ public class PassportTemplateService {
     return PassportTemplateDto.from(template);
   }
 
-  /**
-   * Lists the templates.
-   *
-   * @return template
-   */
+  /** Lists the templates. */
   public List<PassportTemplateDto> getAllPassportTemplates() {
     List<PassportTemplate> templates = passportTemplateRepository.findAll();
 

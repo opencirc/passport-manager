@@ -10,11 +10,7 @@ import org.springframework.shell.command.annotation.CommandScan;
 @CommandScan
 public class PassportManager {
 
-  /**
-   * Main class.
-   *
-   * @param args
-   */
+  /** Main class. */
   public static void main(String[] args) {
 
     SpringApplication.run(PassportManager.class, args);

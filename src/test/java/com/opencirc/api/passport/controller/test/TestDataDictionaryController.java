@@ -6,12 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
+import org.springframework.http.HttpStatus;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
@@ -51,7 +50,6 @@ public class TestDataDictionaryController {
   /** AuthUserDetailsService mock bean. */
   @MockBean private AuthenticationManager authenticationManager;
 
-  /** RestTemplate bean. */
   @Autowired
   @Qualifier("testRestTemplate")
   private RestTemplate restTemplate;
@@ -70,8 +68,6 @@ public class TestDataDictionaryController {
    * Sets up necessary configurations and mocks before each test execution. Initializes REST Assured
    * with the test server port, opens Mockito annotations, mocks the authentication context,
    * generates a mock JWT token, and stubs the bsdd API response.
-   *
-   * @param wmInfo
    */
   @BeforeEach
   void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
@@ -79,7 +75,7 @@ public class TestDataDictionaryController {
     MockitoAnnotations.openMocks(this);
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
 
     generateMockJwtToken();
   }
@@ -88,7 +84,7 @@ public class TestDataDictionaryController {
     String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
-    if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
+    if (response.getStatusCode() == 200) {
       jwtToken = response.getCookie("access_token");
     } else {
       throw new AssertionError("Expected status 200, but got " + response.getStatusCode());
@@ -115,7 +111,7 @@ public class TestDataDictionaryController {
             .when()
             .get("/api/data-dictionary/{dictionary}/class/search/{query}", dictionary, query)
             .then()
-            .statusCode(TestConstants.STATUS_SUCCESS)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -156,7 +152,7 @@ public class TestDataDictionaryController {
             .when()
             .post("/api/data-dictionary/{dictionary}/class", dictionary)
             .then()
-            .statusCode(TestConstants.STATUS_SUCCESS)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -190,7 +186,7 @@ public class TestDataDictionaryController {
             .when()
             .post("/api/data-dictionary/{dictionary}/class", dictionary)
             .then()
-            .statusCode(HttpStatus.SC_BAD_REQUEST)
+            .statusCode(HttpStatus.BAD_REQUEST.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -219,7 +215,7 @@ public class TestDataDictionaryController {
             .when()
             .get("/api/data-dictionary/{dictionary}/property/search/{query}", dictionary, query)
             .then()
-            .statusCode(TestConstants.STATUS_SUCCESS)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -228,7 +224,7 @@ public class TestDataDictionaryController {
 
     response
         .then()
-        .statusCode(HttpStatus.SC_SUCCESS)
+        .statusCode(HttpStatus.OK.value())
         .contentType(ContentType.JSON)
         .body("[0].code", equalTo("ApplicationTemperature"))
         .body("[0].name", equalTo("ApplicationTemperature"))
@@ -264,7 +260,7 @@ public class TestDataDictionaryController {
             .when()
             .post("/api/data-dictionary/{dictionary}/properties", dictionary)
             .then()
-            .statusCode(TestConstants.STATUS_SUCCESS)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -273,7 +269,7 @@ public class TestDataDictionaryController {
 
     response
         .then()
-        .statusCode(TestConstants.STATUS_SUCCESS)
+        .statusCode(HttpStatus.OK.value())
         .contentType(ContentType.JSON)
         .body("properties[0].code", equalTo("EF000008"))
         .body("properties[0].name", equalTo("Width"))

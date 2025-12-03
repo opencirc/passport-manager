@@ -18,51 +18,33 @@ import lombok.ToString;
 @ToString
 public class DatasheetDto {
 
-  /** Unique Id for Datasheet. */
   @JsonProperty private String id;
 
-  /** Name of the data dictionary platform. */
   @JsonProperty private String platform;
 
-  /** Name of the data dictionary. */
   @JsonProperty private String dictionary;
 
-  /** Code of the class. */
   @JsonProperty private String code;
 
-  /** Name of the class. */
   @JsonProperty private String name;
 
-  /** Description of the class. */
   @JsonProperty private String description;
 
-  /** Uri of the platform. */
   @JsonProperty private String platformId;
 
-  /** Data category (Unique or Generic). */
   @JsonProperty private String dataCategory;
 
-  /** Template information in JSON format. */
   @JsonProperty private JsonNode data;
 
-  /** Id of the user who created the datasheet. */
   @JsonProperty private String createdById;
 
-  /** Metadata of the user who created datasheet. */
   @JsonProperty private CreatedByDto createdBy;
 
-  /** Time when datasheet is created. */
   @JsonProperty private OffsetDateTime createdTime;
 
-  /** Linked datasheet Properties. */
   private List<DatasheetPropertyDto> datasheetProperties;
 
-  /**
-   * Maps the Datasheet values to dto.
-   *
-   * @param datasheet
-   * @return datasheetDto
-   */
+  /** Maps the Datasheet values to dto. */
   public static DatasheetDto from(Datasheet datasheet) {
     DatasheetDto datasheetDto = new DatasheetDto();
     datasheetDto.id = datasheet.getId();

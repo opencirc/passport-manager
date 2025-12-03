@@ -36,14 +36,7 @@ public class ApiKeyService {
   /** Injecting UserRepository class. */
   private final UserRepository userRepository;
 
-  /**
-   * Constructor.
-   *
-   * @param apiKeyRepository
-   * @param encoder
-   * @param properties
-   * @param userRepository
-   */
+  /** Constructor. */
   public ApiKeyService(
       ApiKeyRepository apiKeyRepository,
       BCryptPasswordEncoder encoder,
@@ -55,15 +48,7 @@ public class ApiKeyService {
     this.userRepository = userRepository;
   }
 
-  /**
-   * Generates and stores a new API key for the specified user.
-   *
-   * @param userId
-   * @param expirationDate (yyyy-MM-dd)
-   * @param name
-   * @return a DTO containing the persisted API key metadata and the raw secret
-   * @throws InvalidInputException if userId is invalid or expiration date is invalid
-   */
+  /** Generates and stores a new API key for the specified user. */
   @Transactional
   public GeneratedApiKeyDto createApiKey(String userId, LocalDate expirationDate, String name) {
 
@@ -105,12 +90,7 @@ public class ApiKeyService {
     return new GeneratedApiKeyDto(apiKey, rawSecret);
   }
 
-  /**
-   * Lists all the api tokens for the userId.
-   *
-   * @param userId
-   * @return list of ApiKey instances
-   */
+  /** Lists all the api tokens for the userId. */
   @Transactional(readOnly = true)
   public List<ApiKey> getApiTokens(String userId) {
     if (userId == null) {
@@ -122,12 +102,7 @@ public class ApiKeyService {
     return apiKeyRepository.findAllByUserId(userId);
   }
 
-  /**
-   * Deletes the api token for the given key.
-   *
-   * @param keyId
-   * @return result
-   */
+  /** Deletes the api token for the given key. */
   @Transactional
   public boolean deleteApiToken(String keyId) {
     if (keyId == null) {
@@ -146,12 +121,7 @@ public class ApiKeyService {
     }
   }
 
-  /**
-   * Fetch an API key by ID, returning null if not found.
-   *
-   * @param id the API key UUID
-   * @return Optional containing the ApiKey if found
-   */
+  /** Fetch an API key by ID, returning null if not found. */
   public ApiKey findById(String id) {
     return apiKeyRepository.findById(id).orElse(null);
   }

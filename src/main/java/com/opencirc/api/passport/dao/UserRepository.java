@@ -9,39 +9,20 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+/** User repository. */
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
-  /**
-   * Fetches a user by email.
-   *
-   * @param email
-   * @return User Entity
-   */
+  /** Fetches a user by email. */
   User findByEmail(String email);
 
-  /**
-   * Checks whether a user with the given email exists.
-   *
-   * @param email the email to check
-   * @return true if a user exists with the given email; false otherwise
-   */
+  /** Checks whether a user with the given email exists. */
   boolean existsByEmail(String email);
 
-  /**
-   * Retrieves the first user ordered by ID in ascending order.
-   *
-   * @return an Optional containing the first User if present, or an empty Optional if no users
-   *     exist
-   */
+  /** Retrieves the first user ordered by ID in ascending order. */
   Optional<User> findFirstByOrderByIdAsc();
 
-  /**
-   * Updates the refresh token.
-   *
-   * @param id
-   * @param refreshToken
-   */
+  /** Updates the refresh token. */
   @Transactional
   @Modifying
   @Query("UPDATE User u SET u.refreshToken = :refreshToken" + " WHERE u.id = :id")

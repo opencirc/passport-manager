@@ -14,17 +14,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthUserDetailsService implements UserDetailsService {
 
-  /** Injecting UserRepository class. */
   @Autowired private UserRepository userRepository;
 
   /**
    * This method is required to be implemented by UserDetailsService interface. Loads a user by
    * their email. Although the interface defines the method as {@code loadUserByUsername}, our
    * application uses email as the unique identifier for users.
-   *
-   * @param email the user's email address
-   * @return the details of the user
-   * @throws UsernameNotFoundException if no user is found with the given email
    */
   @Override
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -39,12 +34,7 @@ public class AuthUserDetailsService implements UserDetailsService {
     return new UserPrincipal(user);
   }
 
-  /**
-   * Gets the user data by ID.
-   *
-   * @param userId User's unique identifier
-   * @return User details
-   */
+  /** Gets the user data by ID. */
   public UserDetails loadUserById(String userId) {
     Optional<User> userOptional = userRepository.findById(userId);
     User user =

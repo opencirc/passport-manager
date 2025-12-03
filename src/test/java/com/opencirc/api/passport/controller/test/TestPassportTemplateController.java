@@ -10,14 +10,13 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import java.util.List;
 import java.util.Map;
-import org.apache.hc.core5.http.HttpStatus;
+import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -50,7 +49,6 @@ public class TestPassportTemplateController {
   /** AuthUserDetailsService mock bean. */
   @MockBean private AuthenticationManager authenticationManager;
 
-  /** RestTemplate bean. */
   @Autowired
   @Qualifier("testRestTemplate")
   private RestTemplate restTemplate;
@@ -69,8 +67,6 @@ public class TestPassportTemplateController {
    * Sets up necessary configurations and mocks before each test execution. Initializes REST Assured
    * with the test server port, opens Mockito annotations, mocks the authentication context,
    * generates a mock JWT token, and stubs the bsdd API response.
-   *
-   * @param wmInfo
    */
   @BeforeEach
   void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
@@ -78,7 +74,7 @@ public class TestPassportTemplateController {
     MockitoAnnotations.openMocks(this);
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
 
     generateMockJwtToken();
   }
@@ -87,7 +83,7 @@ public class TestPassportTemplateController {
     String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
-    if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
+    if (response.getStatusCode() == 200) {
       jwtToken = response.getCookie("access_token");
     } else {
       throw new AssertionError("Expected status 200, but got " + response.getStatusCode());
@@ -114,7 +110,7 @@ public class TestPassportTemplateController {
             .when()
             .post("/api/passport-template/{passportId}")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -147,7 +143,7 @@ public class TestPassportTemplateController {
             .when()
             .post("/api/passport-template/{passportId}")
             .then()
-            .statusCode(HttpStatus.SC_NOT_FOUND)
+            .statusCode(HttpStatus.NOT_FOUND.value())
             .extract()
             .response();
 
@@ -170,7 +166,7 @@ public class TestPassportTemplateController {
             .when()
             .get("/api/passport-template/{id}")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -199,7 +195,7 @@ public class TestPassportTemplateController {
             .when()
             .get("/api/passport-template/{id}")
             .then()
-            .statusCode(HttpStatus.SC_NOT_FOUND)
+            .statusCode(HttpStatus.NOT_FOUND.value())
             .log()
             .all()
             .extract()
@@ -226,7 +222,7 @@ public class TestPassportTemplateController {
             .when()
             .get("/api/passport-templates/all")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()

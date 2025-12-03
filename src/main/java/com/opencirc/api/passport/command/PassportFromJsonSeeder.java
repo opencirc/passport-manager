@@ -9,7 +9,7 @@ import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.PassportService;
@@ -41,7 +41,7 @@ public class PassportFromJsonSeeder {
   private final Map<String, BsddClassTemplateDto> templatesByUri = new ConcurrentHashMap<>();
 
   /** The platform in which data dictionary is present. */
-  private final DataDictionaryPlatform platform = DataDictionaryPlatform.BSDD;
+  private final Platform platform = Platform.BSDD;
 
   /** The data dictionary used for seeding passport templates. */
   private final DataDictionary dictionary = DataDictionary.IFC;
@@ -49,14 +49,7 @@ public class PassportFromJsonSeeder {
   /** List to store the uri. */
   private List<String> uriList;
 
-  /**
-   * Constructor-based dependency injection.
-   *
-   * @param appProperties
-   * @param userRepository
-   * @param passportService
-   * @param objectMapper
-   */
+  /** Constructor-based dependency injection. */
   public PassportFromJsonSeeder(
       AppProperties appProperties,
       UserRepository userRepository,
@@ -119,23 +112,12 @@ public class PassportFromJsonSeeder {
 
     for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
       String uri = uriList.get(i % uriList.size());
-      createPassportRecursive(
-          1, String.valueOf(i + 1), uri, i, null, String.valueOf(user.getId()), createdByDto);
+      createPassportRecursive(1, String.valueOf(i + 1), uri, i, null, user.getId(), createdByDto);
     }
     log.info("Passport seeding from JSON templates completed.");
   }
 
-  /**
-   * Recursively creates passports and their child passports.
-   *
-   * @param level
-   * @param nameSuffix
-   * @param uri
-   * @param uriIndex
-   * @param parentId
-   * @param userId
-   * @param createdByDto
-   */
+  /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
       int level,
       String nameSuffix,

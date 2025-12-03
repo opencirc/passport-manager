@@ -37,28 +37,13 @@ public class SecurityConfig {
   /** Injecting Properties class. */
   private AppProperties properties;
 
-  /**
-   * Constructor.
-   *
-   * @param userDetailsService
-   * @param properties
-   */
+  /** Constructor. */
   public SecurityConfig(UserDetailsService userDetailsService, AppProperties properties) {
     this.userDetailsService = userDetailsService;
     this.properties = properties;
   }
 
-  /**
-   * JwtFilter bean.
-   *
-   * @param jwtService
-   * @param properties
-   * @param apiKeyService
-   * @param passwordService
-   * @param authUserDetailsService
-   * @param objectMapper
-   * @return JwtFilter
-   */
+  /** JwtFilter bean. */
   @Bean
   public JwtFilter jwtFilter(
       JwtService jwtService,
@@ -76,34 +61,20 @@ public class SecurityConfig {
         objectMapper);
   }
 
-  /**
-   * PasswordEncoder bean.
-   *
-   * @return passwordEncoder
-   */
+  /** PasswordEncoder bean. */
   @Bean
   public BCryptPasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder(AppConstants.PASSWORD_STRENGTH);
   }
 
-  /**
-   * Bean to get authenticationManager.
-   *
-   * @param config
-   * @return the instance of authentication manager
-   */
+  /** Bean to get authenticationManager. */
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
       throws Exception {
     return config.getAuthenticationManager();
   }
 
-  /**
-   * Bean of authenticationProvider.
-   *
-   * @param bcryptPasswordEncoder
-   * @return the instance of authentication provider
-   */
+  /** Bean of authenticationProvider. */
   @Bean
   public AuthenticationProvider authenticationProvider(
       BCryptPasswordEncoder bcryptPasswordEncoder) {
@@ -113,13 +84,7 @@ public class SecurityConfig {
     return provider;
   }
 
-  /**
-   * Configuring security filter chain.
-   *
-   * @param http
-   * @param jwtFilter
-   * @return instance of security filter chain
-   */
+  /** Configuring security filter chain. */
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter)
       throws Exception {

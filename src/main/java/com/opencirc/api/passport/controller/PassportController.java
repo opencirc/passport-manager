@@ -2,11 +2,12 @@ package com.opencirc.api.passport.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.dto.PlatformTreeStructureDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.PassportService;
@@ -26,23 +27,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint for operations related to passport. */
+/** Controller for operations related to passports. */
 @RestController
 @Tag(name = "Passport", description = "Operations related to Passport")
 public class PassportController {
 
-  /** Injecting PassportService class. */
   @Autowired private PassportService passportService;
 
-  /**
-   * Endpoint to create a passport.
-   *
-   * @param data
-   * @param dictionaryName
-   * @return the status
-   * @throws JsonValidationException
-   * @throws InvalidInputException
-   */
+  /** Create a passport. */
   @Operation(summary = "Creates Passport and validates it")
   @PostMapping(
       value = "/api/passport/dictionary/{platform}/{dictionary}",
@@ -64,17 +56,10 @@ public class PassportController {
       throws InvalidInputException, JsonValidationException {
     return ResponseEntity.ok(
         passportService.createPassportUsingDictionary(
-            DataDictionaryPlatform.fromValue(platform),
-            DataDictionary.fromValue(dictionaryName),
-            data));
+            Platform.fromValue(platform), DataDictionary.fromValue(dictionaryName), data));
   }
 
-  /**
-   * Endpoint to fetch the passport.
-   *
-   * @param passportId
-   * @return the passport in json
-   */
+  /** Fetch a passport. */
   @Operation(summary = "Retrieves the Passport")
   @GetMapping("/api/passport/{passportId}")
   public ResponseEntity<PassportDto> getPassport(
@@ -85,13 +70,7 @@ public class PassportController {
     return ResponseEntity.ok(passportService.getPassport(passportId));
   }
 
-  /**
-   * Endpoint to fetch the specified passport and its descendants.
-   *
-   * @param passportId
-   * @return the passport as JSON
-   * @throws JsonValidationException
-   */
+  /** Fetch the specified passport and its descendants. */
   @Operation(summary = "Get Passport and its children for the given ID")
   @GetMapping("/api/passport/{passportId}/children")
   public ResponseEntity<List<PassportDto>> getWithChildren(
@@ -102,41 +81,24 @@ public class PassportController {
     return ResponseEntity.ok(passportService.getPassportChildren(passportId));
   }
 
-  /**
-   * Endpoint to fetch the immediate children of the specified passport.
-   *
-   * @param passportId
-   * @return the passport as JSON
-   * @throws JsonValidationException
-   */
+  /** Fetch the immediate children of the specified passport. */
   @Operation(summary = "Get all passports with the given parent ID")
   @GetMapping("/api/passport/{passportId}/immediateChildren")
   public ResponseEntity<List<PassportDto>> getImmediateChildren(
       @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
           @PathVariable
-          String passportId)
-      throws JsonProcessingException, JsonValidationException {
+          String passportId) {
     return ResponseEntity.ok(passportService.getImmediateChildren(passportId));
   }
 
-  /**
-   * Endpoint to fetch all the root passports.
-   *
-   * @return the passports without parent
-   * @throws JsonValidationException
-   */
+  /** Fetch all the root passports. */
   @Operation(summary = "Get all the root passports available")
   @GetMapping("/api/passport/root")
   public ResponseEntity<List<PassportDto>> getRootPassports() {
     return ResponseEntity.ok(passportService.getRootPassports());
   }
 
-  /**
-   * Endpoint to update the properties for the given passport and property group.
-   *
-   * @return the updated passport
-   * @throws JsonValidationException
-   */
+  /** Update the properties for the given passport and property group. */
   @Operation(summary = "Updates the property in the datasheet")
   @PutMapping(
       value = "/api/passport/{passportId}/data",
@@ -156,33 +118,28 @@ public class PassportController {
     return ResponseEntity.ok(passportService.updateData(passportId, request));
   }
 
-  /**
-   * Endpoint to fetch the list of passports corresponding to the specified platform and code.
-   *
-   * @param code - class code
-   * @return the list of passports
-   * @throws JsonProcessingException
-   * @throws JsonValidationException
-   */
+  /** Fetch the list of passports corresponding to the specified platform and code. */
   @Operation(summary = "Get all passports with the given code")
   @GetMapping("/api/passport/byCode/{code}")
   public ResponseEntity<List<PassportDto>> listPassportsByCode(
       @Parameter(description = "Code", required = true, in = ParameterIn.PATH) @PathVariable
           String code)
-      throws JsonProcessingException, JsonValidationException {
-    return ResponseEntity.ok(
-        passportService.listPassportsByCode(code));
+      throws JsonProcessingException {
+    return ResponseEntity.ok(passportService.listPassportsByCode(code));
   }
 
-  /**
-   * Endpoint to get the tree structure of the platform.
-   *
-   * @return the list of PlatformTreeStructureDto
-   * @throws IOException
-   */
-  @GetMapping("/api/getPlatformTreeStructure")
-  public ResponseEntity<List<PlatformTreeStructureDto>> getPlatformTreeStructure()
-      throws IOException {
-    return ResponseEntity.ok(passportService.getPlatformTreeStructure());
+  /** Get the tree structure of the dictionary. */
+  @GetMapping("/api/passport/platform/{platform}/dictionary/{dictionary}/treeStructure")
+  public ResponseEntity<List<DataDictionaryTreeStructureDto>> getDictionaryTreeStructure(
+      @Parameter(description = "Platform name", required = true, in = ParameterIn.PATH)
+          @PathVariable
+          String platform,
+      @Parameter(description = "Dictionary name", required = true, in = ParameterIn.PATH)
+          @PathVariable
+          String dictionary)
+      throws IOException, InvalidDataDictionaryException {
+    return ResponseEntity.ok(
+        passportService.getDictionaryTreeStructure(
+            Platform.fromValue(platform), DataDictionary.fromValue(dictionary)));
   }
 }

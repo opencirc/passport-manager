@@ -16,25 +16,12 @@ public class RegisterUserCommand {
   /** Injecting AuthService. */
   private final AuthService authService;
 
-  /**
-   * Constructor.
-   *
-   * @param authService
-   */
+  /** Constructor. */
   public RegisterUserCommand(AuthService authService) {
     this.authService = authService;
   }
 
-  /**
-   * Shell command to register a new user.
-   *
-   * @param email
-   * @param password
-   * @param firstName
-   * @param lastName
-   * @param role
-   * @return message
-   */
+  /** Shell command to register a new user. */
   @Command(description = "Register a user.")
   public String register(
       @Option(longNames = "email", required = true) String email,

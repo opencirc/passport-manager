@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.opencirc.api.passport.adapter.DictionaryAdapterFactory;
+import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.DatasheetPropertyRepository;
@@ -16,14 +16,15 @@ import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
 import com.opencirc.api.passport.dto.DatasheetPropertyDto;
 import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.dto.PlatformTreeStructureDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
-import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
+import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
@@ -33,13 +34,9 @@ import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -49,76 +46,52 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
+/** Service class for Passport operations. */
 @Service
 public class PassportService {
 
-  /** Injecting DatasheetRepository class. */
   private final DatasheetRepository datasheetRepository;
 
-  /** Injecting DatasheetPropertyRepository class. */
   private final DatasheetPropertyRepository datasheetPropertyRepository;
 
-  /** Injecting PassportRepository class. */
   private final PassportRepository passportRepository;
 
-  /** Injecting PassportDatasheetMappingRepository class. */
   private final PassportDatasheetMappingRepository passportDatasheetMappingRepository;
 
-  /** Injecting ObjectMapper bean. */
   private final ObjectMapper objectMapper;
 
-  /** Injecting DictionaryAdapterFactory class. */
-  private final DictionaryAdapterFactory dictionaryAdapterFactory;
+  private final PlatformAdapterFactory platformAdapterFactory;
 
-  /** Injecting AppProperties class. */
   private final AppProperties appProperties;
 
-  /**
-   * Constructor.
-   *
-   * @param datasheetRepository
-   * @param passportRepository
-   * @param passportDatasheetMappingRepository
-   * @param dictionaryAdapterFactory
-   * @param objectMapper
-   * @param appProperties
-   */
+  /** Constructor. */
   public PassportService(
       DatasheetRepository datasheetRepository,
       DatasheetPropertyRepository datasheetPropertyRepository,
       PassportRepository passportRepository,
       PassportDatasheetMappingRepository passportDatasheetMappingRepository,
-      DictionaryAdapterFactory dictionaryAdapterFactory,
+      PlatformAdapterFactory platformAdapterFactory,
       ObjectMapper objectMapper,
       AppProperties appProperties) {
     this.datasheetRepository = datasheetRepository;
     this.datasheetPropertyRepository = datasheetPropertyRepository;
     this.passportRepository = passportRepository;
     this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
-    this.dictionaryAdapterFactory = dictionaryAdapterFactory;
+    this.platformAdapterFactory = platformAdapterFactory;
     this.objectMapper = objectMapper;
     this.appProperties = appProperties;
   }
 
-  /**
-   * Creates template Entry.
-   *
-   * @param dictionaryPlatform
-   * @param data
-   * @return Passport DTO from passport
-   */
+  /** Creates template entry. */
   @Transactional
   public PassportDto createPassportUsingDictionary(
-      DataDictionaryPlatform dictionaryPlatform,
-      DataDictionary dictionary,
-      CreatePassportRequestDto data)
+      Platform dictionaryPlatform, DataDictionary dictionary, CreatePassportRequestDto data)
       throws InvalidInputException {
     JsonNode datasheetData = data.getDatasheetData();
 
@@ -137,7 +110,7 @@ public class PassportService {
     passport.setStatus(Passport.Status.ACTIVE);
     passport.setCreatedById(data.getCreatedById());
     passport.setCreatedTime(OffsetDateTime.now());
-    passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
+    passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedBy()));
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
@@ -169,7 +142,7 @@ public class PassportService {
     datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
     datasheet.setCreatedById(data.getCreatedById());
     datasheet.setCreatedTime(OffsetDateTime.now());
-    datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedById(), data.getCreatedBy()));
+    datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedBy()));
 
     datasheet = datasheetRepository.save(datasheet);
 
@@ -205,7 +178,7 @@ public class PassportService {
       DatasheetProperty property = propertyByCode.get(propertyCode);
       if (property != null) {
         dataJson.set(
-            property.getCode().toString(),
+            property.getCode(),
             actualValueNode.isMissingNode() ? NullNode.instance : actualValueNode);
       }
     }
@@ -229,7 +202,7 @@ public class PassportService {
     return node.hasNonNull(field) ? node.get(field).asText() : null;
   }
 
-  private CreatedByDto getOrDefaultCreatedBy(String createdById, CreatedByDto createdBy) {
+  private CreatedByDto getOrDefaultCreatedBy(CreatedByDto createdBy) {
     if (createdBy != null) {
       return createdBy;
     }
@@ -237,14 +210,8 @@ public class PassportService {
         appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail());
   }
 
-  /**
-   * Retrieves passport.
-   *
-   * @param passportId
-   * @return Passport DTO from passport
-   */
-  public PassportDto getPassport(String passportId) throws JsonProcessingException {
-
+  /** Retrieves passport. */
+  public PassportDto getPassport(String passportId) {
     Optional<Passport> optionalPassport =
         passportRepository.findPassport(passportId, Passport.Status.ACTIVE);
     if (optionalPassport.isEmpty()) {
@@ -255,15 +222,9 @@ public class PassportService {
     return PassportDto.from(optionalPassport.get());
   }
 
-  /**
-   * Retrieves passport and its children for the given id.
-   *
-   * @param id
-   * @return a list of {@link PassportDto} objects
-   * @throws JsonProcessingException
-   */
-  public List<PassportDto> getPassportChildren(String id) throws JsonProcessingException {
-    List<PassportDatasheetResultMapDto> resultRows =
+  /** Retrieves passport and its children for the given id. */
+  public List<PassportDto> getPassportChildren(String id) {
+    List<PassportDatasheetResultMapQueryResult> resultRows =
         passportRepository.findPassportWithDescendants(id).orElse(Collections.emptyList());
 
     if (resultRows.isEmpty()) {
@@ -273,7 +234,7 @@ public class PassportService {
 
     Map<String, PassportDto> passportMap = new LinkedHashMap<>();
 
-    for (PassportDatasheetResultMapDto row : resultRows) {
+    for (PassportDatasheetResultMapQueryResult row : resultRows) {
       PassportDto passportDto =
           passportMap.computeIfAbsent(row.getPassportId(), key -> buildPassportDto(row));
 
@@ -307,32 +268,24 @@ public class PassportService {
     return new ArrayList<>(passportMap.values());
   }
 
-  /**
-   * Retrieves the passports with the given parent ID.
-   *
-   * @param passportId
-   * @return a list of {@link PassportDto} objects
-   * @throws JsonProcessingException
-   */
-  public List<PassportDto> getImmediateChildren(String passportId) throws JsonProcessingException {
-    List<PassportDatasheetResultMapDto> resultRows =
-        passportRepository.findImmediateChildren(passportId).orElse(Collections.emptyList());
+  /** Retrieves the passports with the given parent ID. */
+  public List<PassportDto> getImmediateChildren(String passportId) {
+    List<PassportDatasheetResultMapQueryResult> resultRows =
+        passportRepository.findImmediateChildren(passportId).orElseThrow(
+            () -> new HttpServerErrorException(
+                HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId
+            )
+        );
 
     return assemblePassportsFromResultRows(resultRows);
   }
 
-  /**
-   * Validate the passport, throw if there is an error.
-   *
-   * @param dictionaryPlatform
-   * @param passportData
-   */
-  private void validatePassportData(
-      DataDictionaryPlatform dictionaryPlatform, JsonNode passportData)
+  /** Validate the passport, throw if there is an error. */
+  private void validatePassportData(Platform dictionaryPlatform, JsonNode passportData)
       throws JsonValidationException {
     if (passportData == null
         || passportData.isNull()
-        || passportData.isObject() && passportData.size() == 0) {
+        || passportData.isObject() && passportData.isEmpty()) {
       throw new InvalidInputException("Input JSON node is null");
     }
     List<String> errorMessages = new ArrayList<>();
@@ -355,9 +308,13 @@ public class PassportService {
     } catch (ClassCastException e) {
       throw new InvalidInputException("Expected an array node for properties");
     }
+    if (properties == null) {
+      throw new InvalidInputException("No properties found");
+    }
+
+    var adapter = platformAdapterFactory.getAdapter(dictionaryPlatform);
     for (JsonNode property : properties) {
-      String error =
-          dictionaryAdapterFactory.getAdapter(dictionaryPlatform).validatePassportData(property);
+      String error = adapter.validatePassportData(property);
       if (error != null) {
         errorMessages.add(error);
       }
@@ -369,11 +326,7 @@ public class PassportService {
     }
   }
 
-  /**
-   * Retrieves all the root passports.
-   *
-   * @return Passport DTO list from passport
-   */
+  /** Retrieves all the root passports. */
   public List<PassportDto> getRootPassports() {
     List<Passport> passports = passportRepository.getRootPassports();
     if (passports == null) {
@@ -383,7 +336,7 @@ public class PassportService {
     return passports.stream().map(PassportDto::from).collect(Collectors.toList());
   }
 
-  private PassportDto buildPassportDto(PassportDatasheetResultMapDto row) {
+  private PassportDto buildPassportDto(PassportDatasheetResultMapQueryResult row) {
     PassportDto dto = new PassportDto();
     dto.setId(row.getPassportId());
     dto.setParentId(row.getParentId());
@@ -398,7 +351,7 @@ public class PassportService {
     return dto;
   }
 
-  private DatasheetDto buildDatasheetDto(PassportDatasheetResultMapDto row) {
+  private DatasheetDto buildDatasheetDto(PassportDatasheetResultMapQueryResult row) {
     try {
       DatasheetDto dto = new DatasheetDto();
       dto.setId(row.getDatasheetId());
@@ -438,7 +391,7 @@ public class PassportService {
     }
   }
 
-  private DatasheetPropertyDto buildDatasheetProperty(PassportDatasheetResultMapDto row) {
+  private DatasheetPropertyDto buildDatasheetProperty(PassportDatasheetResultMapQueryResult row) {
 
     if (row.getDatasheetPropertyId() == null) {
       return null;
@@ -489,11 +442,6 @@ public class PassportService {
   /**
    * Updates datasheet property values for the given passport and group. Only properties present in
    * {@code updateDataRequestDto.values} are updated.
-   *
-   * @param passportId passport ID
-   * @param updateDataRequestDto
-   * @return updated Passport dto
-   * @throws JsonValidationException
    */
   @Transactional
   public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto)
@@ -541,9 +489,8 @@ public class PassportService {
 
           propertyDefinition.set("actualValue", newValueNode);
 
-          String error = null;
-          error =
-              dictionaryAdapterFactory
+          String error =
+              platformAdapterFactory
                   .getAdapter(datasheet.getPlatform())
                   .validatePassportData(property.getDefinition());
           if (error != null) {
@@ -566,7 +513,7 @@ public class PassportService {
       }
       if (changed) {
         datasheet.setData(dataNode);
-        datasheet = datasheetRepository.save(datasheet);
+        datasheetRepository.save(datasheet);
       }
     }
 
@@ -577,36 +524,22 @@ public class PassportService {
     return PassportDto.from(passport);
   }
 
-  /**
-   * Retrieves all passports associated with the specified code.
-   *
-   * @param code
-   * @return a list of {@link PassportDto} objects
-   * @throws JsonProcessingException
-   */
-  public List<PassportDto> listPassportsByCode(String code)
-      throws JsonProcessingException {
+  /** Retrieves all passports associated with the specified code. */
+  public List<PassportDto> listPassportsByCode(String code) {
 
-    List<PassportDatasheetResultMapDto> resultRows =
-        passportRepository
-            .findPassportsByCode(code)
-            .orElse(Collections.emptyList());
+    List<PassportDatasheetResultMapQueryResult> resultRows =
+        passportRepository.findPassportsByCode(code).orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
   }
 
-  /**
-   * This method sets the result sets to passport dto.
-   *
-   * @param resultRows
-   * @return the list of passports
-   */
+  /** This method sets the result sets to passport dto. */
   private List<PassportDto> assemblePassportsFromResultRows(
-      List<PassportDatasheetResultMapDto> resultRows) {
+      List<PassportDatasheetResultMapQueryResult> resultRows) {
 
     Map<String, PassportDto> passportMap = new LinkedHashMap<>();
 
-    for (PassportDatasheetResultMapDto row : resultRows) {
+    for (PassportDatasheetResultMapQueryResult row : resultRows) {
 
       PassportDto passportDto =
           passportMap.computeIfAbsent(row.getPassportId(), id -> buildPassportDto(row));
@@ -643,75 +576,11 @@ public class PassportService {
     return new ArrayList<>(passportMap.values());
   }
 
-  /**
-   * Method to parse and form the tree structure of the platform.
-   *
-   * @return the list of PlatformTreeStructureDto
-   * @throws IOException
-   */
-  public List<PlatformTreeStructureDto> getPlatformTreeStructure() throws IOException {
-
-    Path outputPath =
-        Paths.get(appProperties.getTable6StructureOutputCachedPath()).toAbsolutePath();
-
-    if (Files.exists(outputPath)) {
-      return Arrays.asList(
-          objectMapper.readValue(outputPath.toFile(), PlatformTreeStructureDto[].class));
-    }
-
-    String templatePath = appProperties.getTable6StructureJsonPath();
-
-    ClassPathResource templateResource = new ClassPathResource(templatePath);
-
-    if (!templateResource.exists()) {
-      throw new IllegalStateException("Template not found in classpath: " + templatePath);
-    }
-
-    JsonNode root = objectMapper.readTree(templateResource.getInputStream());
-    JsonNode classes = root.get("Classes");
-
-    if (classes == null) {
-      throw new IllegalStateException("Template JSON has no 'Classes' field.");
-    }
-
-    Map<String, PlatformTreeStructureDto> nodeMap = new LinkedHashMap<>();
-    List<PlatformTreeStructureDto> roots = new ArrayList<>();
-
-    for (JsonNode classNode : classes) {
-      String code = classNode.get("Code").asText();
-      String name = classNode.get("Name").asText();
-      nodeMap.put(code, new PlatformTreeStructureDto(code, name, new ArrayList<>()));
-    }
-
-    for (JsonNode classNode : classes) {
-      JsonNode codeNode = classNode.get("Code");
-      if (codeNode == null || codeNode.isNull()) {
-        throw new IllegalStateException("Class node missing required 'Code' field");
-      }
-      String code = codeNode.asText();
-
-      JsonNode parentCodeNode = classNode.get("ParentClassCode");
-      String parentCode =
-          (parentCodeNode != null && !parentCodeNode.isNull()) ? parentCodeNode.asText() : null;
-
-      PlatformTreeStructureDto node = nodeMap.get(code);
-
-      if (parentCode == null || parentCode.isBlank()) {
-        roots.add(node);
-      } else {
-        PlatformTreeStructureDto parent = nodeMap.get(parentCode);
-        if (parent != null) {
-          parent.addChild(node);
-        } else {
-          roots.add(node);
-        }
-      }
-    }
-
-    Files.createDirectories(outputPath.getParent());
-
-    objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath.toFile(), roots);
-
-    return roots;
+  /** Parse and form the tree structure of the platform. */
+  public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(
+      Platform platform, DataDictionary dictionary)
+      throws IOException, InvalidDataDictionaryException {
+    var adapter = this.platformAdapterFactory.getAdapter(platform);
+    return adapter.getDictionaryTreeStructure(dictionary);
   }
 }

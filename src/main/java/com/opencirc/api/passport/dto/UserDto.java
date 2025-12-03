@@ -34,12 +34,7 @@ public class UserDto {
   /** Holds info if the user is active.. */
   private boolean active;
 
-  /**
-   * Setting up values from UserPrincipal to User Dto.
-   *
-   * @param userPrincipal
-   * @return userDto
-   */
+  /** Setting up values from UserPrincipal to User Dto. */
   public static UserDto from(UserPrincipal userPrincipal) {
     UserDto userDto = new UserDto();
     userDto.setId(userPrincipal.getUserId());
@@ -50,12 +45,7 @@ public class UserDto {
     return userDto;
   }
 
-  /**
-   * Setting up values from User to User Dto.
-   *
-   * @param user
-   * @return userDto
-   */
+  /** Setting up values from User to User Dto. */
   public static UserDto from(User user) {
     UserDto userDto = new UserDto();
     userDto.setId(user.getId());

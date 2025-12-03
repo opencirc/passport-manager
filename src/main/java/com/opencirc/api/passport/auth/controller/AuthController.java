@@ -18,21 +18,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint controller for authentication. */
+/** Controller for authentication operatinos. */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  /** Injecting AuthService class. */
   @Autowired private AuthService authService;
 
-  /**
-   * Endpoint to Login.
-   *
-   * @param loginRequest details with email, password
-   * @param response
-   * @return response with JWT token (access and refresh tokens)
-   */
+  /** Log in. */
   @PostMapping("/login")
   public ResponseEntity<UserDto> login(
       @RequestBody LoginRequestDto loginRequest, HttpServletResponse response)
@@ -41,12 +34,7 @@ public class AuthController {
     return ResponseEntity.ok(userDto);
   }
 
-  /**
-   * Verifies the status of authentication.
-   *
-   * @param request
-   * @return response
-   */
+  /** Verifies the status of authentication. */
   @GetMapping("/status")
   public ResponseEntity<StatusResponseDto> checkAuth(HttpServletRequest request) {
     Cookie[] cookies = request.getCookies();
@@ -73,25 +61,14 @@ public class AuthController {
     return ResponseEntity.ok(new StatusResponseDto("Authenticated"));
   }
 
-  /**
-   * Returns the currently authenticated user.
-   *
-   * @param request HTTP servlet request
-   * @return UserDto if authenticated, or null
-   */
+  /** Returns the currently authenticated user. */
   @GetMapping("/currentUser")
   public ResponseEntity<UserDto> getCurrentUser(HttpServletRequest request) {
     UserDto userDto = authService.getCurrentUser(request);
     return ResponseEntity.ok(userDto);
   }
 
-  /**
-   * Endpoint to refresh expired token.
-   *
-   * @param refreshToken - Existing JWT refresh token
-   * @param response
-   * @return response with JWT token (new access token)
-   */
+  /** Refresh an expired token. */
   @PostMapping("/refresh")
   public ResponseEntity<?> refreshToken(
       @CookieValue("refresh_token") String refreshToken, HttpServletResponse response)
@@ -110,13 +87,7 @@ public class AuthController {
     }
   }
 
-  /**
-   * Endpoint to Logout.
-   *
-   * @param request
-   * @param response
-   * @return response with JWT token (new access token)
-   */
+  /** Log out. */
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response)
       throws AuthenticationException {

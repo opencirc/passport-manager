@@ -8,10 +8,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
-import com.opencirc.api.passport.constants.test.TestConstants;
-import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
+import org.springframework.http.HttpStatus;
+import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class BsddMockStubHelper {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withStatus(TestConstants.STATUS_SUCCESS)
+                    .withStatus(HttpStatus.OK.value())
                     .withBody(
                         """
                         {
@@ -68,7 +68,7 @@ public class BsddMockStubHelper {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withStatus(TestConstants.STATUS_SUCCESS)
+                    .withStatus(HttpStatus.OK.value())
                     .withBody(
                         """
                     {
@@ -102,7 +102,7 @@ public class BsddMockStubHelper {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withStatus(HttpStatus.SC_SUCCESS)
+                    .withStatus(HttpStatus.OK.value())
                     .withBody(
                         """
                         {
@@ -155,7 +155,7 @@ public class BsddMockStubHelper {
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withStatus(TestConstants.STATUS_SUCCESS)
+                    .withStatus(HttpStatus.OK.value())
                     .withBody(
                         """
                     {
@@ -194,152 +194,249 @@ public class BsddMockStubHelper {
    * <p>This mock implementation is primarily used for testing the retrieval of passports and their
    * associated datasheets from a data source.
    */
-  public static class TestPassportDatasheetResultMapDto implements PassportDatasheetResultMapDto {
-
-    /** Unique identifier for the passport. */
+  public static class TestPassportDatasheetResultMapQueryResult
+      implements PassportDatasheetResultMapQueryResult {
     private final String passportId;
 
-    /** Name of the passport. */
     private final String passportName;
 
-    /** Current status of the passport. */
     private final String status;
 
-    /** Identifier of the parent passport, if this passport is a child; may be null. */
     private final String parentId;
 
-    /** Unique identifier for the associated datasheet. */
+    private final String passportCreatedById;
+
+    private final String passportCreatedBy;
+
+    private final LocalDateTime passportCreatedTime;
+
     private final String datasheetId;
 
-    /** JSON string containing the datasheet information. */
-    private final String data;
+    private final String platform;
 
-    /** URI of the data dictionary. */
-    private final String dataDictionary;
+    private final String dictionary;
 
-    /** Category of the data. */
+    private final String datasheetCode;
+
+    private final String datasheetName;
+
+    private final String datasheetDescription;
+
+    private final String datasheetPlatformId;
+
     private final String dataCategory;
 
-    /** Created By. */
-    private final String createdBy;
+    private final String data;
 
-    /** Time of the creation. */
-    private final Timestamp createdTime;
+    private final String datasheetCreatedById;
 
-    /**
-     * Constructor to initialize all fields of the mock DTO.
-     *
-     * @param passportId
-     * @param passportName
-     * @param status
-     * @param parentId
-     * @param datasheetId
-     * @param data
-     * @param dataDictionary
-     * @param dataCategory
-     * @param createdBy
-     * @param createdTime
-     */
-    public TestPassportDatasheetResultMapDto(
+    private final String datasheetCreatedBy;
+
+    private final LocalDateTime datasheetCreatedTime;
+
+    private final String datasheetPropertyId;
+
+    private final String datasheetPropertyDatasheetId;
+
+    private final String datasheetPropertyCode;
+
+    private final String datasheetPropertyPlatformId;
+
+    private final String datasheetPropertyGroupTag;
+
+    private final String datasheetPropertyType;
+
+    private final String datasheetPropertyDefinition;
+
+    /** Constructor to initialize all fields of the mock DTO. */
+    public TestPassportDatasheetResultMapQueryResult(
         String passportId,
         String passportName,
         String status,
         String parentId,
+        String passportCreatedById,
+        String passportCreatedBy,
+        LocalDateTime passportCreatedTime,
         String datasheetId,
-        String data,
-        String dataDictionary,
+        String platform,
+        String dictionary,
+        String datasheetCode,
+        String datasheetName,
+        String datasheetDescription,
+        String datasheetPlatformId,
         String dataCategory,
-        String createdBy,
-        Timestamp createdTime) {
+        String data,
+        String datasheetCreatedById,
+        String datasheetCreatedBy,
+        LocalDateTime datasheetCreatedTime,
+        String datasheetPropertyId,
+        String datasheetPropertyDatasheetId,
+        String datasheetPropertyCode,
+        String datasheetPropertyPlatformId,
+        String datasheetPropertyGroupTag,
+        String datasheetPropertyType,
+        String datasheetPropertyDefinition) {
       this.passportId = passportId;
       this.passportName = passportName;
       this.status = status;
       this.parentId = parentId;
+      this.passportCreatedById = passportCreatedById;
+      this.passportCreatedBy = passportCreatedBy;
+      this.passportCreatedTime = passportCreatedTime;
       this.datasheetId = datasheetId;
-      this.data = data;
-      this.dataDictionary = dataDictionary;
+      this.platform = platform;
+      this.dictionary = dictionary;
+      this.datasheetCode = datasheetCode;
+      this.datasheetName = datasheetName;
+      this.datasheetDescription = datasheetDescription;
+      this.datasheetPlatformId = datasheetPlatformId;
       this.dataCategory = dataCategory;
-      this.createdBy = createdBy;
-      this.createdTime = createdTime;
+      this.data = data;
+      this.datasheetCreatedById = datasheetCreatedById;
+      this.datasheetCreatedBy = datasheetCreatedBy;
+      this.datasheetCreatedTime = datasheetCreatedTime;
+      this.datasheetPropertyId = datasheetPropertyId;
+      this.datasheetPropertyDatasheetId = datasheetPropertyDatasheetId;
+      this.datasheetPropertyCode = datasheetPropertyCode;
+      this.datasheetPropertyPlatformId = datasheetPropertyPlatformId;
+      this.datasheetPropertyGroupTag = datasheetPropertyGroupTag;
+      this.datasheetPropertyType = datasheetPropertyType;
+      this.datasheetPropertyDefinition = datasheetPropertyDefinition;
     }
 
-    /**
-     * @return Passport ID
-     */
+    /** Returns the ID of the passport. */
     public String getPassportId() {
-      return passportId;
+      return this.passportId;
     }
 
-    /**
-     * @return Passport name
-     */
+    /** Returns the name of the passport. */
     public String getPassportName() {
-      return passportName;
+      return this.passportName;
     }
 
-    /**
-     * @return Passport status
-     */
+    /** Returns the status of the passport. */
     public String getStatus() {
-      return status;
+      return this.status;
     }
 
-    /**
-     * @return Parent passport ID
-     */
+    /** Returns the parent ID of the passport (if any). */
     public String getParentId() {
-      return parentId;
+      return this.parentId;
     }
 
-    /**
-     * @return Datasheet ID
-     */
+    /** Returns the user id who created the passport. */
+    public String getPassportCreatedById() {
+      return this.passportCreatedById;
+    }
+
+    /** Returns the JSON (as text) containing user information who created the passport. */
+    public String getPassportCreatedBy() {
+      return this.passportCreatedBy;
+    }
+
+    /** Returns the creation timestamp of the passport. */
+    public LocalDateTime getPassportCreatedTime() {
+      return this.passportCreatedTime;
+    }
+
+    /** Returns the ID of the associated datasheet. */
     public String getDatasheetId() {
-      return datasheetId;
+      return this.datasheetId;
     }
 
-    /**
-     * @return Datasheet JSON data
-     */
-    public String getData() {
-      return data;
+    /** Returns the platform. */
+    public String getPlatform() {
+      return this.platform;
     }
 
-    /**
-     * @return URI of the data dictionary
-     */
-    public String getDataDictionary() {
-      return dataDictionary;
+    /** Returns the dictionary. */
+    public String getDictionary() {
+      return this.dictionary;
     }
 
-    /**
-     * @return Data category
-     */
+    /** Returns the code. */
+    public String getDatasheetCode() {
+      return this.datasheetCode;
+    }
+
+    /** Returns the name. */
+    public String getDatasheetName() {
+      return this.datasheetName;
+    }
+
+    /** Returns the description. */
+    public String getDatasheetDescription() {
+      return this.datasheetDescription;
+    }
+
+    /** Returns the platform id. */
+    public String getDatasheetPlatformId() {
+      return this.datasheetPlatformId;
+    }
+
+    /** Returns the category of the datasheet (e.g., UNIQUE or GENERIC). */
     public String getDataCategory() {
-      return dataCategory;
+      return this.dataCategory;
     }
 
-    /**
-     * @return User who created the record
-     */
-    public String getCreatedBy() {
-      return createdBy;
+    /** Returns the JSON data of the datasheet as a string. */
+    public String getData() {
+      return this.data;
     }
 
-    /**
-     * @return Timestamp of creation
-     */
-    public Timestamp getCreatedTime() {
-      return createdTime;
+    /** Returns the user id who created the datasheet. */
+    public String getDatasheetCreatedById() {
+      return this.datasheetCreatedById;
+    }
+
+    /** Returns the JSON (as text) containing user information who created the datasheet. */
+    public String getDatasheetCreatedBy() {
+      return this.datasheetCreatedBy;
+    }
+
+    /** Returns the creation timestamp of the datasheet. */
+    public LocalDateTime getDatasheetCreatedTime() {
+      return this.datasheetCreatedTime;
+    }
+
+    /** Returns the ID of the associated datasheet property. */
+    public String getDatasheetPropertyId() {
+      return this.datasheetPropertyId;
+    }
+
+    /** Returns the ID of the associated datasheet. */
+    public String getDatasheetPropertyDatasheetId() {
+      return this.datasheetPropertyDatasheetId;
+    }
+
+    /** Returns the property code. */
+    public String getDatasheetPropertyCode() {
+      return this.datasheetPropertyCode;
+    }
+
+    /** Returns the ID of the platform. */
+    public String getDatasheetPropertyPlatformId() {
+      return this.datasheetPropertyPlatformId;
+    }
+
+    /** Returns the group where the property belongs to. */
+    public String getDatasheetPropertyGroupTag() {
+      return this.datasheetPropertyGroupTag;
+    }
+
+    /** Returns the type. */
+    public String getDatasheetPropertyType() {
+      return this.datasheetPropertyType;
+    }
+
+    /** Returns the definition of datasheet property. */
+    public String getDatasheetPropertyDefinition() {
+      return this.datasheetPropertyDefinition;
     }
   }
 
-  /**
-   * Creates mock stub data representing a parent passport with children. *
-   *
-   * @return List of {@link PassportDatasheetResultMapDto} representing mock passport data
-   */
-  public static List<PassportDatasheetResultMapDto> createPassportChildrenStubData() {
+  /** Creates mock stub data representing a parent passport with children. * */
+  public static List<PassportDatasheetResultMapQueryResult> createPassportChildrenStubData() {
     String datasheetJson =
         """
             {
@@ -364,10 +461,10 @@ public class BsddMockStubHelper {
 
     Timestamp timestamp = Timestamp.valueOf("2025-06-10 12:00:00");
 
-    List<PassportDatasheetResultMapDto> stubData = new ArrayList<>();
+    List<PassportDatasheetResultMapQueryResult> stubData = new ArrayList<>();
 
     stubData.add(
-        new TestPassportDatasheetResultMapDto(
+        new TestPassportDatasheetResultMapQueryResult(
             "oqj4p875porh0vpuqj1vob2jqgymchildren",
             "Parent Passport",
             "active",
@@ -377,10 +474,26 @@ public class BsddMockStubHelper {
             null,
             null,
             "parent@example.com",
-            timestamp));
+            timestamp.toString(),
+            "A-A__",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
 
     stubData.add(
-        new TestPassportDatasheetResultMapDto(
+        new TestPassportDatasheetResultMapQueryResult(
             "oqj4p875porh0vpuqj1vob2jqgymchild001",
             "Child Passport 1",
             "active",
@@ -390,10 +503,26 @@ public class BsddMockStubHelper {
             null,
             null,
             "child1@example.com",
-            timestamp));
+            timestamp.toString(),
+            "A-A__",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
 
     stubData.add(
-        new TestPassportDatasheetResultMapDto(
+        new TestPassportDatasheetResultMapQueryResult(
             "oqj4p875porh0vpuqj1vob2jqgymchild002",
             "Child Passport 2",
             "active",
@@ -403,7 +532,23 @@ public class BsddMockStubHelper {
             null,
             null,
             "child2@example.com",
-            timestamp));
+            timestamp.toString(),
+            "A-A__",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
 
     return stubData;
   }

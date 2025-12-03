@@ -12,7 +12,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class PlatformTreeStructureDto {
+public class DataDictionaryTreeStructureDto {
 
   /** Class code. */
   @JsonProperty private String code;
@@ -20,14 +20,10 @@ public class PlatformTreeStructureDto {
   /** Class name. */
   @JsonProperty private String name;
 
-  private List<PlatformTreeStructureDto> children = new ArrayList<>();
+  private List<DataDictionaryTreeStructureDto> children = new ArrayList<>();
 
-  /**
-   * Method to add child node to the parent node.
-   *
-   * @param child node
-   */
-  public void addChild(PlatformTreeStructureDto child) {
+  /** Add a child node to the parent node. */
+  public void addChild(DataDictionaryTreeStructureDto child) {
     children.add(child);
   }
 }

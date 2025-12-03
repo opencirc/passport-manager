@@ -11,10 +11,6 @@ public final class StringUtil {
   /**
    * Normalizes the given email by trimming whitespace and converting it to lowercase. Throws an
    * exception if the email is null, blank, or contains invalid characters.
-   *
-   * @param email
-   * @return normalized email
-   * @throws InvalidInputException if the email is null or invalid
    */
   public static String normalizeEmail(String email) {
     if (email == null) {
@@ -33,12 +29,7 @@ public final class StringUtil {
     return email.toLowerCase();
   }
 
-  /**
-   * Safely parses a UUID string.
-   *
-   * @param key
-   * @return UUID value of a given string
-   */
+  /** Safely parses a UUID string. */
   public static UUID validateUuid(String key) {
     if (key == null || key.isBlank()) {
       return null;

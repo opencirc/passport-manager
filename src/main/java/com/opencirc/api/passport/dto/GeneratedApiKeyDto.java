@@ -7,12 +7,7 @@ public class GeneratedApiKeyDto {
   private final ApiKey apiKey;
   private final String rawSecret;
 
-  /**
-   * Constructor with parameters.
-   *
-   * @param apiKey
-   * @param rawSecret
-   */
+  /** Constructor with parameters. */
   public GeneratedApiKeyDto(ApiKey apiKey, String rawSecret) {
     this.apiKey = apiKey;
     this.rawSecret = rawSecret;

@@ -3,9 +3,9 @@ package com.opencirc.api.passport.controller.test;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.springframework.http.HttpStatus;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -40,7 +40,7 @@ public class TestAuthController {
     RestAssured.port = port;
     MockitoAnnotations.openMocks(this);
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
   }
 
   /**
@@ -56,7 +56,7 @@ public class TestAuthController {
             .body("{\"username\": \"user1\", \"password\": \"user1password\"}")
             .when()
             .post("/api/auth/login");
-    response.then().statusCode(TestConstants.STATUS_SUCCESS).contentType(ContentType.JSON);
+    response.then().statusCode(HttpStatus.OK.value()).contentType(ContentType.JSON);
     String accessToken = response.getCookie("access_token");
     assertNotNull(accessToken, "Access token should be present in the" + " response cookies");
     String refToken = response.getCookie("refresh_token");
@@ -84,6 +84,6 @@ public class TestAuthController {
         .when()
         .post("/api/auth/login")
         .then()
-        .statusCode(TestConstants.STATUS_UNAUTHORIZED);
+        .statusCode(HttpStatus.UNAUTHORIZED.value());
   }
 }

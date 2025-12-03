@@ -2,26 +2,16 @@ package com.opencirc.api.passport.adapter.bsdd.exception;
 
 import com.opencirc.api.passport.exception.JsonValidationException;
 
+/** BsDD JSON validation exception. */
 public class BsddJsonValidationException extends JsonValidationException {
+  private static final long serialVersionUID = 1L;
 
-  /** Serialization version UID for BsddJsonValidationException class. */
-  private static final long serialVersionUID = 2L;
-
-  /**
-   * JsonValidationException with message.
-   *
-   * @param message
-   */
+  /** JsonValidationException with a message. */
   public BsddJsonValidationException(String message) {
     super(message);
   }
 
-  /**
-   * JsonValidationException with message and cause.
-   *
-   * @param message
-   * @param cause
-   */
+  /** JsonValidationException with message and cause. */
   public BsddJsonValidationException(String message, Throwable cause) {
     super(message, cause);
   }

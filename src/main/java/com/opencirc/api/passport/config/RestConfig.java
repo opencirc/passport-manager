@@ -8,11 +8,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class RestConfig {
 
-  /**
-   * Rest Template Bean Initialisation.
-   *
-   * @return {@link RestTemplate}
-   */
+  /** Rest Template Bean Initialisation. */
   @Bean
   public RestTemplate restTemplate() {
     return new RestTemplate();

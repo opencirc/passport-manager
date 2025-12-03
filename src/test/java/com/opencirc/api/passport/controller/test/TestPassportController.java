@@ -8,13 +8,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
+import org.springframework.http.HttpStatus;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import com.opencirc.api.passport.model.Datasheet;
@@ -24,9 +26,8 @@ import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.time.OffsetDateTime;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -40,6 +41,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+/** Integration tests for the passport controller. */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = PassportManager.class)
@@ -48,16 +50,12 @@ import org.springframework.test.context.DynamicPropertySource;
 @AutoConfigureMockMvc
 public class TestPassportController {
 
-  /** Assigns random port number in which application runs. */
   @LocalServerPort private int port;
 
-  /** AuthUserDetailsService mock bean. */
   @MockBean private AuthUserDetailsService authUserDetailsService;
 
-  /** AuthUserDetailsService mock bean. */
   @MockBean private AuthenticationManager authenticationManager;
 
-  /** Injecting ObjectMapper bean. */
   @Autowired private ObjectMapper objectMapper;
 
   /** JWT token. */
@@ -74,8 +72,6 @@ public class TestPassportController {
    * Sets up necessary configurations and mocks before each test execution. Initializes REST Assured
    * with the test server port, opens Mockito annotations, mocks the authentication context,
    * generates a mock JWT token, and stubs the bsdd API response.
-   *
-   * @param wmInfo
    */
   @BeforeEach
   void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
@@ -83,7 +79,7 @@ public class TestPassportController {
     MockitoAnnotations.openMocks(this);
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetailsDB(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(authUserDetailsService, authenticationManager);
     generateMockJwtToken();
   }
 
@@ -91,23 +87,22 @@ public class TestPassportController {
     String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
-    if (response.getStatusCode() == TestConstants.STATUS_SUCCESS) {
+    if (response.getStatusCode() == 200) {
       jwtToken = response.getCookie("access_token");
     } else {
       throw new AssertionError("Expected status 200, but got " + response.getStatusCode());
     }
   }
 
-  /**
-   * Tests the successful creation of a passport with valid JSON input.
-   *
-   * @throws JsonProcessingException
-   * @throws JsonMappingException
-   */
+  /** Tests the successful creation of a passport with valid JSON input. */
   @Test
   public void givenValidBsddDataWhenCreatePassportThenReturnCreatedPassportWithCorrectDetails()
-      throws JsonValidationException, JsonMappingException, JsonProcessingException {
-    String dictionary = "bsdd";
+      throws JsonProcessingException {
+
+    var createdByDto = new CreatedByDto();
+    createdByDto.setFullName("User One");
+    createdByDto.setEmail("user1@test.com");
+
     String jsonBody =
         """
                                 {
@@ -136,14 +131,17 @@ public class TestPassportController {
                     "templateName": "testTemplate",
                     "dataCategory": "Unique"
                 }
-                                """;
+                """;
 
-    CreatePassportRequestDto createPassportRequest = new CreatePassportRequestDto();
-    createPassportRequest.setCreatedTime(LocalDateTime.now());
-    createPassportRequest.setDataCategory(DataCategory.GENERIC.getValue());
-    createPassportRequest.setDatasheetData(objectMapper.readTree(jsonBody));
-    createPassportRequest.setPassportName("Dwelling Space");
-    createPassportRequest.setCreatedBy("Test");
+    CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
+    requestDto.setCreatedTime(OffsetDateTime.now());
+    requestDto.setDataCategory(DataCategory.GENERIC.getValue());
+    requestDto.setDatasheetData(objectMapper.readTree(jsonBody));
+    requestDto.setPassportName("Dwelling Space");
+    requestDto.setCreatedBy(createdByDto);
+
+    Platform platform = Platform.BSDD;
+    DataDictionary dictionary = DataDictionary.TABLE6;
 
     Response response =
         RestAssured.given()
@@ -151,12 +149,13 @@ public class TestPassportController {
             .all()
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
-            .body(createPassportRequest)
-            .pathParam("dictionary", dictionary)
+            .body(requestDto)
+            .pathParam("platform", platform.getValue())
+            .pathParam("dictionary", dictionary.getValue())
             .when()
-            .post("/api/passport/dictionary/{dictionary}")
+            .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
-            .statusCode(HttpStatus.SC_SUCCESS)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -176,14 +175,20 @@ public class TestPassportController {
             equalTo("space designed for human dwelling and related activities"));
   }
 
-  /** Tests the behaviour of the createPassport method when an empty JSON body is provided. */
+  /** Tests the behavior of the createPassport method when an empty JSON body is provided. */
   @Test
   public void shouldFailToCreatePassportWhenJsonBodyIsEmpty() throws JsonValidationException {
-    String dictionary = "bsdd";
+    var createdByDto = new CreatedByDto();
+    createdByDto.setFullName("User One");
+    createdByDto.setEmail("user1@test.com");
+
     CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
-    requestDto.setCreatedTime(LocalDateTime.now());
-    requestDto.setCreatedBy("Test");
+    requestDto.setCreatedTime(OffsetDateTime.now());
+    requestDto.setCreatedBy(createdByDto);
     requestDto.setPassportName("Empty Passport");
+
+    Platform platform = Platform.BSDD;
+    DataDictionary dictionary = DataDictionary.TABLE6;
 
     Response response =
         RestAssured.given()
@@ -192,11 +197,12 @@ public class TestPassportController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .body(requestDto)
-            .pathParam("dictionary", dictionary)
+            .pathParam("platform", platform.getValue())
+            .pathParam("dictionary", dictionary.getValue())
             .when()
-            .post("/api/passport/dictionary/{dictionary}")
+            .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
-            .statusCode(HttpStatus.SC_BAD_REQUEST)
+            .statusCode(HttpStatus.BAD_REQUEST.value())
             .log()
             .all()
             .extract()
@@ -206,16 +212,12 @@ public class TestPassportController {
     assertTrue(responseBody.contains("Input JSON node is null"));
   }
 
-  /**
-   * Tests the behaviour of the createPassport method when an invalid JSON body is provided.
-   *
-   * @throws JsonProcessingException
-   * @throws JsonMappingException
-   */
+  /** Tests the behavior of the createPassport method when an invalid JSON body is provided. */
   @Test
-  public void shouldFailToCreatePassportWhenJsonBodyIsInvalid()
-      throws JsonValidationException, JsonMappingException, JsonProcessingException {
-    String dictionary = "bsdd";
+  public void shouldFailToCreatePassportWhenJsonBodyIsInvalid() throws JsonProcessingException {
+    var createdByDto = new CreatedByDto();
+    createdByDto.setFullName("User One");
+    createdByDto.setEmail("user1@test.com");
 
     JsonNode invalidNode =
         objectMapper.readTree(
@@ -226,11 +228,14 @@ public class TestPassportController {
         """);
 
     CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
-    requestDto.setCreatedTime(LocalDateTime.now());
-    requestDto.setCreatedBy("Test");
+    requestDto.setCreatedTime(OffsetDateTime.now());
+    requestDto.setCreatedBy(createdByDto);
     requestDto.setPassportName("Invalid Passport");
     requestDto.setDataCategory(DataCategory.GENERIC.getValue());
     requestDto.setDatasheetData(invalidNode);
+
+    Platform platform = Platform.BSDD;
+    DataDictionary dictionary = DataDictionary.TABLE6;
 
     Response response =
         RestAssured.given()
@@ -239,11 +244,12 @@ public class TestPassportController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .body(requestDto)
-            .pathParam("dictionary", dictionary)
+            .pathParam("platform", platform.getValue())
+            .pathParam("dictionary", dictionary.getValue())
             .when()
-            .post("/api/passport/dictionary/{dictionary}")
+            .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
-            .statusCode(HttpStatus.SC_BAD_REQUEST)
+            .statusCode(HttpStatus.BAD_REQUEST.value())
             .log()
             .all()
             .extract()
@@ -256,8 +262,6 @@ public class TestPassportController {
   /**
    * Tests retrieval of passport details by a valid passport ID.Verifies that the response contains
    * the correct passport ID, name, and associated datasheet information.
-   *
-   * @throws Exception if the request or data processing fails
    */
   @Test
   public void shouldReturnPassportDetailsWhenPassportIdIsValid() throws Exception {
@@ -273,8 +277,8 @@ public class TestPassportController {
     datasheet.setData(generateDatasheetData());
     datasheetMapping.setDatasheet(datasheet);
     datasheetMapping.setPassport(passport);
-    datasheetMapping.setId(UUID.fromString("cd4d3ec2-0c8a-45bf-888f-81fdbd9eaa37"));
-    passport.setDatasheetMappings(List.of(datasheetMapping));
+    datasheetMapping.setId("cd4d3ec2-0c8a-45bf-888f-81fdbd9eaa37");
+    passport.setDatasheetMappings(Set.of(datasheetMapping));
 
     Response response =
         RestAssured.given()
@@ -286,7 +290,7 @@ public class TestPassportController {
             .when()
             .get("/api/passport/{id}")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -311,8 +315,6 @@ public class TestPassportController {
    *
    * <p>Verifies that the response includes child passport objects, with correct parent-child
    * relationships and datasheet property values.
-   *
-   * @throws Exception if the request or data processing fails
    */
   @Test
   public void shouldReturnPassportDetailsWithChildrenWhenPassportIdIsValid() throws Exception {
@@ -329,7 +331,7 @@ public class TestPassportController {
             .when()
             .get("/api/passport/{id}/children")
             .then()
-            .statusCode(HttpStatus.SC_OK)
+            .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
             .log()
             .all()
@@ -374,7 +376,7 @@ public class TestPassportController {
             "createdBy": "abc@example.com",
             "createdTime": "2025-06-10T12:00:00"
         }
-                """;
+        """;
 
     return objectMapper.readTree(jsonBody);
   }

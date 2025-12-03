@@ -3,7 +3,7 @@ package com.opencirc.api.passport.mapping;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -18,25 +18,21 @@ import org.springframework.stereotype.Component;
 public class DictionaryMapping {
 
   /** Added with dictionary mappings. */
-  private Map<String, Map<String, String>> dictionaries = new HashMap<>();
+  private final Map<String, Map<String, String>> dictionaries = new HashMap<>();
 
   /** Injecting ObjectMapper. */
   private final ObjectMapper objectMapper;
 
-  /**
-   * DictionaryMapping constructor.
-   *
-   * @param mapper
-   */
+  /** DictionaryMapping constructor. */
   public DictionaryMapping(ObjectMapper mapper) throws IOException {
     this.objectMapper = mapper;
     loadDictionaryMappings();
   }
 
   /** Stores the required Dictionary mappings. */
-  private final Map<DataDictionaryPlatform, Map<String, String>> reverseCache = new HashMap<>();
+  private final Map<Platform, Map<String, String>> reverseCache = new HashMap<>();
 
-  /** Loads the field names from dictionary mapping property file. */
+  /** Loads the field names from a dictionary mapping property file. */
   private void loadDictionaryMappings() throws IOException {
     PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
     Resource[] resources = resolver.getResources("classpath:DataDictionary_Mapping/*.properties");
@@ -59,25 +55,13 @@ public class DictionaryMapping {
     }
   }
 
-  /**
-   * Fetches the relevant dictionary mapping.
-   *
-   * @param dictionaryName
-   * @return the dictionary mappings for the requested dictionary
-   */
-  public Map<String, String> getDictionaryMapping(DataDictionaryPlatform dictionaryName) {
+  /** Fetches the relevant dictionary mapping. */
+  public Map<String, String> getDictionaryMapping(Platform dictionaryName) {
     return dictionaries.get(dictionaryName.getValue());
   }
 
-  /**
-   * Maps the keys of a template to their corresponding ISO standard keys.
-   *
-   * @param template
-   * @param dictionaryName
-   * @return an ObjectNode containing the mapped template
-   */
-  public ObjectNode mapTemplateFieldsToStandards(
-      JsonNode template, DataDictionaryPlatform dictionaryName) {
+  /** Maps the keys of a template to their corresponding ISO standard keys. */
+  public ObjectNode mapTemplateFieldsToStandards(JsonNode template, Platform dictionaryName) {
     ObjectNode resultNode = objectMapper.createObjectNode();
     Map<String, String> dictionaryMappings = getDictionaryMapping(dictionaryName);
 
@@ -97,15 +81,9 @@ public class DictionaryMapping {
     return resultNode;
   }
 
-  /**
-   * Retrieves the mapping details for the specified data dictionary.
-   *
-   * @param dictionaryPlatform dictionary name
-   * @param dictionaryMappings fetched mappings
-   * @return map the matched field names
-   */
+  /** Retrieves the mapping details for the specified data dictionary. */
   private Map<String, String> getReverseMapping(
-      DataDictionaryPlatform dictionaryPlatform, Map<String, String> dictionaryMappings) {
+      Platform dictionaryPlatform, Map<String, String> dictionaryMappings) {
     return reverseCache.computeIfAbsent(
         dictionaryPlatform,
         d -> {

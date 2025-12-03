@@ -3,7 +3,7 @@ package com.opencirc.api.passport.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.dto.GetClassRequestDto;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,21 +20,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Endpoint for operations related to data dictionary. */
+/** Controller for operations related to a data dictionary. */
 @RestController
 @Tag(name = "Data Dictionary", description = "Operations related to template from Data Dictionary")
 public class DataDictionaryController {
 
-  /** Injecting DataDictionaryService class. */
   @Autowired private DataDictionaryService dataDictionaryService;
 
-  /**
-   * Returns list of classes fetched from bsdd.
-   *
-   * @param platform
-   * @param query
-   * @return list of class and its details
-   */
+  /** Returns a list of classes fetched from bsdd. */
   @GetMapping(
       value = "/api/dataDictionary/{platform}/class/search/{query}",
       produces = {"application/json"})
@@ -44,19 +37,10 @@ public class DataDictionaryController {
           String platform,
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
-    return dataDictionaryService.searchClassesByText(
-        DataDictionaryPlatform.fromValue(platform), query);
+    return dataDictionaryService.searchClassesByText(Platform.fromValue(platform), query);
   }
 
-  /**
-   * Returns Class Template with or without properties from the data dictionary using the provided
-   * URI.
-   *
-   * @param platform
-   * @param getClassRequest
-   * @param withProperties
-   * @return the template with all the relevant properties
-   */
+  /** Returns a Class Template with/without properties from the data dictionary using the URI. */
   @Operation(summary = "Get class from DD for the requested uri")
   @PostMapping(
       value = "/api/dataDictionary/{platform}/class",
@@ -83,16 +67,10 @@ public class DataDictionaryController {
           Boolean withProperties)
       throws JsonValidationException, JsonProcessingException {
     return dataDictionaryService.createClassTemplate(
-        DataDictionaryPlatform.fromValue(platform), getClassRequest.getUri(), withProperties);
+        Platform.fromValue(platform), getClassRequest.getUri(), withProperties);
   }
 
-  /**
-   * Returns list of properties fetched from bsdd.
-   *
-   * @param platform
-   * @param query
-   * @return the template with all the relevant properties
-   */
+  /** Returns a list of properties fetched from bsdd. */
   @Operation(summary = "Lists all the properties name and its URI matching the text")
   @GetMapping(
       value = "/api/dataDictionary/{platform}/property/search/{query}",
@@ -103,16 +81,10 @@ public class DataDictionaryController {
           String platform,
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
-    return dataDictionaryService.listProperties(DataDictionaryPlatform.fromValue(platform), query);
+    return dataDictionaryService.listProperties(Platform.fromValue(platform), query);
   }
 
-  /**
-   * Create template with selected properties.
-   *
-   * @param platform
-   * @param propertiesUriList
-   * @return the template with all the relevant properties
-   */
+  /** Create template with selected properties. */
   @Operation(summary = "Create template with selected properties")
   @PostMapping(
       value = "/api/dataDictionary/{platform}/properties",
@@ -129,6 +101,6 @@ public class DataDictionaryController {
           List<String> propertiesUriList)
       throws JsonValidationException {
     return dataDictionaryService.createTemplateWithProperties(
-        DataDictionaryPlatform.fromValue(platform), propertiesUriList);
+        Platform.fromValue(platform), propertiesUriList);
   }
 }

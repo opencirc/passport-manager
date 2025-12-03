@@ -93,29 +93,17 @@ public class AppProperties {
   @Value("${bsdd.table6.structure.output.cached.path}")
   private String table6StructureOutputCachedPath;
 
-  /**
-   * Getter for refresh token.
-   *
-   * @return refresh token expiry time
-   */
+  /** Getter for refresh token. */
   public int getRefreshTokenExpiryTime() {
     return Integer.parseInt(refreshTokenExpiryTime);
   }
 
-  /**
-   * Getter for access token.
-   *
-   * @return access token expiry time
-   */
+  /** Getter for access token. */
   public int getAccessTokenExpiryTime() {
     return Integer.parseInt(accessTokenExpiryTime);
   }
 
-  /**
-   * Getter for Maximum level.
-   *
-   * @return Maximum level of the passports to be created
-   */
+  /** Getter for Maximum level. */
   public int getMaximumLevel() {
     try {
       return Integer.parseInt(maximumLevel);
@@ -124,11 +112,7 @@ public class AppProperties {
     }
   }
 
-  /**
-   * Getter for childrenPerLevel.
-   *
-   * @return Number of children for each passport
-   */
+  /** Getter for childrenPerLevel. */
   public int getChildrenPerLevel() {
     try {
       return Integer.parseInt(childrenPerLevel);
@@ -138,11 +122,7 @@ public class AppProperties {
     }
   }
 
-  /**
-   * Getter for propertyCountToSelect.
-   *
-   * @return the number of properties to have in the template
-   */
+  /** Getter for propertyCountToSelect. */
   public int getPropertyCountToSelect() {
     try {
       return Integer.parseInt(propertyCountToSelect);

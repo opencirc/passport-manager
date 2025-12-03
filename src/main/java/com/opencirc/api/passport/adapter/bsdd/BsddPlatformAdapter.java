@@ -1,89 +1,81 @@
 package com.opencirc.api.passport.adapter.bsdd;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.opencirc.api.passport.adapter.DictionaryAdapter;
+import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
+import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.mapping.DictionaryMapping;
 import com.opencirc.api.passport.service.CacheService;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/** BSDD implementation of PlatformAdapter. */
 @Service
-public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
+public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto> {
 
-  /** Injecting Rest Template. */
   private final RestTemplate restTemplate;
 
-  /** Injecting Properties. */
-  private final AppProperties properties;
+  private final AppProperties appProperties;
 
-  /** Injecting ObjectMapper. */
   private final ObjectMapper objectMapper;
 
-  /** Injecting DictionaryMapping. */
   private final DictionaryMapping dictionaryMapping;
 
-  /** Injecting CacheService. */
   private final CacheService cacheService;
 
-  /**
-   * Instantiating BsddAdapter.
-   *
-   * @param injectedRestTemplate
-   * @param appProperties
-   * @param mapper
-   * @param dictionaryMapping
-   * @param cacheService
-   */
+  /** Constructor. */
   @Autowired
-  public BsddAdapter(
+  public BsddPlatformAdapter(
       RestTemplate injectedRestTemplate,
       AppProperties appProperties,
       ObjectMapper mapper,
       DictionaryMapping dictionaryMapping,
       CacheService cacheService) {
     this.restTemplate = injectedRestTemplate;
-    this.properties = appProperties;
+    this.appProperties = appProperties;
     this.objectMapper = mapper;
     this.cacheService = cacheService;
     this.dictionaryMapping = dictionaryMapping;
   }
 
-  /**
-   * Fetches a list of classes matching the search text.
-   *
-   * @param text The search text.
-   * @return A list of maps containing class details.
-   */
+  /** Fetches a list of classes matching the search text. */
   @Override
   public List<Map<String, String>> listClass(String text) {
 
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(properties.getBsddClassSearchTextUrl())
+        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassSearchTextUrl())
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
             .queryParam(AppConstants.QP_BSDD_LIMIT, AppConstants.BSDD_LIMIT);
     String url = uriBuilder.toUriString();
@@ -91,8 +83,8 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     JsonNode responseBody = response.getBody();
 
     List<Map<String, String>> classList = new ArrayList<>();
-    int totalCount = responseBody.path("totalCount").asInt();
-    if (responseBody != null && totalCount > 0) {
+    int totalCount = responseBody != null ? responseBody.path("totalCount").asInt() : 0;
+    if (totalCount > 0) {
       for (JsonNode node : responseBody.get("classes")) {
         Map<String, String> classMap = new HashMap<>();
         classMap.put("name", node.path("name").asText());
@@ -104,17 +96,10 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     return classList;
   }
 
-  /**
-   * Fetches class template with property details.
-   *
-   * @param uri The class URI.
-   * @return The class template as a JsonNode.
-   * @throws JsonValidationException If the URI is invalid.
-   * @throws JsonProcessingException
-   */
+  /** Fetches class template with property details. */
   @Override
   public BsddClassTemplateDto createClassTemplate(String uri, boolean addProperties)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
 
     BsddClassTemplateDto classTemplateDto = getClassTemplate(uri, addProperties);
 
@@ -141,23 +126,15 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     return classTemplateDto;
   }
 
-  /**
-   * Fetches class template with property details.
-   *
-   * @param uri The class URI.
-   * @param addProperties
-   * @return The class template as a JsonNode.
-   * @throws JsonValidationException If the URI is invalid.
-   * @throws JsonProcessingException
-   */
+  /** Fetches class template with property details. */
   private BsddClassTemplateDto getClassTemplate(String uri, boolean addProperties)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
 
     if (!validateUri(uri)) {
       throw new InvalidInputException("Invalid URI : " + uri);
     }
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(properties.getBsddClassDetailsUrl())
+        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassDetailsUrl())
             .queryParam(AppConstants.URI, uri);
 
     if (addProperties) {
@@ -187,12 +164,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     return classTemplateDto;
   }
 
-  /**
-   * Retrieves the property template with its details.
-   *
-   * @param uriList
-   * @return property template in json format
-   */
+  /** Retrieves the property template with its details. */
   @Override
   public ObjectNode getPropertyTemplateWithDetails(List<String> uriList)
       throws JsonValidationException {
@@ -205,7 +177,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
       }
 
       UriComponentsBuilder uriBuilder =
-          UriComponentsBuilder.fromHttpUrl(properties.getBsddPropertiesWithDetailUrl())
+          UriComponentsBuilder.fromHttpUrl(appProperties.getBsddPropertiesWithDetailUrl())
               .queryParam(AppConstants.URI, uri);
       String url = uriBuilder.toUriString();
 
@@ -232,29 +204,18 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     return template;
   }
 
-  /**
-   * Maps the given template to standard fields and adds an actual value field.
-   *
-   * @param propertiesArray
-   * @param template
-   */
+  /** Maps the given template to standard fields and adds an actual value field. */
   private void formPropertyTemplate(ArrayNode propertiesArray, JsonNode template) {
-    ObjectNode mappedNode =
-        dictionaryMapping.mapTemplateFieldsToStandards(template, DataDictionaryPlatform.BSDD);
+    ObjectNode mappedNode = dictionaryMapping.mapTemplateFieldsToStandards(template, Platform.BSDD);
     mappedNode.put(AppConstants.ACTUAL_VALUE, "");
     propertiesArray.add(mappedNode);
   }
 
-  /**
-   * Fetches the properties.
-   *
-   * @param text
-   * @return list of properties
-   */
+  /** Fetches the properties. */
   @Override
   public List<Map<String, String>> listProperties(String text) {
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(properties.getBsddTextSearchUrl())
+        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddTextSearchUrl())
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
             .queryParam(AppConstants.QP_BSDD_TYPEFILTER, "Property")
             .queryParam("IncludeSearchDescriptions", "false")
@@ -279,16 +240,10 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     return propertyList;
   }
 
-  /**
-   * Validates template entries against allowed values and ranges.
-   *
-   * @param propertyNode The JSON node containing template data.
-   * @throws JsonValidationException If validation fails.
-   */
+  /** Validates template entries against allowed values and ranges. */
   @Override
-  public String validatePassportData(JsonNode propertyNode) throws JsonValidationException {
-
-    String errorMessage = null;
+  public String validatePassportData(JsonNode propertyNode) {
+    String errorMessage;
     if (propertyNode == null || !propertyNode.isObject()) {
       return "Invalid property node found (not an object). Skipping...";
     }
@@ -309,9 +264,10 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
         property.has("MinInclusive") ? property.get("MinInclusive").asDouble() : null;
 
     if (actualValueNode != null && !actualValueNode.asText().isEmpty()) {
-
+      if (dataType == null) {
+        return "Missing 'dataType' for property: " + propertyName;
+      }
       errorMessage = validateDataType(propertyName, dataType, actualValueNode);
-
       if (errorMessage == null && allowedValuesNode != null && allowedValuesNode.isArray()) {
         errorMessage =
             validateAllowedValues(propertyName, (ArrayNode) allowedValuesNode, actualValueNode);
@@ -332,12 +288,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     return errorMessage;
   }
 
-  /**
-   * Validates whether the given URI is correctly formatted.
-   *
-   * @param uriString The URI string.
-   * @return True if valid, false otherwise.
-   */
+  /** Validates whether the given URI is correctly formatted. */
   public boolean validateUri(String uriString) {
     if (uriString == null || uriString.trim().isEmpty()) {
       return false;
@@ -352,10 +303,10 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     }
   }
 
+  /** Validates the data type of the given actual value. */
   private static String validateDataType(
       String propertyName, String dataType, JsonNode actualValueNode) {
     String actualValue = actualValueNode.asText();
-    String errorMessage = null;
     switch (dataType) {
       case "String":
         break;
@@ -364,12 +315,12 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
         try {
           Integer.parseInt(actualValue);
         } catch (NumberFormatException e) {
-          return propertyName + " : Invalid data type. Expected Integer, but got: " + actualValue;
+          return propertyName + ": Invalid data type. Expected Integer, but got: " + actualValue;
         }
         break;
       case "Boolean":
         if (!"true".equalsIgnoreCase(actualValue) && !"false".equalsIgnoreCase(actualValue)) {
-          return propertyName + " : Invalid data type. Expected Boolean, but got: " + actualValue;
+          return propertyName + ": Invalid data type. Expected Boolean, but got: " + actualValue;
         }
         break;
       case "Real":
@@ -377,57 +328,57 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
           Double.parseDouble(actualValue.replace("\"", ""));
           if (!actualValue.contains(".")) {
             return propertyName
-                + " : Invalid Real number. A valid Real number should contain"
+                + ": Invalid Real number. A valid Real number should contain"
                 + " a decimal point.";
           }
 
         } catch (NumberFormatException e) {
           return propertyName
-              + " : Invalid data type. Expected Real (Double), but got: "
+              + ": Invalid data type. Expected Real (Double), but got: "
               + actualValue;
         }
         break;
       case "Character":
         if (actualValue.length() != 1) {
           return propertyName
-              + " : Invalid data type. Expected Character "
+              + ": Invalid data type. Expected Character "
               + "(Single character string), but got: "
               + actualValue;
         }
         break;
       case "Time":
-        if (!(actualValue instanceof String)) {
-          return propertyName
-              + " : Invalid data type. Expected Time (String), but got: "
-              + actualValue;
+        if (actualValue == null) {
+          return propertyName + ": Invalid data type. Expected Time (String), but got null";
         }
-        boolean valid = false;
+
+        boolean valid;
 
         try {
           LocalDate.parse(actualValue, DateTimeFormatter.ISO_LOCAL_DATE);
           valid = true;
-        } catch (DateTimeParseException e1) {
+        } catch (DateTimeParseException parseException) {
           try {
             Instant.parse(actualValue);
             valid = true;
-          } catch (DateTimeParseException e2) {
+          } catch (DateTimeParseException secondParseException) {
             try {
               OffsetDateTime.parse(actualValue, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
               valid = true;
-            } catch (DateTimeParseException e3) {
+            } catch (DateTimeParseException thirdParseException) {
               valid = false;
             }
           }
         }
+
         if (!valid) {
-          return propertyName + " : Invalid ISO 8601 date/time format. Value: " + actualValue;
+          return propertyName + ": Invalid ISO 8601 date/time format. Value: " + actualValue;
         }
 
         break;
       default:
-        return propertyName + " : Unknown data type: " + dataType;
+        return propertyName + ": Unknown data type: " + dataType;
     }
-    return errorMessage;
+    return null;
   }
 
   private static String validateAllowedValues(
@@ -445,7 +396,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
 
     if (!isValid) {
       errorMessage =
-          propertyName + " : Actual value: " + actualValue + " is not within the allowed values.";
+          propertyName + ": Actual value: " + actualValue + " is not within the allowed values.";
     }
     return errorMessage;
   }
@@ -463,13 +414,13 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
       realValue = Double.parseDouble(actualValue.toString().trim().replace("\"", ""));
     } catch (NumberFormatException e) {
       errorMessage =
-          propertyName + " : Invalid data type. Expected Real (Double), but got: " + actualValue;
+          propertyName + ": Invalid data type. Expected Real (Double), but got: " + actualValue;
     }
 
     if (maxExclusive != null && realValue >= maxExclusive) {
       errorMessage =
           propertyName
-              + " : Actual value: "
+              + ": Actual value: "
               + realValue
               + " exceeds MaxExclusive limit: "
               + maxExclusive;
@@ -478,7 +429,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     if (maxInclusive != null && realValue > maxInclusive) {
       errorMessage =
           propertyName
-              + " : Actual value: "
+              + ": Actual value: "
               + realValue
               + " exceeds MaxInclusive limit: "
               + maxInclusive;
@@ -487,7 +438,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     if (minExclusive != null && realValue <= minExclusive) {
       errorMessage =
           propertyName
-              + " : Actual value: "
+              + ": Actual value: "
               + realValue
               + " is below MinExclusive limit: "
               + minExclusive;
@@ -496,7 +447,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     if (minInclusive != null && realValue < minInclusive) {
       errorMessage =
           propertyName
-              + " : Actual value: "
+              + ": Actual value: "
               + realValue
               + " is below MinInclusive limit: "
               + minInclusive;
@@ -504,20 +455,15 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     return errorMessage;
   }
 
-  /**
-   * Displays the template from the dictionary without any processing.
-   *
-   * @param uri
-   * @param type
-   * @return response
-   * @throws JsonProcessingException
-   */
-  public JsonNode fetchRawTemplate(String uri, String type) throws JsonProcessingException {
-    String uriPrefix = null;
+  /** Displays the template from the dictionary without any processing. */
+  public JsonNode fetchRawTemplate(String uri, String type) {
+    String uriPrefix;
     if (type.equalsIgnoreCase("class")) {
-      uriPrefix = properties.getBsddClassDetailsUrl();
+      uriPrefix = appProperties.getBsddClassDetailsUrl();
     } else if (type.equalsIgnoreCase("property")) {
-      uriPrefix = properties.getBsddPropertiesWithDetailUrl();
+      uriPrefix = appProperties.getBsddPropertiesWithDetailUrl();
+    } else {
+      throw new IllegalArgumentException("Invalid type: " + type);
     }
 
     UriComponentsBuilder uriBuilder =
@@ -528,5 +474,85 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
 
     return response.getBody();
+  }
+
+  /** Retrieves the tree structure of the dictionary. */
+  public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(DataDictionary dictionary)
+      throws IOException {
+    if (dictionary != DataDictionary.TABLE6) {
+      throw new InvalidDataDictionaryException("Unsupported dictionary: " + dictionary);
+    }
+
+    String cachePath = appProperties.getTable6StructureOutputCachedPath();
+    String templatePath = appProperties.getTable6StructureJsonPath();
+    Path outputPath = Paths.get(cachePath).toAbsolutePath();
+
+    if (Files.exists(outputPath)) {
+      return Arrays.asList(
+          objectMapper.readValue(outputPath.toFile(), DataDictionaryTreeStructureDto[].class));
+    }
+
+    ClassPathResource templateResource = new ClassPathResource(templatePath);
+
+    if (!templateResource.exists()) {
+      throw new IllegalStateException("Template not found in classpath: " + templatePath);
+    }
+
+    JsonNode root = objectMapper.readTree(templateResource.getInputStream());
+    JsonNode classes = root.get("Classes");
+
+    if (classes == null) {
+      throw new IllegalStateException("Template JSON has no 'Classes' field.");
+    }
+
+    Map<String, DataDictionaryTreeStructureDto> nodeMap = new LinkedHashMap<>();
+    List<DataDictionaryTreeStructureDto> roots = new ArrayList<>();
+
+    for (JsonNode classNode : classes) {
+      var codeNode = classNode.get("Code");
+      var nameNode = classNode.get("Name");
+      if (codeNode == null || nameNode == null) {
+        throw new IllegalStateException("Class node missing required 'Code' or 'Name' field");
+      }
+      var code = codeNode.asText();
+      var name = nameNode.asText();
+      if (code == null || name == null || code.isBlank() || name.isBlank()) {
+        throw new IllegalStateException("Class node missing required 'Code' or 'Name' field");
+      }
+      nodeMap.put(code, new DataDictionaryTreeStructureDto(code, name, new ArrayList<>()));
+    }
+
+    for (JsonNode classNode : classes) {
+      JsonNode codeNode = classNode.get("Code");
+      if (codeNode == null || codeNode.isNull()) {
+        throw new IllegalStateException("Class node missing required 'Code' field");
+      }
+      String code = codeNode.asText();
+
+      JsonNode parentCodeNode = classNode.get("ParentClassCode");
+      String parentCode =
+          (parentCodeNode != null && !parentCodeNode.isNull()) ? parentCodeNode.asText() : null;
+
+      DataDictionaryTreeStructureDto node = nodeMap.get(code);
+
+      if (parentCode == null || parentCode.isBlank()) {
+        roots.add(node);
+      } else {
+        DataDictionaryTreeStructureDto parent = nodeMap.get(parentCode);
+        if (parent != null) {
+          parent.addChild(node);
+        } else {
+          roots.add(node);
+        }
+      }
+    }
+
+    Path parent = outputPath.getParent();
+    if (parent != null) {
+      Files.createDirectories(parent);
+    }
+
+    objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath.toFile(), roots);
+    return roots;
   }
 }
