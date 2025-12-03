@@ -29,9 +29,7 @@ public final class StringUtil {
     return email.toLowerCase();
   }
 
-  /**
-   * Safely parses a UUID string.
-   */
+  /** Safely parses a UUID string. */
   public static UUID validateUuid(String key) {
     if (key == null || key.isBlank()) {
       return null;

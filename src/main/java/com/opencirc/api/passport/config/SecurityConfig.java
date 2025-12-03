@@ -37,17 +37,13 @@ public class SecurityConfig {
   /** Injecting Properties class. */
   private AppProperties properties;
 
-  /**
-   * Constructor.
-   */
+  /** Constructor. */
   public SecurityConfig(UserDetailsService userDetailsService, AppProperties properties) {
     this.userDetailsService = userDetailsService;
     this.properties = properties;
   }
 
-  /**
-   * JwtFilter bean.
-   */
+  /** JwtFilter bean. */
   @Bean
   public JwtFilter jwtFilter(
       JwtService jwtService,
@@ -65,26 +61,20 @@ public class SecurityConfig {
         objectMapper);
   }
 
-  /**
-   * PasswordEncoder bean.
-   */
+  /** PasswordEncoder bean. */
   @Bean
   public BCryptPasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder(AppConstants.PASSWORD_STRENGTH);
   }
 
-  /**
-   * Bean to get authenticationManager.
-   */
+  /** Bean to get authenticationManager. */
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
       throws Exception {
     return config.getAuthenticationManager();
   }
 
-  /**
-   * Bean of authenticationProvider.
-   */
+  /** Bean of authenticationProvider. */
   @Bean
   public AuthenticationProvider authenticationProvider(
       BCryptPasswordEncoder bcryptPasswordEncoder) {
@@ -94,9 +84,7 @@ public class SecurityConfig {
     return provider;
   }
 
-  /**
-   * Configuring security filter chain.
-   */
+  /** Configuring security filter chain. */
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter)
       throws Exception {

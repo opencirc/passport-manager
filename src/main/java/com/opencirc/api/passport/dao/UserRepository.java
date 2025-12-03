@@ -13,24 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
-  /**
-   * Fetches a user by email.
-   */
+  /** Fetches a user by email. */
   User findByEmail(String email);
 
-  /**
-   * Checks whether a user with the given email exists.
-   */
+  /** Checks whether a user with the given email exists. */
   boolean existsByEmail(String email);
 
-  /**
-   * Retrieves the first user ordered by ID in ascending order.
-   */
+  /** Retrieves the first user ordered by ID in ascending order. */
   Optional<User> findFirstByOrderByIdAsc();
 
-  /**
-   * Updates the refresh token.
-   */
+  /** Updates the refresh token. */
   @Transactional
   @Modifying
   @Query("UPDATE User u SET u.refreshToken = :refreshToken" + " WHERE u.id = :id")

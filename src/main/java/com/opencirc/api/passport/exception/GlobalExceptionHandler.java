@@ -8,15 +8,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-/**
- * Global Exception Handler.
- */
+/** Global Exception Handler. */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  /**
-   * Handler for JWT exceptions.
-   */
+  /** Handler for JWT exceptions. */
   @ExceptionHandler(AuthenticationException.class)
   public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
     if (ex.getMessage().contains(AppConstants.ERR_INVALID_TOKEN)) {
@@ -31,9 +27,7 @@ public class GlobalExceptionHandler {
     }
   }
 
-  /**
-   * Handler for Invalid input exception.
-   */
+  /** Handler for Invalid input exception. */
   @ExceptionHandler(InvalidInputException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ResponseEntity<?> handleInvalidInputException(
@@ -42,64 +36,48 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
   }
 
-  /**
-   * Handler for a Resource not found exception.
-   */
+  /** Handler for a Resource not found exception. */
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex) {
     ErrorResponse errorResponse = new ErrorResponse("Not Found", ex.getMessage());
     return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
   }
 
-  /**
-   * Handler for All other exception.
-   */
+  /** Handler for All other exception. */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<Object> handleGenericException(Exception ex) {
     ErrorResponse errorResponse = new ErrorResponse("Internal Server Error", ex.getMessage());
     return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  /**
-   * ErrorResponse class.
-   */
+  /** ErrorResponse class. */
   public static class ErrorResponse {
     private String error;
 
     private String message;
 
-    /**
-     * ErrorResponse with a message.
-     */
+    /** ErrorResponse with a message. */
     public ErrorResponse(String errorType, String errMessage) {
       this.error = errorType;
       this.message = errMessage;
     }
 
-    /**
-     * The Error type Getter.
-     */
+    /** The Error type Getter. */
     public String getError() {
       return error;
     }
 
-    /**
-     * The Error type Setter.
-     */
+    /** The Error type Setter. */
     public void setError(String passedError) {
       this.error = passedError;
     }
 
-    /**
-     * Message Getter.
-     */
+    /** Message Getter. */
     public String getMessage() {
       return message;
     }
 
-    /**
-     * Message Setter.
-     */
+    /** Message Setter. */
     public void setMessage(String errorMessage) {
       this.message = errorMessage;
     }

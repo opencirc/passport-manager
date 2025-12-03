@@ -47,9 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
   /** Injecting ObjectMapper class. */
   private final ObjectMapper objectMapper;
 
-  /**
-   * Constructor to initialize JwtFilter dependencies.
-   */
+  /** Constructor to initialize JwtFilter dependencies. */
   public JwtFilter(
       JwtService jwtService,
       AppProperties properties,
@@ -65,9 +63,7 @@ public class JwtFilter extends OncePerRequestFilter {
     this.objectMapper = objectMapper;
   }
 
-  /**
-   * Processes incoming HTTP requests and validates authentication.
-   */
+  /** Processes incoming HTTP requests and validates authentication. */
   @Override
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -108,9 +104,7 @@ public class JwtFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  /**
-   * Handles authentication using API key and secret headers.
-   */
+  /** Handles authentication using API key and secret headers. */
   private void handleApiKeyAuth(
       HttpServletRequest request,
       HttpServletResponse response,
@@ -177,9 +171,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
   }
 
-  /**
-   * Extracts the token from cookies.
-   */
+  /** Extracts the token from cookies. */
   private String extractTokenFromCookies(HttpServletRequest request, String tokenName) {
     if (request.getCookies() != null) {
       for (Cookie cookie : request.getCookies()) {
@@ -191,9 +183,7 @@ public class JwtFilter extends OncePerRequestFilter {
     return null;
   }
 
-  /**
-   * Handles refresh token logic and generates a new access token.
-   */
+  /** Handles refresh token logic and generates a new access token. */
   private String handleRefreshToken(HttpServletResponse response, String refreshToken) {
     try {
       String newAccessToken = jwtService.generateAccessTokenUsingRefreshToken(refreshToken);
@@ -212,9 +202,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
   }
 
-  /**
-   * Extracts the user ID from the token.
-   */
+  /** Extracts the user ID from the token. */
   private String extractUserIdFromToken(String token, HttpServletResponse response)
       throws IOException {
     try {
@@ -226,9 +214,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
   }
 
-  /**
-   * Authenticates the user using extracted user ID.
-   */
+  /** Authenticates the user using extracted user ID. */
   private void authenticateUser(
       HttpServletRequest request, HttpServletResponse response, String accessToken, String userId)
       throws IOException {
@@ -260,9 +246,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
   }
 
-  /**
-   * Sends an error response.
-   */
+  /** Sends an error response. */
   private void sendErrorResponse(HttpServletResponse response, int status, String message)
       throws IOException {
     SecurityContextHolder.clearContext();

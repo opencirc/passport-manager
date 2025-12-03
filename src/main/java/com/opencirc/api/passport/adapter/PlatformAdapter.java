@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Interface of Dictionary Adapter.
- */
+/** Interface of Dictionary Adapter. */
 public interface PlatformAdapter<T> {
 
   /** Retrieves a list of classes matching the given search text. */

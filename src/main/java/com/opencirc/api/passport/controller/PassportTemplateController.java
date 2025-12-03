@@ -22,9 +22,7 @@ public class PassportTemplateController {
 
   @Autowired private PassportTemplateService passportTemplateService;
 
-  /**
-   * Create a template from an existing passport.
-   */
+  /** Create a template from an existing passport. */
   @Operation(summary = "Create a template from the existing passport")
   @PostMapping(
       value = "/api/passportTemplate/{passportId}",
@@ -43,9 +41,7 @@ public class PassportTemplateController {
         passportTemplateService.createTemplateFromPassport(passportId, dryRun, templateName));
   }
 
-  /**
-   * Retrieve a passport template.
-   */
+  /** Retrieve a passport template. */
   @Operation(summary = "Retrieves the requested passport template")
   @GetMapping("/api/passportTemplate/{templateId}")
   public ResponseEntity<PassportTemplateDto> getTemplate(
@@ -54,9 +50,7 @@ public class PassportTemplateController {
     return ResponseEntity.ok(passportTemplateService.getPassportTemplate(templateId));
   }
 
-  /**
-   * Retrieve all passport templates.
-   */
+  /** Retrieve all passport templates. */
   @Operation(summary = "Lists all the persisted passport templates")
   @GetMapping("/api/passportTemplate/all")
   public ResponseEntity<List<PassportTemplateDto>> getAllTemplates() {

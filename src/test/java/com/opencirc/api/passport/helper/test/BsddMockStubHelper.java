@@ -226,9 +226,7 @@ public class BsddMockStubHelper {
     /** Time of the creation. */
     private final Timestamp createdTime;
 
-    /**
-     * Constructor to initialize all fields of the mock DTO.
-     */
+    /** Constructor to initialize all fields of the mock DTO. */
     public TestPassportDatasheetResultMapDto(
         String passportId,
         String passportName,
@@ -252,70 +250,58 @@ public class BsddMockStubHelper {
       this.createdTime = createdTime;
     }
 
-    /**
-     */
+    /** */
     public String getPassportId() {
       return passportId;
     }
 
-    /**
-     */
+    /** */
     public String getPassportName() {
       return passportName;
     }
 
-    /**
-     */
+    /** */
     public String getStatus() {
       return status;
     }
 
-    /**
-     */
+    /** */
     public String getParentId() {
       return parentId;
     }
 
-    /**
-     */
+    /** */
     public String getDatasheetId() {
       return datasheetId;
     }
 
-    /**
-     */
+    /** */
     public String getData() {
       return data;
     }
 
-    /**
-     */
+    /** */
     public String getDataDictionary() {
       return dataDictionary;
     }
 
-    /**
-     */
+    /** */
     public String getDataCategory() {
       return dataCategory;
     }
 
-    /**
-     */
+    /** */
     public String getCreatedBy() {
       return createdBy;
     }
 
-    /**
-     */
+    /** */
     public Timestamp getCreatedTime() {
       return createdTime;
     }
   }
 
-  /**
-   * Creates mock stub data representing a parent passport with children. *
-   */
+  /** Creates mock stub data representing a parent passport with children. * */
   public static List<PassportDatasheetResultMapDto> createPassportChildrenStubData() {
     String datasheetJson =
         """

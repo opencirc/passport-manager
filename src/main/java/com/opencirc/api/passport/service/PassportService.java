@@ -56,25 +56,18 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class PassportService {
 
-  /** Injecting DatasheetRepository class. */
   private final DatasheetRepository datasheetRepository;
 
-  /** Injecting DatasheetPropertyRepository class. */
   private final DatasheetPropertyRepository datasheetPropertyRepository;
 
-  /** Injecting PassportRepository class. */
   private final PassportRepository passportRepository;
 
-  /** Injecting PassportDatasheetMappingRepository class. */
   private final PassportDatasheetMappingRepository passportDatasheetMappingRepository;
 
-  /** Injecting ObjectMapper bean. */
   private final ObjectMapper objectMapper;
 
-  /** Injecting PlatformAdapterFactory class. */
   private final PlatformAdapterFactory platformAdapterFactory;
 
-  /** Injecting AppProperties class. */
   private final AppProperties appProperties;
 
   /** Constructor. */
@@ -329,9 +322,7 @@ public class PassportService {
     }
   }
 
-  /**
-   * Retrieves all the root passports.
-   */
+  /** Retrieves all the root passports. */
   public List<PassportDto> getRootPassports() {
     List<Passport> passports = passportRepository.getRootPassports();
     if (passports == null) {

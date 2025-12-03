@@ -6,23 +6,17 @@ public class StatusResponseDto {
   /** The message of the response. */
   private String message;
 
-  /**
-   * Instantiates StatusResponseDto.
-   */
+  /** Instantiates StatusResponseDto. */
   public StatusResponseDto(String message) {
     this.message = message;
   }
 
-  /**
-   * Returns the message.
-   */
+  /** Returns the message. */
   public String getMessage() {
     return message;
   }
 
-  /**
-   * Sets the message.
-   */
+  /** Sets the message. */
   public void setMessage(String message) {
     this.message = message;
   }

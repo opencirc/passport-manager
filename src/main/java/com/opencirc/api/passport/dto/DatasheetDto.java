@@ -44,9 +44,7 @@ public class DatasheetDto {
 
   private List<DatasheetPropertyDto> datasheetProperties;
 
-  /**
-   * Maps the Datasheet values to dto.
-   */
+  /** Maps the Datasheet values to dto. */
   public static DatasheetDto from(Datasheet datasheet) {
     DatasheetDto datasheetDto = new DatasheetDto();
     datasheetDto.id = datasheet.getId();

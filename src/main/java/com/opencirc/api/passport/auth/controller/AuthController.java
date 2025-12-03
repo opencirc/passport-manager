@@ -25,9 +25,7 @@ public class AuthController {
 
   @Autowired private AuthService authService;
 
-  /**
-   * Log in.
-   */
+  /** Log in. */
   @PostMapping("/login")
   public ResponseEntity<UserDto> login(
       @RequestBody LoginRequestDto loginRequest, HttpServletResponse response)
@@ -36,9 +34,7 @@ public class AuthController {
     return ResponseEntity.ok(userDto);
   }
 
-  /**
-   * Verifies the status of authentication.
-   */
+  /** Verifies the status of authentication. */
   @GetMapping("/status")
   public ResponseEntity<StatusResponseDto> checkAuth(HttpServletRequest request) {
     Cookie[] cookies = request.getCookies();
@@ -65,18 +61,14 @@ public class AuthController {
     return ResponseEntity.ok(new StatusResponseDto("Authenticated"));
   }
 
-  /**
-   * Returns the currently authenticated user.
-   */
+  /** Returns the currently authenticated user. */
   @GetMapping("/currentUser")
   public ResponseEntity<UserDto> getCurrentUser(HttpServletRequest request) {
     UserDto userDto = authService.getCurrentUser(request);
     return ResponseEntity.ok(userDto);
   }
 
-  /**
-   * Refresh an expired token.
-   */
+  /** Refresh an expired token. */
   @PostMapping("/refresh")
   public ResponseEntity<?> refreshToken(
       @CookieValue("refresh_token") String refreshToken, HttpServletResponse response)
@@ -95,9 +87,7 @@ public class AuthController {
     }
   }
 
-  /**
-   * Log out.
-   */
+  /** Log out. */
   @PostMapping("/logout")
   public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response)
       throws AuthenticationException {

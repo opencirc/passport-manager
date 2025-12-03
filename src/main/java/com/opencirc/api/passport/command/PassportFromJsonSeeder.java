@@ -49,9 +49,7 @@ public class PassportFromJsonSeeder {
   /** List to store the uri. */
   private List<String> uriList;
 
-  /**
-   * Constructor-based dependency injection.
-   */
+  /** Constructor-based dependency injection. */
   public PassportFromJsonSeeder(
       AppProperties appProperties,
       UserRepository userRepository,
@@ -114,15 +112,12 @@ public class PassportFromJsonSeeder {
 
     for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
       String uri = uriList.get(i % uriList.size());
-      createPassportRecursive(
-          1, String.valueOf(i + 1), uri, i, null, user.getId(), createdByDto);
+      createPassportRecursive(1, String.valueOf(i + 1), uri, i, null, user.getId(), createdByDto);
     }
     log.info("Passport seeding from JSON templates completed.");
   }
 
-  /**
-   * Recursively creates passports and their child passports.
-   */
+  /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
       int level,
       String nameSuffix,

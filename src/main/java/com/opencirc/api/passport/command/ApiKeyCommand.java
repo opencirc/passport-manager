@@ -26,9 +26,7 @@ public class ApiKeyCommand {
   /** Format to show API keys to user in terminal. */
   private static final String API_TOKEN_DISPLAY_FORMAT = "%-40s %-20s %-25s%n";
 
-  /**
-   * Creates a new API key for the specified user.
-   */
+  /** Creates a new API key for the specified user. */
   @Command(
       command = "create-api-key",
       description =
@@ -88,9 +86,7 @@ public class ApiKeyCommand {
     }
   }
 
-  /**
-   * Lists all available API tokens for the specified user.
-   */
+  /** Lists all available API tokens for the specified user. */
   @Command(
       command = "list-api-tokens",
       description =
@@ -138,9 +134,7 @@ public class ApiKeyCommand {
     }
   }
 
-  /**
-   * Deletes the api token for the given key.
-   */
+  /** Deletes the api token for the given key. */
   @Command(
       command = "delete-api-token",
       description =

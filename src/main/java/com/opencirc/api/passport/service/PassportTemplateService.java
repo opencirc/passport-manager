@@ -21,9 +21,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- * Service class for PassportTemplate related operations.
- */
+/** Service class for PassportTemplate related operations. */
 @Service
 public class PassportTemplateService {
 
@@ -35,9 +33,7 @@ public class PassportTemplateService {
 
   @Autowired private ObjectMapper objectMapper;
 
-  /**
-   * Creates a template from the existing passport.
-   */
+  /** Creates a template from the existing passport. */
   public PassportTemplateDto createTemplateFromPassport(
       String passportId, boolean dryRun, String templateName) {
     Optional<Passport> passport =
@@ -53,9 +49,7 @@ public class PassportTemplateService {
     return PassportTemplateDto.from(extractedTemplate);
   }
 
-  /**
-   * Extracts template from the existing passport.
-   */
+  /** Extracts template from the existing passport. */
   private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName) {
     ObjectNode rootNode = objectMapper.createObjectNode();
 
@@ -71,16 +65,14 @@ public class PassportTemplateService {
     }
     UserDto userDtoContext = userContext.getCurrentUser();
     return PassportTemplate.builder()
-            .name(templateName)
-            .template(rootNode)
-            .createdById(userDtoContext.getId())
-            .createdBy(new CreatedByDto(userDtoContext.getFullName(), userDtoContext.getEmail()))
-            .build();
+        .name(templateName)
+        .template(rootNode)
+        .createdById(userDtoContext.getId())
+        .createdBy(new CreatedByDto(userDtoContext.getFullName(), userDtoContext.getEmail()))
+        .build();
   }
 
-  /**
-   * Clears the value from the passport to make it as template.
-   */
+  /** Clears the value from the passport to make it as template. */
   private void clearActualValues(JsonNode node) {
     if (node.isObject()) {
       ObjectNode objectNode = (ObjectNode) node;
@@ -100,9 +92,7 @@ public class PassportTemplateService {
     }
   }
 
-  /**
-   * Retrieves the template from the database.
-   */
+  /** Retrieves the template from the database. */
   public PassportTemplateDto getPassportTemplate(String id) {
     PassportTemplate template = passportTemplateRepository.findFirstById(id);
 
@@ -112,9 +102,7 @@ public class PassportTemplateService {
     return PassportTemplateDto.from(template);
   }
 
-  /**
-   * Lists the templates.
-   */
+  /** Lists the templates. */
   public List<PassportTemplateDto> getAllPassportTemplates() {
     List<PassportTemplate> templates = passportTemplateRepository.findAll();
 

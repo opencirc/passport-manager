@@ -41,9 +41,7 @@ public class PassportDto {
   /** Linked datasheets. */
   private List<DatasheetDto> datasheets;
 
-  /**
-   * Setting up values from Passport to Passport Dto.
-   */
+  /** Setting up values from Passport to Passport Dto. */
   public static PassportDto from(Passport passport) {
     PassportDto dto = new PassportDto();
     dto.setId(passport.getId());

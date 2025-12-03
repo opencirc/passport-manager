@@ -15,9 +15,7 @@ public class CompanyHashService {
   /** Company hash value. */
   private String companyHash;
 
-  /**
-   * CompanyHashService constructor with config.
-   */
+  /** CompanyHashService constructor with config. */
   @Autowired
   public CompanyHashService(CompanyConfig companyConfiguration) {
     this.companyConfig = companyConfiguration;
@@ -45,9 +43,7 @@ public class CompanyHashService {
     }
   }
 
-  /**
-   * Retrieves hash from database.
-   */
+  /** Retrieves hash from database. */
   public String getCompanyHash() {
     return companyHash;
   }

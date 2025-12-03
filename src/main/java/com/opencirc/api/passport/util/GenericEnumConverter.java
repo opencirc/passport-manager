@@ -7,16 +7,12 @@ public abstract class GenericEnumConverter<E extends Enum<E>>
 
   private final Class<E> enumClass;
 
-  /**
-   * Creates a new converter for the specified enum class.
-   */
+  /** Creates a new converter for the specified enum class. */
   protected GenericEnumConverter(Class<E> enumClass) {
     this.enumClass = enumClass;
   }
 
-  /**
-   * Converts an enum to its database value by calling {@code getValue()} on the enum.
-   */
+  /** Converts an enum to its database value by calling {@code getValue()} on the enum. */
   @Override
   public String convertToDatabaseColumn(E attribute) {
     if (attribute == null) {

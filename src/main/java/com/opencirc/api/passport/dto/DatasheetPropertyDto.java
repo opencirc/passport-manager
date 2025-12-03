@@ -28,9 +28,7 @@ public class DatasheetPropertyDto {
 
   @JsonProperty private JsonNode definition;
 
-  /**
-   * Maps the DatasheetProperty values to dto.
-   */
+  /** Maps the DatasheetProperty values to dto. */
   public static DatasheetPropertyDto from(DatasheetProperty property) {
     DatasheetPropertyDto datasheetPropertyDto = new DatasheetPropertyDto();
     datasheetPropertyDto.setId(property.getId());

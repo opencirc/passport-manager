@@ -34,9 +34,7 @@ public class AuthUserDetailsService implements UserDetailsService {
     return new UserPrincipal(user);
   }
 
-  /**
-   * Gets the user data by ID.
-   */
+  /** Gets the user data by ID. */
   public UserDetails loadUserById(String userId) {
     Optional<User> userOptional = userRepository.findById(userId);
     User user =

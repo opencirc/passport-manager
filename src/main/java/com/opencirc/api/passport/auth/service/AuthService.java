@@ -31,9 +31,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service class for authentication related operations.
- */
+/** Service class for authentication related operations. */
 @Service
 public class AuthService {
 
@@ -51,9 +49,7 @@ public class AuthService {
 
   private final ApiKeyService apiKeyService;
 
-  /**
-   * Constructor.
-   */
+  /** Constructor. */
   public AuthService(
       UserRepository userRepository,
       AppProperties properties,
@@ -71,9 +67,7 @@ public class AuthService {
     this.apiKeyService = apiKeyService;
   }
 
-  /**
-   * Register new user.
-   */
+  /** Register new user. */
   @Transactional
   public User register(String email, String password, String firstName, String lastName, Role role)
       throws AuthenticationException {
@@ -102,9 +96,7 @@ public class AuthService {
     }
   }
 
-  /**
-   * Validates registration fields (email and password).
-   */
+  /** Validates registration fields (email and password). */
   private void validateRegistrationFields(String email, String password) {
     EmailValidator emailValidator = EmailValidator.getInstance();
     if (!emailValidator.isValid(email)) {
@@ -136,9 +128,7 @@ public class AuthService {
     }
   }
 
-  /**
-   * Verifies the user and logs them in.
-   */
+  /** Verifies the user and logs them in. */
   public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response) {
 
     final String email = StringUtil.normalizeEmail(loginRequest.getEmail());
@@ -184,9 +174,7 @@ public class AuthService {
     }
   }
 
-  /**
-   * Refreshes the expired token.
-   */
+  /** Refreshes the expired token. */
   public String refreshToken(String refreshToken, HttpServletResponse response)
       throws AuthenticationException {
     try {
@@ -202,9 +190,7 @@ public class AuthService {
     }
   }
 
-  /**
-   * Validates the token.
-   */
+  /** Validates the token. */
   public boolean validateToken(String token) {
     try {
       String userId = jwtService.extractUserId(token);
@@ -216,9 +202,7 @@ public class AuthService {
     }
   }
 
-  /**
-   * Logs the user out.
-   */
+  /** Logs the user out. */
   public void logout(String refreshToken, HttpServletResponse response) {
     SecurityContextHolder.clearContext();
     String userId = jwtService.extractUserId(refreshToken);
@@ -234,9 +218,7 @@ public class AuthService {
     jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_REFRESH_TOKEN, 0);
   }
 
-  /**
-   * Gets the details of current logged in user.
-   */
+  /** Gets the details of current logged in user. */
   public UserDto getCurrentUser(HttpServletRequest request) {
 
     String token = null;
@@ -266,9 +248,7 @@ public class AuthService {
     return user != null ? UserDto.from(user) : null;
   }
 
-  /**
-   * Validates API Key.
-   */
+  /** Validates API Key. */
   public boolean validateApiKeySecret(HttpServletRequest request) {
     String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
     String apiSecretHeader = request.getHeader(AppConstants.HEADER_API_SECRET);

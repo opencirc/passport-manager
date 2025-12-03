@@ -12,9 +12,7 @@ public class EncryptionUtil {
   /** Encryption algorithm. */
   private static final String ENCRYPTION_ALGORITHM = "AES";
 
-  /**
-   * Generates Security Key to which helps JWT.
-   */
+  /** Generates Security Key to which helps JWT. */
   public static String generateSecureKey() {
     try {
       byte[] keyBytes = new byte[32];
@@ -25,9 +23,7 @@ public class EncryptionUtil {
     }
   }
 
-  /**
-   * Derives and hashes the key with the help of encryption key.
-   */
+  /** Derives and hashes the key with the help of encryption key. */
   public static SecretKeySpec deriveKey(String encryptionKey) throws Exception {
     byte[] keyBytes = encryptionKey.getBytes("UTF-8");
     MessageDigest sha = MessageDigest.getInstance("SHA-256");
@@ -35,9 +31,7 @@ public class EncryptionUtil {
     return new SecretKeySpec(keyBytes, ENCRYPTION_ALGORITHM);
   }
 
-  /**
-   * Encrypts the data.
-   */
+  /** Encrypts the data. */
   public static String encrypt(String data, String encryptionKey) throws Exception {
     SecretKeySpec secretKey = deriveKey(encryptionKey);
     Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
@@ -46,9 +40,7 @@ public class EncryptionUtil {
     return Base64.getEncoder().encodeToString(encryptedBytes);
   }
 
-  /**
-   * Decrypts the data.
-   */
+  /** Decrypts the data. */
   public static String decrypt(String encryptedData, String encryptionKey) throws Exception {
     SecretKeySpec secretKey = deriveKey(encryptionKey);
     Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);

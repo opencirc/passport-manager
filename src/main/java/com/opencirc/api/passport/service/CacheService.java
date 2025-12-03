@@ -18,9 +18,7 @@ public class CacheService {
   /** Injecting ObjectMapper bean. */
   private final ObjectMapper objectMapper;
 
-  /**
-   * Initialising CacheService bean.
-   */
+  /** Initialising CacheService bean. */
   public CacheService(
       @Qualifier("redisTemplate") RedisTemplate<String, String> redisTemplateParam,
       ObjectMapper objectMapperParam) {
@@ -28,9 +26,7 @@ public class CacheService {
     this.objectMapper = objectMapperParam;
   }
 
-  /**
-   * Caches the template under the given key as a JSON string.
-   */
+  /** Caches the template under the given key as a JSON string. */
   public <T> void cacheTemplate(String key, T template) {
     if (key == null || key.trim().isEmpty()) {
       throw new IllegalArgumentException("Cache key must not be null or blank");
@@ -46,9 +42,7 @@ public class CacheService {
     }
   }
 
-  /**
-   * Retrieves the cached template.
-   */
+  /** Retrieves the cached template. */
   public <T> T getCachedTemplate(String key, Class<T> valueType) {
     if (key == null || key.trim().isEmpty()) {
       throw new IllegalArgumentException("Cache key must not be null or blank");

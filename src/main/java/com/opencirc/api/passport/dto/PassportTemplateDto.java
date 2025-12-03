@@ -37,9 +37,7 @@ public class PassportTemplateDto {
   @Column(name = "created_time", updatable = false)
   private LocalDateTime createdTime;
 
-  /**
-   * Sets the passportTemplateDto from PassportTemplate.
-   */
+  /** Sets the passportTemplateDto from PassportTemplate. */
   public static PassportTemplateDto from(PassportTemplate passportTemplate) {
     PassportTemplateDto dto = new PassportTemplateDto();
     dto.setId(passportTemplate.getId());

@@ -9,13 +9,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ApiKeyRepository extends JpaRepository<ApiKey, String> {
 
-  /**
-   * Gets all API tokens for the given userId.
-   */
+  /** Gets all API tokens for the given userId. */
   List<ApiKey> findAllByUserId(String userId);
 
-  /**
-   * Finds an API key by its ID.
-   */
+  /** Finds an API key by its ID. */
   Optional<ApiKey> findById(String id);
 }

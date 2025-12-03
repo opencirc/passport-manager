@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Controller for perations related to passport. */
+/** Controller for operations related to passports. */
 @RestController
 @Tag(name = "Passport", description = "Operations related to Passport")
 public class PassportController {

@@ -23,9 +23,7 @@ public class Seeder {
   /** Passport seeder from stored JSON templates. */
   private final PassportFromJsonSeeder passportFromJsonSeeder;
 
-  /**
-   * Constructor-based dependency injection for seeder components.
-   */
+  /** Constructor-based dependency injection for seeder components. */
   public Seeder(
       UserSeeder userSeeder,
       PassportFromApiSeeder passportFromApiSeeder,
@@ -51,9 +49,7 @@ public class Seeder {
     ALL
   }
 
-  /**
-   * Executes the seeding process for the given type.
-   */
+  /** Executes the seeding process for the given type. */
   @Command(
       command = "seed",
       description =

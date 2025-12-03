@@ -27,9 +27,7 @@ public class DataDictionaryController {
 
   @Autowired private DataDictionaryService dataDictionaryService;
 
-  /**
-   * Returns a list of classes fetched from bsdd.
-   */
+  /** Returns a list of classes fetched from bsdd. */
   @GetMapping(
       value = "/api/dataDictionary/{platform}/class/search/{query}",
       produces = {"application/json"})
@@ -42,9 +40,7 @@ public class DataDictionaryController {
     return dataDictionaryService.searchClassesByText(Platform.fromValue(platform), query);
   }
 
-  /**
-   * Returns a Class Template with/without properties from the data dictionary using the URI.
-   */
+  /** Returns a Class Template with/without properties from the data dictionary using the URI. */
   @Operation(summary = "Get class from DD for the requested uri")
   @PostMapping(
       value = "/api/dataDictionary/{platform}/class",
@@ -74,9 +70,7 @@ public class DataDictionaryController {
         Platform.fromValue(platform), getClassRequest.getUri(), withProperties);
   }
 
-  /**
-   * Returns a list of properties fetched from bsdd.
-   */
+  /** Returns a list of properties fetched from bsdd. */
   @Operation(summary = "Lists all the properties name and its URI matching the text")
   @GetMapping(
       value = "/api/dataDictionary/{platform}/property/search/{query}",
@@ -90,9 +84,7 @@ public class DataDictionaryController {
     return dataDictionaryService.listProperties(Platform.fromValue(platform), query);
   }
 
-  /**
-   * Create template with selected properties.
-   */
+  /** Create template with selected properties. */
   @Operation(summary = "Create template with selected properties")
   @PostMapping(
       value = "/api/dataDictionary/{platform}/properties",

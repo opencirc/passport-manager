@@ -55,9 +55,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
 
   private final CacheService cacheService;
 
-  /**
-   * Constructor.
-   */
+  /** Constructor. */
   @Autowired
   public BsddPlatformAdapter(
       RestTemplate injectedRestTemplate,
@@ -72,9 +70,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     this.dictionaryMapping = dictionaryMapping;
   }
 
-  /**
-   * Fetches a list of classes matching the search text.
-   */
+  /** Fetches a list of classes matching the search text. */
   @Override
   public List<Map<String, String>> listClass(String text) {
 
@@ -292,9 +288,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     return errorMessage;
   }
 
-  /**
-   * Validates whether the given URI is correctly formatted.
-   */
+  /** Validates whether the given URI is correctly formatted. */
   public boolean validateUri(String uriString) {
     if (uriString == null || uriString.trim().isEmpty()) {
       return false;
@@ -309,9 +303,7 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     }
   }
 
-  /**
-   * Validates the data type of the given actual value.
-   */
+  /** Validates the data type of the given actual value. */
   private static String validateDataType(
       String propertyName, String dataType, JsonNode actualValueNode) {
     String actualValue = actualValueNode.asText();
@@ -517,8 +509,13 @@ public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto
     List<DataDictionaryTreeStructureDto> roots = new ArrayList<>();
 
     for (JsonNode classNode : classes) {
-      String code = classNode.get("Code").asText();
-      String name = classNode.get("Name").asText();
+      var codeNode = classNode.get("Code");
+      var nameNode = classNode.get("Name");
+      if (codeNode == null || nameNode == null) {
+        throw new IllegalStateException("Class node missing required 'Code' or 'Name' field");
+      }
+      var code = codeNode.asText();
+      var name = nameNode.asText();
       if (code == null || name == null || code.isBlank() || name.isBlank()) {
         throw new IllegalStateException("Class node missing required 'Code' or 'Name' field");
       }

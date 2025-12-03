@@ -9,9 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class JacksonConfig {
 
-  /**
-   * Configures Jackson to handle Java time types and serialize dates as ISO-8601 strings.
-   */
+  /** Configures Jackson to handle Java time types and serialize dates as ISO-8601 strings. */
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
     return builder -> {

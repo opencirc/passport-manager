@@ -19,9 +19,7 @@ public final class SecretGenerator {
   /** private constructor to prevents instantiation. */
   private SecretGenerator() {}
 
-  /**
-   * Generates a random alphanumeric string.
-   */
+  /** Generates a random alphanumeric string. */
   public static String generateRandomString(int length) {
     if (length <= 0) {
       throw new IllegalArgumentException("Random string length must be greater than 0");
@@ -33,9 +31,7 @@ public final class SecretGenerator {
     return sb.toString();
   }
 
-  /**
-   * Generates an API token with the format: {prefix}_{randomString}_{macHex}.
-   */
+  /** Generates an API token with the format: {prefix}_{randomString}_{macHex}. */
   public static String generateApiToken(String prefix, int length, String secretKey) {
 
     if (prefix == null || prefix.isBlank()) {

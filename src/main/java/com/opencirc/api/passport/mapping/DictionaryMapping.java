@@ -23,9 +23,7 @@ public class DictionaryMapping {
   /** Injecting ObjectMapper. */
   private final ObjectMapper objectMapper;
 
-  /**
-   * DictionaryMapping constructor.
-   */
+  /** DictionaryMapping constructor. */
   public DictionaryMapping(ObjectMapper mapper) throws IOException {
     this.objectMapper = mapper;
     loadDictionaryMappings();
@@ -57,16 +55,12 @@ public class DictionaryMapping {
     }
   }
 
-  /**
-   * Fetches the relevant dictionary mapping.
-   */
+  /** Fetches the relevant dictionary mapping. */
   public Map<String, String> getDictionaryMapping(Platform dictionaryName) {
     return dictionaries.get(dictionaryName.getValue());
   }
 
-  /**
-   * Maps the keys of a template to their corresponding ISO standard keys.
-   */
+  /** Maps the keys of a template to their corresponding ISO standard keys. */
   public ObjectNode mapTemplateFieldsToStandards(JsonNode template, Platform dictionaryName) {
     ObjectNode resultNode = objectMapper.createObjectNode();
     Map<String, String> dictionaryMappings = getDictionaryMapping(dictionaryName);
@@ -87,9 +81,7 @@ public class DictionaryMapping {
     return resultNode;
   }
 
-  /**
-   * Retrieves the mapping details for the specified data dictionary.
-   */
+  /** Retrieves the mapping details for the specified data dictionary. */
   private Map<String, String> getReverseMapping(
       Platform dictionaryPlatform, Map<String, String> dictionaryMappings) {
     return reverseCache.computeIfAbsent(

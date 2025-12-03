@@ -93,23 +93,17 @@ public class AppProperties {
   @Value("${bsdd.table6.structure.output.cached.path}")
   private String table6StructureOutputCachedPath;
 
-  /**
-   * Getter for refresh token.
-   */
+  /** Getter for refresh token. */
   public int getRefreshTokenExpiryTime() {
     return Integer.parseInt(refreshTokenExpiryTime);
   }
 
-  /**
-   * Getter for access token.
-   */
+  /** Getter for access token. */
   public int getAccessTokenExpiryTime() {
     return Integer.parseInt(accessTokenExpiryTime);
   }
 
-  /**
-   * Getter for Maximum level.
-   */
+  /** Getter for Maximum level. */
   public int getMaximumLevel() {
     try {
       return Integer.parseInt(maximumLevel);
@@ -118,9 +112,7 @@ public class AppProperties {
     }
   }
 
-  /**
-   * Getter for childrenPerLevel.
-   */
+  /** Getter for childrenPerLevel. */
   public int getChildrenPerLevel() {
     try {
       return Integer.parseInt(childrenPerLevel);
@@ -130,9 +122,7 @@ public class AppProperties {
     }
   }
 
-  /**
-   * Getter for propertyCountToSelect.
-   */
+  /** Getter for propertyCountToSelect. */
   public int getPropertyCountToSelect() {
     try {
       return Integer.parseInt(propertyCountToSelect);

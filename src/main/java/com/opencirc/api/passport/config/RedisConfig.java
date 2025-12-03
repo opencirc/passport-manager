@@ -11,9 +11,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-  /**
-   * Created Redis template.
-   */
+  /** Created Redis template. */
   @Bean
   public RedisTemplate<String, String> redisTemplate(
       RedisConnectionFactory redisConnectionFactory) {

@@ -15,9 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class MockAuthenticationTestHelper {
 
-  /**
-   * Mocks User data.
-   */
+  /** Mocks User data. */
   public void mockUserDetailsDB(
       AuthUserDetailsService authUserDetailsService, AuthenticationManager authenticationManager) {
     UUID existingUserId = UUID.fromString("87510a3c-4357-47bc-80a1-9ed02285fbae");

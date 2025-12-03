@@ -36,9 +36,7 @@ public class ApiKeyService {
   /** Injecting UserRepository class. */
   private final UserRepository userRepository;
 
-  /**
-   * Constructor.
-   */
+  /** Constructor. */
   public ApiKeyService(
       ApiKeyRepository apiKeyRepository,
       BCryptPasswordEncoder encoder,
@@ -50,9 +48,7 @@ public class ApiKeyService {
     this.userRepository = userRepository;
   }
 
-  /**
-   * Generates and stores a new API key for the specified user.
-   */
+  /** Generates and stores a new API key for the specified user. */
   @Transactional
   public GeneratedApiKeyDto createApiKey(String userId, LocalDate expirationDate, String name) {
 
@@ -94,9 +90,7 @@ public class ApiKeyService {
     return new GeneratedApiKeyDto(apiKey, rawSecret);
   }
 
-  /**
-   * Lists all the api tokens for the userId.
-   */
+  /** Lists all the api tokens for the userId. */
   @Transactional(readOnly = true)
   public List<ApiKey> getApiTokens(String userId) {
     if (userId == null) {
@@ -108,9 +102,7 @@ public class ApiKeyService {
     return apiKeyRepository.findAllByUserId(userId);
   }
 
-  /**
-   * Deletes the api token for the given key.
-   */
+  /** Deletes the api token for the given key. */
   @Transactional
   public boolean deleteApiToken(String keyId) {
     if (keyId == null) {
@@ -129,9 +121,7 @@ public class ApiKeyService {
     }
   }
 
-  /**
-   * Fetch an API key by ID, returning null if not found.
-   */
+  /** Fetch an API key by ID, returning null if not found. */
   public ApiKey findById(String id) {
     return apiKeyRepository.findById(id).orElse(null);
   }

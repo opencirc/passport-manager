@@ -95,9 +95,7 @@ public class TestPassportController {
     }
   }
 
-  /**
-   * Tests the successful creation of a passport with valid JSON input.
-   */
+  /** Tests the successful creation of a passport with valid JSON input. */
   @Test
   public void givenValidBsddDataWhenCreatePassportThenReturnCreatedPassportWithCorrectDetails()
       throws JsonValidationException, JsonMappingException, JsonProcessingException {
@@ -200,9 +198,7 @@ public class TestPassportController {
     assertTrue(responseBody.contains("Input JSON node is null"));
   }
 
-  /**
-   * Tests the behaviour of the createPassport method when an invalid JSON body is provided.
-   */
+  /** Tests the behaviour of the createPassport method when an invalid JSON body is provided. */
   @Test
   public void shouldFailToCreatePassportWhenJsonBodyIsInvalid()
       throws JsonValidationException, JsonMappingException, JsonProcessingException {

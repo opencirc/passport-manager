@@ -23,9 +23,7 @@ public class DataDictionaryCommands {
   /** Injecting PlatformAdapterFactory. */
   private final PlatformAdapterFactory platformAdapterFactory;
 
-  /**
-   * Instantiating DataDictionaryCommands.
-   */
+  /** Instantiating DataDictionaryCommands. */
   @Autowired
   public DataDictionaryCommands(
       ObjectMapper objectMapper,
@@ -36,9 +34,7 @@ public class DataDictionaryCommands {
     this.platformAdapterFactory = platformAdapterFactory;
   }
 
-  /**
-   * Shell command to fetch template from the required data dictionary.
-   */
+  /** Shell command to fetch template from the required data dictionary. */
   @Command(description = "Fetch template from Data Dictionary.")
   public String fetchTemplate(
       @Option(longNames = "dictionaryType", required = true) String dictionaryPlatform,
@@ -57,9 +53,7 @@ public class DataDictionaryCommands {
     }
   }
 
-  /**
-   * Gets the processed template.
-   */
+  /** Gets the processed template. */
   private String generateProcessedTemplate(Platform dictionaryPlatform, String uri, String type)
       throws JsonValidationException, JsonProcessingException {
 
@@ -68,18 +62,14 @@ public class DataDictionaryCommands {
     return formatJsonResponse(response);
   }
 
-  /**
-   * Gets the raw template fetched from given data dictionary.
-   */
+  /** Gets the raw template fetched from given data dictionary. */
   private String generateRawTemplate(Platform dictionaryPlatform, String uri, String type)
       throws JsonProcessingException {
     PlatformAdapter<?> adapter = platformAdapterFactory.getAdapter(dictionaryPlatform);
     return formatJsonResponse(adapter.fetchRawTemplate(uri, type));
   }
 
-  /**
-   * Formats the json.
-   */
+  /** Formats the json. */
   private String formatJsonResponse(Object response) throws JsonProcessingException {
     return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
   }

@@ -119,7 +119,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   /** Deactivates the passport. */
   @Modifying
   @Transactional
-  @Query("UPDATE Passport p SET p.status = 'inactive'" + "WHERE p.id = :passport_id")
+  @Query("UPDATE Passport p SET p.status = 'inactive' " + "WHERE p.id = :passport_id")
   int updateStatusToInactive(@Param("passport_id") String passportId);
 
   /** Retrieves the parentId. */
@@ -127,9 +127,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   @Query("Select p.parentId from Passport p " + "WHERE p.id = :passport_id")
   String getParentId(@Param("passport_id") String passportId);
 
-  /**
-   * Retrieves passports without parent.
-   */
+  /** Retrieves passports without parent. */
   @Query(
       "SELECT DISTINCT p FROM Passport p "
           + "LEFT JOIN FETCH p.datasheetMappings dm "

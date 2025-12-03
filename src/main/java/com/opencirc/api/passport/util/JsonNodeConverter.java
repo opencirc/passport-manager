@@ -15,9 +15,7 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
   /** ObjectMapper bean. */
   private final ObjectMapper objectMapper;
 
-  /**
-   * Initialising JsonNodeConverter.
-   */
+  /** Initialising JsonNodeConverter. */
   public JsonNodeConverter(ObjectMapper mapper) {
     this.objectMapper = mapper;
   }
@@ -25,9 +23,7 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
   /** Fallback ObjectMapper bean. */
   private static final ObjectMapper FALLBACK_MAPPER = JsonMapper.builder().build();
 
-  /**
-   * Converts as column to fit in table.
-   */
+  /** Converts as column to fit in table. */
   @Override
   public String convertToDatabaseColumn(JsonNode attribute) {
     try {
@@ -38,9 +34,7 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
     }
   }
 
-  /**
-   * Converts to json node.
-   */
+  /** Converts to json node. */
   @Override
   public JsonNode convertToEntityAttribute(String dbData) {
     try {

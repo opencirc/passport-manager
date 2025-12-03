@@ -75,9 +75,7 @@ public class PassportFromApiSeeder {
     this.userRepository = userRepository;
   }
 
-  /**
-   * Seeds sample passports recursively using the predefined URI list.
-   */
+  /** Seeds sample passports recursively using the predefined URI list. */
   public void seed() {
     try {
 
@@ -98,13 +96,7 @@ public class PassportFromApiSeeder {
       for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
         String uri = uris.get(index % uris.size());
         createPassportRecursive(
-            1,
-            String.valueOf(index + 1),
-            uri,
-            index,
-            null,
-            user.getId(),
-            createdByDto);
+            1, String.valueOf(index + 1), uri, index, null, user.getId(), createdByDto);
       }
       log.info("Passport seeding completed.");
     } catch (RuntimeException e) {
