@@ -14,13 +14,7 @@ import com.opencirc.api.passport.dao.DatasheetPropertyRepository;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
-import com.opencirc.api.passport.dto.CreatePassportRequestDto;
-import com.opencirc.api.passport.dto.CreatedByDto;
-import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
-import com.opencirc.api.passport.dto.DatasheetDto;
-import com.opencirc.api.passport.dto.DatasheetPropertyDto;
-import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.dto.UpdateDataRequestDto;
+import com.opencirc.api.passport.dto.*;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
@@ -28,7 +22,6 @@ import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
@@ -90,27 +83,20 @@ public class PassportService {
 
   /** Creates template entry. */
   @Transactional
-  public PassportDto createPassportUsingDictionary(
-      Platform dictionaryPlatform, DataDictionary dictionary, CreatePassportRequestDto data)
-      throws InvalidInputException {
-    JsonNode datasheetData = data.getDatasheetData();
-
-    try {
-      validatePassportData(dictionaryPlatform, datasheetData);
-    } catch (JsonValidationException e) {
-      throw new InvalidInputException(e.getMessage());
-    }
+  public PassportDto createPassportUsingPlatform(
+      Platform platform, CreatePassportRequestDto data, UserDto author)
+      throws InvalidInputException, JsonValidationException, JsonProcessingException {
 
     int customLength = AppConstants.CUID_LENGTH;
     CUID cuid = CUID.randomCUID2(customLength);
 
     Passport passport = new Passport();
     passport.setId(cuid.toString());
-    passport.setName(data.getPassportName());
+    passport.setName(data.getName());
     passport.setStatus(Passport.Status.ACTIVE);
-    passport.setCreatedById(data.getCreatedById());
+    passport.setCreatedById(author != null ? author.getId() : null);
     passport.setCreatedTime(OffsetDateTime.now());
-    passport.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedBy()));
+    passport.setCreatedBy(getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
@@ -123,68 +109,11 @@ public class PassportService {
 
     passport = passportRepository.save(passport);
 
-    String code = datasheetData.hasNonNull("code") ? datasheetData.get("code").asText() : null;
-    String name = datasheetData.hasNonNull("name") ? datasheetData.get("name").asText() : null;
-    String description =
-        datasheetData.hasNonNull("definition") ? datasheetData.get("definition").asText() : null;
-    String platformId =
-        datasheetData.hasNonNull("dictionaryUri")
-            ? datasheetData.get("dictionaryUri").asText()
-            : null;
-
-    Datasheet datasheet = new Datasheet();
-    datasheet.setPlatform(dictionaryPlatform);
-    datasheet.setDictionary(dictionary);
-    datasheet.setCode(code);
-    datasheet.setName(name);
-    datasheet.setDescription(description);
-    datasheet.setPlatformId(platformId);
-    datasheet.setDataCategory(DataCategory.fromValue(data.getDataCategory()));
-    datasheet.setCreatedById(data.getCreatedById());
-    datasheet.setCreatedTime(OffsetDateTime.now());
-    datasheet.setCreatedBy(getOrDefaultCreatedBy(data.getCreatedBy()));
-
-    datasheet = datasheetRepository.save(datasheet);
-
-    List<DatasheetProperty> propertyList = new ArrayList<>();
-    JsonNode propertiesNode = datasheetData.path("classProperties");
-    if (propertiesNode.isArray()) {
-      for (JsonNode propNode : propertiesNode) {
-        String propCode = getText(propNode, "propertyCode");
-        if (propCode == null || propCode.isBlank()) {
-          continue;
-        }
-        DatasheetProperty property = new DatasheetProperty();
-        property.setCode(propCode);
-        property.setGroupTag(getText(propNode, "propertySet"));
-        property.setPropertyType(getText(propNode, "dataType"));
-        property.setDefinition(propNode);
-        property.setPlatformId(platformId);
-        property.setDatasheet(datasheet);
-        propertyList.add(property);
-      }
-    }
-    propertyList = datasheetPropertyRepository.saveAll(propertyList);
-
-    ObjectNode dataJson = JsonNodeFactory.instance.objectNode();
-    Map<String, DatasheetProperty> propertyByCode =
-        propertyList.stream()
-            .filter(property -> property.getCode() != null)
-            .collect(Collectors.toMap(DatasheetProperty::getCode, property -> property));
-
-    for (JsonNode propertyNode : propertiesNode) {
-      String propertyCode = getText(propertyNode, "propertyCode");
-      JsonNode actualValueNode = propertyNode.path("actualValue");
-      DatasheetProperty property = propertyByCode.get(propertyCode);
-      if (property != null) {
-        dataJson.set(
-            property.getCode(),
-            actualValueNode.isMissingNode() ? NullNode.instance : actualValueNode);
-      }
-    }
-
-    datasheet.setData(dataJson);
-    datasheet = datasheetRepository.save(datasheet);
+    var adapter = platformAdapterFactory.getAdapter(platform);
+    var rawDatasheet = adapter.generateDatasheetFromPlatformId(data.getPlatformId());
+    rawDatasheet.setCreatedById(author.getId());
+    rawDatasheet.setCreatedBy(CreatedByDto.from(author));
+    var datasheet = datasheetRepository.save(rawDatasheet);
 
     PassportDatasheetMapping mapping = new PassportDatasheetMapping();
     mapping.setPassport(passport);
@@ -271,11 +200,12 @@ public class PassportService {
   /** Retrieves the passports with the given parent ID. */
   public List<PassportDto> getImmediateChildren(String passportId) {
     List<PassportDatasheetResultMapQueryResult> resultRows =
-        passportRepository.findImmediateChildren(passportId).orElseThrow(
-            () -> new HttpServerErrorException(
-                HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId
-            )
-        );
+        passportRepository
+            .findImmediateChildren(passportId)
+            .orElseThrow(
+                () ->
+                    new HttpServerErrorException(
+                        HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId));
 
     return assemblePassportsFromResultRows(resultRows);
   }

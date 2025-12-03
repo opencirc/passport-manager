@@ -21,10 +21,6 @@ public class AppProperties {
   @Value("${bsdd.classDetails.url}")
   private String bsddClassDetailsUrl;
 
-  /** URL for fetching properties with detail BsDD. */
-  @Value("${bsdd.propertiesWithDetail.url}")
-  private String bsddPropertiesWithDetailUrl;
-
   /** URL for text based search in bsdd. */
   @Value("${bsdd.textSearch.url}")
   private String bsddTextSearchUrl;

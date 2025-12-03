@@ -13,5 +13,5 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GetClassRequestDto {
 
-  private String uri;
+  private String code;
 }

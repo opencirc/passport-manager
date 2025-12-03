@@ -1,5 +1,9 @@
 package com.opencirc.api.passport.command;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.opencirc.api.passport.exception.JsonValidationException;
+import java.util.Arrays;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
@@ -34,19 +38,42 @@ public class Seeder {
   }
 
   /** Enum representing supported seed types. */
-  private enum SeedType {
+  @Getter
+  public enum SeedType {
 
     /** Seed only user-related data. */
-    USER,
+    USER("user"),
 
     /** Seed passport-related data from API. */
-    PASSPORT_FROM_API,
+    PASSPORT_FROM_API("passportFromApi"),
 
     /** Seed passport-related data from stored JSON. */
-    PASSPORT_FROM_JSON,
+    PASSPORT_FROM_JSON("passportFromJson"),
 
     /** Seed both user and passport data(From JSON). */
-    ALL
+    ALL("all");
+
+    /** Dictionary name in string. -- GETTER -- Gets the dictionary value. */
+    private final String value;
+
+    /** Constructor. */
+    SeedType(String dictionaryValue) {
+      this.value = dictionaryValue;
+    }
+
+    /** Returns the string representation of the enum. */
+    @Override
+    public String toString() {
+      return value;
+    }
+
+    /** Parses a string value to its corresponding enum. */
+    public static SeedType fromValue(String value) throws IllegalArgumentException {
+      return Arrays.stream(SeedType.values())
+          .filter(seedType -> seedType.value.equalsIgnoreCase(value))
+          .findFirst()
+          .orElseThrow(() -> new IllegalArgumentException("Invalid seed type: " + value));
+    }
   }
 
   /** Executes the seeding process for the given type. */
@@ -57,32 +84,28 @@ public class Seeder {
             Seed database tables with initial or sample data.
 
             Available seed types:
-              USER               - Seed only user data
-              PASSPORT_FROM_API  - Seed passport data via API
-              PASSPORT_FROM_JSON - Seed passport data from local JSON templates
-              ALL (default)      - Seed users + passports (from JSON)
+              user               - Seed only user data
+              passportFromApi    - Seed passport data via API
+              passportFromJson   - Seed passport data from local JSON templates
+              all (default)      - Seed users + passports (from JSON)
 
             Examples:
-              seed --type USER
-              seed --type PASSPORT_FROM_API
-              seed --type PASSPORT_FROM_JSON
-              seed --type ALL
+              seed --type user
+              seed --type passportFromApi
+              seed --type passportFromJson
+              seed --type all
               seed                 (defaults to ALL)
             """)
-  public void seed(@Option(longNames = "type", defaultValue = "ALL") SeedType seedType) {
+  public void seed(@Option(longNames = "type", defaultValue = "all") String seedTypeText) {
     log.info("Seeding started.");
+    var seedType = SeedType.fromValue(seedTypeText);
     try {
 
       switch (seedType) {
         case USER -> userSeeder.seed();
         case PASSPORT_FROM_API -> passportFromApiSeeder.seed();
         case PASSPORT_FROM_JSON -> passportFromJsonSeeder.seed();
-        case ALL -> {
-          seedAll();
-        }
-        default -> {
-          seedAll();
-        }
+        default -> seedAll();
       }
 
       log.info("Seeding complete.");
@@ -95,7 +118,7 @@ public class Seeder {
     }
   }
 
-  private void seedAll() {
+  private void seedAll() throws JsonValidationException, JsonProcessingException {
     userSeeder.seed();
     passportFromJsonSeeder.seed();
   }

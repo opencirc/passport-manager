@@ -17,28 +17,20 @@ import lombok.ToString;
 @ToString
 public class PassportDto {
 
-  /** Unique Id. */
   @JsonProperty private String id;
 
-  /** Name of Passport. */
   @JsonProperty private String name;
 
-  /** Status of Passport. */
   @JsonProperty private String status;
 
-  /** Id of Parent Passport. */
   @JsonProperty private String parentId;
 
-  /** Id of the user who created Passport. */
   @JsonProperty private String createdById;
 
-  /** Metadata of the user who created Passport. */
   @JsonProperty private CreatedByDto createdBy;
 
-  /** Time of passport creation. */
   @JsonProperty private OffsetDateTime createdTime;
 
-  /** Linked datasheets. */
   private List<DatasheetDto> datasheets;
 
   /** Setting up values from Passport to Passport Dto. */

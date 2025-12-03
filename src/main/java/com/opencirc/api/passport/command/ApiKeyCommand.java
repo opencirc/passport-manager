@@ -33,16 +33,16 @@ public class ApiKeyCommand {
           """
             Create a new API key for a user.
             Parameters:
-              --user-id         (required) UUID of the user
+              --userId         (required) ID of the user
               --expiration-date (optional) Expiration date in yyyy-MM-dd
               --name  name of the token
             Example:
-              create-api-key --user-id <<user id>>
+              create-api-key --userId <<user id>>
               --expiration-date 2025-12-31 --name test
             """)
   public void createApiKey(
-      @Option(longNames = "user-id", required = true) String userId,
-      @Option(longNames = "expiration-date") String expirationDate,
+      @Option(longNames = "userId", required = true) String userId,
+      @Option(longNames = "expirationDate") String expirationDate,
       @Option(longNames = "name", required = true) String name) {
 
     try {
@@ -73,8 +73,8 @@ public class ApiKeyCommand {
           apiKeyService.createApiKey(userId.trim(), formattedExpirationDate, name.trim());
 
       System.out.println("API Key created successfully");
-      System.out.println("Key: " + generatedApiKey.getApiKey().getId());
-      System.out.println("Secret: " + generatedApiKey.getRawSecret());
+      System.out.println("X-Api-Key: " + generatedApiKey.getApiKey().getId());
+      System.out.println("X-Api-Secret: " + generatedApiKey.getRawSecret());
 
     } catch (InvalidInputException e) {
       log.warn("Validation error: {}", e.getMessage());
@@ -93,11 +93,11 @@ public class ApiKeyCommand {
           """
             Retrieves all the API tokens associated with the user.
             Parameters:
-              --user-id         (required) UUID of the user
+              --userId         (required) ID of the user
             Example:
-              list-api-tokens --user-id <<user id>>
+              list-api-tokens --userId <<user id>>
             """)
-  public void getApiTokens(@Option(longNames = "user-id", required = true) String userId) {
+  public void getApiTokens(@Option(longNames = "userId", required = true) String userId) {
 
     if (userId == null || userId.isBlank()) {
       log.warn("Validation error: User ID is required.");
@@ -141,7 +141,7 @@ public class ApiKeyCommand {
           """
             Deletes an API token by ID.
             Parameters:
-              --key         (required) UUID of the API key
+              --key         (required) ID of the API key
             Example:
               delete-api-token --key <<key id>>
             """)

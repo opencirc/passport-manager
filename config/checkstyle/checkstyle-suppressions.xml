@@ -6,4 +6,6 @@
 <suppressions>
     <suppress checks="NonEmptyAtclauseDescription" files="."/>
     <suppress checks="MissingJavadocType" files="."/>
+    <suppress checks="AvoidStarImport" files="."/>
+    <suppress checks="LineLength" files="."/>
 </suppressions>

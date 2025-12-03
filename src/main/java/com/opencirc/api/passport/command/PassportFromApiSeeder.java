@@ -1,28 +1,18 @@
 package com.opencirc.api.passport.command;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.dto.BsddClassTemplateDto;
-import com.opencirc.api.passport.dto.CreatePassportRequestDto;
-import com.opencirc.api.passport.dto.CreatedByDto;
-import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.dto.*;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
+import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.service.DataDictionaryService;
 import com.opencirc.api.passport.service.PassportService;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
+import com.opencirc.api.passport.service.PlatformService;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -33,44 +23,21 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class PassportFromApiSeeder {
-
-  /** Application properties class. */
   private final AppProperties appProperties;
-
-  /** Service to get user details. */
   private final UserRepository userRepository;
-
-  /** Service to retrieve data dictionary templates. */
-  private final DataDictionaryService dataDictionaryService;
-
-  /** Service responsible for creating passports. */
+  private final PlatformService platformService;
   private final PassportService passportService;
-
-  /** ObjectMapper. */
-  private final ObjectMapper objectMapper;
-
-  /** Random number generator for generating property values. */
-  private static final Random RANDOM = new Random();
-
-  /** The platform in which data dictionary is present. */
   private final Platform platform = Platform.BSDD;
-
-  /** The data dictionary used for seeding passport templates. */
-  private final DataDictionary dictionary = DataDictionary.IFC;
-
-  /** Cache the class templates. */
-  private final Map<String, BsddClassTemplateDto> templateCache = new ConcurrentHashMap<>();
+  private final Map<String, Datasheet> templateCache = new ConcurrentHashMap<>();
 
   /** Constructor-based dependency injection. */
   public PassportFromApiSeeder(
-      DataDictionaryService dataDictionaryService,
+      PlatformService platformService,
       PassportService passportService,
-      ObjectMapper objectMapper,
       AppProperties appProperties,
       UserRepository userRepository) {
-    this.dataDictionaryService = dataDictionaryService;
+    this.platformService = platformService;
     this.passportService = passportService;
-    this.objectMapper = objectMapper;
     this.appProperties = appProperties;
     this.userRepository = userRepository;
   }
@@ -88,15 +55,13 @@ public class PassportFromApiSeeder {
                           "No users found in the database. "
                               + "Please seed users before running passport seeding."));
 
-      CreatedByDto createdByDto = CreatedByDto.fromUser(user);
       List<String> uris = appProperties.getUriList();
       if (uris == null || uris.isEmpty()) {
         throw new IllegalStateException("URI list cannot be empty for passport seeding");
       }
       for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
         String uri = uris.get(index % uris.size());
-        createPassportRecursive(
-            1, String.valueOf(index + 1), uri, index, null, user.getId(), createdByDto);
+        createPassportRecursive(1, String.valueOf(index + 1), uri, index, null, UserDto.from(user));
       }
       log.info("Passport seeding completed.");
     } catch (RuntimeException e) {
@@ -110,39 +75,30 @@ public class PassportFromApiSeeder {
 
   /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
-      int level,
-      String nameSuffix,
-      String uri,
-      int uriIndex,
-      String parentId,
-      String userId,
-      CreatedByDto createdByDto) {
+      int level, String nameSuffix, String uri, int uriIndex, String parentId, UserDto author)
+      throws JsonValidationException, JsonProcessingException {
     if (level > appProperties.getMaximumLevel()) {
       return;
     }
 
-    BsddClassTemplateDto templateNode =
-        templateCache.computeIfAbsent(
-            uri,
-            currentUri -> {
-              try {
-                return dataDictionaryService.createClassTemplate(platform, currentUri, true);
-              } catch (JsonProcessingException | JsonValidationException e) {
-                throw new RuntimeException("Failed to create template for URI: " + currentUri, e);
-              }
-            });
-    filterAndFillProperties(templateNode);
+    templateCache.computeIfAbsent(
+        uri,
+        currentUri -> {
+          try {
+            return platformService.generateDatasheetFromPlatformId(platform, currentUri);
+          } catch (JsonProcessingException | JsonValidationException e) {
+            throw new RuntimeException("Failed to create template for URI: " + currentUri, e);
+          }
+        });
 
     CreatePassportRequestDto request = new CreatePassportRequestDto();
-    request.setDatasheetData(objectMapper.valueToTree(templateNode));
+    request.setPlatformId(uri);
     request.setDataCategory(DataCategory.GENERIC.getValue());
-    request.setPassportName("Passport" + nameSuffix);
-    request.setCreatedById(userId);
-    request.setCreatedBy(createdByDto);
+    request.setName("Passport" + nameSuffix);
     request.setParentId(parentId);
 
     PassportDto createdPassport =
-        passportService.createPassportUsingDictionary(platform, dictionary, request);
+        passportService.createPassportUsingPlatform(platform, request, author);
 
     List<String> uris = appProperties.getUriList();
     for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
@@ -154,60 +110,7 @@ public class PassportFromApiSeeder {
           nextUri,
           nextUriIndex,
           createdPassport.getId(),
-          userId,
-          createdByDto);
-    }
-  }
-
-  /** Restricts the number of properties in the template and fills them with sample values. */
-  private void filterAndFillProperties(BsddClassTemplateDto template) {
-
-    if (template.getClassProperties() == null) {
-      return;
-    }
-
-    List<JsonNode> properties = new ArrayList<>();
-    template.getClassProperties().forEach(properties::add);
-
-    List<JsonNode> selectedProperties =
-        properties.stream().limit(appProperties.getPropertyCountToSelect()).toList();
-
-    ArrayNode newProperties = objectMapper.createArrayNode();
-    selectedProperties.forEach(newProperties::add);
-    template.setClassProperties(newProperties);
-
-    for (JsonNode propertyNode : selectedProperties) {
-      if (!propertyNode.isObject()) {
-        log.debug("Skipping non-object property node in classProperties");
-        continue;
-      }
-      ObjectNode propertyObject = (ObjectNode) propertyNode;
-      if (propertyNode.has("allowedValues")
-          && propertyNode.get("allowedValues").isArray()
-          && !propertyNode.get("allowedValues").isEmpty()) {
-        JsonNode first = propertyNode.get("allowedValues").get(0);
-        String allowedValue = first.has("value") ? first.get("value").asText() : first.asText();
-        propertyObject.put("actualValue", allowedValue);
-      } else if (propertyNode.has("dataType")) {
-        String dataType = propertyNode.get("dataType").asText().toLowerCase();
-        switch (dataType) {
-          case "boolean" -> propertyObject.put("actualValue", RANDOM.nextBoolean());
-          case "string" -> propertyObject.put("actualValue", "testData");
-          case "real" -> propertyObject.put("actualValue", RANDOM.nextDouble());
-          case "integer" -> propertyObject.put("actualValue", RANDOM.nextInt(50));
-          case "datetime" ->
-              propertyObject.put(
-                  "actualValue",
-                  OffsetDateTime.now(java.time.ZoneOffset.UTC)
-                      .minusHours(RANDOM.nextInt(200))
-                      .format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-          default -> {
-            log.debug(
-                "Unknown data type '{}' for property, using " + "default test data", dataType);
-            propertyObject.put("actualValue", "testData");
-          }
-        }
-      }
+          author);
     }
   }
 }
