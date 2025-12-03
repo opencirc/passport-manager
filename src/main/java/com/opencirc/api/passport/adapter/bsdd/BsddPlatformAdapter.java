@@ -5,27 +5,31 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.opencirc.api.passport.adapter.DictionaryAdapter;
+import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
+import com.opencirc.api.passport.enums.DataDictionary;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.mapping.DictionaryMapping;
 import com.opencirc.api.passport.service.CacheService;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -33,13 +37,13 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
-public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
+public class BsddPlatformAdapter implements PlatformAdapter<BsddClassTemplateDto> {
 
   /** Injecting Rest Template. */
   private final RestTemplate restTemplate;
 
   /** Injecting Properties. */
-  private final AppProperties properties;
+  private final AppProperties appProperties;
 
   /** Injecting ObjectMapper. */
   private final ObjectMapper objectMapper;
@@ -51,7 +55,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
   private final CacheService cacheService;
 
   /**
-   * Instantiating BsddAdapter.
+   * Instantiating BsddPlatformAdapter.
    *
    * @param injectedRestTemplate
    * @param appProperties
@@ -60,14 +64,14 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
    * @param cacheService
    */
   @Autowired
-  public BsddAdapter(
+  public BsddPlatformAdapter(
       RestTemplate injectedRestTemplate,
       AppProperties appProperties,
       ObjectMapper mapper,
       DictionaryMapping dictionaryMapping,
       CacheService cacheService) {
     this.restTemplate = injectedRestTemplate;
-    this.properties = appProperties;
+    this.appProperties = appProperties;
     this.objectMapper = mapper;
     this.cacheService = cacheService;
     this.dictionaryMapping = dictionaryMapping;
@@ -83,7 +87,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
   public List<Map<String, String>> listClass(String text) {
 
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(properties.getBsddClassSearchTextUrl())
+        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassSearchTextUrl())
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
             .queryParam(AppConstants.QP_BSDD_LIMIT, AppConstants.BSDD_LIMIT);
     String url = uriBuilder.toUriString();
@@ -157,7 +161,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
       throw new InvalidInputException("Invalid URI : " + uri);
     }
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(properties.getBsddClassDetailsUrl())
+        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassDetailsUrl())
             .queryParam(AppConstants.URI, uri);
 
     if (addProperties) {
@@ -205,7 +209,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
       }
 
       UriComponentsBuilder uriBuilder =
-          UriComponentsBuilder.fromHttpUrl(properties.getBsddPropertiesWithDetailUrl())
+          UriComponentsBuilder.fromHttpUrl(appProperties.getBsddPropertiesWithDetailUrl())
               .queryParam(AppConstants.URI, uri);
       String url = uriBuilder.toUriString();
 
@@ -239,8 +243,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
    * @param template
    */
   private void formPropertyTemplate(ArrayNode propertiesArray, JsonNode template) {
-    ObjectNode mappedNode =
-        dictionaryMapping.mapTemplateFieldsToStandards(template, DataDictionaryPlatform.BSDD);
+    ObjectNode mappedNode = dictionaryMapping.mapTemplateFieldsToStandards(template, Platform.BSDD);
     mappedNode.put(AppConstants.ACTUAL_VALUE, "");
     propertiesArray.add(mappedNode);
   }
@@ -254,7 +257,7 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
   @Override
   public List<Map<String, String>> listProperties(String text) {
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(properties.getBsddTextSearchUrl())
+        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddTextSearchUrl())
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
             .queryParam(AppConstants.QP_BSDD_TYPEFILTER, "Property")
             .queryParam("IncludeSearchDescriptions", "false")
@@ -515,9 +518,11 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
   public JsonNode fetchRawTemplate(String uri, String type) throws JsonProcessingException {
     String uriPrefix = null;
     if (type.equalsIgnoreCase("class")) {
-      uriPrefix = properties.getBsddClassDetailsUrl();
+      uriPrefix = appProperties.getBsddClassDetailsUrl();
     } else if (type.equalsIgnoreCase("property")) {
-      uriPrefix = properties.getBsddPropertiesWithDetailUrl();
+      uriPrefix = appProperties.getBsddPropertiesWithDetailUrl();
+    } else {
+      throw new IllegalArgumentException("Invalid type: " + type);
     }
 
     UriComponentsBuilder uriBuilder =
@@ -528,5 +533,80 @@ public class BsddAdapter implements DictionaryAdapter<BsddClassTemplateDto> {
     ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
 
     return response.getBody();
+  }
+
+  /** Retrieves the tree structure of the dictionary. */
+  public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(DataDictionary dictionary)
+      throws JsonValidationException, IOException {
+    String cachePath =
+        switch (dictionary) {
+          case DataDictionary.TABLE6 -> appProperties.getTable6StructureOutputCachedPath();
+          default -> throw new IllegalArgumentException("Unsupported dictionary: " + dictionary);
+        };
+
+    String templatePath =
+        switch (dictionary) {
+          case DataDictionary.TABLE6 -> appProperties.getTable6StructureJsonPath();
+          default -> throw new IllegalArgumentException("Unsupported dictionary: " + dictionary);
+        };
+
+    Path outputPath = Paths.get(cachePath).toAbsolutePath();
+
+    if (Files.exists(outputPath)) {
+      return Arrays.asList(
+          objectMapper.readValue(outputPath.toFile(), DataDictionaryTreeStructureDto[].class));
+    }
+
+    ClassPathResource templateResource = new ClassPathResource(templatePath);
+
+    if (!templateResource.exists()) {
+      throw new IllegalStateException("Template not found in classpath: " + templatePath);
+    }
+
+    JsonNode root = objectMapper.readTree(templateResource.getInputStream());
+    JsonNode classes = root.get("Classes");
+
+    if (classes == null) {
+      throw new IllegalStateException("Template JSON has no 'Classes' field.");
+    }
+
+    Map<String, DataDictionaryTreeStructureDto> nodeMap = new LinkedHashMap<>();
+    List<DataDictionaryTreeStructureDto> roots = new ArrayList<>();
+
+    for (JsonNode classNode : classes) {
+      String code = classNode.get("Code").asText();
+      String name = classNode.get("Name").asText();
+      nodeMap.put(code, new DataDictionaryTreeStructureDto(code, name, new ArrayList<>()));
+    }
+
+    for (JsonNode classNode : classes) {
+      JsonNode codeNode = classNode.get("Code");
+      if (codeNode == null || codeNode.isNull()) {
+        throw new IllegalStateException("Class node missing required 'Code' field");
+      }
+      String code = codeNode.asText();
+
+      JsonNode parentCodeNode = classNode.get("ParentClassCode");
+      String parentCode =
+          (parentCodeNode != null && !parentCodeNode.isNull()) ? parentCodeNode.asText() : null;
+
+      DataDictionaryTreeStructureDto node = nodeMap.get(code);
+
+      if (parentCode == null || parentCode.isBlank()) {
+        roots.add(node);
+      } else {
+        DataDictionaryTreeStructureDto parent = nodeMap.get(parentCode);
+        if (parent != null) {
+          parent.addChild(node);
+        } else {
+          roots.add(node);
+        }
+      }
+    }
+
+    Files.createDirectories(outputPath.getParent());
+
+    objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath.toFile(), roots);
+    return roots;
   }
 }

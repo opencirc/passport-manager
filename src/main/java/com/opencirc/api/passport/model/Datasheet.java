@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import com.opencirc.api.passport.util.DataCategoryConverter;
 import com.opencirc.api.passport.util.DataDictionaryConverter;
@@ -54,7 +54,7 @@ public class Datasheet {
   /** Name of the data dictionary platform. */
   @Column(name = "platform")
   @Convert(converter = DataDictionaryPlatformConverter.class)
-  private DataDictionaryPlatform platform;
+  private Platform platform;
 
   /** Name of the data dictionary from which template is fetched. */
   @Column(name = "dictionary")

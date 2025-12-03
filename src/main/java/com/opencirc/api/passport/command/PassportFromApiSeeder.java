@@ -12,7 +12,7 @@ import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
 import com.opencirc.api.passport.model.User;
@@ -53,7 +53,7 @@ public class PassportFromApiSeeder {
   private static final Random RANDOM = new Random();
 
   /** The platform in which data dictionary is present. */
-  private final DataDictionaryPlatform platform = DataDictionaryPlatform.BSDD;
+  private final Platform platform = Platform.BSDD;
 
   /** The data dictionary used for seeding passport templates. */
   private final DataDictionary dictionary = DataDictionary.IFC;
@@ -61,15 +61,7 @@ public class PassportFromApiSeeder {
   /** Cache the class templates. */
   private final Map<String, BsddClassTemplateDto> templateCache = new ConcurrentHashMap<>();
 
-  /**
-   * Constructor-based dependency injection.
-   *
-   * @param dataDictionaryService
-   * @param passportService
-   * @param objectMapper
-   * @param appProperties
-   * @param userRepository
-   */
+  /** Constructor-based dependency injection. */
   public PassportFromApiSeeder(
       DataDictionaryService dataDictionaryService,
       PassportService passportService,
@@ -126,17 +118,7 @@ public class PassportFromApiSeeder {
     }
   }
 
-  /**
-   * Recursively creates passports and their child passports.
-   *
-   * @param level
-   * @param nameSuffix
-   * @param uri
-   * @param uriIndex
-   * @param parentId
-   * @param userId
-   * @param createdByDto
-   */
+  /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
       int level,
       String nameSuffix,
@@ -187,11 +169,7 @@ public class PassportFromApiSeeder {
     }
   }
 
-  /**
-   * Restricts the number of properties in the template and fills them with sample values.
-   *
-   * @param template
-   */
+  /** Restricts the number of properties in the template and fills them with sample values. */
   private void filterAndFillProperties(BsddClassTemplateDto template) {
 
     if (template.getClassProperties() == null) {
@@ -216,7 +194,7 @@ public class PassportFromApiSeeder {
       ObjectNode propertyObject = (ObjectNode) propertyNode;
       if (propertyNode.has("allowedValues")
           && propertyNode.get("allowedValues").isArray()
-          && propertyNode.get("allowedValues").size() > 0) {
+          && !propertyNode.get("allowedValues").isEmpty()) {
         JsonNode first = propertyNode.get("allowedValues").get(0);
         String allowedValue = first.has("value") ? first.get("value").asText() : first.asText();
         propertyObject.put("actualValue", allowedValue);

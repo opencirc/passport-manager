@@ -3,7 +3,7 @@ package com.opencirc.api.passport.mapping;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ public class DictionaryMapping {
   }
 
   /** Stores the required Dictionary mappings. */
-  private final Map<DataDictionaryPlatform, Map<String, String>> reverseCache = new HashMap<>();
+  private final Map<Platform, Map<String, String>> reverseCache = new HashMap<>();
 
   /** Loads the field names from dictionary mapping property file. */
   private void loadDictionaryMappings() throws IOException {
@@ -65,7 +65,7 @@ public class DictionaryMapping {
    * @param dictionaryName
    * @return the dictionary mappings for the requested dictionary
    */
-  public Map<String, String> getDictionaryMapping(DataDictionaryPlatform dictionaryName) {
+  public Map<String, String> getDictionaryMapping(Platform dictionaryName) {
     return dictionaries.get(dictionaryName.getValue());
   }
 
@@ -76,8 +76,7 @@ public class DictionaryMapping {
    * @param dictionaryName
    * @return an ObjectNode containing the mapped template
    */
-  public ObjectNode mapTemplateFieldsToStandards(
-      JsonNode template, DataDictionaryPlatform dictionaryName) {
+  public ObjectNode mapTemplateFieldsToStandards(JsonNode template, Platform dictionaryName) {
     ObjectNode resultNode = objectMapper.createObjectNode();
     Map<String, String> dictionaryMappings = getDictionaryMapping(dictionaryName);
 
@@ -105,7 +104,7 @@ public class DictionaryMapping {
    * @return map the matched field names
    */
   private Map<String, String> getReverseMapping(
-      DataDictionaryPlatform dictionaryPlatform, Map<String, String> dictionaryMappings) {
+      Platform dictionaryPlatform, Map<String, String> dictionaryMappings) {
     return reverseCache.computeIfAbsent(
         dictionaryPlatform,
         d -> {

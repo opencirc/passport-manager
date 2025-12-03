@@ -3,7 +3,7 @@ package com.opencirc.api.passport.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.dto.GetClassRequestDto;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.DataDictionaryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,8 +44,7 @@ public class DataDictionaryController {
           String platform,
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
-    return dataDictionaryService.searchClassesByText(
-        DataDictionaryPlatform.fromValue(platform), query);
+    return dataDictionaryService.searchClassesByText(Platform.fromValue(platform), query);
   }
 
   /**
@@ -83,7 +82,7 @@ public class DataDictionaryController {
           Boolean withProperties)
       throws JsonValidationException, JsonProcessingException {
     return dataDictionaryService.createClassTemplate(
-        DataDictionaryPlatform.fromValue(platform), getClassRequest.getUri(), withProperties);
+        Platform.fromValue(platform), getClassRequest.getUri(), withProperties);
   }
 
   /**
@@ -103,7 +102,7 @@ public class DataDictionaryController {
           String platform,
       @Parameter(description = "The text to search for", required = true) @PathVariable
           String query) {
-    return dataDictionaryService.listProperties(DataDictionaryPlatform.fromValue(platform), query);
+    return dataDictionaryService.listProperties(Platform.fromValue(platform), query);
   }
 
   /**
@@ -129,6 +128,6 @@ public class DataDictionaryController {
           List<String> propertiesUriList)
       throws JsonValidationException {
     return dataDictionaryService.createTemplateWithProperties(
-        DataDictionaryPlatform.fromValue(platform), propertiesUriList);
+        Platform.fromValue(platform), propertiesUriList);
   }
 }

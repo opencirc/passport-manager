@@ -14,16 +14,11 @@ import com.opencirc.api.passport.dao.DatasheetPropertyRepository;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
-import com.opencirc.api.passport.dto.CreatePassportRequestDto;
-import com.opencirc.api.passport.dto.CreatedByDto;
-import com.opencirc.api.passport.dto.DatasheetDto;
-import com.opencirc.api.passport.dto.DatasheetPropertyDto;
-import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.dto.PlatformTreeStructureDto;
-import com.opencirc.api.passport.dto.UpdateDataRequestDto;
+import com.opencirc.api.passport.dto.*;
+import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapDto;
 import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.DataDictionaryPlatform;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
@@ -33,13 +28,9 @@ import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -49,7 +40,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,9 +106,7 @@ public class PassportService {
    */
   @Transactional
   public PassportDto createPassportUsingDictionary(
-      DataDictionaryPlatform dictionaryPlatform,
-      DataDictionary dictionary,
-      CreatePassportRequestDto data)
+      Platform dictionaryPlatform, DataDictionary dictionary, CreatePassportRequestDto data)
       throws InvalidInputException {
     JsonNode datasheetData = data.getDatasheetData();
 
@@ -327,8 +315,7 @@ public class PassportService {
    * @param dictionaryPlatform
    * @param passportData
    */
-  private void validatePassportData(
-      DataDictionaryPlatform dictionaryPlatform, JsonNode passportData)
+  private void validatePassportData(Platform dictionaryPlatform, JsonNode passportData)
       throws JsonValidationException {
     if (passportData == null
         || passportData.isNull()
@@ -584,13 +571,10 @@ public class PassportService {
    * @return a list of {@link PassportDto} objects
    * @throws JsonProcessingException
    */
-  public List<PassportDto> listPassportsByCode(String code)
-      throws JsonProcessingException {
+  public List<PassportDto> listPassportsByCode(String code) throws JsonProcessingException {
 
     List<PassportDatasheetResultMapDto> resultRows =
-        passportRepository
-            .findPassportsByCode(code)
-            .orElse(Collections.emptyList());
+        passportRepository.findPassportsByCode(code).orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
   }
@@ -646,72 +630,11 @@ public class PassportService {
   /**
    * Method to parse and form the tree structure of the platform.
    *
-   * @return the list of PlatformTreeStructureDto
-   * @throws IOException
+   * @return the list of DataDictionaryTreeStructureDto
    */
-  public List<PlatformTreeStructureDto> getPlatformTreeStructure() throws IOException {
-
-    Path outputPath =
-        Paths.get(appProperties.getTable6StructureOutputCachedPath()).toAbsolutePath();
-
-    if (Files.exists(outputPath)) {
-      return Arrays.asList(
-          objectMapper.readValue(outputPath.toFile(), PlatformTreeStructureDto[].class));
-    }
-
-    String templatePath = appProperties.getTable6StructureJsonPath();
-
-    ClassPathResource templateResource = new ClassPathResource(templatePath);
-
-    if (!templateResource.exists()) {
-      throw new IllegalStateException("Template not found in classpath: " + templatePath);
-    }
-
-    JsonNode root = objectMapper.readTree(templateResource.getInputStream());
-    JsonNode classes = root.get("Classes");
-
-    if (classes == null) {
-      throw new IllegalStateException("Template JSON has no 'Classes' field.");
-    }
-
-    Map<String, PlatformTreeStructureDto> nodeMap = new LinkedHashMap<>();
-    List<PlatformTreeStructureDto> roots = new ArrayList<>();
-
-    for (JsonNode classNode : classes) {
-      String code = classNode.get("Code").asText();
-      String name = classNode.get("Name").asText();
-      nodeMap.put(code, new PlatformTreeStructureDto(code, name, new ArrayList<>()));
-    }
-
-    for (JsonNode classNode : classes) {
-      JsonNode codeNode = classNode.get("Code");
-      if (codeNode == null || codeNode.isNull()) {
-        throw new IllegalStateException("Class node missing required 'Code' field");
-      }
-      String code = codeNode.asText();
-
-      JsonNode parentCodeNode = classNode.get("ParentClassCode");
-      String parentCode =
-          (parentCodeNode != null && !parentCodeNode.isNull()) ? parentCodeNode.asText() : null;
-
-      PlatformTreeStructureDto node = nodeMap.get(code);
-
-      if (parentCode == null || parentCode.isBlank()) {
-        roots.add(node);
-      } else {
-        PlatformTreeStructureDto parent = nodeMap.get(parentCode);
-        if (parent != null) {
-          parent.addChild(node);
-        } else {
-          roots.add(node);
-        }
-      }
-    }
-
-    Files.createDirectories(outputPath.getParent());
-
-    objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath.toFile(), roots);
-
-    return roots;
+  public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(
+      Platform platform, DataDictionary dictionary) throws IOException {
+    var adapter = this.dictionaryAdapterFactory.getAdapter(platform);
+    return adapter.getDictionaryTreeStructure(dictionary);
   }
 }
