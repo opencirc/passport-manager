@@ -271,7 +271,11 @@ public class PassportService {
   /** Retrieves the passports with the given parent ID. */
   public List<PassportDto> getImmediateChildren(String passportId) {
     List<PassportDatasheetResultMapQueryResult> resultRows =
-        passportRepository.findImmediateChildren(passportId).orElse(Collections.emptyList());
+        passportRepository.findImmediateChildren(passportId).orElseThrow(
+            () -> new HttpServerErrorException(
+                HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId
+            )
+        );
 
     return assemblePassportsFromResultRows(resultRows);
   }

@@ -194,7 +194,8 @@ public class BsddMockStubHelper {
    * <p>This mock implementation is primarily used for testing the retrieval of passports and their
    * associated datasheets from a data source.
    */
-  public static class TestPassportDatasheetResultMapQueryResult implements PassportDatasheetResultMapQueryResult {
+  public static class TestPassportDatasheetResultMapQueryResult
+      implements PassportDatasheetResultMapQueryResult {
     private final String passportId;
 
     private final String passportName;
@@ -274,8 +275,7 @@ public class BsddMockStubHelper {
         String datasheetPropertyPlatformId,
         String datasheetPropertyGroupTag,
         String datasheetPropertyType,
-        String datasheetPropertyDefinition
-    ) {
+        String datasheetPropertyDefinition) {
       this.passportId = passportId;
       this.passportName = passportName;
       this.status = status;

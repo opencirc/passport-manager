@@ -13,7 +13,6 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -28,9 +27,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -44,9 +41,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-/**
- * Integration tests for the passport controller.
- */
+/** Integration tests for the passport controller. */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = PassportManager.class)
@@ -108,7 +103,6 @@ public class TestPassportController {
     createdByDto.setFullName("User One");
     createdByDto.setEmail("user1@test.com");
 
-
     String jsonBody =
         """
                                 {
@@ -159,7 +153,7 @@ public class TestPassportController {
             .pathParam("platform", platform.getValue())
             .pathParam("dictionary", dictionary.getValue())
             .when()
-            .post("/api/passport/dictionary/{dictionary}")
+            .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
             .statusCode(HttpStatus.SC_SUCCESS)
             .contentType(ContentType.JSON)
@@ -220,8 +214,7 @@ public class TestPassportController {
 
   /** Tests the behavior of the createPassport method when an invalid JSON body is provided. */
   @Test
-  public void shouldFailToCreatePassportWhenJsonBodyIsInvalid()
-      throws JsonProcessingException {
+  public void shouldFailToCreatePassportWhenJsonBodyIsInvalid() throws JsonProcessingException {
     var createdByDto = new CreatedByDto();
     createdByDto.setFullName("User One");
     createdByDto.setEmail("user1@test.com");
@@ -254,7 +247,7 @@ public class TestPassportController {
             .pathParam("platform", platform.getValue())
             .pathParam("dictionary", dictionary.getValue())
             .when()
-            .post("/api/passport/dictionary/{dictionary}")
+            .post("/api/passport/dictionary/{platform}/{dictionary}")
             .then()
             .statusCode(HttpStatus.SC_BAD_REQUEST)
             .log()

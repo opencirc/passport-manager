@@ -11,7 +11,6 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;

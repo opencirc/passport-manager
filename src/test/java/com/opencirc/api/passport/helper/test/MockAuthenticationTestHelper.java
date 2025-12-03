@@ -5,7 +5,6 @@ import static org.mockito.Mockito.when;
 
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.model.User;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;

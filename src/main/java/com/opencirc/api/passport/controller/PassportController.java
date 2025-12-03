@@ -87,8 +87,7 @@ public class PassportController {
   public ResponseEntity<List<PassportDto>> getImmediateChildren(
       @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
           @PathVariable
-          String passportId)
-      throws JsonProcessingException, JsonValidationException {
+          String passportId) {
     return ResponseEntity.ok(passportService.getImmediateChildren(passportId));
   }
 

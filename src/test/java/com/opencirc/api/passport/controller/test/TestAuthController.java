@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.constants.test.TestConstants;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
