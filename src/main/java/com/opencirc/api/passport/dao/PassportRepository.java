@@ -68,7 +68,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
             FROM PassportTree pt
             LEFT JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
-            LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
+            LEFT JOIN datasheet_properties dp ON ds.id = dp.datasheet_id
             WHERE pt.status = 'active'
             """,
       nativeQuery = true)
@@ -109,7 +109,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
             FROM passports p
             LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
             LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
-            LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
+            LEFT JOIN datasheet_properties dp ON ds.id = dp.datasheet_id
             WHERE p.parent_id = :passport_id AND p.status = 'active'
             """,
       nativeQuery = true)
@@ -169,7 +169,7 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
 FROM passports p
 LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
 LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
-LEFT JOIN datasheet_property dp ON ds.id = dp.datasheet_id
+LEFT JOIN datasheet_properties dp ON ds.id = dp.datasheet_id
                 WHERE ds.code = :code
                 AND p.status = 'active'
                 """,
