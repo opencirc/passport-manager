@@ -338,13 +338,13 @@ public class PassportService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
 
-    Map<String, Object> updatedProperties = new LinkedHashMap<>();
-
     var mappings = passport.getDatasheetMappings();
     if (mappings == null || mappings.isEmpty()) {
       throw new ResponseStatusException(
           HttpStatus.NOT_FOUND, "Passport does not have any datasheet mappings: " + passportId);
     }
+
+    Map<String, Object> updatedProperties = new LinkedHashMap<>();
 
     for (PassportDatasheetMapping mapping : mappings) {
       Datasheet datasheet = mapping.getDatasheet();
@@ -357,50 +357,47 @@ public class PassportService {
               : JsonNodeFactory.instance.objectNode();
 
       boolean isChanged = false;
-      Set<DatasheetProperty> propertyList = datasheet.getDatasheetProperties();
-
-      if (propertyList == null || propertyList.isEmpty()) {
-        continue;
-      }
 
       // List<String> errorMessages = new ArrayList<>();
-      for (DatasheetProperty property : propertyList) {
-        String propertyCode = property.getCode();
+      for (DatasheetProperty property : datasheet.getDatasheetProperties()) {
+        String propertyId = property.getId();
 
-        if (updateDataRequestDto.getValues().containsKey(propertyCode)) {
-          Object newValue = updateDataRequestDto.getValues().get(propertyCode);
-          Object existingValue = dataNode.get(propertyCode);
-          if (Objects.equals(newValue, existingValue)) {
-            continue;
-          }
-
-          isChanged = true;
-          updatedProperties.put(propertyCode, newValue);
-
-          /*
-          ObjectNode propertyDefinition = (ObjectNode) property.getDefinition();
-          JsonNode newValueNode =
-              newValue == null ? NullNode.instance : objectMapper.valueToTree(newValue);
-
-          propertyDefinition.set("actualValue", newValueNode);
-
-          String error =
-              platformAdapterFactory
-                  .getAdapter(datasheet.getPlatform())
-                  .validatePassportData(property.getDefinition());
-          if (error != null) {
-            errorMessages.add(error);
-            continue;
-          }
-
-          JsonNode currentValue = dataNode.get(propertyCode);
-
-          if (!Objects.equals(currentValue, newValueNode)) {
-            dataNode.set(propertyCode, newValueNode);
-            changed = true;
-            updatedProperties.put(propertyCode, newValue);
-          } */
+        if (!updateDataRequestDto.getValues().containsKey(property.getId())) {
+          continue;
         }
+
+        Object newValue = updateDataRequestDto.getValues().get(propertyId);
+        Object existingValue = dataNode.get(propertyId);
+        if (Objects.equals(newValue, existingValue)) {
+          continue;
+        }
+
+        isChanged = true;
+        updatedProperties.put(propertyId, newValue);
+
+        /*
+        ObjectNode propertyDefinition = (ObjectNode) property.getDefinition();
+        JsonNode newValueNode =
+            newValue == null ? NullNode.instance : objectMapper.valueToTree(newValue);
+
+        propertyDefinition.set("actualValue", newValueNode);
+
+        String error =
+            platformAdapterFactory
+                .getAdapter(datasheet.getPlatform())
+                .validatePassportData(property.getDefinition());
+        if (error != null) {
+          errorMessages.add(error);
+          continue;
+        }
+
+        JsonNode currentValue = dataNode.get(propertyCode);
+
+        if (!Objects.equals(currentValue, newValueNode)) {
+          dataNode.set(propertyCode, newValueNode);
+          changed = true;
+          updatedProperties.put(propertyCode, newValue);
+        } */
       }
 
       /* if (!errorMessages.isEmpty()) {
