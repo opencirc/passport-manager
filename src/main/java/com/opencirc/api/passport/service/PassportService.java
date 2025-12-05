@@ -356,19 +356,28 @@ public class PassportService {
               ? datasheet.getData().deepCopy()
               : JsonNodeFactory.instance.objectNode();
 
-      boolean changed = false;
+      boolean isChanged = false;
       Set<DatasheetProperty> propertyList = datasheet.getDatasheetProperties();
 
       if (propertyList == null || propertyList.isEmpty()) {
         continue;
       }
 
-      List<String> errorMessages = new ArrayList<>();
+      // List<String> errorMessages = new ArrayList<>();
       for (DatasheetProperty property : propertyList) {
         String propertyCode = property.getCode();
 
         if (updateDataRequestDto.getValues().containsKey(propertyCode)) {
           Object newValue = updateDataRequestDto.getValues().get(propertyCode);
+          Object existingValue = dataNode.get(propertyCode);
+          if (Objects.equals(newValue, existingValue)) {
+            continue;
+          }
+
+          isChanged = true;
+          updatedProperties.put(propertyCode, newValue);
+
+          /*
           ObjectNode propertyDefinition = (ObjectNode) property.getDefinition();
           JsonNode newValueNode =
               newValue == null ? NullNode.instance : objectMapper.valueToTree(newValue);
@@ -390,22 +399,23 @@ public class PassportService {
             dataNode.set(propertyCode, newValueNode);
             changed = true;
             updatedProperties.put(propertyCode, newValue);
-          }
+          } */
         }
       }
-      if (!errorMessages.isEmpty()) {
+
+      /* if (!errorMessages.isEmpty()) {
         throw new InvalidInputException(
             "Validation failed with the following errors: " + errorMessages);
-      }
-      if (changed) {
+      } */
+      if (isChanged) {
         datasheet.setData(dataNode);
         datasheetRepository.save(datasheet);
       }
     }
 
-    if (updatedProperties.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No valid properties found");
-    }
+    //if (updatedProperties.isEmpty()) {
+    //  throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No valid properties found");
+    //}
 
     return PassportDto.from(passport);
   }
