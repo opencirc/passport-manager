@@ -38,7 +38,7 @@ public class PassportLog {
   private String passportId;
 
   /** Log information in JSON format. */
-  @Column(name = "data", columnDefinition = "json", nullable = false)
+  @Column(name = "data", columnDefinition = "jsonb", nullable = false)
   private JsonNode data;
 
   /** Created by. */

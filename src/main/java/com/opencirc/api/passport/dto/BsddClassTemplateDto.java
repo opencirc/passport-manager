@@ -109,7 +109,7 @@ public class BsddClassTemplateDto {
     /**
      * Represents a property of a BSDD class.
      *
-     * <p>Example API response using:</p>
+     * <p>Example API response using:
      * https://api.bsdd.buildingsmart.org/api/Class/v1?Uri=https://identifier.buildingsmart.org/uri/etim/etim/10.0/class/EC000003&IncludeClassProperties=true
      *
      * <pre>
@@ -129,7 +129,7 @@ public class BsddClassTemplateDto {
      * "propertyValueKind": "Single"
      * </pre>
      *
-     * <p>We remove some properties not to get confused, as we will not use them</p>
+     * <p>We remove some properties not to get confused, as we will not use them
      */
     @JsonProperty private String name;
 

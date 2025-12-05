@@ -7,7 +7,6 @@ import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.CreatePassportRequestDto;
-import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.DataDictionary;

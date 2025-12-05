@@ -114,8 +114,7 @@ public class PassportService {
     var rawDatasheet = adapter.generateDatasheetFromPlatformId(data.getPlatformId());
     rawDatasheet.setCreatedById(author != null ? author.getId() : null);
     rawDatasheet.setCreatedBy(
-        getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null)
-    );
+        getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
     rawDatasheet.setDataCategory(Datasheet.DataCategory.fromValue(data.getDataCategory()));
     var datasheet = datasheetRepository.save(rawDatasheet);
 
@@ -208,9 +207,7 @@ public class PassportService {
           HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId);
     }
     List<PassportDatasheetResultMapQueryResult> resultRows =
-        passportRepository
-            .findImmediateChildren(passportId)
-            .orElse(Collections.emptyList());
+        passportRepository.findImmediateChildren(passportId).orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
   }

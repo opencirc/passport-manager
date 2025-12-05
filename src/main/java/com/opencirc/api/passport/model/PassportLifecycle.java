@@ -42,7 +42,7 @@ public class PassportLifecycle {
   private String eventType;
 
   /** Lifecycle data in JSON format. */
-  @Column(name = "data", columnDefinition = "json", nullable = false)
+  @Column(name = "data", columnDefinition = "jsonb", nullable = false)
   private JsonNode data;
 
   /** Id of the user. */

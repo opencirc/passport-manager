@@ -28,9 +28,7 @@ public class PassportFromApiSeeder {
 
   /** Constructor-based dependency injection. */
   public PassportFromApiSeeder(
-      PassportService passportService,
-      AppProperties appProperties,
-      UserRepository userRepository) {
+      PassportService passportService, AppProperties appProperties, UserRepository userRepository) {
     this.passportService = passportService;
     this.appProperties = appProperties;
     this.userRepository = userRepository;

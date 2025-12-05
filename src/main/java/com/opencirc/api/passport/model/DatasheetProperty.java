@@ -17,9 +17,9 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UuidGenerator;
 
-/** Model for datasheet_property table. */
+/** Model for datasheet_properties table. */
 @Entity
-@Table(name = "datasheet_property")
+@Table(name = "datasheet_properties")
 @Data
 @ToString
 public class DatasheetProperty {
