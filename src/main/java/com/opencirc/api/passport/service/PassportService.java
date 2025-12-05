@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
@@ -42,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -344,8 +342,6 @@ public class PassportService {
           HttpStatus.NOT_FOUND, "Passport does not have any datasheet mappings: " + passportId);
     }
 
-    Map<String, Object> updatedProperties = new LinkedHashMap<>();
-
     for (PassportDatasheetMapping mapping : mappings) {
       Datasheet datasheet = mapping.getDatasheet();
       if (datasheet == null) {
@@ -366,14 +362,15 @@ public class PassportService {
           continue;
         }
 
-        Object newValue = updateDataRequestDto.getValues().get(propertyId);
-        Object existingValue = dataNode.get(propertyId);
+        JsonNode newValue =
+            objectMapper.valueToTree(updateDataRequestDto.getValues().get(propertyId));
+        JsonNode existingValue = dataNode.get(propertyId);
         if (Objects.equals(newValue, existingValue)) {
           continue;
         }
 
         isChanged = true;
-        updatedProperties.put(propertyId, newValue);
+        dataNode.set(propertyId, newValue);
 
         /*
         ObjectNode propertyDefinition = (ObjectNode) property.getDefinition();
@@ -410,9 +407,9 @@ public class PassportService {
       }
     }
 
-    //if (updatedProperties.isEmpty()) {
+    // if (updatedProperties.isEmpty()) {
     //  throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No valid properties found");
-    //}
+    // }
 
     return PassportDto.from(passport);
   }
