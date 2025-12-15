@@ -105,11 +105,6 @@ public class PassportTemplateService {
   /** Lists the templates. */
   public List<PassportTemplateDto> getAllPassportTemplates() {
     List<PassportTemplate> templates = passportTemplateRepository.findAll();
-
-    if (templates.isEmpty()) {
-      throw new ResourceNotFoundException("No passport templates found");
-    }
-
     return templates.stream().map(PassportTemplateDto::from).toList();
   }
 }
