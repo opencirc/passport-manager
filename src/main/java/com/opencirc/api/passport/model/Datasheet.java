@@ -1,7 +1,6 @@
 package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
@@ -9,6 +8,7 @@ import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import com.opencirc.api.passport.util.DataCategoryConverter;
 import com.opencirc.api.passport.util.DataDictionaryConverter;
 import com.opencirc.api.passport.util.DataDictionaryPlatformConverter;
+import com.opencirc.api.passport.util.JsonMapConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -22,6 +22,7 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -75,8 +76,9 @@ public class Datasheet {
   private DataCategory dataCategory;
 
   @Column(name = "data", columnDefinition = "jsonb")
+  @Convert(converter = JsonMapConverter.class)
   @ColumnTransformer(write = "?::jsonb")
-  private JsonNode data;
+  private Map<String, Object> data;
 
   @Column(name = "created_by_id")
   private String createdById;

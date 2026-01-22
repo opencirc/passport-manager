@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * Seeder command entry point for running seed operations. Supports seeding of users, passports, or
  * both.
  */
-@Command(group = "Seeder Commands")
+@Command(group = "Seeder commands")
 @Slf4j
 @Component
 public class Seeder {

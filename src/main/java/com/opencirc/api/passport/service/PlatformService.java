@@ -24,10 +24,10 @@ public class PlatformService {
   }
 
   /** Search and retrieves the class along with the properties. */
-  public Datasheet generateDatasheetFromPlatformId(Platform platform, String code)
+  public List<Datasheet> generateDatasheetsFromPlatformId(Platform platform, String code)
       throws JsonValidationException, JsonProcessingException {
     var adapter = platformAdapterFactory.getAdapter(platform);
-    return adapter.generateDatasheetFromPlatformId(code);
+    return adapter.generateDatasheetsFromPlatformId(code);
   }
 
   /** Retrieves the list of properties. */

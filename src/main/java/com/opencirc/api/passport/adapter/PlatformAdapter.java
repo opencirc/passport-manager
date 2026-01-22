@@ -17,8 +17,8 @@ public interface PlatformAdapter {
   /** Retrieves a list of classes matching the given search text. */
   List<Map<String, String>> listClass(String text);
 
-  /** Generates a datasheet using on the given platform ID. */
-  Datasheet generateDatasheetFromPlatformId(String platformId)
+  /** Generates a set of datasheets using the given platform ID. */
+  List<Datasheet> generateDatasheetsFromPlatformId(String platformId)
       throws JsonValidationException, JsonProcessingException;
 
   /** Retrieves a list of properties matching the given search text. */

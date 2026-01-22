@@ -14,11 +14,11 @@ import org.springframework.stereotype.Component;
 public class AppProperties {
 
   /** URL for searching class in BsDD. */
-  @Value("${bsdd.class.searchText.url}")
-  private String bsddClassSearchTextUrl;
+  @Value("${bsdd.class.searchByText.url}")
+  private String bsddClassSearchByTextUrl;
 
   /** URL for fetching class details in BsDD. */
-  @Value("${bsdd.classDetails.url}")
+  @Value("${bsdd.class.details.url}")
   private String bsddClassDetailsUrl;
 
   /** URL for text based search in bsdd. */

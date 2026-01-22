@@ -7,12 +7,12 @@ import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.PlatformService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
 
-@Command(group = "Data Dictionary Commands")
-public class DataDictionaryCommands {
+/** Data Dictionary commands. */
+@Command(group = "Data Dictionary commands")
+public class DataDictionaryCommand {
 
   /** Injecting ObjectMapper. */
   private final ObjectMapper objectMapper;
@@ -23,9 +23,8 @@ public class DataDictionaryCommands {
   /** Injecting PlatformAdapterFactory. */
   private final PlatformAdapterFactory platformAdapterFactory;
 
-  /** Instantiating DataDictionaryCommands. */
-  @Autowired
-  public DataDictionaryCommands(
+  /** Instantiating DataDictionaryCommand. */
+  public DataDictionaryCommand(
       ObjectMapper objectMapper,
       PlatformService platformService,
       PlatformAdapterFactory platformAdapterFactory) {
@@ -45,7 +44,7 @@ public class DataDictionaryCommands {
       if (raw) {
         return generateRawTemplate(Platform.fromValue(platform), code);
       } else {
-        return generateDatasheetFromPlatformId(Platform.fromValue(platform), code);
+        return generateDatasheetsFromPlatformId(Platform.fromValue(platform), code);
       }
     } catch (Exception e) {
       return "Error fetching template: " + e.getMessage();
@@ -53,10 +52,10 @@ public class DataDictionaryCommands {
   }
 
   /** Gets the processed template. */
-  private String generateDatasheetFromPlatformId(Platform dictionaryPlatform, String platformId)
+  private String generateDatasheetsFromPlatformId(Platform dictionaryPlatform, String platformId)
       throws JsonValidationException, JsonProcessingException {
 
-    var response = platformService.generateDatasheetFromPlatformId(dictionaryPlatform, platformId);
+    var response = platformService.generateDatasheetsFromPlatformId(dictionaryPlatform, platformId);
     return formatJsonResponse(response);
   }
 

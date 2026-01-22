@@ -58,7 +58,7 @@ public class PassportTemplateService {
       if (Datasheet.DataCategory.UNIQUE.equals(datasheet.getDataCategory())) {
         continue;
       }
-      JsonNode dataNode = datasheet.getData();
+      JsonNode dataNode = objectMapper.valueToTree(datasheet.getData());
       JsonNode newDataNode = dataNode.deepCopy();
       clearActualValues(newDataNode);
       rootNode = (ObjectNode) newDataNode;

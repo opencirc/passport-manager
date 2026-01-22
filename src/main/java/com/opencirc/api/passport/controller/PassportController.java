@@ -45,13 +45,11 @@ public class PassportController {
       consumes = {"application/json"})
   public ResponseEntity<PassportDto> createPassportUsingPlatform(
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
-              description =
-                  "JSON template retrieved from external APIs, "
-                      + "populated with actual data to create the Passport")
+              description = "Options for passport creation")
           @RequestBody
           CreatePassportRequestDto data,
-      @Parameter(description = "Dictionary Platform", required = true, in = ParameterIn.PATH)
-          @PathVariable("platform")
+      @PathVariable
+          @Parameter(description = "Dictionary platform", required = true, in = ParameterIn.PATH)
           String platform)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
     return ResponseEntity.ok(

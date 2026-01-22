@@ -15,16 +15,14 @@ import org.springframework.shell.command.annotation.Option;
 import org.springframework.stereotype.Component;
 
 @Component
-@Command(group = "API Key Commands")
+@Command(group = "API Key commands")
 @Slf4j
 @RequiredArgsConstructor
 public class ApiKeyCommand {
 
-  /** Injecting ApiKeyService. */
   private final ApiKeyService apiKeyService;
 
-  /** Format to show API keys to user in terminal. */
-  private static final String API_TOKEN_DISPLAY_FORMAT = "%-40s %-20s %-25s%n";
+  private static final String API_TOKEN_ROW_FORMAT = "%-40s %-20s %-25s%n";
 
   /** Creates a new API key for the specified user. */
   @Command(
@@ -113,7 +111,7 @@ public class ApiKeyCommand {
       }
 
       DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-      System.out.printf(API_TOKEN_DISPLAY_FORMAT, "Key", "Name", "Expiration");
+      System.out.printf(API_TOKEN_ROW_FORMAT, "Key", "Name", "Expiration");
       System.out.println(
           "---------------------------------------" + "------------------------------------");
 
@@ -123,7 +121,7 @@ public class ApiKeyCommand {
                 ? "Never"
                 : token.getExpirationTime().format(dateTimeFormatter);
         System.out.printf(
-            API_TOKEN_DISPLAY_FORMAT,
+            API_TOKEN_ROW_FORMAT,
             token.getId(),
             token.getName() == null ? "" : token.getName(),
             expiration);

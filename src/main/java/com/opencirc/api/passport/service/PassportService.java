@@ -96,6 +96,7 @@ public class PassportService {
     passport.setCreatedById(author != null ? author.getId() : null);
     passport.setCreatedTime(OffsetDateTime.now());
     passport.setCreatedBy(getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
+    passport.setDatasheetMappings(new HashSet<>());
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
@@ -109,27 +110,21 @@ public class PassportService {
     passport = passportRepository.save(passport);
 
     var adapter = platformAdapterFactory.getAdapter(platform);
-    var rawDatasheet = adapter.generateDatasheetFromPlatformId(data.getPlatformId());
-    rawDatasheet.setCreatedById(author != null ? author.getId() : null);
-    rawDatasheet.setCreatedBy(
-        getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
-    rawDatasheet.setDataCategory(Datasheet.DataCategory.fromValue(data.getDataCategory()));
-    var datasheet = datasheetRepository.save(rawDatasheet);
-
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setPassport(passport);
-    mapping.setDatasheet(datasheet);
-    mapping = passportDatasheetMappingRepository.save(mapping);
-
-    if (passport.getDatasheetMappings() == null) {
-      passport.setDatasheetMappings(new HashSet<>());
+    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(data.getPlatformId());
+    for (var rawDatasheet : rawDatasheets) {
+      rawDatasheet.setCreatedById(author != null ? author.getId() : null);
+      rawDatasheet.setCreatedBy(
+          getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
+      rawDatasheet.setDataCategory(Datasheet.DataCategory.fromValue(data.getDataCategory()));
+      var datasheet = datasheetRepository.save(rawDatasheet);
+      PassportDatasheetMapping mapping = new PassportDatasheetMapping();
+      mapping.setPassport(passport);
+      mapping.setDatasheet(datasheet);
+      mapping = passportDatasheetMappingRepository.save(mapping);
+      passport.getDatasheetMappings().add(mapping);
     }
-    passport.getDatasheetMappings().add(mapping);
-    return PassportDto.from(passport);
-  }
 
-  private String getText(JsonNode node, String field) {
-    return node.hasNonNull(field) ? node.get(field).asText() : null;
+    return PassportDto.from(passport);
   }
 
   private CreatedByDto getOrDefaultCreatedBy(CreatedByDto createdBy) {
@@ -250,12 +245,14 @@ public class PassportService {
       dto.setPlatformId(row.getDatasheetPlatformId());
       dto.setDataCategory(row.getDataCategory());
 
-      JsonNode dataNode = null;
+      Map<String, Object> dataMap = null;
       String data = row.getData();
       if (data != null && !data.isBlank()) {
-        dataNode = objectMapper.readTree(data);
+        dataMap = objectMapper.readValue(
+            data, new com.fasterxml.jackson.core.type.TypeReference<>() {}
+        );
       }
-      dto.setData(dataNode);
+      dto.setData(dataMap);
 
       dto.setCreatedById(row.getDatasheetCreatedById());
       dto.setCreatedBy(parseCreatedBy(row.getDatasheetCreatedBy()));
@@ -328,8 +325,7 @@ public class PassportService {
    * {@code updateDataRequestDto.values} are updated.
    */
   @Transactional
-  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto)
-      throws JsonValidationException {
+  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto) {
     Passport passport =
         passportRepository
             .findPassport(passportId, Passport.Status.ACTIVE)
@@ -349,7 +345,7 @@ public class PassportService {
       }
       ObjectNode dataNode =
           datasheet.getData() != null
-              ? datasheet.getData().deepCopy()
+              ? objectMapper.valueToTree(datasheet.getData())
               : JsonNodeFactory.instance.objectNode();
 
       boolean isChanged = false;
@@ -402,7 +398,11 @@ public class PassportService {
             "Validation failed with the following errors: " + errorMessages);
       } */
       if (isChanged) {
-        datasheet.setData(dataNode);
+        datasheet.setData(
+            objectMapper.convertValue(
+                dataNode, new com.fasterxml.jackson.core.type.TypeReference<>() {}
+            )
+        );
         datasheetRepository.save(datasheet);
       }
     }
