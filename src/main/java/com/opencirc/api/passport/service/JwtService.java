@@ -46,7 +46,11 @@ public class JwtService {
 
   /** Instantiating JwtService class. */
   @Autowired
-  public JwtService(AppProperties appProp, UserRepository userRepository, JwtConfigRepository jwtConfigRepository, AuthUserDetailsService authUserDetailsService) {
+  public JwtService(
+      AppProperties appProp,
+      UserRepository userRepository,
+      JwtConfigRepository jwtConfigRepository,
+      AuthUserDetailsService authUserDetailsService) {
     this.appProperties = appProp;
     this.userRepository = userRepository;
     this.jwtConfigRepository = jwtConfigRepository;

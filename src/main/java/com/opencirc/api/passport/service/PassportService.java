@@ -248,7 +248,9 @@ public class PassportService {
       Map<String, Object> dataMap = null;
       String data = row.getData();
       if (data != null && !data.isBlank()) {
-        dataMap = objectMapper.readValue(data, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+        dataMap = objectMapper.readValue(
+            data, new com.fasterxml.jackson.core.type.TypeReference<>() {}
+        );
       }
       dto.setData(dataMap);
 
@@ -323,8 +325,7 @@ public class PassportService {
    * {@code updateDataRequestDto.values} are updated.
    */
   @Transactional
-  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto)
-      throws JsonValidationException {
+  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto) {
     Passport passport =
         passportRepository
             .findPassport(passportId, Passport.Status.ACTIVE)
@@ -397,7 +398,11 @@ public class PassportService {
             "Validation failed with the following errors: " + errorMessages);
       } */
       if (isChanged) {
-        datasheet.setData(objectMapper.convertValue(dataNode, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}));
+        datasheet.setData(
+            objectMapper.convertValue(
+                dataNode, new com.fasterxml.jackson.core.type.TypeReference<>() {}
+            )
+        );
         datasheetRepository.save(datasheet);
       }
     }
