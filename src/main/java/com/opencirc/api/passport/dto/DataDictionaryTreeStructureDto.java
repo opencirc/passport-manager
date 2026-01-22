@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,22 +9,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/** Tree structure for getDictionaryTreeStructure. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class DataDictionaryTreeStructureDto {
 
-  /** Class code. */
   @JsonProperty private String code;
 
-  /** Class name. */
   @JsonProperty private String name;
 
   private List<DataDictionaryTreeStructureDto> children = new ArrayList<>();
-
-  /** Add a child node to the parent node. */
-  public void addChild(DataDictionaryTreeStructureDto child) {
-    children.add(child);
-  }
 }

@@ -81,13 +81,21 @@ public class AppProperties {
   @Value("${api.secret.key}")
   private String apiSecretKey;
 
-  /** Path to get table6 structure json. */
-  @Value("${bsdd.table6.structure.template.path}")
+  /** Path to the table6 structure JSON file. */
+  @Value("${bsdd.table6.raw-structure.path}")
+  private String table6RawStructureJsonPath;
+
+  /** Path to the parsed table6 structure JSON file. */
+  @Value("${bsdd.table6.structure.path}")
   private String table6StructureJsonPath;
 
-  /** Path to get table6 structure json. */
-  @Value("${bsdd.table6.structure.output.cached.path}")
-  private String table6StructureOutputCachedPath;
+  /** Path to the IFC structure JSON file. */
+  @Value("${bsdd.ifc.raw-structure.path}")
+  private String ifcRawStructureJsonPath;
+
+  /** Path to the parsed IFC structure JSON file. */
+  @Value("${bsdd.ifc.structure.path}")
+  private String ifcStructureJsonPath;
 
   /** Getter for refresh token. */
   public int getRefreshTokenExpiryTime() {
