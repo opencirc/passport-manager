@@ -2,7 +2,8 @@ package com.opencirc.api.passport.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.context.UserContext;
-import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.AddDatasheetsToPassportUsingPlatformRequestDto;
+import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
@@ -11,6 +12,7 @@ import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
+import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.service.PassportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,9 +47,9 @@ public class PassportController {
       consumes = {"application/json"})
   public ResponseEntity<PassportDto> createPassportUsingPlatform(
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
-              description = "Options for passport creation")
+              description = "Configuration for passport creation")
           @RequestBody
-          CreatePassportRequestDto data,
+          CreatePassportUsingPlatformRequestDto data,
       @PathVariable
           @Parameter(description = "Dictionary platform", required = true, in = ParameterIn.PATH)
           String platform)
@@ -55,6 +57,33 @@ public class PassportController {
     return ResponseEntity.ok(
         passportService.createPassportUsingPlatform(
             Platform.fromValue(platform), data, userContext.getCurrentUser()));
+  }
+
+  /**
+   * Creates a datasheet and adds it to the passport using information from the provided platform.
+   */
+  @Operation(
+      summary =
+          "Creates a set of datasheets using the provided platform and adds them to the passport.")
+  @PostMapping(
+      value = "/api/passport/{passportId}/datasheet",
+      produces = {"application/json"},
+      consumes = {"application/json"})
+  public ResponseEntity<PassportDto> addDatasheetsToPassportUsingPlatform(
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              description = "Configuration for passport creation")
+          @RequestBody
+          AddDatasheetsToPassportUsingPlatformRequestDto data,
+      @PathVariable @Parameter(description = "Passport ID", required = true, in = ParameterIn.PATH)
+          String passportId)
+      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+    return ResponseEntity.ok(
+        passportService.addDatasheetsToPassportUsingPlatform(
+            passportId,
+            Platform.fromValue(data.getPlatform()),
+            data.getPlatformId(),
+            Datasheet.DataCategory.fromValue(data.getDataCategory()),
+            userContext.getCurrentUser()));
   }
 
   /** Fetch a passport. */

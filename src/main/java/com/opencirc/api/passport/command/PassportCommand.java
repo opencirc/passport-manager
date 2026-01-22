@@ -2,7 +2,7 @@ package com.opencirc.api.passport.command;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
@@ -41,7 +41,7 @@ public class PassportCommand {
       @Option(longNames = "dataCategory", defaultValue = "generic") String dataCategory)
       throws JsonValidationException, JsonProcessingException {
 
-    CreatePassportRequestDto data = new CreatePassportRequestDto();
+    CreatePassportUsingPlatformRequestDto data = new CreatePassportUsingPlatformRequestDto();
     data.setPlatformId(platformId);
     data.setName(name);
     data.setDataCategory(Datasheet.DataCategory.fromValue(dataCategory).getValue());

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
-import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.DataDictionary;
@@ -129,7 +129,7 @@ public class PassportFromJsonSeeder {
       throw new IllegalStateException("No template found for URI: " + uri);
     }
 
-    CreatePassportRequestDto request = new CreatePassportRequestDto();
+    CreatePassportUsingPlatformRequestDto request = new CreatePassportUsingPlatformRequestDto();
     request.setPlatformId(uri);
     request.setDataCategory(DataCategory.GENERIC.getValue());
     request.setName("Passport" + nameSuffix);

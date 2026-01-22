@@ -6,17 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/** CreatePassportRequestDto. */
+/** AddDatasheetsToPassportUsingPlatformRequestDto. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class CreatePassportRequestDto {
+public class AddDatasheetsToPassportUsingPlatformRequestDto {
+  @JsonProperty private String platform;
+
   @JsonProperty private String platformId;
 
-  @JsonProperty private String name;
-
   @JsonProperty private String dataCategory;
-
-  @JsonProperty private String parentId;
 }
