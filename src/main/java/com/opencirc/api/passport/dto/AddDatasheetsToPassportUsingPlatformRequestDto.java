@@ -1,6 +1,7 @@
 package com.opencirc.api.passport.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,9 +13,15 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class AddDatasheetsToPassportUsingPlatformRequestDto {
-  @JsonProperty private String platform;
+  @NotBlank
+  @JsonProperty
+  private String platform;
 
-  @JsonProperty private String platformId;
+  @NotBlank
+  @JsonProperty
+  private String platformId;
 
-  @JsonProperty private String dataCategory;
+  @NotBlank
+  @JsonProperty
+  private String dataCategory;
 }

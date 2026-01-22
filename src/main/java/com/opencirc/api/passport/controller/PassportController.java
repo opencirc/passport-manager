@@ -48,6 +48,7 @@ public class PassportController {
   public ResponseEntity<PassportDto> createPassportUsingPlatform(
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
               description = "Configuration for passport creation")
+          @Valid
           @RequestBody
           CreatePassportUsingPlatformRequestDto data,
       @PathVariable
@@ -71,7 +72,8 @@ public class PassportController {
       consumes = {"application/json"})
   public ResponseEntity<PassportDto> addDatasheetsToPassportUsingPlatform(
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
-              description = "Configuration for passport creation")
+              description = "Configuration for adding datasheets to passport")
+          @Valid
           @RequestBody
           AddDatasheetsToPassportUsingPlatformRequestDto data,
       @PathVariable @Parameter(description = "Passport ID", required = true, in = ParameterIn.PATH)

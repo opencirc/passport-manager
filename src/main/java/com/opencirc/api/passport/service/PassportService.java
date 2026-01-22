@@ -127,6 +127,7 @@ public class PassportService {
   /**
    * Creates a datasheet and adds it to the passport using information from the provided platform.
    */
+  @Transactional
   public PassportDto addDatasheetsToPassportUsingPlatform(
       String passportId,
       Platform platform,
@@ -146,6 +147,7 @@ public class PassportService {
   /**
    * Creates a datasheet and adds it to the passport using information from the provided platform.
    */
+  @Transactional
   public PassportDto addDatasheetsToPassportUsingPlatform(
       Passport passport,
       Platform platform,
