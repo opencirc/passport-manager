@@ -14,13 +14,10 @@ import org.springframework.shell.command.annotation.Option;
 @Slf4j
 public class UserCommand {
 
-  /** Format to show API keys to user in terminal. */
   private static final String USER_LIST_ROW_FORMAT = "%-40s %-20s %-25s%n";
 
-  /** Injecting AuthService. */
   private final AuthService authService;
 
-  /** Injecting UserRepository. */
   private final UserRepository userRepository;
 
   /** Constructor. */

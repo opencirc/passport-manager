@@ -34,22 +34,23 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
-  @Autowired private UserRepository userRepository;
+  private final UserRepository userRepository;
 
-  @Autowired private JwtConfigRepository jwtConfigRepository;
+  private final JwtConfigRepository jwtConfigRepository;
 
-  /** Injecting Properties class. */
   private final AppProperties appProperties;
 
-  @Autowired private AuthUserDetailsService authUserDetailsService;
+  private final AuthUserDetailsService authUserDetailsService;
 
-  /** Secret key declaration. */
   private String secretKey = "";
 
   /** Instantiating JwtService class. */
   @Autowired
-  public JwtService(AppProperties appProp) {
+  public JwtService(AppProperties appProp, UserRepository userRepository, JwtConfigRepository jwtConfigRepository, AuthUserDetailsService authUserDetailsService) {
     this.appProperties = appProp;
+    this.userRepository = userRepository;
+    this.jwtConfigRepository = jwtConfigRepository;
+    this.authUserDetailsService = authUserDetailsService;
   }
 
   /** Loading Secret Key after initialization. */
@@ -101,7 +102,6 @@ public class JwtService {
         .compact();
   }
 
-  /** Retrieves the secret key. */
   private SecretKey getKey() {
     if (secretKey == null || secretKey.isEmpty()) {
       throw new RuntimeException("Secret key is missing or invalid");
@@ -119,41 +119,31 @@ public class JwtService {
     return extractClaim(token, claims -> claims.get("userId", String.class));
   }
 
-  /** Extracts the details based on claim resolver. */
   private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
     final Claims claims = extractAllClaims(token);
     return claimResolver.apply(claims);
   }
 
-  /** Extracts all the details. */
   private Claims extractAllClaims(String token) {
     return Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(token).getPayload();
   }
 
   /** Validates the token. */
   public boolean validateToken(String token, UserDetails userDetails) {
-    if (!(userDetails instanceof UserPrincipal)) {
+    if (!(userDetails instanceof UserPrincipal userPrincipal)) {
       return false;
     }
 
-    UserPrincipal userPrincipal = (UserPrincipal) userDetails;
     final String userIdFromToken = extractUserId(token);
 
     return (userIdFromToken.equals(userPrincipal.getUserId()) && !isTokenExpired(token));
   }
 
-  /** Checks if the token is still valid or expired. */
   private boolean isTokenExpired(String token) {
     return extractClaim(token, Claims::getExpiration).before(new Date());
   }
 
-  /** Retrieves the user details from jwt token. */
-  public User extractUserFromToken(String token) {
-    Optional<User> user = userRepository.findById(extractUserId(token));
-    return user.orElseThrow(() -> new UsernameNotFoundException("Invalid token, user not found"));
-  }
-
-  /** Validates the refresh token. If it is valid, generates new access token . */
+  /** Validates the refresh token. If it is valid, generates a new access token. */
   public String generateAccessTokenUsingRefreshToken(String refreshToken) {
     String userId = extractUserId(refreshToken);
     UserDetails userDetails = authUserDetailsService.loadUserById(userId);
@@ -168,8 +158,8 @@ public class JwtService {
     if (!refreshToken.equals(user.getRefreshToken())) {
       throw new AuthenticationException("Invalid Refresh Token");
     }
-    String newAccessToken = generateToken(userId, appProperties.getAccessTokenExpiryTime());
-    return newAccessToken;
+
+    return generateToken(userId, appProperties.getAccessTokenExpiryTime());
   }
 
   /** Sets a cookie with generated token. */

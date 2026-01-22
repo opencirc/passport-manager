@@ -20,10 +20,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ApiKeyCommand {
 
-  /** Injecting ApiKeyService. */
   private final ApiKeyService apiKeyService;
 
-  /** Format to show API keys to user in terminal. */
   private static final String API_TOKEN_ROW_FORMAT = "%-40s %-20s %-25s%n";
 
   /** Creates a new API key for the specified user. */

@@ -245,12 +245,12 @@ public class PassportService {
       dto.setPlatformId(row.getDatasheetPlatformId());
       dto.setDataCategory(row.getDataCategory());
 
-      JsonNode dataNode = null;
+      Map<String, Object> dataMap = null;
       String data = row.getData();
       if (data != null && !data.isBlank()) {
-        dataNode = objectMapper.readTree(data);
+        dataMap = objectMapper.readValue(data, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
       }
-      dto.setData(dataNode);
+      dto.setData(dataMap);
 
       dto.setCreatedById(row.getDatasheetCreatedById());
       dto.setCreatedBy(parseCreatedBy(row.getDatasheetCreatedBy()));
@@ -344,7 +344,7 @@ public class PassportService {
       }
       ObjectNode dataNode =
           datasheet.getData() != null
-              ? datasheet.getData().deepCopy()
+              ? objectMapper.valueToTree(datasheet.getData())
               : JsonNodeFactory.instance.objectNode();
 
       boolean isChanged = false;
@@ -397,7 +397,7 @@ public class PassportService {
             "Validation failed with the following errors: " + errorMessages);
       } */
       if (isChanged) {
-        datasheet.setData(dataNode);
+        datasheet.setData(objectMapper.convertValue(dataNode, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}));
         datasheetRepository.save(datasheet);
       }
     }
