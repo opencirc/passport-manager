@@ -248,9 +248,8 @@ public class PassportService {
       Map<String, Object> dataMap = null;
       String data = row.getData();
       if (data != null && !data.isBlank()) {
-        dataMap = objectMapper.readValue(
-            data, new com.fasterxml.jackson.core.type.TypeReference<>() {}
-        );
+        dataMap =
+            objectMapper.readValue(data, new com.fasterxml.jackson.core.type.TypeReference<>() {});
       }
       dto.setData(dataMap);
 
@@ -400,9 +399,7 @@ public class PassportService {
       if (isChanged) {
         datasheet.setData(
             objectMapper.convertValue(
-                dataNode, new com.fasterxml.jackson.core.type.TypeReference<>() {}
-            )
-        );
+                dataNode, new com.fasterxml.jackson.core.type.TypeReference<>() {}));
         datasheetRepository.save(datasheet);
       }
     }
@@ -470,7 +467,6 @@ public class PassportService {
   public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(
       Platform platform, DataDictionary dictionary)
       throws IOException, InvalidDataDictionaryException {
-    var adapter = this.platformAdapterFactory.getAdapter(platform);
-    return adapter.getDictionaryTreeStructure(dictionary);
+    return this.platformAdapterFactory.getAdapter(platform).getDictionaryTreeStructure(dictionary);
   }
 }

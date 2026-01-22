@@ -109,7 +109,7 @@ public class PassportController {
       @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
           @PathVariable
           String passportId)
-      throws InvalidInputException, JsonValidationException {
+      throws InvalidInputException {
 
     return ResponseEntity.ok(passportService.updateData(passportId, request));
   }

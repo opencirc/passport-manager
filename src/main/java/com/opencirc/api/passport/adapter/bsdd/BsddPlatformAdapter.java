@@ -11,7 +11,6 @@ import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
-import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
@@ -451,23 +450,30 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   /** Retrieves the tree structure of the dictionary. */
   public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(DataDictionary dictionary)
       throws IOException {
-    if (dictionary != DataDictionary.TABLE6) {
-      throw new InvalidDataDictionaryException("Unsupported dictionary: " + dictionary);
+    String structurePathString = switch (dictionary) {
+      case DataDictionary.TABLE6 -> appProperties.getTable6StructureJsonPath();
+      case DataDictionary.IFC -> appProperties.getIfcStructureJsonPath();
+    };
+
+    Path structurePath = Paths.get(structurePathString).toAbsolutePath();
+    if (!Files.exists(structurePath)) {
+      createTreeStructure(dictionary);
     }
 
-    String cachePath = appProperties.getTable6StructureOutputCachedPath();
-    String templatePath = appProperties.getTable6StructureJsonPath();
-    Path outputPath = Paths.get(cachePath).toAbsolutePath();
+    return Arrays.asList(
+        objectMapper.readValue(structurePath.toFile(), DataDictionaryTreeStructureDto[].class));
+  }
 
-    if (Files.exists(outputPath)) {
-      return Arrays.asList(
-          objectMapper.readValue(outputPath.toFile(), DataDictionaryTreeStructureDto[].class));
-    }
+  private void createTreeStructure(DataDictionary dictionary) throws IOException {
+    String rawStructurePathString = switch (dictionary) {
+      case DataDictionary.TABLE6 -> appProperties.getTable6RawStructureJsonPath();
+      case DataDictionary.IFC -> appProperties.getIfcRawStructureJsonPath();
+    };
 
-    ClassPathResource templateResource = new ClassPathResource(templatePath);
+    ClassPathResource templateResource = new ClassPathResource(rawStructurePathString);
 
     if (!templateResource.exists()) {
-      throw new IllegalStateException("Template not found in classpath: " + templatePath);
+      throw new IllegalStateException("Template not found in classpath: " + rawStructurePathString);
     }
 
     JsonNode root = objectMapper.readTree(templateResource.getInputStream());
@@ -512,19 +518,24 @@ public class BsddPlatformAdapter implements PlatformAdapter {
       } else {
         DataDictionaryTreeStructureDto parent = nodeMap.get(parentCode);
         if (parent != null) {
-          parent.addChild(node);
+          parent.getChildren().add(node);
         } else {
           roots.add(node);
         }
       }
     }
 
+    String structurePathString = switch (dictionary) {
+      case DataDictionary.TABLE6 -> appProperties.getTable6StructureJsonPath();
+      case DataDictionary.IFC -> appProperties.getIfcStructureJsonPath();
+    };
+
+    Path outputPath = Paths.get(structurePathString).toAbsolutePath();
     Path parent = outputPath.getParent();
     if (parent != null) {
       Files.createDirectories(parent);
     }
 
     objectMapper.writerWithDefaultPrettyPrinter().writeValue(outputPath.toFile(), roots);
-    return roots;
   }
 }

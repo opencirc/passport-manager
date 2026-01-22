@@ -1,0 +1,1823 @@
+[ {
+  "code" : "br18B2T6.1",
+  "name" : "Bygningsbasis",
+  "children" : [ {
+    "code" : "br18B2T6.1.1",
+    "name" : "Terræn",
+    "children" : [ {
+      "code" : "br18B2T6.1.1.1",
+      "name" : "Forberedt grund"
+    }, {
+      "code" : "br18B2T6.1.1.2",
+      "name" : "Byggegrube inkl. afstivning"
+    }, {
+      "code" : "br18B2T6.1.1.3",
+      "name" : "Spunsvægge"
+    }, {
+      "code" : "br18B2T6.1.1.4",
+      "name" : "Byggeplads"
+    } ]
+  }, {
+    "code" : "br18B2T6.1.2",
+    "name" : "Fundamenter",
+    "children" : [ {
+      "code" : "br18B2T6.1.2.1",
+      "name" : "Liniefundamenter, punktfundamenter, pælefundamenter mm."
+    }, {
+      "code" : "br18B2T6.1.2.2",
+      "name" : "Maskinfundamenter"
+    }, {
+      "code" : "br18B2T6.1.2.3",
+      "name" : "Fundamenter i terræn"
+    } ]
+  }, {
+    "code" : "br18B2T6.1.3",
+    "name" : "Bygning",
+    "children" : [ {
+      "code" : "br18B2T6.1.3.1",
+      "name" : "Terrændæk og bundplade"
+    } ]
+  }, {
+    "code" : "br18B2T6.1.4",
+    "name" : "Bygningsbasis bygning, øvrige",
+    "children" : [ {
+      "code" : "br18B2T6.1.4.1",
+      "name" : "Kanaler under terrændæk"
+    }, {
+      "code" : "br18B2T6.1.4.2",
+      "name" : "Gruber og sumpe"
+    } ]
+  } ]
+}, {
+  "code" : "br18B2T6.2",
+  "name" : "Primære bygningsdele",
+  "children" : [ {
+    "code" : "br18B2T6.2.1",
+    "name" : "Terræn",
+    "children" : [ {
+      "code" : "br18B2T6.2.1.1",
+      "name" : "Hegnsmure"
+    }, {
+      "code" : "br18B2T6.2.1.2",
+      "name" : "Støttemure"
+    }, {
+      "code" : "br18B2T6.2.1.3",
+      "name" : "Teknikgange i terræn inkl. rørbroer og tunneler"
+    }, {
+      "code" : "br18B2T6.2.1.4",
+      "name" : "Fodgængerbroer, viadukter m.m."
+    }, {
+      "code" : "br18B2T6.2.1.5",
+      "name" : "Trapper og ramper i terræn"
+    } ]
+  }, {
+    "code" : "br18B2T6.2.2",
+    "name" : "Ydervægge",
+    "children" : [ {
+      "code" : "br18B2T6.2.2.1",
+      "name" : "Vægelementer"
+    }, {
+      "code" : "br18B2T6.2.2.2",
+      "name" : "Pladsstøbte vægge"
+    }, {
+      "code" : "br18B2T6.2.2.3",
+      "name" : "Opmurede vægge"
+    }, {
+      "code" : "br18B2T6.2.2.4",
+      "name" : "Skeletkonstruerede vægge"
+    }, {
+      "code" : "br18B2T6.2.2.5",
+      "name" : "Skeletkonstruerede vægskørter"
+    }, {
+      "code" : "br18B2T6.2.2.6",
+      "name" : "Facadesystemer"
+    }, {
+      "code" : "br18B2T6.2.2.7",
+      "name" : "Isoleringsvægsystemer"
+    }, {
+      "code" : "br18B2T6.2.2.8",
+      "name" : "Lyskasser"
+    } ]
+  }, {
+    "code" : "br18B2T6.2.3",
+    "name" : "Indervægge",
+    "children" : [ {
+      "code" : "br18B2T6.2.3.1",
+      "name" : "Vægelementer"
+    }, {
+      "code" : "br18B2T6.2.3.2",
+      "name" : "Pladsstøbte vægge"
+    }, {
+      "code" : "br18B2T6.2.3.3",
+      "name" : "Opmurede vægge"
+    }, {
+      "code" : "br18B2T6.2.3.4",
+      "name" : "Skeletkonstruerede vægge"
+    }, {
+      "code" : "br18B2T6.2.3.5",
+      "name" : "Skeletkonstruerede vægskørter"
+    }, {
+      "code" : "br18B2T6.2.3.6",
+      "name" : "Glasvægssystemer"
+    } ]
+  }, {
+    "code" : "br18B2T6.2.4",
+    "name" : "Dæk",
+    "children" : [ {
+      "code" : "br18B2T6.2.4.1",
+      "name" : "Dækelementer"
+    }, {
+      "code" : "br18B2T6.2.4.2",
+      "name" : "Dækelementer"
+    }, {
+      "code" : "br18B2T6.2.4.3",
+      "name" : "Pladsstøbte dæk"
+    }, {
+      "code" : "br18B2T6.2.4.4",
+      "name" : "Pladsstøbte dæk"
+    }, {
+      "code" : "br18B2T6.2.4.5",
+      "name" : "Skeletkonstruerede dæk"
+    }, {
+      "code" : "br18B2T6.2.4.6",
+      "name" : "Skeletkonstruerede dæk"
+    }, {
+      "code" : "br18B2T6.2.4.7",
+      "name" : "Afretningslag"
+    }, {
+      "code" : "br18B2T6.2.4.8",
+      "name" : "Øvrige dæk"
+    } ]
+  }, {
+    "code" : "br18B2T6.2.5",
+    "name" : "Trapper og ramper",
+    "children" : [ {
+      "code" : "br18B2T6.2.5.1",
+      "name" : "Elementtrapper"
+    }, {
+      "code" : "br18B2T6.2.5.2",
+      "name" : "Pladsstøbte trapper"
+    }, {
+      "code" : "br18B2T6.2.5.3",
+      "name" : "Sammensatte trapper"
+    }, {
+      "code" : "br18B2T6.2.5.4",
+      "name" : "Element ramper"
+    }, {
+      "code" : "br18B2T6.2.5.5",
+      "name" : "Pladsstøbte ramper"
+    }, {
+      "code" : "br18B2T6.2.5.6",
+      "name" : "Sammensatte ramper"
+    }, {
+      "code" : "br18B2T6.2.5.7",
+      "name" : "Faste stiger, lejdere og trin"
+    } ]
+  }, {
+    "code" : "br18B2T6.2.6",
+    "name" : "Bærende bjælker og søjler",
+    "children" : [ {
+      "code" : "br18B2T6.2.6.1",
+      "name" : "Bjælker"
+    }, {
+      "code" : "br18B2T6.2.6.2",
+      "name" : "Søjler"
+    } ]
+  }, {
+    "code" : "br18B2T6.2.7",
+    "name" : "Altaner og altangange",
+    "children" : [ {
+      "code" : "br18B2T6.2.7.1",
+      "name" : "Elementaltaner og altangange"
+    }, {
+      "code" : "br18B2T6.2.7.2",
+      "name" : "Pladsstøbte altaner og altangange"
+    }, {
+      "code" : "br18B2T6.2.7.3",
+      "name" : "Sammensatte altaner, altangange"
+    } ]
+  }, {
+    "code" : "br18B2T6.2.8",
+    "name" : "Tage",
+    "children" : [ {
+      "code" : "br18B2T6.2.8.1",
+      "name" : "Spærtage"
+    }, {
+      "code" : "br18B2T6.2.8.2",
+      "name" : "Tagkassetter"
+    }, {
+      "code" : "br18B2T6.2.8.3",
+      "name" : "Varme tage"
+    }, {
+      "code" : "br18B2T6.2.8.4",
+      "name" : "Glastagssystemer"
+    }, {
+      "code" : "br18B2T6.2.8.5",
+      "name" : "Mobile tage"
+    }, {
+      "code" : "br18B2T6.2.8.6",
+      "name" : "Baldakiner og overdækninger"
+    }, {
+      "code" : "br18B2T6.2.8.7",
+      "name" : "Øvrige tagværker"
+    } ]
+  } ]
+}, {
+  "code" : "br18B2T6.3",
+  "name" : "Kompletterende bygningsdele",
+  "children" : [ {
+    "code" : "br18B2T6.3.1",
+    "name" : "Terræn",
+    "children" : [ {
+      "code" : "br18B2T6.3.1.1",
+      "name" : "Hegn, afskærmninger"
+    }, {
+      "code" : "br18B2T6.3.1.2",
+      "name" : "Trapper og ramper"
+    }, {
+      "code" : "br18B2T6.3.1.3",
+      "name" : "Trapper og ramper"
+    }, {
+      "code" : "br18B2T6.3.1.4",
+      "name" : "Overgange"
+    } ]
+  }, {
+    "code" : "br18B2T6.3.2",
+    "name" : "Ydervægge",
+    "children" : [ {
+      "code" : "br18B2T6.3.2.1",
+      "name" : "Døre"
+    }, {
+      "code" : "br18B2T6.3.2.2",
+      "name" : "Vinduer"
+    }, {
+      "code" : "br18B2T6.3.2.3",
+      "name" : "Døre, facadesystemer"
+    }, {
+      "code" : "br18B2T6.3.2.4",
+      "name" : "Vinduesopluk, døropluk, facadesystemer"
+    }, {
+      "code" : "br18B2T6.3.2.5",
+      "name" : "Ruder, blændfelter og karmprofiler, facadesystemer"
+    }, {
+      "code" : "br18B2T6.3.2.6",
+      "name" : "Porte og karusseldøre"
+    }, {
+      "code" : "br18B2T6.3.2.7",
+      "name" : "Ydervægge, afskærmninger"
+    }, {
+      "code" : "br18B2T6.3.2.8",
+      "name" : "Øvrig ydervægs kompletteringer"
+    } ]
+  }, {
+    "code" : "br18B2T6.3.3",
+    "name" : "Indervægge",
+    "children" : [ {
+      "code" : "br18B2T6.3.3.1",
+      "name" : "Døre"
+    }, {
+      "code" : "br18B2T6.3.3.2",
+      "name" : "Vinduer, luger og lemme"
+    }, {
+      "code" : "br18B2T6.3.3.3",
+      "name" : "Døre, glasvægsystem"
+    }, {
+      "code" : "br18B2T6.3.3.4",
+      "name" : "Vinduesopluk, glasvægsystemer"
+    }, {
+      "code" : "br18B2T6.3.3.5",
+      "name" : "Ruder, blændfelter og karmprofiler,glasvægsystemer"
+    }, {
+      "code" : "br18B2T6.3.3.6",
+      "name" : "Indvendige porte og karruseldøre"
+    }, {
+      "code" : "br18B2T6.3.3.7",
+      "name" : "Bevægelige indervægge"
+    }, {
+      "code" : "br18B2T6.3.3.8",
+      "name" : "Indervægge, afskærmning"
+    }, {
+      "code" : "br18B2T6.3.3.9",
+      "name" : "Øvrig indervægs kompletteringer"
+    } ]
+  }, {
+    "code" : "br18B2T6.3.4",
+    "name" : "Dæk",
+    "children" : [ {
+      "code" : "br18B2T6.3.4.1",
+      "name" : "Opbyggede gulve"
+    }, {
+      "code" : "br18B2T6.3.4.2",
+      "name" : "Opbyggede gulve"
+    }, {
+      "code" : "br18B2T6.3.4.3",
+      "name" : "Svømmende gulve"
+    }, {
+      "code" : "br18B2T6.3.4.4",
+      "name" : "Svømmende gulve"
+    }, {
+      "code" : "br18B2T6.3.4.5",
+      "name" : "Lemme, riste, måtterammer"
+    }, {
+      "code" : "br18B2T6.3.4.6",
+      "name" : "Støbte gulve"
+    }, {
+      "code" : "br18B2T6.3.4.7",
+      "name" : "Støbte gulve"
+    }, {
+      "code" : "br18B2T6.3.4.8",
+      "name" : "Opbyggede belægninger"
+    }, {
+      "code" : "br18B2T6.3.4.9",
+      "name" : "Opbyggede belægninger"
+    }, {
+      "code" : "br18B2T6.3.4.10",
+      "name" : "Lydabsorbenter"
+    }, {
+      "code" : "br18B2T6.3.4.11",
+      "name" : "Lydabsorbenter"
+    }, {
+      "code" : "br18B2T6.3.4.12",
+      "name" : "Øvrige dækkompletteringer"
+    } ]
+  }, {
+    "code" : "br18B2T6.3.5",
+    "name" : "Trapper og ramper",
+    "children" : [ {
+      "code" : "br18B2T6.3.5.1",
+      "name" : "Gelændere, rækværker og håndlister udvendige"
+    }, {
+      "code" : "br18B2T6.3.5.2",
+      "name" : "Gelændere, rækværker og håndlister udvendige"
+    }, {
+      "code" : "br18B2T6.3.5.3",
+      "name" : "Gelændere, rækværker og håndlister indvendige"
+    }, {
+      "code" : "br18B2T6.3.5.4",
+      "name" : "Gelændere, rækværker og håndlister indvendige"
+    }, {
+      "code" : "br18B2T6.3.5.5",
+      "name" : "Riste, måtterammer"
+    }, {
+      "code" : "br18B2T6.3.5.6",
+      "name" : "Øvrig trappekompletteringer"
+    } ]
+  }, {
+    "code" : "br18B2T6.3.6",
+    "name" : "Lofter",
+    "children" : [ {
+      "code" : "br18B2T6.3.6.1",
+      "name" : "Indvendige nedhængte lofter"
+    }, {
+      "code" : "br18B2T6.3.6.2",
+      "name" : "Indvendige nedhængte lofter"
+    }, {
+      "code" : "br18B2T6.3.6.3",
+      "name" : "Udvendige nedhængte lofter"
+    }, {
+      "code" : "br18B2T6.3.6.4",
+      "name" : "Udvendige nedhængte lofter"
+    }, {
+      "code" : "br18B2T6.3.6.5",
+      "name" : "Indvendige påbyggede lofter"
+    }, {
+      "code" : "br18B2T6.3.6.6",
+      "name" : "Indvendige påbyggede lofter"
+    }, {
+      "code" : "br18B2T6.3.6.7",
+      "name" : "Udvendige påbyggede lofter"
+    }, {
+      "code" : "br18B2T6.3.6.8",
+      "name" : "Udvendige påbyggede lofter"
+    }, {
+      "code" : "br18B2T6.3.6.9",
+      "name" : "Indvendige loftskørter"
+    }, {
+      "code" : "br18B2T6.3.6.10",
+      "name" : "Indvendige loftskørter"
+    }, {
+      "code" : "br18B2T6.3.6.11",
+      "name" : "Udvendige loftskørter"
+    }, {
+      "code" : "br18B2T6.3.6.12",
+      "name" : "Udvendige loftskørter"
+    }, {
+      "code" : "br18B2T6.3.6.13",
+      "name" : "Lydabsorbenter"
+    }, {
+      "code" : "br18B2T6.3.6.14",
+      "name" : "Lydabsorbenter"
+    } ]
+  }, {
+    "code" : "br18B2T6.3.7",
+    "name" : "Altaner",
+    "children" : [ {
+      "code" : "br18B2T6.3.7.1",
+      "name" : "Rækværker, brystninger"
+    } ]
+  }, {
+    "code" : "br18B2T6.3.8",
+    "name" : "Tage",
+    "children" : [ {
+      "code" : "br18B2T6.3.8.1",
+      "name" : "Kviste"
+    }, {
+      "code" : "br18B2T6.3.8.2",
+      "name" : "Ovenlys, røg- og taglemme"
+    }, {
+      "code" : "br18B2T6.3.8.3",
+      "name" : "Solskærme til ovenlys"
+    }, {
+      "code" : "br18B2T6.3.8.4",
+      "name" : "Sikring"
+    }, {
+      "code" : "br18B2T6.3.8.5",
+      "name" : "Brandkamserstatning"
+    }, {
+      "code" : "br18B2T6.3.8.6",
+      "name" : "Inddækninger"
+    }, {
+      "code" : "br18B2T6.3.8.7",
+      "name" : "Belægninger på færdige tagflader"
+    }, {
+      "code" : "br18B2T6.3.8.8",
+      "name" : "Tagrender og nedløbsrør"
+    } ]
+  } ]
+}, {
+  "code" : "br18B2T6.4",
+  "name" : "Overfladebygningsdele",
+  "children" : [ {
+    "code" : "br18B2T6.4.1",
+    "name" : "Udvendige vægge",
+    "children" : [ {
+      "code" : "br18B2T6.4.1.1",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.1.2",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.1.3",
+      "name" : "Beklædninger, monteret"
+    } ]
+  }, {
+    "code" : "br18B2T6.4.2",
+    "name" : "Indvendige vægge",
+    "children" : [ {
+      "code" : "br18B2T6.4.2.1",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.2.2",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.2.3",
+      "name" : "Beklædninger, monteret"
+    } ]
+  }, {
+    "code" : "br18B2T6.4.3",
+    "name" : "Dæk og gulve",
+    "children" : [ {
+      "code" : "br18B2T6.4.3.1",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.3.2",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.3.3",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.3.4",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.3.5",
+      "name" : "Beklædninger, monteret"
+    }, {
+      "code" : "br18B2T6.4.3.6",
+      "name" : "Beklædninger, monteret"
+    } ]
+  }, {
+    "code" : "br18B2T6.4.4",
+    "name" : "Trapper og ramper",
+    "children" : [ {
+      "code" : "br18B2T6.4.4.1",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.4.2",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.4.3",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.4.4",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.4.5",
+      "name" : "Beklædninger, monteret"
+    }, {
+      "code" : "br18B2T6.4.4.6",
+      "name" : "Beklædninger, monteret"
+    } ]
+  }, {
+    "code" : "br18B2T6.4.5",
+    "name" : "Lofter",
+    "children" : [ {
+      "code" : "br18B2T6.4.5.1",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.5.2",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.5.3",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.5.4",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.5.5",
+      "name" : "Beklædninger, monteret"
+    }, {
+      "code" : "br18B2T6.4.5.6",
+      "name" : "Beklædninger, monteret"
+    } ]
+  }, {
+    "code" : "br18B2T6.4.6",
+    "name" : "Altaner",
+    "children" : [ {
+      "code" : "br18B2T6.4.6.1",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.6.2",
+      "name" : "Beklædninger, påmurede"
+    }, {
+      "code" : "br18B2T6.4.6.3",
+      "name" : "Beklædninger, monteret"
+    } ]
+  }, {
+    "code" : "br18B2T6.4.7",
+    "name" : "Tage",
+    "children" : [ {
+      "code" : "br18B2T6.4.7.1",
+      "name" : "Malerbehandlinger"
+    }, {
+      "code" : "br18B2T6.4.7.2",
+      "name" : "Tagdækninger"
+    } ]
+  } ]
+}, {
+  "code" : "br18B2T6.5",
+  "name" : "VVS-anlæg",
+  "children" : [ {
+    "code" : "br18B2T6.5.1",
+    "name" : "VVS-anlæg, terræn",
+    "children" : [ {
+      "code" : "br18B2T6.5.1.1",
+      "name" : "Metalrør i jord"
+    }, {
+      "code" : "br18B2T6.5.1.2",
+      "name" : "Fleksible plastrør i jord"
+    }, {
+      "code" : "br18B2T6.5.1.3",
+      "name" : "Hårde plastrør i jord"
+    }, {
+      "code" : "br18B2T6.5.1.4",
+      "name" : "Brønde"
+    }, {
+      "code" : "br18B2T6.5.1.5",
+      "name" : "Drænbrønde"
+    }, {
+      "code" : "br18B2T6.5.1.6",
+      "name" : "Nedløbsbrønde"
+    }, {
+      "code" : "br18B2T6.5.1.7",
+      "name" : "Pumpebrønde"
+    }, {
+      "code" : "br18B2T6.5.1.8",
+      "name" : "Spulebrønde"
+    }, {
+      "code" : "br18B2T6.5.1.9",
+      "name" : "Tørbrønde"
+    }, {
+      "code" : "br18B2T6.5.1.10",
+      "name" : "Sandfang"
+    }, {
+      "code" : "br18B2T6.5.1.11",
+      "name" : "Rendestensbrønde"
+    }, {
+      "code" : "br18B2T6.5.1.12",
+      "name" : "Linjedræn"
+    }, {
+      "code" : "br18B2T6.5.1.13",
+      "name" : "Punktriste"
+    }, {
+      "code" : "br18B2T6.5.1.14",
+      "name" : "Benzin- og olieudskillere"
+    }, {
+      "code" : "br18B2T6.5.1.15",
+      "name" : "Fedtudskillere"
+    }, {
+      "code" : "br18B2T6.5.1.16",
+      "name" : "Slamfang"
+    }, {
+      "code" : "br18B2T6.5.1.17",
+      "name" : "Gulvafløb"
+    }, {
+      "code" : "br18B2T6.5.1.18",
+      "name" : "Vaskerender"
+    }, {
+      "code" : "br18B2T6.5.1.19",
+      "name" : "Toiletter"
+    }, {
+      "code" : "br18B2T6.5.1.20",
+      "name" : "Vaske"
+    }, {
+      "code" : "br18B2T6.5.1.21",
+      "name" : "Udstyr"
+    }, {
+      "code" : "br18B2T6.5.1.22",
+      "name" : "Faskiner"
+    }, {
+      "code" : "br18B2T6.5.1.23",
+      "name" : "Højvandslukke"
+    }, {
+      "code" : "br18B2T6.5.1.24",
+      "name" : "Brandhaner"
+    }, {
+      "code" : "br18B2T6.5.1.25",
+      "name" : "Tanke"
+    }, {
+      "code" : "br18B2T6.5.1.26",
+      "name" : "Bæringer"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.2",
+    "name" : "Logistik",
+    "children" : [ {
+      "code" : "br18B2T6.5.2.1",
+      "name" : "Affald"
+    }, {
+      "code" : "br18B2T6.5.2.2",
+      "name" : "Logistik"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.3",
+    "name" : "Afløb",
+    "children" : [ {
+      "code" : "br18B2T6.5.3.1",
+      "name" : "Ledninger"
+    }, {
+      "code" : "br18B2T6.5.3.2",
+      "name" : "Gulvafløb"
+    }, {
+      "code" : "br18B2T6.5.3.3",
+      "name" : "Specialafløb"
+    }, {
+      "code" : "br18B2T6.5.3.4",
+      "name" : "Drypkopper"
+    }, {
+      "code" : "br18B2T6.5.3.5",
+      "name" : "Vakuumventiler"
+    }, {
+      "code" : "br18B2T6.5.3.6",
+      "name" : "Tagbrønde"
+    }, {
+      "code" : "br18B2T6.5.3.7",
+      "name" : "Faldstammeudluftninger"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.4",
+    "name" : "Sanitet og andre komponenter",
+    "children" : [ {
+      "code" : "br18B2T6.5.4.1",
+      "name" : "Toiletter"
+    }, {
+      "code" : "br18B2T6.5.4.2",
+      "name" : "Bideter"
+    }, {
+      "code" : "br18B2T6.5.4.3",
+      "name" : "Urinaler"
+    }, {
+      "code" : "br18B2T6.5.4.4",
+      "name" : "Tørklosetter"
+    }, {
+      "code" : "br18B2T6.5.4.5",
+      "name" : "Håndvaske"
+    }, {
+      "code" : "br18B2T6.5.4.6",
+      "name" : "Køkkenvaske"
+    }, {
+      "code" : "br18B2T6.5.4.7",
+      "name" : "Rengøringsvaske"
+    }, {
+      "code" : "br18B2T6.5.4.8",
+      "name" : "Stålvaske"
+    }, {
+      "code" : "br18B2T6.5.4.9",
+      "name" : "Udslagsvaske"
+    }, {
+      "code" : "br18B2T6.5.4.10",
+      "name" : "Laboratorievaske"
+    }, {
+      "code" : "br18B2T6.5.4.11",
+      "name" : "Vaskeborde"
+    }, {
+      "code" : "br18B2T6.5.4.12",
+      "name" : "Vaskerender"
+    }, {
+      "code" : "br18B2T6.5.4.13",
+      "name" : "Kølediske"
+    }, {
+      "code" : "br18B2T6.5.4.14",
+      "name" : "Kondensafløb"
+    }, {
+      "code" : "br18B2T6.5.4.15",
+      "name" : "Drikkevandskølere"
+    }, {
+      "code" : "br18B2T6.5.4.16",
+      "name" : "Ismaskiner"
+    }, {
+      "code" : "br18B2T6.5.4.17",
+      "name" : "Kaffemaskiner"
+    }, {
+      "code" : "br18B2T6.5.4.18",
+      "name" : "Opvaskemaskiner"
+    }, {
+      "code" : "br18B2T6.5.4.19",
+      "name" : "Ovne"
+    }, {
+      "code" : "br18B2T6.5.4.20",
+      "name" : "Vaskemaskiner"
+    }, {
+      "code" : "br18B2T6.5.4.21",
+      "name" : "Bækkenskyllere"
+    }, {
+      "code" : "br18B2T6.5.4.22",
+      "name" : "Dekontaminatorer"
+    }, {
+      "code" : "br18B2T6.5.4.23",
+      "name" : "Aftrækskabe"
+    }, {
+      "code" : "br18B2T6.5.4.24",
+      "name" : "Stinkskabe"
+    }, {
+      "code" : "br18B2T6.5.4.25",
+      "name" : "Badekar"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.5",
+    "name" : "Vand (koldt/varmt vand, behandlet vand)",
+    "children" : [ {
+      "code" : "br18B2T6.5.5.1",
+      "name" : "Målearrangementer"
+    }, {
+      "code" : "br18B2T6.5.5.2",
+      "name" : "Cirkulationspumper"
+    }, {
+      "code" : "br18B2T6.5.5.3",
+      "name" : "Rør til vand"
+    }, {
+      "code" : "br18B2T6.5.5.4",
+      "name" : "Trykforøgeranlæg"
+    }, {
+      "code" : "br18B2T6.5.5.5",
+      "name" : "Spulehaner"
+    }, {
+      "code" : "br18B2T6.5.5.6",
+      "name" : "Gårdhaner"
+    }, {
+      "code" : "br18B2T6.5.5.7",
+      "name" : "Brandstigerør"
+    }, {
+      "code" : "br18B2T6.5.5.8",
+      "name" : "Nødbrusere"
+    }, {
+      "code" : "br18B2T6.5.5.9",
+      "name" : "Brusere"
+    }, {
+      "code" : "br18B2T6.5.5.10",
+      "name" : "Kipgryder"
+    }, {
+      "code" : "br18B2T6.5.5.11",
+      "name" : "Aftapningshaner"
+    }, {
+      "code" : "br18B2T6.5.5.12",
+      "name" : "Klordioxidanlæg"
+    }, {
+      "code" : "br18B2T6.5.5.13",
+      "name" : "Korrolyseanlæg"
+    }, {
+      "code" : "br18B2T6.5.5.14",
+      "name" : "Produktion BBK"
+    }, {
+      "code" : "br18B2T6.5.5.15",
+      "name" : "Produktions RO"
+    }, {
+      "code" : "br18B2T6.5.5.16",
+      "name" : "Parafinrensere"
+    }, {
+      "code" : "br18B2T6.5.5.17",
+      "name" : "Filtreringsanlæg"
+    }, {
+      "code" : "br18B2T6.5.5.18",
+      "name" : "Brandslangevindere"
+    }, {
+      "code" : "br18B2T6.5.5.19",
+      "name" : "Bæringer"
+    }, {
+      "code" : "br18B2T6.5.5.20",
+      "name" : "Isolering"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.6",
+    "name" : "Luftarter (gas, trykluft, vakuum, damp)",
+    "children" : [ {
+      "code" : "br18B2T6.5.6.1",
+      "name" : "Overvågningsenheder"
+    }, {
+      "code" : "br18B2T6.5.6.2",
+      "name" : "Nødspærringsbokse"
+    }, {
+      "code" : "br18B2T6.5.6.3",
+      "name" : "Nødforsyningsenheder"
+    }, {
+      "code" : "br18B2T6.5.6.4",
+      "name" : "Gasregulatorer"
+    }, {
+      "code" : "br18B2T6.5.6.5",
+      "name" : "Målerarrangementer"
+    }, {
+      "code" : "br18B2T6.5.6.6",
+      "name" : "Trykluftskompressorer"
+    }, {
+      "code" : "br18B2T6.5.6.7",
+      "name" : "Vakuumanlæg"
+    }, {
+      "code" : "br18B2T6.5.6.8",
+      "name" : "Gasflasker"
+    }, {
+      "code" : "br18B2T6.5.6.9",
+      "name" : "Tanke"
+    }, {
+      "code" : "br18B2T6.5.6.10",
+      "name" : "Flaskegas regulatorer"
+    }, {
+      "code" : "br18B2T6.5.6.11",
+      "name" : "NIST koblinger"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.7",
+    "name" : "Køling",
+    "children" : [ {
+      "code" : "br18B2T6.5.7.1",
+      "name" : "Målearrangementer"
+    }, {
+      "code" : "br18B2T6.5.7.2",
+      "name" : "Cirkulationspumper"
+    }, {
+      "code" : "br18B2T6.5.7.3",
+      "name" : "Rør til køling"
+    }, {
+      "code" : "br18B2T6.5.7.4",
+      "name" : "Køleblandesløjfer"
+    }, {
+      "code" : "br18B2T6.5.7.5",
+      "name" : "Kølevekslere"
+    }, {
+      "code" : "br18B2T6.5.7.6",
+      "name" : "Beholdere/Tanke"
+    }, {
+      "code" : "br18B2T6.5.7.7",
+      "name" : "Fordamperer"
+    }, {
+      "code" : "br18B2T6.5.7.8",
+      "name" : "Køleflader"
+    }, {
+      "code" : "br18B2T6.5.7.9",
+      "name" : "Fancoils"
+    }, {
+      "code" : "br18B2T6.5.7.10",
+      "name" : "Kølebafler"
+    }, {
+      "code" : "br18B2T6.5.7.11",
+      "name" : "Chillere"
+    }, {
+      "code" : "br18B2T6.5.7.12",
+      "name" : "Frikølere"
+    }, {
+      "code" : "br18B2T6.5.7.13",
+      "name" : "Tørkølere"
+    }, {
+      "code" : "br18B2T6.5.7.14",
+      "name" : "Kølekompressorer"
+    }, {
+      "code" : "br18B2T6.5.7.15",
+      "name" : "Isolering"
+    }, {
+      "code" : "br18B2T6.5.7.16",
+      "name" : "Bæringer"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.8",
+    "name" : "Varme",
+    "children" : [ {
+      "code" : "br18B2T6.5.8.1",
+      "name" : "Målearrangementer"
+    }, {
+      "code" : "br18B2T6.5.8.2",
+      "name" : "Pumper"
+    }, {
+      "code" : "br18B2T6.5.8.3",
+      "name" : "Rør til varme"
+    }, {
+      "code" : "br18B2T6.5.8.4",
+      "name" : "Varmeblandesløjfer"
+    }, {
+      "code" : "br18B2T6.5.8.5",
+      "name" : "Varmevekslere"
+    }, {
+      "code" : "br18B2T6.5.8.6",
+      "name" : "Ekspansionsbeholdere"
+    }, {
+      "code" : "br18B2T6.5.8.7",
+      "name" : "Brugsvandvekslere"
+    }, {
+      "code" : "br18B2T6.5.8.8",
+      "name" : "Varmtvandsbeholdere"
+    }, {
+      "code" : "br18B2T6.5.8.9",
+      "name" : "Varmeflader"
+    }, {
+      "code" : "br18B2T6.5.8.10",
+      "name" : "Radiatorer"
+    }, {
+      "code" : "br18B2T6.5.8.11",
+      "name" : "Gulvvarme"
+    }, {
+      "code" : "br18B2T6.5.8.12",
+      "name" : "Strålevarmepaneler"
+    }, {
+      "code" : "br18B2T6.5.8.13",
+      "name" : "Konvektore"
+    }, {
+      "code" : "br18B2T6.5.8.14",
+      "name" : "Varmluftstæpper"
+    }, {
+      "code" : "br18B2T6.5.8.15",
+      "name" : "Varme kalorieferer"
+    }, {
+      "code" : "br18B2T6.5.8.16",
+      "name" : "Kedler, fyr og varmepumper"
+    }, {
+      "code" : "br18B2T6.5.8.17",
+      "name" : "Isolering"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.9",
+    "name" : "Ventilation",
+    "children" : [ {
+      "code" : "br18B2T6.5.9.1",
+      "name" : "Kanaler"
+    }, {
+      "code" : "br18B2T6.5.9.2",
+      "name" : "Ventilationsaggregat"
+    }, {
+      "code" : "br18B2T6.5.9.3",
+      "name" : "Varmeflader, el og vandbårne"
+    }, {
+      "code" : "br18B2T6.5.9.4",
+      "name" : "Køleflader"
+    }, {
+      "code" : "br18B2T6.5.9.5",
+      "name" : "Befugtere"
+    }, {
+      "code" : "br18B2T6.5.9.6",
+      "name" : "Affugtere"
+    }, {
+      "code" : "br18B2T6.5.9.7",
+      "name" : "Lyddæmpere"
+    }, {
+      "code" : "br18B2T6.5.9.8",
+      "name" : "Flamme og røgspjæld"
+    }, {
+      "code" : "br18B2T6.5.9.9",
+      "name" : "Brand og røgspjæld"
+    }, {
+      "code" : "br18B2T6.5.9.10",
+      "name" : "Overtryksspjæld"
+    }, {
+      "code" : "br18B2T6.5.9.11",
+      "name" : "Røgspjæld"
+    }, {
+      "code" : "br18B2T6.5.9.12",
+      "name" : "Spjæld on/off"
+    }, {
+      "code" : "br18B2T6.5.9.13",
+      "name" : "Volumenstrømsregulatore"
+    }, {
+      "code" : "br18B2T6.5.9.14",
+      "name" : "Filtre"
+    }, {
+      "code" : "br18B2T6.5.9.15",
+      "name" : "Ventilatorer"
+    }, {
+      "code" : "br18B2T6.5.9.16",
+      "name" : "Processudsugningsventilatorer"
+    }, {
+      "code" : "br18B2T6.5.9.17",
+      "name" : "Dyser"
+    }, {
+      "code" : "br18B2T6.5.9.18",
+      "name" : "Fortrængningsarmaturer"
+    }, {
+      "code" : "br18B2T6.5.9.19",
+      "name" : "Loftsarmaturer"
+    }, {
+      "code" : "br18B2T6.5.9.20",
+      "name" : "Loftsarmaturer synlig montage"
+    }, {
+      "code" : "br18B2T6.5.9.21",
+      "name" : "Renrumsarmaturer"
+    }, {
+      "code" : "br18B2T6.5.9.22",
+      "name" : "Riste/Vægarmarturer"
+    }, {
+      "code" : "br18B2T6.5.9.23",
+      "name" : "Indblæsningsposer"
+    }, {
+      "code" : "br18B2T6.5.9.24",
+      "name" : "Kontrolventiler"
+    }, {
+      "code" : "br18B2T6.5.9.25",
+      "name" : "Overtryksventiler"
+    }, {
+      "code" : "br18B2T6.5.9.26",
+      "name" : "Emhætter"
+    }, {
+      "code" : "br18B2T6.5.9.27",
+      "name" : "Punktsug"
+    }, {
+      "code" : "br18B2T6.5.9.28",
+      "name" : "Kemikalieskabe"
+    }, {
+      "code" : "br18B2T6.5.9.29",
+      "name" : "Stinkskabe"
+    }, {
+      "code" : "br18B2T6.5.9.30",
+      "name" : "Lafbænke"
+    }, {
+      "code" : "br18B2T6.5.9.31",
+      "name" : "Sluser"
+    }, {
+      "code" : "br18B2T6.5.9.32",
+      "name" : "Aftrækskasser"
+    }, {
+      "code" : "br18B2T6.5.9.33",
+      "name" : "Dekontaminatorer"
+    }, {
+      "code" : "br18B2T6.5.9.34",
+      "name" : "Afkasthætter"
+    }, {
+      "code" : "br18B2T6.5.9.35",
+      "name" : "Indtagshætter"
+    }, {
+      "code" : "br18B2T6.5.9.36",
+      "name" : "Afkastsskorstene"
+    }, {
+      "code" : "br18B2T6.5.9.37",
+      "name" : "Indtagsskorstene"
+    }, {
+      "code" : "br18B2T6.5.9.38",
+      "name" : "Indtagsriste i vægge"
+    }, {
+      "code" : "br18B2T6.5.9.39",
+      "name" : "Taggennemføringer"
+    }, {
+      "code" : "br18B2T6.5.9.40",
+      "name" : "Membrangennemføringer"
+    }, {
+      "code" : "br18B2T6.5.9.41",
+      "name" : "Isolering  "
+    }, {
+      "code" : "br18B2T6.5.9.42",
+      "name" : "Bæringer "
+    } ]
+  }, {
+    "code" : "br18B2T6.5.10",
+    "name" : "Sprinkler og lignende",
+    "children" : [ {
+      "code" : "br18B2T6.5.10.1",
+      "name" : "Tryktanke"
+    }, {
+      "code" : "br18B2T6.5.10.2",
+      "name" : "Trykbeholderpumper"
+    }, {
+      "code" : "br18B2T6.5.10.3",
+      "name" : "Alarmventiler"
+    }, {
+      "code" : "br18B2T6.5.10.4",
+      "name" : "Flowswitche"
+    }, {
+      "code" : "br18B2T6.5.10.5",
+      "name" : "Nedhængt sprinklerdyser"
+    }, {
+      "code" : "br18B2T6.5.10.6",
+      "name" : "Skjult, nedhængt sprinklerdyser"
+    }, {
+      "code" : "br18B2T6.5.10.7",
+      "name" : "Pendant sprinklerdyser"
+    }, {
+      "code" : "br18B2T6.5.10.8",
+      "name" : "Vægmonterert sprinklerdyser"
+    }, {
+      "code" : "br18B2T6.5.10.9",
+      "name" : "Rør til sprinkling"
+    }, {
+      "code" : "br18B2T6.5.10.10",
+      "name" : "Slangevindere"
+    }, {
+      "code" : "br18B2T6.5.10.11",
+      "name" : "Bæringer"
+    } ]
+  }, {
+    "code" : "br18B2T6.5.11",
+    "name" : "Tværgående komponenter, VVS",
+    "children" : [ {
+      "code" : "br18B2T6.5.11.1",
+      "name" : "Afspæringsventiler"
+    }, {
+      "code" : "br18B2T6.5.11.2",
+      "name" : "Strengreguleringsventiler"
+    }, {
+      "code" : "br18B2T6.5.11.3",
+      "name" : "Magnet ventiler"
+    }, {
+      "code" : "br18B2T6.5.11.4",
+      "name" : "Sikkerhedsventiler"
+    }, {
+      "code" : "br18B2T6.5.11.5",
+      "name" : "Udluftningsventiler"
+    }, {
+      "code" : "br18B2T6.5.11.6",
+      "name" : "Aftapningsventiler"
+    }, {
+      "code" : "br18B2T6.5.11.7",
+      "name" : "Kontraventiler"
+    }, {
+      "code" : "br18B2T6.5.11.8",
+      "name" : "Zoneventiler"
+    }, {
+      "code" : "br18B2T6.5.11.9",
+      "name" : "Cirkulationsventiler"
+    }, {
+      "code" : "br18B2T6.5.11.10",
+      "name" : "Dynamisk strengreguleringsventiler"
+    }, {
+      "code" : "br18B2T6.5.11.11",
+      "name" : "Trykdifferensregulator"
+    }, {
+      "code" : "br18B2T6.5.11.12",
+      "name" : "Motorventil"
+    }, {
+      "code" : "br18B2T6.5.11.13",
+      "name" : "Motordreven trykdifferensregulatorer"
+    }, {
+      "code" : "br18B2T6.5.11.14",
+      "name" : "Filter"
+    }, {
+      "code" : "br18B2T6.5.11.15",
+      "name" : "Flowmåler"
+    }, {
+      "code" : "br18B2T6.5.11.16",
+      "name" : "Energimålere"
+    }, {
+      "code" : "br18B2T6.5.11.17",
+      "name" : "Termometer"
+    }, {
+      "code" : "br18B2T6.5.11.18",
+      "name" : "Manometer"
+    }, {
+      "code" : "br18B2T6.5.11.19",
+      "name" : "Kompensator"
+    }, {
+      "code" : "br18B2T6.5.11.20",
+      "name" : "Renselemme"
+    }, {
+      "code" : "br18B2T6.5.11.21",
+      "name" : "Koblingsdåser"
+    }, {
+      "code" : "br18B2T6.5.11.22",
+      "name" : "Bæringer"
+    }, {
+      "code" : "br18B2T6.5.11.23",
+      "name" : "Konsoller"
+    }, {
+      "code" : "br18B2T6.5.11.24",
+      "name" : "Huller og hullukninger"
+    }, {
+      "code" : "br18B2T6.5.11.25",
+      "name" : "Stativer"
+    } ]
+  } ]
+}, {
+  "code" : "br18B2T6.6",
+  "name" : "El- og mekaniske anlæg",
+  "children" : [ {
+    "code" : "br18B2T6.6.1",
+    "name" : "Terræn",
+    "children" : [ {
+      "code" : "br18B2T6.6.1.1",
+      "name" : "Luftledninger for højspændingsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.2",
+      "name" : "Ledninger i jord for højspændingsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.3",
+      "name" : "Luftledninger for lavspændingsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.4",
+      "name" : "Ledninger i jord for lavspændingsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.5",
+      "name" : "Ledninger for elektronik- og svagstrømsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.6",
+      "name" : "Gade- og vejbelysningsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.7",
+      "name" : "Pladsbelysning"
+    }, {
+      "code" : "br18B2T6.6.1.8",
+      "name" : "Park- og havebelysningsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.9",
+      "name" : "Specialbelysning"
+    }, {
+      "code" : "br18B2T6.6.1.10",
+      "name" : "Jordelektrodeanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.11",
+      "name" : "Olieudskilleranlæg"
+    }, {
+      "code" : "br18B2T6.6.1.12",
+      "name" : "Pumpeanlæg i brønde"
+    }, {
+      "code" : "br18B2T6.6.1.13",
+      "name" : "Registreringsanlæg for fedtudskiller"
+    }, {
+      "code" : "br18B2T6.6.1.14",
+      "name" : "Varmekabelanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.15",
+      "name" : "Lækagedetekteringsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.16",
+      "name" : "Frostdetekteringsanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.17",
+      "name" : "Anlæg for brugsgenstande"
+    }, {
+      "code" : "br18B2T6.6.1.18",
+      "name" : "Trafiksignalanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.19",
+      "name" : "Faste skilte"
+    }, {
+      "code" : "br18B2T6.6.1.20",
+      "name" : "Dynamiske skilte"
+    }, {
+      "code" : "br18B2T6.6.1.21",
+      "name" : "Trafikdetektering"
+    }, {
+      "code" : "br18B2T6.6.1.22",
+      "name" : "Bomanlæg"
+    }, {
+      "code" : "br18B2T6.6.1.23",
+      "name" : "Bæringer"
+    } ]
+  }, {
+    "code" : "br18B2T6.6.2",
+    "name" : "Føringsveje",
+    "children" : [ {
+      "code" : "br18B2T6.6.2.1",
+      "name" : "Kabelstiger"
+    }, {
+      "code" : "br18B2T6.6.2.2",
+      "name" : "Kabelbakker"
+    }, {
+      "code" : "br18B2T6.6.2.3",
+      "name" : "Gitterbakker"
+    }, {
+      "code" : "br18B2T6.6.2.4",
+      "name" : "Installationskanaler"
+    }, {
+      "code" : "br18B2T6.6.2.5",
+      "name" : "Flexrør"
+    }, {
+      "code" : "br18B2T6.6.2.6",
+      "name" : "Plastrør"
+    }, {
+      "code" : "br18B2T6.6.2.7",
+      "name" : "Stålrør"
+    }, {
+      "code" : "br18B2T6.6.2.8",
+      "name" : "Fiberrunner"
+    }, {
+      "code" : "br18B2T6.6.2.9",
+      "name" : "Brandtætninger"
+    }, {
+      "code" : "br18B2T6.6.2.10",
+      "name" : "Lydtætninger"
+    }, {
+      "code" : "br18B2T6.6.2.11",
+      "name" : "Huller"
+    }, {
+      "code" : "br18B2T6.6.2.12",
+      "name" : "Udsparinger"
+    }, {
+      "code" : "br18B2T6.6.2.13",
+      "name" : "Dåser"
+    }, {
+      "code" : "br18B2T6.6.2.14",
+      "name" : "Indstøbninger"
+    } ]
+  }, {
+    "code" : "br18B2T6.6.3",
+    "name" : "Højspænding",
+    "children" : [ {
+      "code" : "br18B2T6.6.3.1",
+      "name" : "Stikledninger"
+    }, {
+      "code" : "br18B2T6.6.3.2",
+      "name" : "Transformere"
+    }, {
+      "code" : "br18B2T6.6.3.3",
+      "name" : "Nød- og reserveforsyningsanlæg / UPS"
+    }, {
+      "code" : "br18B2T6.6.3.4",
+      "name" : "Ens- og vekselretteranlæg"
+    }, {
+      "code" : "br18B2T6.6.3.5",
+      "name" : "Fasekompenseringsanlæg"
+    }, {
+      "code" : "br18B2T6.6.3.6",
+      "name" : "Frekvensomformeranlæg"
+    }, {
+      "code" : "br18B2T6.6.3.7",
+      "name" : "Hovedledninger"
+    }, {
+      "code" : "br18B2T6.6.3.8",
+      "name" : "Koblingsudstyr"
+    }, {
+      "code" : "br18B2T6.6.3.9",
+      "name" : "El til produktions- og arbejdsmaskiner"
+    }, {
+      "code" : "br18B2T6.6.3.10",
+      "name" : "El til pumpeanlæg"
+    }, {
+      "code" : "br18B2T6.6.3.11",
+      "name" : "El til motorer"
+    } ]
+  }, {
+    "code" : "br18B2T6.6.4",
+    "name" : "Lavspænding",
+    "children" : [ {
+      "code" : "br18B2T6.6.4.1",
+      "name" : "Stikledninger / Kanalskinner"
+    }, {
+      "code" : "br18B2T6.6.4.2",
+      "name" : "Transformeranlæg"
+    }, {
+      "code" : "br18B2T6.6.4.3",
+      "name" : "Stationstavler"
+    }, {
+      "code" : "br18B2T6.6.4.4",
+      "name" : "Nød- og reserveforsyningsanlæg/UPS"
+    }, {
+      "code" : "br18B2T6.6.4.5",
+      "name" : "Fasekompenseringsanlæg"
+    }, {
+      "code" : "br18B2T6.6.4.6",
+      "name" : "Frekvensomformeranlæg"
+    }, {
+      "code" : "br18B2T6.6.4.7",
+      "name" : "Hovedledninger / Kanalskinner"
+    }, {
+      "code" : "br18B2T6.6.4.8",
+      "name" : "Hovedtavler"
+    }, {
+      "code" : "br18B2T6.6.4.9",
+      "name" : "Fordelingstavler"
+    }, {
+      "code" : "br18B2T6.6.4.10",
+      "name" : "Undertavler"
+    }, {
+      "code" : "br18B2T6.6.4.11",
+      "name" : "Gruppetavler"
+    }, {
+      "code" : "br18B2T6.6.4.12",
+      "name" : "Øvrige tavler"
+    }, {
+      "code" : "br18B2T6.6.4.13",
+      "name" : "El til kedelanlæg"
+    }, {
+      "code" : "br18B2T6.6.4.14",
+      "name" : "El til køleanlæg"
+    }, {
+      "code" : "br18B2T6.6.4.15",
+      "name" : "El til produktions- og arbejdsmaskiner"
+    }, {
+      "code" : "br18B2T6.6.4.16",
+      "name" : "El til pumpeanlæg"
+    }, {
+      "code" : "br18B2T6.6.4.17",
+      "name" : "El til storkøkkenmaskinanlæg"
+    }, {
+      "code" : "br18B2T6.6.4.18",
+      "name" : "El til stor-/fælles vaskerianlæg"
+    }, {
+      "code" : "br18B2T6.6.4.19",
+      "name" : "El til ventilationsanlæg"
+    }, {
+      "code" : "br18B2T6.6.4.20",
+      "name" : "El til installationer for øvrige mekaniske anlæg"
+    }, {
+      "code" : "br18B2T6.6.4.21",
+      "name" : "El til håndtørrer, håndklædetørrer"
+    }, {
+      "code" : "br18B2T6.6.4.22",
+      "name" : "El til ovnanlæg"
+    }, {
+      "code" : "br18B2T6.6.4.23",
+      "name" : "Anlæg for almen belysning"
+    }, {
+      "code" : "br18B2T6.6.4.24",
+      "name" : "Anlæg for lavvoltsbelysning"
+    }, {
+      "code" : "br18B2T6.6.4.25",
+      "name" : "Anlæg for sikkerhedsbelysning"
+    }, {
+      "code" : "br18B2T6.6.4.26",
+      "name" : "Anlæg for særbelysning"
+    }, {
+      "code" : "br18B2T6.6.4.27",
+      "name" : "Lysstyringsanlæg"
+    }, {
+      "code" : "br18B2T6.6.4.28",
+      "name" : "Armatur – Almen belysning"
+    }, {
+      "code" : "br18B2T6.6.4.29",
+      "name" : "Armatur – Sikkerhedsbelysning"
+    }, {
+      "code" : "br18B2T6.6.4.30",
+      "name" : "Armatur – Special belysning"
+    }, {
+      "code" : "br18B2T6.6.4.31",
+      "name" : "Stikkontakter"
+    }, {
+      "code" : "br18B2T6.6.4.32",
+      "name" : "Arbejdsstationer/Gulvbokse"
+    }, {
+      "code" : "br18B2T6.6.4.33",
+      "name" : "Udtag"
+    }, {
+      "code" : "br18B2T6.6.4.34",
+      "name" : "Forsyning til brugsgenstande"
+    }, {
+      "code" : "br18B2T6.6.4.35",
+      "name" : "Sengestuepaneler"
+    }, {
+      "code" : "br18B2T6.6.4.36",
+      "name" : "Solcelleanlæg"
+    } ]
+  }, {
+    "code" : "br18B2T6.6.5",
+    "name" : "Kommunikation og information",
+    "children" : [ {
+      "code" : "br18B2T6.6.5.1",
+      "name" : "Telefonanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.2",
+      "name" : "Radioanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.3",
+      "name" : "Dør- og porttelefoner"
+    }, {
+      "code" : "br18B2T6.6.5.4",
+      "name" : "Optagetanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.5",
+      "name" : "Ringeanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.6",
+      "name" : "Ur-anlæg"
+    }, {
+      "code" : "br18B2T6.6.5.7",
+      "name" : "Højttaleranlæg"
+    }, {
+      "code" : "br18B2T6.6.5.8",
+      "name" : "Mikrofonanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.9",
+      "name" : "Teleslyngeanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.10",
+      "name" : "Videoanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.11",
+      "name" : "Antenneanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.12",
+      "name" : "AV-anlæg"
+    }, {
+      "code" : "br18B2T6.6.5.13",
+      "name" : "Kabling-og X-felter"
+    }, {
+      "code" : "br18B2T6.6.5.14",
+      "name" : "DAS – antenneanlæg"
+    }, {
+      "code" : "br18B2T6.6.5.15",
+      "name" : "Positionerings system"
+    } ]
+  }, {
+    "code" : "br18B2T6.6.6",
+    "name" : "Sikring",
+    "children" : [ {
+      "code" : "br18B2T6.6.6.1",
+      "name" : "Automatisk indbrudsalarmanlæg (AIA-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.2",
+      "name" : "Automatisk adgangsdørkontrolanlæg (ADK-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.3",
+      "name" : "Internt TV-overvågningsanlæg (ITV-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.4",
+      "name" : "Automatisk brandalarmanlæg (ABA-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.5",
+      "name" : "Automatisk branddørlukningsanlæg (ABDL-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.6",
+      "name" : "Automatisk gasalarmsanlæg (AGA-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.7",
+      "name" : "Automatisk rumslukningsanlæg (ARS-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.8",
+      "name" : "Automatisk vandslukningsanlæg (AVS-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.9",
+      "name" : "Automatisk brandventilationsanlæg"
+    }, {
+      "code" : "br18B2T6.6.6.10",
+      "name" : "Varslingsanlæg (VAR-anlæg)"
+    }, {
+      "code" : "br18B2T6.6.6.11",
+      "name" : "Nødkaldeanlæg"
+    }, {
+      "code" : "br18B2T6.6.6.12",
+      "name" : "Alarmanlæg i køle- og fryserum"
+    }, {
+      "code" : "br18B2T6.6.6.13",
+      "name" : "Detektoranlæg for personsikring"
+    }, {
+      "code" : "br18B2T6.6.6.14",
+      "name" : "Overfaldsalarm"
+    }, {
+      "code" : "br18B2T6.6.6.15",
+      "name" : "Patientkaldeanlæg"
+    } ]
+  }, {
+    "code" : "br18B2T6.6.7",
+    "name" : "Bygningsautomation",
+    "children" : [ {
+      "code" : "br18B2T6.6.7.1",
+      "name" : "BMS-anlæg"
+    }, {
+      "code" : "br18B2T6.6.7.2",
+      "name" : "CTS-anlæg"
+    }, {
+      "code" : "br18B2T6.6.7.3",
+      "name" : "IBI-anlæg med central styring"
+    } ]
+  }, {
+    "code" : "br18B2T6.6.8",
+    "name" : "Beskyttelse",
+    "children" : [ {
+      "code" : "br18B2T6.6.8.1",
+      "name" : "Lynbeskyttelser"
+    }, {
+      "code" : "br18B2T6.6.8.2",
+      "name" : "Hovedudligningsforbindelser"
+    }, {
+      "code" : "br18B2T6.6.8.3",
+      "name" : "Lokal udligningsforbindelse uden jordforbindelser"
+    }, {
+      "code" : "br18B2T6.6.8.4",
+      "name" : "Supplerende udligningsforbindelser"
+    } ]
+  }, {
+    "code" : "br18B2T6.6.9",
+    "name" : "Person- og materialetransport",
+    "children" : [ {
+      "code" : "br18B2T6.6.9.1",
+      "name" : "Elevatorer"
+    }, {
+      "code" : "br18B2T6.6.9.2",
+      "name" : "Lifte"
+    }, {
+      "code" : "br18B2T6.6.9.3",
+      "name" : "Rullende trapper"
+    }, {
+      "code" : "br18B2T6.6.9.4",
+      "name" : "Rullende fortove"
+    }, {
+      "code" : "br18B2T6.6.9.5",
+      "name" : "Lifte og sakseborde"
+    }, {
+      "code" : "br18B2T6.6.9.6",
+      "name" : "Transportbånd"
+    }, {
+      "code" : "br18B2T6.6.9.7",
+      "name" : "Kraner og taljer"
+    } ]
+  } ]
+}, {
+  "code" : "br18B2T6.7",
+  "name" : "Inventar og teknisk udstyr",
+  "children" : [ {
+    "code" : "br18B2T6.7.1",
+    "name" : "Inventar, terræn",
+    "children" : [ {
+      "code" : "br18B2T6.7.1.1",
+      "name" : "Tekniske inventarenheder"
+    }, {
+      "code" : "br18B2T6.7.1.2",
+      "name" : "Tavler, skilte og skærme"
+    }, {
+      "code" : "br18B2T6.7.1.3",
+      "name" : "Opbevaring"
+    }, {
+      "code" : "br18B2T6.7.1.4",
+      "name" : "Bordmøbler"
+    }, {
+      "code" : "br18B2T6.7.1.5",
+      "name" : "Siddemøbler"
+    }, {
+      "code" : "br18B2T6.7.1.6",
+      "name" : "Afskærmninger"
+    }, {
+      "code" : "br18B2T6.7.1.7",
+      "name" : "Aktivites- og legeudstyr"
+    }, {
+      "code" : "br18B2T6.7.1.8",
+      "name" : "Øvrigt inventar i terræn"
+    } ]
+  }, {
+    "code" : "br18B2T6.7.2",
+    "name" : "Inventar, fastmonteret",
+    "children" : [ {
+      "code" : "br18B2T6.7.2.1",
+      "name" : "Skabe"
+    }, {
+      "code" : "br18B2T6.7.2.2",
+      "name" : "Reoler"
+    }, {
+      "code" : "br18B2T6.7.2.3",
+      "name" : "Siddemøbler, liggemøbler"
+    }, {
+      "code" : "br18B2T6.7.2.4",
+      "name" : "Gardiner, persienner, skærmvægge, forhæng"
+    }, {
+      "code" : "br18B2T6.7.2.5",
+      "name" : "Borde, bordplader"
+    }, {
+      "code" : "br18B2T6.7.2.6",
+      "name" : "Skilte, tavler"
+    }, {
+      "code" : "br18B2T6.7.2.7",
+      "name" : "Garniture"
+    }, {
+      "code" : "br18B2T6.7.2.8",
+      "name" : "Øvrigt fast monteret inventar"
+    } ]
+  }, {
+    "code" : "br18B2T6.7.3",
+    "name" : "Inventar, løst",
+    "children" : [ {
+      "code" : "br18B2T6.7.3.1",
+      "name" : "Skabe, skuffer"
+    }, {
+      "code" : "br18B2T6.7.3.2",
+      "name" : "Reoler"
+    }, {
+      "code" : "br18B2T6.7.3.3",
+      "name" : "Siddemøbler, liggemøbler"
+    }, {
+      "code" : "br18B2T6.7.3.4",
+      "name" : "Skærmvægge, forhæng"
+    }, {
+      "code" : "br18B2T6.7.3.5",
+      "name" : "Borde"
+    }, {
+      "code" : "br18B2T6.7.3.6",
+      "name" : "Stativer, hylder"
+    }, {
+      "code" : "br18B2T6.7.3.7",
+      "name" : "Måtter, tæpper, løbere"
+    }, {
+      "code" : "br18B2T6.7.3.8",
+      "name" : "Øvrigt løst inventar"
+    } ]
+  }, {
+    "code" : "br18B2T6.7.4",
+    "name" : "Inventar, tekniske-, IT- og av-inventarenheder",
+    "children" : [ {
+      "code" : "br18B2T6.7.4.1",
+      "name" : "AV-udstyr"
+    }, {
+      "code" : "br18B2T6.7.4.2",
+      "name" : "IT-udstyr"
+    }, {
+      "code" : "br18B2T6.7.4.3",
+      "name" : "Belysning"
+    }, {
+      "code" : "br18B2T6.7.4.4",
+      "name" : "Automater"
+    }, {
+      "code" : "br18B2T6.7.4.5",
+      "name" : "Brandslukningsudstyr"
+    }, {
+      "code" : "br18B2T6.7.4.6",
+      "name" : "Hårde hvidevarer"
+    } ]
+  } ]
+}, {
+  "code" : "br18B2T6.8",
+  "name" : "Beplantning og belægning",
+  "children" : [ {
+    "code" : "br18B2T6.8.1",
+    "name" : "Belægninger og befæstelser",
+    "children" : [ {
+      "code" : "br18B2T6.8.1.1",
+      "name" : "Asfalt belægninger"
+    }, {
+      "code" : "br18B2T6.8.1.2",
+      "name" : "Betonstøbte belægninger"
+    }, {
+      "code" : "br18B2T6.8.1.3",
+      "name" : "Gummibelægninger"
+    }, {
+      "code" : "br18B2T6.8.1.4",
+      "name" : "Flise -og stenbelægninger"
+    }, {
+      "code" : "br18B2T6.8.1.5",
+      "name" : "Skærver og grus"
+    }, {
+      "code" : "br18B2T6.8.1.6",
+      "name" : "Kantbegrænsninger"
+    }, {
+      "code" : "br18B2T6.8.1.7",
+      "name" : "Afstribninger og markeringer"
+    }, {
+      "code" : "br18B2T6.8.1.8",
+      "name" : "Konstruerede elementer"
+    }, {
+      "code" : "br18B2T6.8.1.9",
+      "name" : "Øvrige belægninger og befæstelser"
+    } ]
+  }, {
+    "code" : "br18B2T6.8.2",
+    "name" : "Beplantning",
+    "children" : [ {
+      "code" : "br18B2T6.8.2.1",
+      "name" : "Træer"
+    }, {
+      "code" : "br18B2T6.8.2.2",
+      "name" : "Buske og hække"
+    }, {
+      "code" : "br18B2T6.8.2.3",
+      "name" : "Muldlag"
+    }, {
+      "code" : "br18B2T6.8.2.4",
+      "name" : "Bunddække og stauder"
+    }, {
+      "code" : "br18B2T6.8.2.5",
+      "name" : "Græsarealer"
+    }, {
+      "code" : "br18B2T6.8.2.6",
+      "name" : "Ekstensive beplantningssystemer"
+    }, {
+      "code" : "br18B2T6.8.2.7",
+      "name" : "Ekstensive beplantningssystemer"
+    }, {
+      "code" : "br18B2T6.8.2.8",
+      "name" : "Ekstensive beplantningssystemer"
+    }, {
+      "code" : "br18B2T6.8.2.9",
+      "name" : "Intensive opbygninger på tage"
+    }, {
+      "code" : "br18B2T6.8.2.10",
+      "name" : "Øvrig beplantning"
+    } ]
+  } ]
+} ]
