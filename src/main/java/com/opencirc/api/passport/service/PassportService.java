@@ -140,6 +140,9 @@ public class PassportService {
             .findById(passportId)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+    if (passport.getStatus() != Passport.Status.ACTIVE) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passport is not active");
+    }
     return addDatasheetsToPassportUsingPlatform(
         passport, platform, platformId, dataCategory, author);
   }
