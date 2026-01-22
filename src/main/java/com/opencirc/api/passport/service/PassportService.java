@@ -96,6 +96,7 @@ public class PassportService {
     passport.setCreatedById(author != null ? author.getId() : null);
     passport.setCreatedTime(OffsetDateTime.now());
     passport.setCreatedBy(getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
+    passport.setDatasheetMappings(new HashSet<>());
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
@@ -109,27 +110,21 @@ public class PassportService {
     passport = passportRepository.save(passport);
 
     var adapter = platformAdapterFactory.getAdapter(platform);
-    var rawDatasheet = adapter.generateDatasheetFromPlatformId(data.getPlatformId());
-    rawDatasheet.setCreatedById(author != null ? author.getId() : null);
-    rawDatasheet.setCreatedBy(
-        getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
-    rawDatasheet.setDataCategory(Datasheet.DataCategory.fromValue(data.getDataCategory()));
-    var datasheet = datasheetRepository.save(rawDatasheet);
-
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setPassport(passport);
-    mapping.setDatasheet(datasheet);
-    mapping = passportDatasheetMappingRepository.save(mapping);
-
-    if (passport.getDatasheetMappings() == null) {
-      passport.setDatasheetMappings(new HashSet<>());
+    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(data.getPlatformId());
+    for (var rawDatasheet : rawDatasheets) {
+      rawDatasheet.setCreatedById(author != null ? author.getId() : null);
+      rawDatasheet.setCreatedBy(
+          getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
+      rawDatasheet.setDataCategory(Datasheet.DataCategory.fromValue(data.getDataCategory()));
+      var datasheet = datasheetRepository.save(rawDatasheet);
+      PassportDatasheetMapping mapping = new PassportDatasheetMapping();
+      mapping.setPassport(passport);
+      mapping.setDatasheet(datasheet);
+      mapping = passportDatasheetMappingRepository.save(mapping);
+      passport.getDatasheetMappings().add(mapping);
     }
-    passport.getDatasheetMappings().add(mapping);
-    return PassportDto.from(passport);
-  }
 
-  private String getText(JsonNode node, String field) {
-    return node.hasNonNull(field) ? node.get(field).asText() : null;
+    return PassportDto.from(passport);
   }
 
   private CreatedByDto getOrDefaultCreatedBy(CreatedByDto createdBy) {

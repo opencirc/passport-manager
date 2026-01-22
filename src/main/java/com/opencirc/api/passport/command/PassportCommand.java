@@ -17,16 +17,16 @@ import org.springframework.stereotype.Component;
 
 /** Passport commands entry point. */
 @Component
-@Command(group = "Passport Commands")
+@Command(group = "Passport commands")
 @Slf4j
-public class PassportCommands {
+public class PassportCommand {
   private final PassportService passportService;
 
   private final UserRepository userRepository;
 
-  /** PassportCommands. */
+  /** PassportCommand. */
   @Autowired
-  public PassportCommands(PassportService passportService, UserRepository userRepository) {
+  public PassportCommand(PassportService passportService, UserRepository userRepository) {
     this.passportService = passportService;
     this.userRepository = userRepository;
   }

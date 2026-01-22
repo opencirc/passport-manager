@@ -7,7 +7,7 @@ import org.springframework.shell.command.annotation.Command;
 import org.springframework.stereotype.Component;
 
 @Component
-@Command(group = "Migration Commands")
+@Command(group = "Migration commands")
 @Slf4j
 public class Migration {
 

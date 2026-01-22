@@ -63,7 +63,7 @@ public class TestPassportController {
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
-    registry.add("bsdd.classDetails.url", () -> "http://localhost:8089" + "/api/Class/v1");
+    registry.add("bsdd.class.details.url", () -> "http://localhost:8089" + "/api/Class/v1");
     registry.add(
         "bsdd.propertiesWithDetail.url", () -> "http://localhost:8089" + "/api/Property/v4");
   }

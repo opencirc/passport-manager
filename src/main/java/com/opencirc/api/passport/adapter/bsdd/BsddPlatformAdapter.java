@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -46,6 +47,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 /** BSDD implementation of PlatformAdapter. */
 @Service
 public class BsddPlatformAdapter implements PlatformAdapter {
+
+  private static final String IFC_IDENTIFIER_URL_PATTERN =
+      "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/%s";
 
   private final RestTemplate restTemplate;
 
@@ -72,7 +76,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   @Override
   public List<Map<String, String>> listClass(String text) {
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassSearchTextUrl())
+        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassSearchByTextUrl())
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
             .queryParam(AppConstants.QP_BSDD_LIMIT, AppConstants.BSDD_LIMIT);
     String url = uriBuilder.toUriString();
@@ -93,11 +97,35 @@ public class BsddPlatformAdapter implements PlatformAdapter {
     return classList;
   }
 
-  /** Fetches class template with property details. */
+  /**
+   * Fetches a class template with property details and returns a datasheet for it and its related
+   * IFC entities.
+   */
   @Override
-  public Datasheet generateDatasheetFromPlatformId(String uri) throws JsonValidationException {
+  public List<Datasheet> generateDatasheetsFromPlatformId(String uri)
+      throws JsonValidationException {
 
     BsddClassTemplateDto classTemplateDto = getClassTemplate(uri);
+    Datasheet datasheet = generateDatasheetFromClassTemplateDto(classTemplateDto);
+    List<Datasheet> datasheets = new ArrayList<>(Collections.singletonList(datasheet));
+
+    for (var relatedIfcClass : classTemplateDto.getRelatedIfcEntityNames()) {
+      String ifcUri = String.format(IFC_IDENTIFIER_URL_PATTERN, relatedIfcClass);
+      Datasheet relatedIfcDatasheet = generateDatasheetFromPlatformId(ifcUri);
+      datasheets.add(relatedIfcDatasheet);
+    }
+
+    return datasheets;
+  }
+
+  /** Fetches class template with property details. */
+  public Datasheet generateDatasheetFromPlatformId(String uri) throws JsonValidationException {
+    BsddClassTemplateDto classTemplateDto = getClassTemplate(uri);
+    return generateDatasheetFromClassTemplateDto(classTemplateDto);
+  }
+
+  /** Fetches class template with property details. */
+  public Datasheet generateDatasheetFromClassTemplateDto(BsddClassTemplateDto classTemplateDto) {
     Datasheet datasheet = new Datasheet();
     datasheet.setPlatform(Platform.BSDD);
     datasheet.setDictionary(
@@ -107,7 +135,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
     datasheet.setCode(classTemplateDto.getCode());
     datasheet.setName(classTemplateDto.getName());
     datasheet.setDescription(classTemplateDto.getDefinition());
-    datasheet.setPlatformId(uri);
+    datasheet.setPlatformId(classTemplateDto.getUri());
 
     if (classTemplateDto.getClassProperties() != null) {
       datasheet.setDatasheetProperties(new HashSet<>());

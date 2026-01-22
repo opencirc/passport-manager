@@ -1,7 +1,7 @@
 package com.opencirc.api.passport.command;
 
 import com.opencirc.api.passport.auth.service.AuthService;
-import com.opencirc.api.passport.exception.AuthenticationException;
+import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.util.StringUtil;
@@ -9,21 +9,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
 
-@Command(group = "Register User Commands")
+/** Commands to interact with users. */
+@Command(group = "User commands")
 @Slf4j
-public class RegisterUserCommand {
+public class UserCommand {
+
+  /** Format to show API keys to user in terminal. */
+  private static final String USER_LIST_ROW_FORMAT = "%-40s %-20s %-25s%n";
 
   /** Injecting AuthService. */
   private final AuthService authService;
 
+  /** Injecting UserRepository. */
+  private final UserRepository userRepository;
+
   /** Constructor. */
-  public RegisterUserCommand(AuthService authService) {
+  public UserCommand(AuthService authService, UserRepository userRepository) {
     this.authService = authService;
+    this.userRepository = userRepository;
   }
 
   /** Shell command to register a new user. */
   @Command(description = "Register a user.")
-  public String register(
+  public String registerUser(
       @Option(longNames = "email", required = true) String email,
       @Option(longNames = "password", required = true) String password,
       @Option(longNames = "firstName", required = true) String firstName,
@@ -37,19 +45,25 @@ public class RegisterUserCommand {
       return "Invalid role. Valid roles are 'user' or 'admin'.";
     }
 
-    try {
-      User user =
-          authService.register(
-              StringUtil.normalizeEmail(email),
-              password.trim(),
-              firstName.trim(),
-              lastName.trim(),
-              parsedRole);
-      return String.format("User created with id: %s", user.getId());
-    } catch (AuthenticationException authenticationException) {
-      throw authenticationException;
-    } catch (Exception e) {
-      throw e;
+    User user =
+        authService.register(
+            StringUtil.normalizeEmail(email),
+            password.trim(),
+            firstName.trim(),
+            lastName.trim(),
+            parsedRole);
+    return String.format("User created with id: %s", user.getId());
+  }
+
+  /** Shell command to list existing users. */
+  @Command(description = "List users.")
+  public String listUsers() {
+    StringBuilder sb = new StringBuilder();
+    for (var user : userRepository.findAll()) {
+      sb.append(
+          String.format(USER_LIST_ROW_FORMAT, user.getId(), user.getFullName(), user.getRole()));
     }
+
+    return sb.toString();
   }
 }
