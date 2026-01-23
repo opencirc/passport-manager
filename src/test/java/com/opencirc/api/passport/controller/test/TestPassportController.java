@@ -12,7 +12,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
@@ -133,7 +133,7 @@ public class TestPassportController {
                 }
                 """;
 
-    CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
+    CreatePassportUsingPlatformRequestDto requestDto = new CreatePassportUsingPlatformRequestDto();
     requestDto.setCreatedTime(OffsetDateTime.now());
     requestDto.setDataCategory(DataCategory.GENERIC.getValue());
     requestDto.setDatasheetData(objectMapper.readTree(jsonBody));
@@ -182,7 +182,7 @@ public class TestPassportController {
     createdByDto.setFullName("User One");
     createdByDto.setEmail("user1@test.com");
 
-    CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
+    CreatePassportUsingPlatformRequestDto requestDto = new CreatePassportUsingPlatformRequestDto();
     requestDto.setCreatedTime(OffsetDateTime.now());
     requestDto.setCreatedBy(createdByDto);
     requestDto.setPassportName("Empty Passport");
@@ -227,7 +227,7 @@ public class TestPassportController {
             }
         """);
 
-    CreatePassportRequestDto requestDto = new CreatePassportRequestDto();
+    CreatePassportUsingPlatformRequestDto requestDto = new CreatePassportUsingPlatformRequestDto();
     requestDto.setCreatedTime(OffsetDateTime.now());
     requestDto.setCreatedBy(createdByDto);
     requestDto.setPassportName("Invalid Passport");

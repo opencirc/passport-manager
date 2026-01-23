@@ -11,7 +11,7 @@ import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
-import com.opencirc.api.passport.dto.CreatePassportRequestDto;
+import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
@@ -83,7 +83,7 @@ public class PassportService {
   /** Creates template entry. */
   @Transactional
   public PassportDto createPassportUsingPlatform(
-      Platform platform, CreatePassportRequestDto data, UserDto author)
+      Platform platform, CreatePassportUsingPlatformRequestDto data, UserDto author)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
 
     int customLength = AppConstants.CUID_LENGTH;
@@ -109,13 +109,62 @@ public class PassportService {
 
     passport = passportRepository.save(passport);
 
+    addDatasheetsToPassportUsingPlatform(
+        passport,
+        platform,
+        data.getPlatformId(),
+        Datasheet.DataCategory.fromValue(data.getDataCategory()),
+        author);
+
+    passport =
+        passportRepository
+            .findById(passport.getId())
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+    return PassportDto.from(passport);
+  }
+
+  /**
+   * Creates a datasheet and adds it to the passport using information from the provided platform.
+   */
+  @Transactional
+  public PassportDto addDatasheetsToPassportUsingPlatform(
+      String passportId,
+      Platform platform,
+      String platformId,
+      Datasheet.DataCategory dataCategory,
+      UserDto author)
+      throws JsonValidationException, JsonProcessingException {
+    Passport passport =
+        passportRepository
+            .findById(passportId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+    if (passport.getStatus() != Passport.Status.ACTIVE) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passport is not active");
+    }
+    return addDatasheetsToPassportUsingPlatform(
+        passport, platform, platformId, dataCategory, author);
+  }
+
+  /**
+   * Creates a datasheet and adds it to the passport using information from the provided platform.
+   */
+  @Transactional
+  public PassportDto addDatasheetsToPassportUsingPlatform(
+      Passport passport,
+      Platform platform,
+      String platformId,
+      Datasheet.DataCategory dataCategory,
+      UserDto author)
+      throws JsonValidationException, JsonProcessingException {
     var adapter = platformAdapterFactory.getAdapter(platform);
-    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(data.getPlatformId());
+    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(platformId);
     for (var rawDatasheet : rawDatasheets) {
       rawDatasheet.setCreatedById(author != null ? author.getId() : null);
       rawDatasheet.setCreatedBy(
           getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
-      rawDatasheet.setDataCategory(Datasheet.DataCategory.fromValue(data.getDataCategory()));
+      rawDatasheet.setDataCategory(dataCategory);
       var datasheet = datasheetRepository.save(rawDatasheet);
       PassportDatasheetMapping mapping = new PassportDatasheetMapping();
       mapping.setPassport(passport);
