@@ -35,7 +35,7 @@ public class DictionaryMapping {
   /** Loads the field names from a dictionary mapping property file. */
   private void loadDictionaryMappings() throws IOException {
     PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-    Resource[] resources = resolver.getResources("classpath:DataDictionary_Mapping/*.properties");
+    Resource[] resources = resolver.getResources("classpath:bsdd/*.properties");
 
     for (Resource resource : resources) {
       String filename = resource.getFilename();
