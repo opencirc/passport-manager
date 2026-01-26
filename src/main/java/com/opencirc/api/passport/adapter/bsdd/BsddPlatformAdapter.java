@@ -450,10 +450,11 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   /** Retrieves the tree structure of the dictionary. */
   public List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(DataDictionary dictionary)
       throws IOException {
-    String structurePathString = switch (dictionary) {
-      case DataDictionary.TABLE6 -> appProperties.getTable6StructureJsonPath();
-      case DataDictionary.IFC -> appProperties.getIfcStructureJsonPath();
-    };
+    String structurePathString =
+        switch (dictionary) {
+          case DataDictionary.TABLE6 -> appProperties.getTable6StructureJsonPath();
+          case DataDictionary.IFC -> appProperties.getIfcStructureJsonPath();
+        };
 
     Path structurePath = Paths.get(structurePathString).toAbsolutePath();
     if (!Files.exists(structurePath)) {
@@ -465,10 +466,11 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   }
 
   private void createTreeStructure(DataDictionary dictionary) throws IOException {
-    String rawStructurePathString = switch (dictionary) {
-      case DataDictionary.TABLE6 -> appProperties.getTable6RawStructureJsonPath();
-      case DataDictionary.IFC -> appProperties.getIfcRawStructureJsonPath();
-    };
+    String rawStructurePathString =
+        switch (dictionary) {
+          case DataDictionary.TABLE6 -> appProperties.getTable6RawStructureJsonPath();
+          case DataDictionary.IFC -> appProperties.getIfcRawStructureJsonPath();
+        };
 
     ClassPathResource templateResource = new ClassPathResource(rawStructurePathString);
 
@@ -525,10 +527,11 @@ public class BsddPlatformAdapter implements PlatformAdapter {
       }
     }
 
-    String structurePathString = switch (dictionary) {
-      case DataDictionary.TABLE6 -> appProperties.getTable6StructureJsonPath();
-      case DataDictionary.IFC -> appProperties.getIfcStructureJsonPath();
-    };
+    String structurePathString =
+        switch (dictionary) {
+          case DataDictionary.TABLE6 -> appProperties.getTable6StructureJsonPath();
+          case DataDictionary.IFC -> appProperties.getIfcStructureJsonPath();
+        };
 
     Path outputPath = Paths.get(structurePathString).toAbsolutePath();
     Path parent = outputPath.getParent();

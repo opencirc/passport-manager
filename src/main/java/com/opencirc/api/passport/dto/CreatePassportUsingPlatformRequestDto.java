@@ -1,6 +1,9 @@
 package com.opencirc.api.passport.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+import com.opencirc.api.passport.model.Datasheet;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -14,17 +17,18 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class CreatePassportUsingPlatformRequestDto {
-  @NotBlank
-  @JsonProperty
-  private String platformId;
+  @NotBlank @JsonProperty private String platformId;
 
-  @NotBlank
-  @JsonProperty
-  private String name;
+  @NotBlank @JsonProperty private String name;
 
-  @NotBlank
+  @Schema(
+      requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+      nullable = true,
+      defaultValue = "generic",
+      allowableValues = {"generic", "unique"})
   @JsonProperty
-  private String dataCategory;
+  @JsonSetter(nulls = Nulls.SKIP)
+  private String dataCategory = Datasheet.DataCategory.GENERIC.getValue();
 
   @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true)
   @JsonProperty
