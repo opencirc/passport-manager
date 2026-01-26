@@ -5,5 +5,6 @@
 
 <suppressions>
     <suppress checks="MissingJavadocType" files="."/>
+    <!-- We would love to have Indentation, but it seems to have issues with switch statements -->
     <suppress checks="Indentation" files="."/>
 </suppressions>
