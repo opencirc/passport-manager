@@ -137,6 +137,17 @@ sudo sysctl --system >/dev/null
 
 step "8) Clone repo (skip if already present)"
 APP_DIR="$HOME/passport-manager"
+
+# Ensure GitHub host keys are present to avoid interactive authenticity prompt
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+touch "$HOME/.ssh/known_hosts"
+chmod 600 "$HOME/.ssh/known_hosts"
+
+if ! ssh-keygen -F github.com >/dev/null; then
+  ssh-keyscan -H github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
+fi
+
 if [[ -d "$APP_DIR/.git" ]]; then
   printf 'Repo already exists at %s; skipping clone.\n' "$APP_DIR"
 else
