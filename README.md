@@ -36,7 +36,7 @@ The application can be started easily using Docker Compose.
 2. In the project root directory, run:
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
    
 This command will:
@@ -45,6 +45,12 @@ This command will:
 - Start the necessary containers 
 - Initialize the database
 - Make the REST API available at http://localhost:8080
+
+If you want to access the shell, run:
+
+```bash
+docker compose --profile shell run --rm shell
+```
 
 3. Once the containers are up and running, you should see logs in the terminal indicating that the application has started successfully.
 

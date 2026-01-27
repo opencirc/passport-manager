@@ -3,10 +3,8 @@ package com.opencirc.api.passport.service;
 import com.opencirc.api.passport.auth.principal.UserPrincipal;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.config.AppProperties;
-import com.opencirc.api.passport.dao.JwtConfigRepository;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.exception.AuthenticationException;
-import com.opencirc.api.passport.model.JwtConfig;
 import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.util.EncryptionUtil;
 import io.jsonwebtoken.Claims;
@@ -20,7 +18,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,67 +27,47 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-/** Service to handle JWT related funtions. */
+/** Service to handle JWT related functions. */
 @Service
 public class JwtService {
 
   private final UserRepository userRepository;
 
-  private final JwtConfigRepository jwtConfigRepository;
-
   private final AppProperties appProperties;
 
   private final AuthUserDetailsService authUserDetailsService;
 
-  private String secretKey = "";
+  private String secretKey = null;
 
   /** Instantiating JwtService class. */
   @Autowired
   public JwtService(
-      AppProperties appProp,
+      AppProperties appProperties,
       UserRepository userRepository,
-      JwtConfigRepository jwtConfigRepository,
       AuthUserDetailsService authUserDetailsService) {
-    this.appProperties = appProp;
+    this.appProperties = appProperties;
     this.userRepository = userRepository;
-    this.jwtConfigRepository = jwtConfigRepository;
     this.authUserDetailsService = authUserDetailsService;
   }
 
   /** Loading Secret Key after initialization. */
   @PostConstruct
   public void init() {
-    loadSecretKey();
+    loadSecretKeyIfNeeded();
   }
 
   /** Loading Secret Key. */
-  private void loadSecretKey() {
-
-    if (secretKey == null || secretKey.isEmpty()) {
-      Optional<JwtConfig> keyEntity = jwtConfigRepository.getSecretKey();
-      if (keyEntity.isPresent()) {
-        try {
-          this.secretKey =
-              EncryptionUtil.decrypt(
-                  keyEntity.get().getSecretKey(), appProperties.getEncryptionKey());
-        } catch (Exception e) {
-          throw new RuntimeException("Error decrypting secret key", e);
-        }
-      } else {
-        generateAndStoreSecretKey();
-      }
+  private void loadSecretKeyIfNeeded() {
+    if (secretKey != null && !secretKey.isEmpty()) {
+      return;
     }
-  }
 
-  private void generateAndStoreSecretKey() {
     try {
-      String rawKey = EncryptionUtil.generateSecureKey();
-      String encryptedKey = EncryptionUtil.encrypt(rawKey, appProperties.getEncryptionKey());
-      this.secretKey = rawKey;
-      jwtConfigRepository.saveConfig(encryptedKey);
-
+      this.secretKey =
+          EncryptionUtil.decrypt(
+              appProperties.getJwtSecretKey(), appProperties.getJwtEncryptionKey());
     } catch (Exception e) {
-      throw new RuntimeException("Error generating and storing secret key", e);
+      throw new RuntimeException("Error decrypting secret key", e);
     }
   }
 
@@ -107,9 +84,7 @@ public class JwtService {
   }
 
   private SecretKey getKey() {
-    if (secretKey == null || secretKey.isEmpty()) {
-      throw new RuntimeException("Secret key is missing or invalid");
-    }
+    loadSecretKeyIfNeeded();
     try {
       byte[] keyBytes = Decoders.BASE64.decode(secretKey.trim());
       return Keys.hmacShaKeyFor(keyBytes);

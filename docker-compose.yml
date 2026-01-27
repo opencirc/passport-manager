@@ -10,13 +10,13 @@ services:
        condition: service_healthy
       cache:
        condition: service_healthy
-
     environment:
       DATABASE_URL: jdbc:postgresql://db:5432/opencirc
       DATABASE_USER: postgres
       DATABASE_PASSWORD: opencirc
       REDIS_HOST: cache
       REDIS_PORT: 6379
+      SPRING_SHELL_INTERACTIVE_ENABLED: false
     volumes:
       - ./src:/app/src
       - ./pom.xml:/app/pom.xml
@@ -26,7 +26,12 @@ services:
     networks:
       - spring-net
     restart: always
-
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8080"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
   db:
     image: postgres:alpine
     environment:
@@ -64,6 +69,28 @@ services:
     networks:
       - spring-net
 
+  shell:
+    profiles: ["shell"]
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    depends_on:
+      app:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+    environment:
+      SPRING_SHELL_INTERACTIVE_ENABLED: true
+      SPRING_MAIN_WEB_APPLICATION_TYPE: none
+      DATABASE_URL: jdbc:postgresql://db:5432/opencirc
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: opencirc
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+    volumes:
+      - maven-repo:/root/.m2
+    networks:
+      - spring-net
 volumes:
   db_data:
   test_db_data:

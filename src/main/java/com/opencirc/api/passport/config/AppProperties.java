@@ -14,6 +14,14 @@ import org.springframework.stereotype.Component;
 public class AppProperties {
 
   /** URL for searching class in BsDD. */
+  @Value("${jwt.secret-key}")
+  private String jwtSecretKey;
+
+  /** Encryption key. */
+  @Value("${jwt.encryption-key}")
+  private String jwtEncryptionKey;
+
+  /** URL for searching class in BsDD. */
   @Value("${bsdd.class.searchByText.url}")
   private String bsddClassSearchByTextUrl;
 
@@ -40,10 +48,6 @@ public class AppProperties {
   /** URL for login. */
   @Value("${auth.login.url}")
   private String loginUrl;
-
-  /** URL for encryptionKey. */
-  @Value("${secret.encryption.key}")
-  private String encryptionKey;
 
   /** Maximum depth of passport hierarchy to create. */
   @Value("${seed.passport.max-level}")
