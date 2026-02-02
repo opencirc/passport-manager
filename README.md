@@ -68,8 +68,8 @@ Base API URL
 
 To use the API, login using the test admin credentials:
 
-> **With login credentials :**
->>
+ **With login credentials :**
+
 ```bash
 {
   "email": "admin@test.com",
@@ -79,76 +79,63 @@ To use the API, login using the test admin credentials:
 
 Once logged in, you will receive a JWT access and refresh token which must be included in requests via cookies or headers.
 
->>
 ```bash
 access_token = <received JWT access token>
 refresh_token = <received JWT refresh token>
 ```
->>
 
-> **With Api Keys :**
->>Add the below keys in the request header in the `X-Api-Key` and `X-Api-Secret` fields.
->>
+**With Api Keys :**
+Add the below keys in the request header in the `X-Api-Key` and `X-Api-Secret` fields.
 ```bash
 X-Api-Key: fa76a9d9-caa7-41ba-b929-f468620fa023
 X-Api-Secret: API_sRynttcLE0OfRM3kFi1RXFdP_34b0c0ed5ed2
 ```
->>
 
 You can pass them either through Request header.
 
 **6. CLI Tool Commands**
 
-> This application also provides a CLI tool to manage users, API keys, templates, and seed the database.
+This application also provides a CLI tool to manage users, API keys, templates, and seed the database.
 
->> **6.1 Register a New User:**
+**6.1 Register a New User:**
 
->>>
 ```bash
-register --email <email> --password <password> --firstName <firstName> --lastName <lastName> --role <user/admin>
+register-user --email <email> --password <password> --firstName <firstName> --lastName <lastName> --role <user/admin>
 ```
->>>
 
->>> --role : Defaults to user
+> --role : Defaults to user
 
->>> --password : Use at least 12 characters with a mix of uppercase, lowercase, digits, or symbols.
+> --password : Use at least 12 characters with a mix of uppercase, lowercase, digits, or symbols.
 
->> **6.2 Create API Key Command:**
+**6.2 Create API Key Command:**
 
->>>
 ```bash
-create-api-key --user-id <<user id>> --expiration-date (optional) <Expiration date in yyyy-MM-dd  --name  name of the token
+create-api-key --userId <user id> --expiration-date (optional) <Expiration date in yyyy-MM-dd  --name  name of the token
 ```
->>>
 
->> **6.3 List API Keys:**
+**6.3 List API Keys:**
 
->>>
 ```bash
-list-api-tokens --user-id <<user id>>
+list-api-tokens --user-id <user id>
 ```
->>>
 
->> **6.4 Data Dictionary Command:**
+**6.4 Data Dictionary Command:**
 
->>>
 ```bash
 fetch-template --dictionaryType <<bsdd/lexicon>> --type <<class/property>> --uri <<URI of the template>> --raw <<true/false>>
 ```
->>>
 
->>> --raw : default is false
+> --raw : default is false
 
->>>>true: returns the template without added fields
+>true: returns the template without added fields
 
->>>>false: returns processed templates with added fields
+>false: returns processed templates with added fields
 
 
->> **6.5 Seeder Commands:**
+**6.5 Seeder Commands:**
 
->>> Seed initial data into the database:
+Seed initial data into the database:
 
->>>
 ```bash
 seed --type USER                 # Adds only user data
 seed --type PASSPORT_FROM_API    # Adds passport data fetched from external API templates
@@ -156,30 +143,25 @@ seed --type PASSPORT_FROM_JSON   # Adds passport data from pre-saved bsdd_templa
 seed --type ALL                  # Adds both user and passport data using templates from bsdd_templates.json
 seed                             # Defaults to ALL
 ```
->>>
 
 
 **7.Common Issues and Troubleshooting**
 	
->**1. Port 8080 Already in Use.**
+**1. Port 8080 Already in Use.**
 
->> To Stop any process using port 8080:
+To Stop any process using port 8080:
 
->>>
 ```bash
 sudo lsof -i :8080
 sudo kill -9 <PID>
 ```
->>>
 
+**2. Database Migration Fails**
 
->**2. Database Migration Fails**
+Flyway migrations may fail if the database volume persists old data. Remove the volume and try again:
 
->> Flyway migrations may fail if the database volume persists old data. Remove the volume and try again:
->>>
 ```bash
 docker-compose down -v
 docker-compose up --build
 ```
->>>
 
