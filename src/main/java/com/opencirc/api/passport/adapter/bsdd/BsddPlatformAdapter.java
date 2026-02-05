@@ -108,6 +108,11 @@ public class BsddPlatformAdapter implements PlatformAdapter {
     Datasheet datasheet = generateDatasheetFromClassTemplateDto(classTemplateDto);
     List<Datasheet> datasheets = new ArrayList<>(Collections.singletonList(datasheet));
 
+    var relatedIfcClassNames = classTemplateDto.getRelatedIfcEntityNames();
+    if (relatedIfcClassNames == null || relatedIfcClassNames.isEmpty()) {
+      return datasheets;
+    }
+
     for (var relatedIfcClass : classTemplateDto.getRelatedIfcEntityNames()) {
       String ifcUri = String.format(IFC_IDENTIFIER_URL_PATTERN, relatedIfcClass);
       Datasheet relatedIfcDatasheet = generateDatasheetFromPlatformId(ifcUri);
