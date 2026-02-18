@@ -11,14 +11,12 @@ import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
-import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.service.CacheService;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -163,26 +161,24 @@ public class BsddPlatformAdapter implements PlatformAdapter {
 
   /** Fetches class template with property details. */
   private BsddClassTemplateDto getClassTemplate(String uri) throws JsonValidationException {
-
-    if (!validateUri(uri)) {
-      throw new InvalidInputException("Invalid URI : " + uri);
-    }
-    UriComponentsBuilder uriBuilder =
+    URI requestUri =
         UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassDetailsUrl())
             .queryParam("Uri", uri)
-            .queryParam("IncludeClassProperties", true);
+            .queryParam("IncludeClassProperties", true)
+            .build(false) // don't re-encode the nested URL parameter
+            .toUri();
 
-    String url = uriBuilder.toUriString();
+    String cacheKey = requestUri.toString();
 
     BsddClassTemplateDto classTemplateDto =
-        cacheService.getCachedTemplate(url, BsddClassTemplateDto.class);
+        cacheService.getCachedTemplate(cacheKey, BsddClassTemplateDto.class);
     if (classTemplateDto == null) {
       try {
         ResponseEntity<BsddClassTemplateDto> response =
-            restTemplate.getForEntity(url, BsddClassTemplateDto.class);
+            restTemplate.getForEntity(requestUri, BsddClassTemplateDto.class);
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
           classTemplateDto = response.getBody();
-          cacheService.cacheTemplate(url, classTemplateDto);
+          cacheService.cacheTemplate(cacheKey, classTemplateDto);
         } else {
           throw new JsonValidationException(
               "Failed to fetch class template. HTTP Status: " + response.getStatusCode());
@@ -274,16 +270,20 @@ public class BsddPlatformAdapter implements PlatformAdapter {
 
   /** Validates whether the given URI is correctly formatted. */
   public boolean validateUri(String uriString) {
-    if (uriString == null || uriString.trim().isEmpty()) {
+    if (!uriString.startsWith("https://identifier.buildingsmart.org/uri")) {
       return false;
     }
 
-    String uriPrefix = "https://identifier.buildingsmart.org/uri";
     try {
-      URI uri = new URI(uriString);
-      return uri.getScheme() != null && uri.getHost() != null && uriString.startsWith(uriPrefix);
-    } catch (URISyntaxException e) {
-      return false;
+      var uri =
+          UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassDetailsUrl())
+              .queryParam("Uri", uriString)
+              .queryParam("IncludeClassProperties", true)
+              .encode()
+              .toUriString();
+      return true;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 

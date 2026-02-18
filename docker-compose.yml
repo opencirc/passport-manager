@@ -1,5 +1,5 @@
 services:
-  app:
+  passport-manager-api:
     build:
       dockerfile: Dockerfile.dev
       context: .
@@ -24,7 +24,8 @@ services:
       - ./data:/app/data
       - maven-repo:/root/.m2
     networks:
-      - spring-net
+      - passport-manager-network
+      - api-network
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8080"]
@@ -51,7 +52,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - spring-net
+      - passport-manager-network
 
   cache:
     image: redis
@@ -67,7 +68,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - spring-net
+      - passport-manager-network
 
   shell:
     profiles: ["shell"]
@@ -90,7 +91,7 @@ services:
     volumes:
       - maven-repo:/root/.m2
     networks:
-      - spring-net
+      - passport-manager-network
 volumes:
   db_data:
   test_db_data:
@@ -99,4 +100,7 @@ volumes:
   maven-repo:
 
 networks:
-  spring-net:
+  passport-manager-network:
+    name: passport-manager-network
+  api-network:
+    external: true
