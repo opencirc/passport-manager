@@ -42,8 +42,6 @@ services:
     ports:
       - 5435:5432
     container_name: postgresql
-    volumes:
-      - db_data:/var/lib/postgresql/data
     restart: always
     mem_limit: 768m
     healthcheck:
