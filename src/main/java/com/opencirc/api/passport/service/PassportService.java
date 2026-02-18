@@ -35,6 +35,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,7 +81,19 @@ public class PassportService {
     this.appProperties = appProperties;
   }
 
-  /** Creates template entry. */
+  /** Creates multiple passports. */
+  @Transactional
+  public List<PassportDto> batchCreatePassportsUsingPlatform(
+      Platform platform, List<CreatePassportUsingPlatformRequestDto> dataArray, UserDto author)
+      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+    var passportDtos = new ArrayList<PassportDto>();
+    for (var passportData : dataArray) {
+      passportDtos.add(createPassportUsingPlatform(platform, passportData, author));
+    }
+    return passportDtos;
+  }
+
+  /** Creates a passport. */
   @Transactional
   public PassportDto createPassportUsingPlatform(
       Platform platform, CreatePassportUsingPlatformRequestDto data, UserDto author)
@@ -121,6 +134,36 @@ public class PassportService {
             .findById(passport.getId())
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+
+    var dataValues = data.getValues();
+    if (dataValues != null) {
+      var mappings = passport.getDatasheetMappings();
+      if (mappings != null && !mappings.isEmpty()) {
+        Map<String, Object> updateValues = new HashMap<>();
+        for (var mapping : mappings) {
+          var datasheet = mapping.getDatasheet();
+          if (datasheet == null) {
+            continue;
+          }
+
+          var properties = datasheet.getDatasheetProperties();
+          if (properties == null || properties.isEmpty()) {
+            continue;
+          }
+
+          for (var property : properties) {
+            if (dataValues.containsKey(property.getCode())) {
+              updateValues.put(property.getId(), dataValues.get(property.getCode()));
+            }
+          }
+        }
+
+        if (!updateValues.isEmpty()) {
+          updateData(passport.getId(), updateValues);
+        }
+      }
+    }
+
     return PassportDto.from(passport);
   }
 
@@ -368,12 +411,18 @@ public class PassportService {
     }
   }
 
+  /** Update passport datasheet data from a DTO. */
+  @Transactional
+  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto) {
+    return updateData(passportId, updateDataRequestDto.getValues());
+  }
+
   /**
    * Updates datasheet property values for the given passport and group. Only properties present in
    * {@code updateDataRequestDto.values} are updated.
    */
   @Transactional
-  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto) {
+  public PassportDto updateData(String passportId, Map<String, Object> values) {
     Passport passport =
         passportRepository
             .findPassport(passportId, Passport.Status.ACTIVE)
@@ -402,12 +451,11 @@ public class PassportService {
       for (DatasheetProperty property : datasheet.getDatasheetProperties()) {
         String propertyId = property.getId();
 
-        if (!updateDataRequestDto.getValues().containsKey(property.getId())) {
+        if (!values.containsKey(property.getId())) {
           continue;
         }
 
-        JsonNode newValue =
-            objectMapper.valueToTree(updateDataRequestDto.getValues().get(propertyId));
+        JsonNode newValue = objectMapper.valueToTree(values.get(propertyId));
         JsonNode existingValue = dataNode.get(propertyId);
         if (Objects.equals(newValue, existingValue)) {
           continue;

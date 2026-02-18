@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 import com.opencirc.api.passport.model.Datasheet;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,4 +34,8 @@ public class CreatePassportUsingPlatformRequestDto {
   @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true)
   @JsonProperty
   private String parentId;
+
+  @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true)
+  @JsonProperty
+  private Map<String, Object> values;
 }

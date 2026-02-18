@@ -60,6 +60,27 @@ public class PassportController {
             Platform.fromValue(platform), data, userContext.getCurrentUser()));
   }
 
+  /** Creates multiple passports using information from the provided platforms. */
+  @Operation(summary = "Creates multiple passports using information from the provided platforms.")
+  @PostMapping(
+      value = "/api/passport/platform/{platform}/batch",
+      produces = {"application/json"},
+      consumes = {"application/json"})
+  public ResponseEntity<List<PassportDto>> batchCreatePassportsUsingPlatform(
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              description = "Configuration for multiple passport creation")
+          @Valid
+          @RequestBody
+          List<CreatePassportUsingPlatformRequestDto> data,
+      @PathVariable
+          @Parameter(description = "Dictionary platform", required = true, in = ParameterIn.PATH)
+          String platform)
+      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+    return ResponseEntity.ok(
+        passportService.batchCreatePassportsUsingPlatform(
+            Platform.fromValue(platform), data, userContext.getCurrentUser()));
+  }
+
   /**
    * Creates a datasheet and adds it to the passport using information from the provided platform.
    */
