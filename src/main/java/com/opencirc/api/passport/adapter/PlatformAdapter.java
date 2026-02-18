@@ -27,9 +27,6 @@ public interface PlatformAdapter {
   /** Validates the given JSON template. */
   String validatePassportData(JsonNode jsonNode) throws JsonValidationException;
 
-  /** Validates the given URI. */
-  boolean validateUri(String uri);
-
   /** Displays the template from the dictionary without any processing. */
   JsonNode fetchRawTemplate(String uri) throws JsonProcessingException;
 

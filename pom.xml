@@ -87,6 +87,14 @@
             <version>3.4.1</version>
         </dependency>
 
+        <!-- For hot-reload -->
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-devtools</artifactId>
+          <scope>runtime</scope>
+          <optional>true</optional>
+        </dependency>
+
 
         <!-- JJWT Implementation -->
         <dependency>
