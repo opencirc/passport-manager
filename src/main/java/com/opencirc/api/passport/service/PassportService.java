@@ -139,18 +139,17 @@ public class PassportService {
         data.getPlatformId(),
         Datasheet.DataCategory.fromValue(data.getDataCategory()),
         author,
-        false);
+        true);
 
-    if (asBatchOperation && platform == Platform.BSDD) {
+    if (asBatchOperation) {
       // @TODO this is an INSANELY ugly hack, but is needed for now.
-      //   it is marked as invokedExternally because we need the one datasheet.
       addDatasheetsToPassportUsingPlatform(
           passport,
           platform,
           "https://identifier.buildingsmart.org/uri/LCA/LCA/3.0/class/GeneralInformation",
           Datasheet.DataCategory.fromValue(data.getDataCategory()),
           author,
-          true);
+          false);
     }
 
     passport =
@@ -200,8 +199,7 @@ public class PassportService {
       Platform platform,
       String platformId,
       Datasheet.DataCategory dataCategory,
-      UserDto author,
-      boolean invokedExternally)
+      UserDto author)
       throws JsonValidationException, JsonProcessingException {
     Passport passport =
         passportRepository
@@ -212,7 +210,7 @@ public class PassportService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passport is not active");
     }
     return addDatasheetsToPassportUsingPlatform(
-        passport, platform, platformId, dataCategory, author, invokedExternally);
+        passport, platform, platformId, dataCategory, author, false);
   }
 
   /**
@@ -225,10 +223,10 @@ public class PassportService {
       String platformId,
       Datasheet.DataCategory dataCategory,
       UserDto author,
-      boolean invokedExternally)
+      boolean addRelatedIfcEntities)
       throws JsonValidationException, JsonProcessingException {
     var adapter = platformAdapterFactory.getAdapter(platform);
-    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(platformId, false);
+    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(platformId, addRelatedIfcEntities);
     for (var rawDatasheet : rawDatasheets) {
       rawDatasheet.setCreatedById(author != null ? author.getId() : null);
       rawDatasheet.setCreatedBy(

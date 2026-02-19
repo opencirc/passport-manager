@@ -99,7 +99,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
    * IFC entities.
    */
   @Override
-  public List<Datasheet> generateDatasheetsFromPlatformId(String uri, boolean invokedExternally)
+  public List<Datasheet> generateDatasheetsFromPlatformId(String uri, boolean addRelatedIfcEntities)
       throws JsonValidationException {
 
     BsddClassTemplateDto classTemplateDto = getClassTemplate(uri);
@@ -107,7 +107,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
     List<Datasheet> datasheets = new ArrayList<>(Collections.singletonList(datasheet));
 
     var relatedIfcClassNames = classTemplateDto.getRelatedIfcEntityNames();
-    if (!invokedExternally || relatedIfcClassNames == null || relatedIfcClassNames.isEmpty()) {
+    if (!addRelatedIfcEntities || relatedIfcClassNames == null || relatedIfcClassNames.isEmpty()) {
       return datasheets;
     }
 

@@ -26,7 +26,7 @@ public interface PlatformAdapter {
    * are invoking this method directly from an endpoint or as part of another flow, because the
    * different scenarios affect the way the datasheet is created.
    */
-  List<Datasheet> generateDatasheetsFromPlatformId(String platformId, boolean invokedExternally)
+  List<Datasheet> generateDatasheetsFromPlatformId(String platformId, boolean addRelatedIfcEntities)
       throws JsonValidationException, JsonProcessingException;
 
   /** Retrieves a list of properties matching the given search text. */
