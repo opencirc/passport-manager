@@ -139,7 +139,7 @@ public class PassportService {
         data.getPlatformId(),
         Datasheet.DataCategory.fromValue(data.getDataCategory()),
         author,
-        true);
+        false);
 
     if (asBatchOperation && platform == Platform.BSDD) {
       // @TODO this is an INSANELY ugly hack, but is needed for now.
