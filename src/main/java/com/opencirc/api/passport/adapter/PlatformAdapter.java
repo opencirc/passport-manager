@@ -22,10 +22,9 @@ public interface PlatformAdapter {
    *   but this is not a good implementation.
    */
   /**
-   * Generates a set of datasheets using the given platform ID.
-   * We can tell the service whether we are invoking this method directly from an endpoint
-   * or as part of another flow, because the different scenarios affect the way the
-   * datasheet is created.
+   * Generates a set of datasheets using the given platform ID. We can tell the service whether we
+   * are invoking this method directly from an endpoint or as part of another flow, because the
+   * different scenarios affect the way the datasheet is created.
    */
   List<Datasheet> generateDatasheetsFromPlatformId(String platformId, boolean invokedExternally)
       throws JsonValidationException, JsonProcessingException;

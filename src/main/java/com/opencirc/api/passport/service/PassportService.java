@@ -96,9 +96,7 @@ public class PassportService {
   /** Creates a passport. */
   @Transactional
   public PassportDto createPassportUsingPlatform(
-      Platform platform,
-      CreatePassportUsingPlatformRequestDto data,
-      UserDto author)
+      Platform platform, CreatePassportUsingPlatformRequestDto data, UserDto author)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
     return createPassportUsingPlatform(platform, data, author, false);
   }
@@ -141,7 +139,7 @@ public class PassportService {
         data.getPlatformId(),
         Datasheet.DataCategory.fromValue(data.getDataCategory()),
         author,
-        false);
+        true);
 
     if (asBatchOperation && platform == Platform.BSDD) {
       // @TODO this is an INSANELY ugly hack, but is needed for now.
