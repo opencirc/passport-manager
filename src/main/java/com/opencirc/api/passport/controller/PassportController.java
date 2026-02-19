@@ -106,7 +106,8 @@ public class PassportController {
             Platform.fromValue(data.getPlatform()),
             data.getPlatformId(),
             Datasheet.DataCategory.fromValue(data.getDataCategory()),
-            userContext.getCurrentUser()));
+            userContext.getCurrentUser(),
+            true));
   }
 
   /** Fetch a passport. */
