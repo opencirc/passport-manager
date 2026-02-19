@@ -98,6 +98,16 @@ public class PassportService {
   public PassportDto createPassportUsingPlatform(
       Platform platform,
       CreatePassportUsingPlatformRequestDto data,
+      UserDto author)
+      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+    return createPassportUsingPlatform(platform, data, author, false);
+  }
+
+  /** Creates a passport. */
+  @Transactional
+  public PassportDto createPassportUsingPlatform(
+      Platform platform,
+      CreatePassportUsingPlatformRequestDto data,
       UserDto author,
       boolean asBatchOperation)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
