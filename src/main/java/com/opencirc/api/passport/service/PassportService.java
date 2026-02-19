@@ -88,7 +88,7 @@ public class PassportService {
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
     var passportDtos = new ArrayList<PassportDto>();
     for (var passportData : dataArray) {
-      passportDtos.add(createPassportUsingPlatform(platform, passportData, author));
+      passportDtos.add(createPassportUsingPlatform(platform, passportData, author, true));
     }
     return passportDtos;
   }
@@ -96,7 +96,10 @@ public class PassportService {
   /** Creates a passport. */
   @Transactional
   public PassportDto createPassportUsingPlatform(
-      Platform platform, CreatePassportUsingPlatformRequestDto data, UserDto author)
+      Platform platform,
+      CreatePassportUsingPlatformRequestDto data,
+      UserDto author,
+      boolean asBatchOperation)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
 
     int customLength = AppConstants.CUID_LENGTH;
@@ -127,7 +130,20 @@ public class PassportService {
         platform,
         data.getPlatformId(),
         Datasheet.DataCategory.fromValue(data.getDataCategory()),
-        author);
+        author,
+        false);
+
+    if (asBatchOperation && platform == Platform.BSDD) {
+      // @TODO this is an INSANELY ugly hack, but is needed for now.
+      //   it is marked as invokedExternally because we need the one datasheet.
+      addDatasheetsToPassportUsingPlatform(
+          passport,
+          platform,
+          "https://identifier.buildingsmart.org/uri/LCA/LCA/3.0/class/GeneralInformation",
+          Datasheet.DataCategory.fromValue(data.getDataCategory()),
+          author,
+          true);
+    }
 
     passport =
         passportRepository
@@ -176,7 +192,8 @@ public class PassportService {
       Platform platform,
       String platformId,
       Datasheet.DataCategory dataCategory,
-      UserDto author)
+      UserDto author,
+      boolean invokedExternally)
       throws JsonValidationException, JsonProcessingException {
     Passport passport =
         passportRepository
@@ -187,7 +204,7 @@ public class PassportService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passport is not active");
     }
     return addDatasheetsToPassportUsingPlatform(
-        passport, platform, platformId, dataCategory, author);
+        passport, platform, platformId, dataCategory, author, invokedExternally);
   }
 
   /**
@@ -199,7 +216,8 @@ public class PassportService {
       Platform platform,
       String platformId,
       Datasheet.DataCategory dataCategory,
-      UserDto author)
+      UserDto author,
+      boolean invokedExternally)
       throws JsonValidationException, JsonProcessingException {
     var adapter = platformAdapterFactory.getAdapter(platform);
     var rawDatasheets = adapter.generateDatasheetsFromPlatformId(platformId, false);
