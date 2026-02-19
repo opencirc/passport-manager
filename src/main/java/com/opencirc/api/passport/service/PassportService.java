@@ -202,7 +202,7 @@ public class PassportService {
       UserDto author)
       throws JsonValidationException, JsonProcessingException {
     var adapter = platformAdapterFactory.getAdapter(platform);
-    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(platformId);
+    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(platformId, false);
     for (var rawDatasheet : rawDatasheets) {
       rawDatasheet.setCreatedById(author != null ? author.getId() : null);
       rawDatasheet.setCreatedBy(

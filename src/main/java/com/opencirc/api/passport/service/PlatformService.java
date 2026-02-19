@@ -27,7 +27,7 @@ public class PlatformService {
   public List<Datasheet> generateDatasheetsFromPlatformId(Platform platform, String code)
       throws JsonValidationException, JsonProcessingException {
     var adapter = platformAdapterFactory.getAdapter(platform);
-    return adapter.generateDatasheetsFromPlatformId(code);
+    return adapter.generateDatasheetsFromPlatformId(code, true);
   }
 
   /** Retrieves the list of properties. */

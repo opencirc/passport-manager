@@ -17,8 +17,17 @@ public interface PlatformAdapter {
   /** Retrieves a list of classes matching the given search text. */
   List<Map<String, String>> listClass(String text);
 
-  /** Generates a set of datasheets using the given platform ID. */
-  List<Datasheet> generateDatasheetsFromPlatformId(String platformId)
+  /*
+   * @TODO this is not abstract enough and will be left here for now for testing purposes,
+   *   but this is not a good implementation.
+   */
+  /**
+   * Generates a set of datasheets using the given platform ID.
+   * We can tell the service whether we are invoking this method directly from an endpoint
+   * or as part of another flow, because the different scenarios affect the way the
+   * datasheet is created.
+   */
+  List<Datasheet> generateDatasheetsFromPlatformId(String platformId, boolean invokedExternally)
       throws JsonValidationException, JsonProcessingException;
 
   /** Retrieves a list of properties matching the given search text. */
