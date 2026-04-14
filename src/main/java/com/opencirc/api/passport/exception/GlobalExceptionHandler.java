@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /** Global Exception Handler. */
 @RestControllerAdvice
@@ -39,6 +40,13 @@ public class GlobalExceptionHandler {
   /** Handler for a Resource not found exception. */
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex) {
+    ErrorResponse errorResponse = new ErrorResponse("Not Found", ex.getMessage());
+    return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+  }
+
+  /** Handler for no resource found (404). */
+  @ExceptionHandler(NoResourceFoundException.class)
+  public ResponseEntity<Object> handleNoResourceFound(NoResourceFoundException ex) {
     ErrorResponse errorResponse = new ErrorResponse("Not Found", ex.getMessage());
     return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
   }
