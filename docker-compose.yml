@@ -74,7 +74,7 @@ services:
       dockerfile: Dockerfile.dev
       context: .
     depends_on:
-      app:
+      passport-manager-api:
         condition: service_healthy
     stdin_open: true
     tty: true
