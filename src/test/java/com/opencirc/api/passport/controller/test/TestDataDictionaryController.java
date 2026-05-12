@@ -82,7 +82,7 @@ public class TestDataDictionaryController {
   }
 
   private void generateMockJwtToken() {
-    String requestBody = "{\"email\": \"user@test.com\", \"password\": \"user1password\"}";
+    String requestBody = "{\"email\": \"user\", \"password\": \"user1password\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
     if (response.getStatusCode() == 200) {
@@ -110,7 +110,7 @@ public class TestDataDictionaryController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .when()
-            .get("/api/data-dictionary/{dictionary}/class/search/{query}", dictionary, query)
+            .get("/api/dataDictionary/{dictionary}/class/search/{query}", dictionary, query)
             .then()
             .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)

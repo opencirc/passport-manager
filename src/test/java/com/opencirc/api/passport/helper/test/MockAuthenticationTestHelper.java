@@ -43,7 +43,7 @@ public class MockAuthenticationTestHelper {
         .thenAnswer(
             invocation -> {
               UsernamePasswordAuthenticationToken authRequest = invocation.getArgument(0);
-              if (authRequest.getName().equals("User")
+              if (authRequest.getName().equalsIgnoreCase("user")
                   && authRequest.getCredentials().equals("user1password")) {
                 return mockAuthenticationToken;
               } else {
