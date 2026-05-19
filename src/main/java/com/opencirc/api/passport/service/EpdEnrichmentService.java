@@ -41,16 +41,30 @@ public class EpdEnrichmentService {
   private static final String CODE_GWP = "ClimateChangePerUnit";
   private static final String CODE_LIFE_CYCLE_PHASE = "LifeCyclePhase";
 
+  /**
+   * Constructs a new EpdEnrichmentService.
+   *
+   * @param restTemplate the RestTemplate to use for HTTP requests
+   * @param datasheetRepository the repository for Datasheet entities
+   */
   public EpdEnrichmentService(RestTemplate restTemplate, DatasheetRepository datasheetRepository) {
     this.restTemplate = restTemplate;
     this.datasheetRepository = datasheetRepository;
   }
 
+  /**
+   * Enriches a passport with data from an EPD URL asynchronously.
+   *
+   * @param passport the passport to enrich
+   * @param epdUrl the URL of the EPD data
+   */
   @Async
   public void enrich(Passport passport, String epdUrl) {
     log.info("Enriching passport {} from EPD URL: {}", passport.getId(), epdUrl);
     try {
-      if (epdUrl == null || epdUrl.isBlank()) return;
+      if (epdUrl == null || epdUrl.isBlank()) {
+        return;
+      }
 
       // Security check: enforce HTTPS unless it's localhost
       if (!epdUrl.startsWith("https://") && !epdUrl.contains("localhost")) {
@@ -66,10 +80,10 @@ public class EpdEnrichmentService {
       }
 
       Map<String, Object> extractedData;
-      if (isLCAx(epdData)) {
-        extractedData = extractLCAxData(epdData);
+      if (isLcax(epdData)) {
+        extractedData = extractLcaxData(epdData);
       } else {
-        extractedData = extractILCDData(epdData);
+        extractedData = extractIlcdData(epdData);
       }
 
       if (extractedData.isEmpty()) {
@@ -105,26 +119,32 @@ public class EpdEnrichmentService {
     return url + separator + queryParam;
   }
 
-  private boolean isLCAx(JsonNode epdData) {
+  private boolean isLcax(JsonNode epdData) {
     return epdData.has("impacts")
         || epdData.has("metaData")
         || (epdData.has("format") && "lcax".equalsIgnoreCase(epdData.get("format").asText()));
   }
 
-  private Map<String, Object> extractLCAxData(JsonNode epdData) {
+  private Map<String, Object> extractLcaxData(JsonNode epdData) {
     Map<String, Object> data = new HashMap<>();
 
     // Product Name
     String name = epdData.path("name").asText(null);
-    if (name != null) data.put(createKey(CODE_PRODUCT_NAME, GROUP_PRODUCT_INFORMATION), name);
+    if (name != null) {
+      data.put(createKey(CODE_PRODUCT_NAME, GROUP_PRODUCT_INFORMATION), name);
+    }
 
     // Publication Date
     String pubDate = epdData.path("publishedDate").asText(null);
-    if (pubDate != null) data.put(createKey(CODE_PUBLICATION_DATE, GROUP_DATE), pubDate);
+    if (pubDate != null) {
+      data.put(createKey(CODE_PUBLICATION_DATE, GROUP_DATE), pubDate);
+    }
 
     // Valid Until
     String validUntil = epdData.path("validUntil").asText(null);
-    if (validUntil != null) data.put(createKey(CODE_VALID_UNTIL, GROUP_DATE), validUntil);
+    if (validUntil != null) {
+      data.put(createKey(CODE_VALID_UNTIL, GROUP_DATE), validUntil);
+    }
 
     // Service Life
     if (epdData.has("referenceServiceLife")) {
@@ -138,11 +158,15 @@ public class EpdEnrichmentService {
     if (epdData.has("source")) {
       owner = epdData.path("source").path("name").asText(null);
     }
-    if (owner != null) data.put(createKey(CODE_OWNER_NAME, GROUP_PARTIES_INVOLVED), owner);
+    if (owner != null) {
+      data.put(createKey(CODE_OWNER_NAME, GROUP_PARTIES_INVOLVED), owner);
+    }
 
     // Unit Type
     String unit = epdData.path("declaredUnit").asText(null);
-    if (unit != null) data.put(createKey(CODE_UNIT_TYPE, GROUP_REFERENCE_UNIT_TYPE), unit);
+    if (unit != null) {
+      data.put(createKey(CODE_UNIT_TYPE, GROUP_REFERENCE_UNIT_TYPE), unit);
+    }
 
     // GWP (A1-A3)
     JsonNode gwp = epdData.path("impacts").path("gwp");
@@ -157,13 +181,15 @@ public class EpdEnrichmentService {
     return data;
   }
 
-  private Map<String, Object> extractILCDData(JsonNode epdData) {
+  private Map<String, Object> extractIlcdData(JsonNode epdData) {
     Map<String, Object> data = new HashMap<>();
 
     // Product Name
     String name =
         getLocalizedText(epdData, "processInformation", "dataSetInformation", "name", "baseName");
-    if (name != null) data.put(createKey(CODE_PRODUCT_NAME, GROUP_PRODUCT_INFORMATION), name);
+    if (name != null) {
+      data.put(createKey(CODE_PRODUCT_NAME, GROUP_PRODUCT_INFORMATION), name);
+    }
 
     // Publication Date
     String pubDate = getLocalizedText(epdData, "processInformation", "time", "other", "anies");
@@ -174,7 +200,9 @@ public class EpdEnrichmentService {
 
     // Valid Until
     String validUntil = getValue(epdData, "processInformation", "time", "dataSetValidUntil");
-    if (validUntil != null) data.put(createKey(CODE_VALID_UNTIL, GROUP_DATE), validUntil);
+    if (validUntil != null) {
+      data.put(createKey(CODE_VALID_UNTIL, GROUP_DATE), validUntil);
+    }
 
     // Owner Name
     String owner =
@@ -192,7 +220,9 @@ public class EpdEnrichmentService {
               "publicationAndOwnership",
               "referenceToOwnershipEntity");
     }
-    if (owner != null) data.put(createKey(CODE_OWNER_NAME, GROUP_PARTIES_INVOLVED), owner);
+    if (owner != null) {
+      data.put(createKey(CODE_OWNER_NAME, GROUP_PARTIES_INVOLVED), owner);
+    }
 
     // Service Life
     String serviceLife =
@@ -207,8 +237,9 @@ public class EpdEnrichmentService {
               "common:other",
               "referenceServiceLife");
     }
-    if (serviceLife != null)
+    if (serviceLife != null) {
       data.put(createKey(CODE_SERVICE_LIFE, GROUP_PRODUCT_INFORMATION), serviceLife);
+    }
 
     // Unit Type
     String unitType = null;
@@ -225,7 +256,9 @@ public class EpdEnrichmentService {
               }
             }
           }
-          if (unitType != null) break;
+          if (unitType != null) {
+            break;
+          }
         }
       }
     }
@@ -244,7 +277,9 @@ public class EpdEnrichmentService {
                 epdData, "processInformation", "quantitativeReference", "referenceToReferenceFlow");
       }
     }
-    if (unitType != null) data.put(createKey(CODE_UNIT_TYPE, GROUP_REFERENCE_UNIT_TYPE), unitType);
+    if (unitType != null) {
+      data.put(createKey(CODE_UNIT_TYPE, GROUP_REFERENCE_UNIT_TYPE), unitType);
+    }
 
     // GWP (A1-A3)
     JsonNode lciaResults = epdData.path("LCIAResults").path("LCIAResult");
@@ -285,7 +320,9 @@ public class EpdEnrichmentService {
   }
 
   private String formatIfEpoch(String value) {
-    if (value == null || value.isBlank()) return value;
+    if (value == null || value.isBlank()) {
+      return value;
+    }
     try {
       long epoch = Long.parseLong(value);
       if (epoch < 10000000000L) {
@@ -304,7 +341,9 @@ public class EpdEnrichmentService {
       current = current.path(p);
     }
 
-    if (current.isMissingNode()) return null;
+    if (current.isMissingNode()) {
+      return null;
+    }
 
     if (current.isArray()) {
       // Find English or take first
@@ -325,7 +364,9 @@ public class EpdEnrichmentService {
       }
       // Maybe it's a map of lang -> value
       JsonNode en = current.path("en");
-      if (!en.isMissingNode()) return en.asText();
+      if (!en.isMissingNode()) {
+        return en.asText();
+      }
 
       if (current.fieldNames().hasNext()) {
         return current.path(current.fieldNames().next()).asText();
@@ -344,7 +385,9 @@ public class EpdEnrichmentService {
   }
 
   private void updateDatasheets(Passport passport, Map<String, Object> enrichedData) {
-    if (passport.getDatasheetMappings() == null) return;
+    if (passport.getDatasheetMappings() == null) {
+      return;
+    }
 
     for (PassportDatasheetMapping mapping : passport.getDatasheetMappings()) {
       Datasheet datasheet = mapping.getDatasheet();
@@ -352,7 +395,9 @@ public class EpdEnrichmentService {
 
       boolean updated = false;
       Map<String, Object> data = datasheet.getData();
-      if (data == null) data = new HashMap<>();
+      if (data == null) {
+        data = new HashMap<>();
+      }
 
       for (DatasheetProperty property : datasheet.getDatasheetProperties()) {
         String key = createKey(property.getCode(), property.getGroupTag());
