@@ -245,7 +245,7 @@ public class PassportService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
 
-    String oldParentId = passport.getParentId();
+    final String oldParentId = passport.getParentId();
 
     if (newParentId != null && !newParentId.isBlank()) {
       if (passportRepository.findPassport(newParentId, Passport.Status.ACTIVE).isEmpty()) {
