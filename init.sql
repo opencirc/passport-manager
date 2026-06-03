@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     is_active BOOLEAN NOT NULL,
     refresh_token VARCHAR(255),
     created_by VARCHAR(255),
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE
+    created_time TIMESTAMP(6) WITH TIME ZONE
 );
 
 INSERT INTO users (
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS public.datasheets (
     data_category VARCHAR(20),
     data_dictionary VARCHAR(50),
     created_by VARCHAR(255),
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE
+    created_time TIMESTAMP(6) WITH TIME ZONE
 );
 
 INSERT INTO public.datasheets (
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS public.passports (
     status passport_status,
     parent_id VARCHAR(100),
     created_by VARCHAR(255),
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE
+    created_time TIMESTAMP(6) WITH TIME ZONE
 );
 
 INSERT INTO public.passports (
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS public.passport_templates (
     name VARCHAR(255),
     template JSONB,
     created_by VARCHAR(255),
-    created_time TIMESTAMP(6) WITHOUT TIME ZONE
+    created_time TIMESTAMP(6) WITH TIME ZONE
 );
 
 
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS passport_logs
     passport_id VARCHAR(100) NOT NULL,
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
-    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (passport_id) REFERENCES passports(id)
 );
 
@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS passport_lifecycles
     event_type VARCHAR(255) NOT NULL,
     data JSON NOT NULL,
     created_by VARCHAR(255) NOT NULL,
-    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (passport_id) REFERENCES passports(id)
 );
 

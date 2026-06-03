@@ -9,7 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -39,6 +39,8 @@ public class PassportLog {
 
   /** Log information in JSON format. */
   @Column(name = "data", columnDefinition = "jsonb", nullable = false)
+  @Convert(converter = com.opencirc.api.passport.util.JsonNodeConverter.class)
+  @ColumnTransformer(write = "?::jsonb")
   private JsonNode data;
 
   /** Created by. */
@@ -53,5 +55,5 @@ public class PassportLog {
 
   /** Created time. */
   @Column(name = "created_time", updatable = false, insertable = false)
-  private LocalDateTime createdTime;
+  private OffsetDateTime createdTime;
 }
