@@ -1,29 +1,22 @@
 package com.opencirc.api.passport.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.opencirc.api.passport.dto.CreatedByDto;
-import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import com.opencirc.api.passport.util.DataCategoryConverter;
-import com.opencirc.api.passport.util.DataDictionaryConverter;
-import com.opencirc.api.passport.util.DataDictionaryPlatformConverter;
 import com.opencirc.api.passport.util.JsonMapConverter;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,15 +26,18 @@ import lombok.ToString;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.UuidGenerator;
 
-/** Model for Datasheet. */
+/**
+ * Per-passport datasheet instance. Links a passport to a globally-shared {@link
+ * DatasheetDefinition} and holds only the passport-specific values.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "datasheets")
+@Table(name = "passport_datasheets")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
+@ToString(exclude = {"passport", "definition"})
 public class Datasheet {
 
   @Id
@@ -51,25 +47,16 @@ public class Datasheet {
   @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
-  @Column(name = "platform")
-  @Convert(converter = DataDictionaryPlatformConverter.class)
-  private Platform platform;
+  /** Passport this datasheet instance belongs to. */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "passport_id", referencedColumnName = "id", nullable = false)
+  @JsonBackReference
+  private Passport passport;
 
-  @Column(name = "dictionary")
-  @Convert(converter = DataDictionaryConverter.class)
-  private DataDictionary dictionary;
-
-  @Column(name = "code")
-  private String code;
-
-  @Column(name = "name")
-  private String name;
-
-  @Column(name = "description")
-  private String description;
-
-  @Column(name = "platform_id")
-  private String platformId;
+  /** Globally-shared definition this instance references. */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "definition_id", referencedColumnName = "id", nullable = false)
+  private DatasheetDefinition definition;
 
   @Column(name = "data_category")
   @Convert(converter = DataCategoryConverter.class)
@@ -90,16 +77,6 @@ public class Datasheet {
 
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;
-
-  @OneToMany(mappedBy = "datasheet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @ToString.Exclude
-  @JsonManagedReference("datasheet")
-  private List<PassportDatasheetMapping> datasheetMappings;
-
-  @ToString.Exclude
-  @JsonManagedReference
-  @OneToMany(mappedBy = "datasheet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  private Set<DatasheetProperty> datasheetProperties = new HashSet<>();
 
   /** Enum representing the category of data. */
   @Getter

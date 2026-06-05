@@ -12,8 +12,8 @@ import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
-import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.DatasheetProperty;
+import com.opencirc.api.passport.model.DatasheetDefinition;
+import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.service.CacheService;
 import java.io.IOException;
 import java.net.URI;
@@ -95,68 +95,72 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   }
 
   /**
-   * Fetches a class template with property details and returns a datasheet for it and its related
-   * IFC entities.
+   * Fetches a class template with property details and returns a datasheet definition for it and
+   * its related IFC entities.
    */
   @Override
-  public List<Datasheet> generateDatasheetsFromPlatformId(String uri, boolean addRelatedIfcEntities)
-      throws JsonValidationException {
+  public List<DatasheetDefinition> generateDatasheetsFromPlatformId(
+      String uri, boolean addRelatedIfcEntities) throws JsonValidationException {
 
     BsddClassTemplateDto classTemplateDto = getClassTemplate(uri);
-    Datasheet datasheet = generateDatasheetFromClassTemplateDto(classTemplateDto);
-    List<Datasheet> datasheets = new ArrayList<>(Collections.singletonList(datasheet));
+    DatasheetDefinition definition = generateDatasheetFromClassTemplateDto(classTemplateDto);
+    List<DatasheetDefinition> definitions = new ArrayList<>(Collections.singletonList(definition));
 
     var relatedIfcClassNames = classTemplateDto.getRelatedIfcEntityNames();
     if (!addRelatedIfcEntities || relatedIfcClassNames == null || relatedIfcClassNames.isEmpty()) {
-      return datasheets;
+      return definitions;
     }
 
-    for (var relatedIfcClass : classTemplateDto.getRelatedIfcEntityNames()) {
+    List<String> relatedUris = new ArrayList<>();
+    for (var relatedIfcClass : relatedIfcClassNames) {
       String ifcUri = String.format(IFC_IDENTIFIER_URL_PATTERN, relatedIfcClass);
-      Datasheet relatedIfcDatasheet = generateDatasheetFromPlatformId(ifcUri);
-      datasheets.add(relatedIfcDatasheet);
+      relatedUris.add(ifcUri);
+      definitions.add(generateDatasheetFromPlatformId(ifcUri));
     }
+    definition.setRelatedPlatformIds(relatedUris);
 
-    return datasheets;
+    return definitions;
   }
 
-  /** Fetches class template with property details. */
-  public Datasheet generateDatasheetFromPlatformId(String uri) throws JsonValidationException {
+  /** Fetches a class template and builds its datasheet definition. */
+  public DatasheetDefinition generateDatasheetFromPlatformId(String uri)
+      throws JsonValidationException {
     BsddClassTemplateDto classTemplateDto = getClassTemplate(uri);
     return generateDatasheetFromClassTemplateDto(classTemplateDto);
   }
 
-  /** Fetches class template with property details. */
-  public Datasheet generateDatasheetFromClassTemplateDto(BsddClassTemplateDto classTemplateDto) {
-    Datasheet datasheet = new Datasheet();
-    datasheet.setPlatform(Platform.BSDD);
-    datasheet.setDictionary(
+  /** Builds a datasheet definition from a fetched class template. */
+  public DatasheetDefinition generateDatasheetFromClassTemplateDto(
+      BsddClassTemplateDto classTemplateDto) {
+    DatasheetDefinition definition = new DatasheetDefinition();
+    definition.setPlatform(Platform.BSDD);
+    definition.setDictionary(
         classTemplateDto.getReferenceCode().startsWith("Ifc")
             ? DataDictionary.IFC
             : DataDictionary.TABLE6);
-    datasheet.setCode(classTemplateDto.getCode());
-    datasheet.setName(classTemplateDto.getName());
-    datasheet.setDescription(classTemplateDto.getDefinition());
-    datasheet.setPlatformId(classTemplateDto.getUri());
+    definition.setCode(classTemplateDto.getCode());
+    definition.setName(classTemplateDto.getName());
+    definition.setDescription(classTemplateDto.getDefinition());
+    definition.setPlatformId(classTemplateDto.getUri());
 
     if (classTemplateDto.getClassProperties() != null) {
-      datasheet.setDatasheetProperties(new HashSet<>());
+      definition.setProperties(new HashSet<>());
       for (var classProperty : classTemplateDto.getClassProperties()) {
         if (classProperty.getPropertyCode() == null || classProperty.getPropertyCode().isBlank()) {
           continue;
         }
 
-        DatasheetProperty property = new DatasheetProperty();
+        DatasheetDefinitionProperty property = new DatasheetDefinitionProperty();
         property.setPlatformId(classProperty.getUri());
         property.setCode(classProperty.getPropertyCode());
         property.setGroupTag(classProperty.getPropertySet());
         property.setPropertyType(classProperty.getDataType());
-        property.setDatasheet(datasheet);
-        datasheet.getDatasheetProperties().add(property);
+        property.setDatasheetDefinition(definition);
+        definition.getProperties().add(property);
       }
     }
 
-    return datasheet;
+    return definition;
   }
 
   /** Fetches class template with property details. */

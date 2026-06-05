@@ -44,11 +44,9 @@ public class PassportDto {
     dto.setCreatedTime(passport.getCreatedTime());
     dto.setParentId(passport.getParentId());
 
-    if (passport.getDatasheetMappings() != null) {
+    if (passport.getDatasheets() != null) {
       dto.setDatasheets(
-          passport.getDatasheetMappings().stream()
-              .map(mapping -> DatasheetDto.from(mapping.getDatasheet()))
-              .collect(Collectors.toList()));
+          passport.getDatasheets().stream().map(DatasheetDto::from).collect(Collectors.toList()));
     }
 
     return dto;

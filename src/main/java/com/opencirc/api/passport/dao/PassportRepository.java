@@ -16,9 +16,9 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   /** Retrieves a Passport. */
   @Query(
       "SELECT DISTINCT p FROM Passport p "
-          + "LEFT JOIN FETCH p.datasheetMappings dm "
-          + "LEFT JOIN FETCH dm.datasheet d "
-          + "LEFT JOIN FETCH d.datasheetProperties "
+          + "LEFT JOIN FETCH p.datasheets d "
+          + "LEFT JOIN FETCH d.definition def "
+          + "LEFT JOIN FETCH def.properties "
           + "WHERE p.id = :id AND p.status = :status")
   Optional<Passport> findPassport(@Param("id") String id, @Param("status") Passport.Status status);
 
@@ -47,28 +47,28 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
                    pt.created_by_id AS passportCreatedById,
                    pt.created_by AS passportCreatedBy,
                    pt.created_time AS passportCreatedTime,
-                   ds.id AS datasheetId,
-                   ds.platform AS platform,
-                   ds.dictionary AS dictionary,
-                   ds.code AS datasheetCode,
-                   ds.name AS datasheetName,
-                   ds.description AS datasheetDescription,
-                   ds.platform_id AS datasheetPlatformId,
-                   ds.data_category AS dataCategory,
-                   ds.data AS data,
-                   ds.created_by AS datasheetCreatedBy,
-                   ds.created_by_id AS datasheetCreatedById,
-                   ds.created_time AS datasheetCreatedTime,
-                   dp.id AS datasheetPropertyId,
-                   dp.code AS datasheetPropertyCode,
-                   dp.platform_id AS datasheetPropertyPlatformId,
-                   dp.group_tag AS datasheetPropertyGroupTag,
-                   dp.property_type AS datasheetPropertyType,
-                   dp.definition AS datasheetPropertyDefinition
+                   pd.id AS datasheetId,
+                   def.platform AS platform,
+                   def.dictionary AS dictionary,
+                   def.code AS datasheetCode,
+                   def.name AS datasheetName,
+                   def.description AS datasheetDescription,
+                   def.platform_id AS datasheetPlatformId,
+                   pd.data_category AS dataCategory,
+                   pd.data AS data,
+                   pd.created_by AS datasheetCreatedBy,
+                   pd.created_by_id AS datasheetCreatedById,
+                   pd.created_time AS datasheetCreatedTime,
+                   dprop.id AS datasheetPropertyId,
+                   dprop.code AS datasheetPropertyCode,
+                   dprop.platform_id AS datasheetPropertyPlatformId,
+                   dprop.group_tag AS datasheetPropertyGroupTag,
+                   dprop.property_type AS datasheetPropertyType,
+                   dprop.definition AS datasheetPropertyDefinition
             FROM PassportTree pt
-            LEFT JOIN passport_datasheet_mappings pdm ON pt.id = pdm.passport_id
-            LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
-            LEFT JOIN datasheet_properties dp ON ds.id = dp.datasheet_id
+            LEFT JOIN passport_datasheets pd ON pt.id = pd.passport_id
+            LEFT JOIN datasheet_definitions def ON pd.definition_id = def.id
+            LEFT JOIN datasheet_definition_properties dprop ON def.id = dprop.definition_id
             WHERE pt.status = 'active'
             """,
       nativeQuery = true)
@@ -86,30 +86,30 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
                    p.created_by_id AS passportCreatedById,
                    p.created_by AS passportCreatedBy,
                    p.created_time AS passportCreatedTime,
-                   ds.id AS datasheetId,
-                   ds.platform AS platform,
-                   ds.dictionary AS dictionary,
-                   ds.code AS datasheetCode,
-                   ds.name AS datasheetName,
-                   ds.description AS datasheetDescription,
-                   ds.platform_id AS datasheetPlatformId,
-                   ds.data_category AS dataCategory,
-                   ds.data AS data,
-                   ds.created_by_id AS datasheetCreatedById,
-                   ds.created_by AS datasheetCreatedBy,
-                   ds.created_time AS datasheetCreatedTime,
-                   dp.id AS datasheetPropertyId,
-                   dp.datasheet_id AS datasheetPropertyDatasheetId,
-                   dp.code AS datasheetPropertyCode,
-                   dp.platform_id AS datasheetPropertyPlatformId,
-                   dp.group_tag AS datasheetPropertyGroupTag,
-                   dp.property_type AS datasheetPropertyType,
-                   dp.definition AS datasheetPropertyDefinition
+                   pd.id AS datasheetId,
+                   def.platform AS platform,
+                   def.dictionary AS dictionary,
+                   def.code AS datasheetCode,
+                   def.name AS datasheetName,
+                   def.description AS datasheetDescription,
+                   def.platform_id AS datasheetPlatformId,
+                   pd.data_category AS dataCategory,
+                   pd.data AS data,
+                   pd.created_by_id AS datasheetCreatedById,
+                   pd.created_by AS datasheetCreatedBy,
+                   pd.created_time AS datasheetCreatedTime,
+                   dprop.id AS datasheetPropertyId,
+                   pd.id AS datasheetPropertyDatasheetId,
+                   dprop.code AS datasheetPropertyCode,
+                   dprop.platform_id AS datasheetPropertyPlatformId,
+                   dprop.group_tag AS datasheetPropertyGroupTag,
+                   dprop.property_type AS datasheetPropertyType,
+                   dprop.definition AS datasheetPropertyDefinition
 
             FROM passports p
-            LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
-            LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
-            LEFT JOIN datasheet_properties dp ON ds.id = dp.datasheet_id
+            LEFT JOIN passport_datasheets pd ON p.id = pd.passport_id
+            LEFT JOIN datasheet_definitions def ON pd.definition_id = def.id
+            LEFT JOIN datasheet_definition_properties dprop ON def.id = dprop.definition_id
             WHERE p.parent_id = :passport_id AND p.status = 'active'
             """,
       nativeQuery = true)
@@ -130,9 +130,9 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
   /** Retrieves passports without parent. */
   @Query(
       "SELECT DISTINCT p FROM Passport p "
-          + "LEFT JOIN FETCH p.datasheetMappings dm "
-          + "LEFT JOIN FETCH dm.datasheet d "
-          + "LEFT JOIN FETCH d.datasheetProperties "
+          + "LEFT JOIN FETCH p.datasheets d "
+          + "LEFT JOIN FETCH d.definition def "
+          + "LEFT JOIN FETCH def.properties "
           + "WHERE p.status = 'active' AND p.parentId IS NULL ")
   List<Passport> getRootPassports();
 
@@ -148,29 +148,29 @@ public interface PassportRepository extends JpaRepository<Passport, String> {
     p.created_by_id AS passportCreatedById,
     p.created_by AS passportCreatedBy,
     p.created_time AS passportCreatedTime,
-    ds.id AS datasheetId,
-    ds.platform AS platform,
-    ds.dictionary AS dictionary,
-    ds.code AS datasheetCode,
-    ds.name AS datasheetName,
-    ds.description AS datasheetDescription,
-    ds.platform_id AS datasheetPlatformId,
-    ds.data_category AS dataCategory,
-    ds.data AS data,
-    ds.created_by_id AS datasheetCreatedById,
-    ds.created_time AS datasheetCreatedTime,
-    dp.id AS datasheetPropertyId,
-    dp.datasheet_id AS datasheetPropertyDatasheetId,
-    dp.code AS datasheetPropertyCode,
-    dp.platform_id AS datasheetPropertyPlatformId,
-    dp.group_tag AS datasheetPropertyGroupTag,
-    dp.property_type AS datasheetPropertyType,
-    dp.definition AS datasheetPropertyDefinition
+    pd.id AS datasheetId,
+    def.platform AS platform,
+    def.dictionary AS dictionary,
+    def.code AS datasheetCode,
+    def.name AS datasheetName,
+    def.description AS datasheetDescription,
+    def.platform_id AS datasheetPlatformId,
+    pd.data_category AS dataCategory,
+    pd.data AS data,
+    pd.created_by_id AS datasheetCreatedById,
+    pd.created_time AS datasheetCreatedTime,
+    dprop.id AS datasheetPropertyId,
+    pd.id AS datasheetPropertyDatasheetId,
+    dprop.code AS datasheetPropertyCode,
+    dprop.platform_id AS datasheetPropertyPlatformId,
+    dprop.group_tag AS datasheetPropertyGroupTag,
+    dprop.property_type AS datasheetPropertyType,
+    dprop.definition AS datasheetPropertyDefinition
 FROM passports p
-LEFT JOIN passport_datasheet_mappings pdm ON p.id = pdm.passport_id
-LEFT JOIN datasheets ds ON pdm.datasheet_id = ds.id
-LEFT JOIN datasheet_properties dp ON ds.id = dp.datasheet_id
-                WHERE ds.code = :code
+LEFT JOIN passport_datasheets pd ON p.id = pd.passport_id
+LEFT JOIN datasheet_definitions def ON pd.definition_id = def.id
+LEFT JOIN datasheet_definition_properties dprop ON def.id = dprop.definition_id
+                WHERE def.code = :code
                 AND p.status = 'active'
                 """,
       nativeQuery = true)

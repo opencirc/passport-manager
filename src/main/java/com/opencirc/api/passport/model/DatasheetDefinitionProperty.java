@@ -17,27 +17,27 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UuidGenerator;
 
-/** Model for datasheet_properties table. */
+/** Model for datasheet_definition_properties table. A property definition shared globally. */
 @Entity
-@Table(name = "datasheet_properties")
+@Table(name = "datasheet_definition_properties")
 @Data
 @ToString
-public class DatasheetProperty {
+public class DatasheetDefinitionProperty {
 
-  /** Unique Id for Datasheet. */
+  /** Unique Id for the property definition. */
   @Id
   @GeneratedValue
   @UuidGenerator
   @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
-  /** Datasheet id. */
+  /** Datasheet definition this property belongs to. */
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "datasheet_id", referencedColumnName = "id", nullable = false)
+  @JoinColumn(name = "definition_id", referencedColumnName = "id", nullable = false)
   @OnDelete(action = OnDeleteAction.CASCADE)
   @ToString.Exclude
-  @JsonBackReference
-  private Datasheet datasheet;
+  @JsonBackReference("definition")
+  private DatasheetDefinition datasheetDefinition;
 
   /** Code of the class. */
   @Column(name = "code")

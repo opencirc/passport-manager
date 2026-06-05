@@ -12,7 +12,6 @@ import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.ResourceNotFoundException;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import com.opencirc.api.passport.model.PassportTemplate;
 import java.util.Iterator;
 import java.util.List;
@@ -53,8 +52,7 @@ public class PassportTemplateService {
   private PassportTemplate generateTemplateFromPassport(Passport passport, String templateName) {
     ObjectNode rootNode = objectMapper.createObjectNode();
 
-    for (PassportDatasheetMapping passportDatasheetMapping : passport.getDatasheetMappings()) {
-      Datasheet datasheet = passportDatasheetMapping.getDatasheet();
+    for (Datasheet datasheet : passport.getDatasheets()) {
       if (Datasheet.DataCategory.UNIQUE.equals(datasheet.getDataCategory())) {
         continue;
       }

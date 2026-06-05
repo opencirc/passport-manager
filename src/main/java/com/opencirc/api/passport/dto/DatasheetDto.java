@@ -44,28 +44,38 @@ public class DatasheetDto {
 
   private List<DatasheetPropertyDto> datasheetProperties;
 
-  /** Maps the Datasheet values to dto. */
+  /**
+   * Maps a per-passport datasheet instance to a dto, pulling definition fields from the shared
+   * {@link com.opencirc.api.passport.model.DatasheetDefinition} it references. The wire shape is
+   * unchanged from when datasheets were copied per passport.
+   */
   public static DatasheetDto from(Datasheet datasheet) {
     DatasheetDto datasheetDto = new DatasheetDto();
     datasheetDto.id = datasheet.getId();
-    datasheetDto.platform =
-        datasheet.getPlatform() != null ? datasheet.getPlatform().getValue() : null;
-    datasheetDto.dictionary =
-        datasheet.getDictionary() != null ? datasheet.getDictionary().getValue() : null;
-    datasheetDto.code = datasheet.getCode();
-    datasheetDto.name = datasheet.getName();
-    datasheetDto.description = datasheet.getDescription();
-    datasheetDto.platformId = datasheet.getPlatformId();
-    datasheetDto.dataCategory = datasheet.getDataCategory().getValue();
+
+    var definition = datasheet.getDefinition();
+    if (definition != null) {
+      datasheetDto.platform =
+          definition.getPlatform() != null ? definition.getPlatform().getValue() : null;
+      datasheetDto.dictionary =
+          definition.getDictionary() != null ? definition.getDictionary().getValue() : null;
+      datasheetDto.code = definition.getCode();
+      datasheetDto.name = definition.getName();
+      datasheetDto.description = definition.getDescription();
+      datasheetDto.platformId = definition.getPlatformId();
+    }
+
+    datasheetDto.dataCategory =
+        datasheet.getDataCategory() != null ? datasheet.getDataCategory().getValue() : null;
     datasheetDto.data = datasheet.getData();
     datasheetDto.createdById = datasheet.getCreatedById();
     datasheetDto.createdBy = datasheet.getCreatedBy();
     datasheetDto.createdTime = datasheet.getCreatedTime();
 
-    if (datasheet.getDatasheetProperties() != null) {
+    if (definition != null && definition.getProperties() != null) {
       datasheetDto.datasheetProperties =
-          datasheet.getDatasheetProperties().stream()
-              .map(DatasheetPropertyDto::from)
+          definition.getProperties().stream()
+              .map(property -> DatasheetPropertyDto.from(property, datasheet.getId()))
               .collect(Collectors.toList());
     }
     return datasheetDto;
