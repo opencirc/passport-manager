@@ -33,6 +33,7 @@ import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,11 +95,77 @@ public class PassportService {
   public List<PassportDto> batchCreatePassportsUsingPlatform(
       Platform platform, List<CreatePassportUsingPlatformRequestDto> dataArray, UserDto author)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
+
+    java.util.Map<CreatePassportUsingPlatformRequestDto, PassportDto> resultMap =
+        new java.util.IdentityHashMap<>();
+    for (var passportData : dataArray) {
+      resultMap.put(
+          passportData, createPassportUsingPlatform(platform, passportData, author, true));
+    }
+
     var passportDtos = new ArrayList<PassportDto>();
     for (var passportData : dataArray) {
-      passportDtos.add(createPassportUsingPlatform(platform, passportData, author, true));
+      passportDtos.add(resultMap.get(passportData));
     }
     return passportDtos;
+  }
+
+  private List<CreatePassportUsingPlatformRequestDto> topologicalSort(
+      List<CreatePassportUsingPlatformRequestDto> dataArray) {
+    if (dataArray == null || dataArray.isEmpty()) {
+      return dataArray;
+    }
+
+    Map<String, CreatePassportUsingPlatformRequestDto> idToDto = new HashMap<>();
+    for (var data : dataArray) {
+      if (data.getId() != null && !data.getId().isBlank()) {
+        idToDto.put(data.getId(), data);
+      }
+    }
+
+    Map<String, List<CreatePassportUsingPlatformRequestDto>> childrenMap = new HashMap<>();
+    Map<CreatePassportUsingPlatformRequestDto, Integer> inDegree =
+        new java.util.IdentityHashMap<>();
+
+    for (var data : dataArray) {
+      inDegree.put(data, 0);
+    }
+
+    for (var data : dataArray) {
+      String parentId = data.getParentId();
+      if (parentId != null && !parentId.isBlank() && idToDto.containsKey(parentId)) {
+        childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(data);
+        inDegree.put(data, inDegree.get(data) + 1);
+      }
+    }
+
+    java.util.Queue<CreatePassportUsingPlatformRequestDto> queue = new java.util.LinkedList<>();
+    for (var data : dataArray) {
+      if (inDegree.get(data) == 0) {
+        queue.add(data);
+      }
+    }
+
+    List<CreatePassportUsingPlatformRequestDto> sortedData = new ArrayList<>();
+    while (!queue.isEmpty()) {
+      var current = queue.poll();
+      sortedData.add(current);
+
+      if (current.getId() != null && childrenMap.containsKey(current.getId())) {
+        for (var child : childrenMap.get(current.getId())) {
+          inDegree.put(child, inDegree.get(child) - 1);
+          if (inDegree.get(child) == 0) {
+            queue.add(child);
+          }
+        }
+      }
+    }
+
+    if (sortedData.size() != dataArray.size()) {
+      throw new InvalidInputException("Circular dependency detected in passport batch creation");
+    }
+
+    return sortedData;
   }
 
   /** Creates a passport. */
@@ -118,11 +185,15 @@ public class PassportService {
       boolean asBatchOperation)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
 
-    int customLength = AppConstants.CUID_LENGTH;
-    CUID cuid = CUID.randomCUID2(customLength);
+    String id = data.getId();
+    if (id == null || id.isBlank()) {
+      int customLength = AppConstants.CUID_LENGTH;
+      CUID cuid = CUID.randomCUID2(customLength);
+      id = cuid.toString();
+    }
 
     Passport passport = new Passport();
-    passport.setId(cuid.toString());
+    passport.setId(id);
     passport.setName(data.getName());
     passport.setStatus(Passport.Status.ACTIVE);
     passport.setCreatedById(author != null ? author.getId() : null);
@@ -427,7 +498,7 @@ public class PassportService {
     dto.setCreatedById(row.getPassportCreatedById());
     dto.setCreatedBy(parseCreatedBy(row.getPassportCreatedBy()));
     if (row.getPassportCreatedTime() != null) {
-      dto.setCreatedTime(row.getPassportCreatedTime());
+      dto.setCreatedTime(row.getPassportCreatedTime().atOffset(ZoneOffset.UTC));
     }
     dto.setDatasheets(new ArrayList<>());
     return dto;
@@ -459,7 +530,7 @@ public class PassportService {
       dto.setCreatedById(row.getDatasheetCreatedById());
       dto.setCreatedBy(parseCreatedBy(row.getDatasheetCreatedBy()));
       if (row.getDatasheetCreatedTime() != null) {
-        dto.setCreatedTime(row.getDatasheetCreatedTime());
+        dto.setCreatedTime(row.getDatasheetCreatedTime().atOffset(ZoneOffset.UTC));
       }
       dto.setDatasheetProperties(new ArrayList<>());
 

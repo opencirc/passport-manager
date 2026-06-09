@@ -18,12 +18,12 @@ services:
       REDIS_HOST: cache
       REDIS_PORT: 6379
       SPRING_SHELL_INTERACTIVE_ENABLED: false
-#    command:
-#      - mvn
-#      - spring-boot:run
-#      - -Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-#      - -Dspring.devtools.restart.enabled=true
-#      - -Dmaven.test.skip=true
+    command:
+      - mvn
+      - spring-boot:run
+      - -Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      - -Dspring.devtools.restart.enabled=true
+      - -Dmaven.test.skip=true
     volumes:
       - ./src:/app/src
       - ./pom.xml:/app/pom.xml

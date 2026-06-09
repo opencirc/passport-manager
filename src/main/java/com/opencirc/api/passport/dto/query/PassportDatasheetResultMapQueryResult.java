@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.dto.query;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 /** Interface to map the result set to passportDto. */
 public interface PassportDatasheetResultMapQueryResult {
@@ -24,7 +24,7 @@ public interface PassportDatasheetResultMapQueryResult {
   String getPassportCreatedBy();
 
   /** Returns the creation timestamp of the passport. */
-  OffsetDateTime getPassportCreatedTime();
+  Instant getPassportCreatedTime();
 
   /** Returns the ID of the associated datasheet. */
   String getDatasheetId();
@@ -60,7 +60,7 @@ public interface PassportDatasheetResultMapQueryResult {
   String getDatasheetCreatedBy();
 
   /** Returns the creation timestamp of the datasheet. */
-  OffsetDateTime getDatasheetCreatedTime();
+  Instant getDatasheetCreatedTime();
 
   /** Returns the ID of the associated datasheet property. */
   String getDatasheetPropertyId();
