@@ -40,7 +40,7 @@ public class Passport {
   @Column(name = "id")
   private String id;
 
-  @Column(name = "name")
+  @Column(name = "name", columnDefinition = "TEXT")
   private String name;
 
   @Column(name = "status")
@@ -50,7 +50,7 @@ public class Passport {
   @Column(name = "parent_id")
   private String parentId;
 
-  @Column(name = "created_by_id")
+  @Column(name = "created_by_id", columnDefinition = "TEXT")
   private String createdById;
 
   @Column(name = "created_by", columnDefinition = "jsonb", nullable = false)

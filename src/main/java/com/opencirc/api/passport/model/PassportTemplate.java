@@ -9,7 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +36,7 @@ public class PassportTemplate {
   private String id;
 
   /** Name of the Template. */
-  @Column(name = "name")
+  @Column(name = "name", columnDefinition = "TEXT")
   private String name;
 
   /** Template in JSON format. */
@@ -45,7 +45,7 @@ public class PassportTemplate {
   private JsonNode template;
 
   /** Id of the user who created the template. */
-  @Column(name = "created_by_id")
+  @Column(name = "created_by_id", columnDefinition = "TEXT")
   private String createdById;
 
   /** User information, stored as JSON. */
@@ -56,5 +56,5 @@ public class PassportTemplate {
 
   /** Template created time. */
   @Column(name = "created_time", updatable = false, insertable = false)
-  private LocalDateTime createdTime;
+  private OffsetDateTime createdTime;
 }

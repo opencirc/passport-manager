@@ -20,6 +20,10 @@ import lombok.ToString;
 public class CreatePassportUsingPlatformRequestDto {
   @NotBlank @JsonProperty private String platformId;
 
+  @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true)
+  @JsonProperty
+  private String id;
+
   @NotBlank @JsonProperty private String name;
 
   @Schema(

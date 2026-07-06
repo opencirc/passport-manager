@@ -15,11 +15,14 @@ import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.service.CacheService;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -33,16 +36,20 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /** BSDD implementation of PlatformAdapter. */
 @Service
+@Slf4j
 public class BsddPlatformAdapter implements PlatformAdapter {
 
   private static final String IFC_IDENTIFIER_URL_PATTERN =
@@ -56,6 +63,8 @@ public class BsddPlatformAdapter implements PlatformAdapter {
 
   private final CacheService cacheService;
 
+  private final RateLimiter rateLimiter;
+
   /** Constructor. */
   @Autowired
   public BsddPlatformAdapter(
@@ -67,6 +76,14 @@ public class BsddPlatformAdapter implements PlatformAdapter {
     this.appProperties = appProperties;
     this.objectMapper = mapper;
     this.cacheService = cacheService;
+    this.rateLimiter =
+        RateLimiter.of(
+            "bsdd-limiter",
+            RateLimiterConfig.custom()
+                .limitRefreshPeriod(Duration.ofSeconds(1))
+                .limitForPeriod(1)
+                .timeoutDuration(Duration.ofSeconds(2))
+                .build());
   }
 
   /** Fetches a list of classes matching the search text. */
@@ -77,10 +94,30 @@ public class BsddPlatformAdapter implements PlatformAdapter {
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
             .queryParam(AppConstants.QP_BSDD_LIMIT, AppConstants.BSDD_LIMIT);
     String url = uriBuilder.toUriString();
-    ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-    JsonNode responseBody = response.getBody();
-
     List<Map<String, String>> classList = new ArrayList<>();
+    int maxRetries = 3;
+    JsonNode responseBody = null;
+    for (int i = 0; i <= maxRetries; i++) {
+      try {
+        ResponseEntity<JsonNode> response =
+            rateLimiter.executeSupplier(() -> restTemplate.getForEntity(url, JsonNode.class));
+        log.info("listClass: {}", url);
+        responseBody = response.getBody();
+        break;
+      } catch (HttpClientErrorException e) {
+        if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS && i < maxRetries) {
+          try {
+            Thread.sleep(2000);
+            continue;
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw e;
+          }
+        }
+        throw e;
+      }
+    }
+
     int totalCount = responseBody != null ? responseBody.path("totalCount").asInt() : 0;
     if (totalCount > 0) {
       for (JsonNode node : responseBody.get("classes")) {
@@ -173,18 +210,35 @@ public class BsddPlatformAdapter implements PlatformAdapter {
     BsddClassTemplateDto classTemplateDto =
         cacheService.getCachedTemplate(cacheKey, BsddClassTemplateDto.class);
     if (classTemplateDto == null) {
-      try {
-        ResponseEntity<BsddClassTemplateDto> response =
-            restTemplate.getForEntity(requestUri, BsddClassTemplateDto.class);
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-          classTemplateDto = response.getBody();
-          cacheService.cacheTemplate(cacheKey, classTemplateDto);
-        } else {
-          throw new JsonValidationException(
-              "Failed to fetch class template. HTTP Status: " + response.getStatusCode());
+      int maxRetries = 3;
+      for (int i = 0; i <= maxRetries; i++) {
+        try {
+          ResponseEntity<BsddClassTemplateDto> response =
+              rateLimiter.executeSupplier(
+                  () -> restTemplate.getForEntity(requestUri, BsddClassTemplateDto.class));
+          log.info("getClassTemplate: {}", requestUri);
+          if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            classTemplateDto = response.getBody();
+            cacheService.cacheTemplate(cacheKey, classTemplateDto);
+            break;
+          } else {
+            throw new JsonValidationException(
+                "Failed to fetch class template. HTTP Status: " + response.getStatusCode());
+          }
+        } catch (RestClientException e) {
+          if (e instanceof HttpClientErrorException hcee
+              && hcee.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS
+              && i < maxRetries) {
+            try {
+              Thread.sleep(2000);
+              continue;
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+              throw new JsonValidationException("Retry interrupted: " + e.getMessage(), e);
+            }
+          }
+          throw new JsonValidationException("Error fetching class template: " + e.getMessage(), e);
         }
-      } catch (RestClientException e) {
-        throw new JsonValidationException("Error fetching class template: " + e.getMessage(), e);
       }
     }
 
@@ -202,8 +256,29 @@ public class BsddPlatformAdapter implements PlatformAdapter {
             .queryParam("Offset", 0);
     String url = uriBuilder.build(false).toUriString();
 
-    ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
-    JsonNode responseBody = response.getBody();
+    int maxRetries = 3;
+    JsonNode responseBody = null;
+    for (int i = 0; i <= maxRetries; i++) {
+      try {
+        ResponseEntity<JsonNode> response =
+            rateLimiter.executeSupplier(() -> restTemplate.getForEntity(url, JsonNode.class));
+        log.info("listProperties: {}", url);
+        responseBody = response.getBody();
+        break;
+      } catch (HttpClientErrorException e) {
+        if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS && i < maxRetries) {
+          try {
+            Thread.sleep(2000);
+            continue;
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw e;
+          }
+        }
+        throw e;
+      }
+    }
+
     List<Map<String, String>> propertyList = new ArrayList<>();
     if (responseBody != null
         && responseBody.has("properties")
@@ -447,9 +522,28 @@ public class BsddPlatformAdapter implements PlatformAdapter {
             .queryParam("Uri", uri)
             .queryParam("IncludeClassProperties", true);
     String url = uriBuilder.toUriString();
-    ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
 
-    return response.getBody();
+    int maxRetries = 3;
+    for (int i = 0; i <= maxRetries; i++) {
+      try {
+        ResponseEntity<JsonNode> response =
+            rateLimiter.executeSupplier(() -> restTemplate.getForEntity(url, JsonNode.class));
+        log.info("fetchRawTemplate: {}", url);
+        return response.getBody();
+      } catch (HttpClientErrorException e) {
+        if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS && i < maxRetries) {
+          try {
+            Thread.sleep(2000);
+            continue;
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw e;
+          }
+        }
+        throw e;
+      }
+    }
+    return null;
   }
 
   /** Retrieves the tree structure of the dictionary. */

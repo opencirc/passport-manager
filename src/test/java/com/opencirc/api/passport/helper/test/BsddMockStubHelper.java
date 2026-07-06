@@ -10,7 +10,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -208,7 +208,7 @@ public class BsddMockStubHelper {
 
     private final String passportCreatedBy;
 
-    private final LocalDateTime passportCreatedTime;
+    private final OffsetDateTime passportCreatedTime;
 
     private final String datasheetId;
 
@@ -232,7 +232,7 @@ public class BsddMockStubHelper {
 
     private final String datasheetCreatedBy;
 
-    private final LocalDateTime datasheetCreatedTime;
+    private final OffsetDateTime datasheetCreatedTime;
 
     private final String datasheetPropertyId;
 
@@ -256,7 +256,7 @@ public class BsddMockStubHelper {
         String parentId,
         String passportCreatedById,
         String passportCreatedBy,
-        LocalDateTime passportCreatedTime,
+        OffsetDateTime passportCreatedTime,
         String datasheetId,
         String platform,
         String dictionary,
@@ -268,7 +268,7 @@ public class BsddMockStubHelper {
         String data,
         String datasheetCreatedById,
         String datasheetCreatedBy,
-        LocalDateTime datasheetCreatedTime,
+        OffsetDateTime datasheetCreatedTime,
         String datasheetPropertyId,
         String datasheetPropertyDatasheetId,
         String datasheetPropertyCode,
@@ -335,7 +335,7 @@ public class BsddMockStubHelper {
     }
 
     /** Returns the creation timestamp of the passport. */
-    public LocalDateTime getPassportCreatedTime() {
+    public OffsetDateTime getPassportCreatedTime() {
       return this.passportCreatedTime;
     }
 
@@ -395,7 +395,7 @@ public class BsddMockStubHelper {
     }
 
     /** Returns the creation timestamp of the datasheet. */
-    public LocalDateTime getDatasheetCreatedTime() {
+    public OffsetDateTime getDatasheetCreatedTime() {
       return this.datasheetCreatedTime;
     }
 

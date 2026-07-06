@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -107,6 +108,29 @@ public class PassportController {
             data.getPlatformId(),
             Datasheet.DataCategory.fromValue(data.getDataCategory()),
             userContext.getCurrentUser()));
+  }
+
+  /** Removes a datasheet from the passport. */
+  @Operation(summary = "Removes a datasheet from the passport.")
+  @DeleteMapping(value = "/api/passport/{passportId}/datasheet/{datasheetId}")
+  public ResponseEntity<PassportDto> removeDatasheet(
+      @PathVariable @Parameter(description = "Passport ID", required = true, in = ParameterIn.PATH)
+          String passportId,
+      @PathVariable @Parameter(description = "Datasheet ID", required = true, in = ParameterIn.PATH)
+          String datasheetId) {
+    return ResponseEntity.ok(passportService.removeDatasheet(passportId, datasheetId));
+  }
+
+  /** Updates the parent for the given passport. */
+  @Operation(summary = "Updates the parent for the given passport.")
+  @PutMapping(value = "/api/passport/{passportId}/parentId/{parentId}")
+  public ResponseEntity<PassportDto> updateParent(
+      @PathVariable @Parameter(description = "Passport ID", required = true, in = ParameterIn.PATH)
+          String passportId,
+      @PathVariable
+          @Parameter(description = "New Parent ID", required = true, in = ParameterIn.PATH)
+          String parentId) {
+    return ResponseEntity.ok(passportService.updateParent(passportId, parentId));
   }
 
   /** Fetch a passport. */
