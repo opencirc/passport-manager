@@ -65,6 +65,8 @@ public class PassportService {
 
   private final AppProperties appProperties;
 
+  private final EpdEnrichmentService epdEnrichmentService;
+
   /** Constructor. */
   public PassportService(
       DatasheetRepository datasheetRepository,
@@ -72,13 +74,15 @@ public class PassportService {
       PassportDatasheetMappingRepository passportDatasheetMappingRepository,
       PlatformAdapterFactory platformAdapterFactory,
       ObjectMapper objectMapper,
-      AppProperties appProperties) {
+      AppProperties appProperties,
+      EpdEnrichmentService epdEnrichmentService) {
     this.datasheetRepository = datasheetRepository;
     this.passportRepository = passportRepository;
     this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
     this.platformAdapterFactory = platformAdapterFactory;
     this.objectMapper = objectMapper;
     this.appProperties = appProperties;
+    this.epdEnrichmentService = epdEnrichmentService;
   }
 
   /** Creates multiple passports. */
@@ -459,11 +463,28 @@ public class PassportService {
           HttpStatus.NOT_FOUND, "Passport does not have any datasheet mappings: " + passportId);
     }
 
+    boolean epdEnrichmentTriggered = false;
     for (PassportDatasheetMapping mapping : mappings) {
       Datasheet datasheet = mapping.getDatasheet();
       if (datasheet == null) {
         continue;
       }
+
+      // Check for EPD enrichment trigger
+      if (!epdEnrichmentTriggered) {
+        for (DatasheetProperty property : datasheet.getDatasheetProperties()) {
+          if ("https://identifier.buildingsmart.org/uri/LCA/LCA/3.0/class/GeneralInformation/prop/ID/referencetooriginalEPD"
+              .equals(property.getPlatformId())) {
+            Object triggerValue = values.get(property.getId());
+            if (triggerValue instanceof String epdUrl && !epdUrl.isBlank()) {
+              epdEnrichmentService.enrich(passport, epdUrl);
+              epdEnrichmentTriggered = true;
+              break;
+            }
+          }
+        }
+      }
+
       ObjectNode dataNode =
           datasheet.getData() != null
               ? objectMapper.valueToTree(datasheet.getData())

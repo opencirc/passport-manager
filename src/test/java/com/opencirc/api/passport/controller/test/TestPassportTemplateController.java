@@ -80,7 +80,7 @@ public class TestPassportTemplateController {
   }
 
   private void generateMockJwtToken() {
-    String requestBody = "{\"username\": \"user1\", \"password\": \"user1password\"}";
+    String requestBody = "{\"email\": \"user\", \"password\": \"user1password\"}";
     Response response =
         given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
     if (response.getStatusCode() == 200) {
@@ -108,7 +108,7 @@ public class TestPassportTemplateController {
             .pathParam("passportId", passportId)
             .body(templateName)
             .when()
-            .post("/api/passport-template/{passportId}")
+            .post("/api/passportTemplate/{passportId}")
             .then()
             .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
@@ -141,7 +141,7 @@ public class TestPassportTemplateController {
             .body(templateName)
             .pathParam("passportId", passportId)
             .when()
-            .post("/api/passport-template/{passportId}")
+            .post("/api/passportTemplate/{passportId}")
             .then()
             .statusCode(HttpStatus.NOT_FOUND.value())
             .extract()
@@ -162,9 +162,9 @@ public class TestPassportTemplateController {
         RestAssured.given()
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
-            .pathParam("id", templateId)
+            .pathParam("templateId", templateId)
             .when()
-            .get("/api/passport-template/{id}")
+            .get("/api/passportTemplate/{templateId}")
             .then()
             .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
@@ -191,9 +191,9 @@ public class TestPassportTemplateController {
         RestAssured.given()
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
-            .pathParam("id", templateId)
+            .pathParam("templateId", templateId)
             .when()
-            .get("/api/passport-template/{id}")
+            .get("/api/passportTemplate/{templateId}")
             .then()
             .statusCode(HttpStatus.NOT_FOUND.value())
             .log()
@@ -220,7 +220,7 @@ public class TestPassportTemplateController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .when()
-            .get("/api/passport-templates/all")
+            .get("/api/passportTemplate/all")
             .then()
             .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
