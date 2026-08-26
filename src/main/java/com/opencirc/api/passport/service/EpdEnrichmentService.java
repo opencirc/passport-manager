@@ -6,10 +6,18 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,6 +28,7 @@ public class EpdEnrichmentService {
 
   private final RestTemplate restTemplate;
   private final DatasheetRepository datasheetRepository;
+  private final Environment environment;
 
   private static final String GWP_UUID_31 = "a7ea142a-9749-11ed-a8fc-0242ac120002";
   private static final String GWP_UUID_30 = "6a37f984-a4b3-458a-a20a-64418c145fa2";
@@ -41,15 +50,27 @@ public class EpdEnrichmentService {
   private static final String CODE_GWP = "ClimateChangePerUnit";
   private static final String CODE_LIFE_CYCLE_PHASE = "LifeCyclePhase";
 
+  private static final int HTTPS_PORT = 443;
+  private static final int IPV4_CGNAT_FIRST_OCTET = 100;
+  private static final int IPV4_CGNAT_SECOND_OCTET_MIN = 64;
+  private static final int IPV4_CGNAT_SECOND_OCTET_MAX = 127;
+  private static final int IPV6_ULA_MASK = 0xFE;
+  private static final int IPV6_ULA_PREFIX = 0xFC;
+
   /**
    * Constructs a new EpdEnrichmentService.
    *
    * @param restTemplate the RestTemplate to use for HTTP requests
    * @param datasheetRepository the repository for Datasheet entities
+   * @param environment the Spring environment used to relax loopback checks in local/test
    */
-  public EpdEnrichmentService(RestTemplate restTemplate, DatasheetRepository datasheetRepository) {
+  public EpdEnrichmentService(
+      RestTemplate restTemplate,
+      DatasheetRepository datasheetRepository,
+      Environment environment) {
     this.restTemplate = restTemplate;
     this.datasheetRepository = datasheetRepository;
+    this.environment = environment;
   }
 
   /**
@@ -66,12 +87,19 @@ public class EpdEnrichmentService {
         return;
       }
 
-      // Security check: enforce HTTPS unless it's localhost
-      if (!epdUrl.startsWith("https://") && !epdUrl.contains("localhost")) {
-        log.warn("Security policy violation: Non-HTTPS EPD URL: {}", epdUrl);
+      if (!isSafeEpdUrl(epdUrl)) {
+        log.warn("Rejected unsafe EPD URL for passport {}: {}", passport.getId(), epdUrl);
+        return;
       }
 
       epdUrl = addRequiredEpdQueryParams(epdUrl);
+      if (!isSafeEpdUrl(epdUrl)) {
+        log.warn(
+            "Rejected unsafe EPD URL after query rewrite for passport {}: {}",
+            passport.getId(),
+            epdUrl);
+        return;
+      }
 
       JsonNode epdData = restTemplate.getForObject(epdUrl, JsonNode.class);
       if (epdData == null) {
@@ -117,6 +145,89 @@ public class EpdEnrichmentService {
   private String appendQueryParam(String url, String queryParam) {
     String separator = url.contains("?") || url.contains("&") ? "&" : "?";
     return url + separator + queryParam;
+  }
+
+  private boolean isSafeEpdUrl(String epdUrl) {
+    URI uri;
+    try {
+      uri = new URI(epdUrl);
+    } catch (URISyntaxException e) {
+      return false;
+    }
+
+    if (uri.getUserInfo() != null && !uri.getUserInfo().isBlank()) {
+      return false;
+    }
+
+    String scheme = uri.getScheme();
+    String host = uri.getHost();
+    if (scheme == null || host == null || host.isBlank()) {
+      return false;
+    }
+    scheme = scheme.toLowerCase(Locale.ROOT);
+
+    InetAddress[] addresses;
+    try {
+      addresses = InetAddress.getAllByName(host);
+    } catch (UnknownHostException e) {
+      return false;
+    }
+    if (addresses.length == 0) {
+      return false;
+    }
+
+    boolean allowLocal = isLocalDevelopment();
+    boolean allLoopback = true;
+    for (InetAddress address : addresses) {
+      if (!address.isLoopbackAddress()) {
+        allLoopback = false;
+      }
+      if (isBlockedAddress(address) && !(allowLocal && address.isLoopbackAddress())) {
+        return false;
+      }
+    }
+
+    if ("https".equals(scheme)) {
+      int port = uri.getPort();
+      if (allowLocal && allLoopback) {
+        return true;
+      }
+      return port == -1 || port == HTTPS_PORT;
+    }
+
+    return "http".equals(scheme) && allowLocal && allLoopback;
+  }
+
+  private boolean isLocalDevelopment() {
+    return Arrays.stream(environment.getActiveProfiles())
+        .anyMatch(
+            profile ->
+                "test".equals(profile) || "dev".equals(profile) || "local".equals(profile));
+  }
+
+  private static boolean isBlockedAddress(InetAddress address) {
+    if (address.isAnyLocalAddress()
+        || address.isLoopbackAddress()
+        || address.isLinkLocalAddress()
+        || address.isSiteLocalAddress()
+        || address.isMulticastAddress()) {
+      return true;
+    }
+
+    byte[] octets = address.getAddress();
+    if (octets.length == 4) {
+      int first = octets[0] & 0xFF;
+      int second = octets[1] & 0xFF;
+      return first == IPV4_CGNAT_FIRST_OCTET
+          && second >= IPV4_CGNAT_SECOND_OCTET_MIN
+          && second <= IPV4_CGNAT_SECOND_OCTET_MAX;
+    }
+
+    if (address instanceof Inet6Address inet6) {
+      byte[] addr = inet6.getAddress();
+      return (addr[0] & IPV6_ULA_MASK) == IPV6_ULA_PREFIX;
+    }
+    return false;
   }
 
   private boolean isLcax(JsonNode epdData) {

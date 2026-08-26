@@ -8,6 +8,7 @@ import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.model.PassportLog;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,5 +44,16 @@ public class PassportLogService {
     log.setData(data);
 
     passportLogRepository.save(log);
+  }
+
+  /**
+   * Retrieves all logs for a specific passport.
+   *
+   * @param passportId the ID of the passport
+   * @return a list of passport logs
+   */
+  @Transactional(readOnly = true)
+  public List<PassportLog> getLogsByPassportId(String passportId) {
+    return passportLogRepository.findByPassportId(passportId);
   }
 }

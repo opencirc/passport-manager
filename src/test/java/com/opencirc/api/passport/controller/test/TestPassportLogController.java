@@ -7,8 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.controller.PassportLogController;
-import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.model.PassportLog;
+import com.opencirc.api.passport.service.PassportLogService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ public class TestPassportLogController {
 
   private MockMvc mockMvc;
 
-  @Mock private PassportLogRepository passportLogRepository;
+  @Mock private PassportLogService passportLogService;
 
   private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -42,7 +42,7 @@ public class TestPassportLogController {
     log.setPassportId(passportId);
     log.setData(objectMapper.createObjectNode().put("action", "CREATE"));
 
-    when(passportLogRepository.findByPassportId(passportId)).thenReturn(List.of(log));
+    when(passportLogService.getLogsByPassportId(passportId)).thenReturn(List.of(log));
 
     mockMvc
         .perform(get("/api/passport/{passportId}/logs", passportId))

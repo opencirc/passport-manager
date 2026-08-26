@@ -96,9 +96,11 @@ public class PassportService {
       Platform platform, List<CreatePassportUsingPlatformRequestDto> dataArray, UserDto author)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
 
+    List<CreatePassportUsingPlatformRequestDto> sortedData = topologicalSort(dataArray);
+
     java.util.Map<CreatePassportUsingPlatformRequestDto, PassportDto> resultMap =
         new java.util.IdentityHashMap<>();
-    for (var passportData : dataArray) {
+    for (var passportData : sortedData) {
       resultMap.put(
           passportData, createPassportUsingPlatform(platform, passportData, author, true));
     }

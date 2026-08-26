@@ -1,7 +1,7 @@
 package com.opencirc.api.passport.controller;
 
-import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.model.PassportLog;
+import com.opencirc.api.passport.service.PassportLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Passport Logs", description = "Endpoints for retrieving passport audit logs")
 public class PassportLogController {
 
-  private final PassportLogRepository passportLogRepository;
+  private final PassportLogService passportLogService;
 
   /**
    * Retrieves all logs for a specific passport.
@@ -32,7 +32,7 @@ public class PassportLogController {
       summary = "Get logs for a passport",
       description = "Retrieves the audit trail for a specific passport")
   public ResponseEntity<List<PassportLog>> getLogsByPassportId(@PathVariable String passportId) {
-    List<PassportLog> logs = passportLogRepository.findByPassportId(passportId);
+    List<PassportLog> logs = passportLogService.getLogsByPassportId(passportId);
     return ResponseEntity.ok(logs);
   }
 }

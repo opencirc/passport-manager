@@ -64,4 +64,17 @@ public class TestPassportLogService {
     org.junit.jupiter.api.Assertions.assertEquals(
         "Passport created", capturedLog.getData().get("changes").get(0).get("info").asText());
   }
+
+  @Test
+  public void shouldGetLogsByPassportId() {
+    String passportId = "test-passport-id";
+    PassportLog log = new PassportLog();
+    log.setPassportId(passportId);
+    when(passportLogRepository.findByPassportId(passportId)).thenReturn(java.util.List.of(log));
+
+    java.util.List<PassportLog> logs = passportLogService.getLogsByPassportId(passportId);
+
+    org.junit.jupiter.api.Assertions.assertEquals(1, logs.size());
+    org.junit.jupiter.api.Assertions.assertEquals(passportId, logs.get(0).getPassportId());
+  }
 }

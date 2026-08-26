@@ -155,10 +155,12 @@ public class TestPassportService {
     childPassport.setStatus(Passport.Status.ACTIVE);
 
     java.util.List<String> saveOrder = new java.util.ArrayList<>();
+    java.util.Set<String> savedIds = new java.util.HashSet<>();
     when(passportRepository.save(any(Passport.class)))
         .thenAnswer(
             i -> {
               Passport p = i.getArgument(0);
+              savedIds.add(p.getId());
               saveOrder.add(p.getId());
               return p;
             });
@@ -166,8 +168,18 @@ public class TestPassportService {
     when(passportRepository.findById("parent-id"))
         .thenReturn(java.util.Optional.of(parentPassport));
     when(passportRepository.findById("child-id")).thenReturn(java.util.Optional.of(childPassport));
-    when(passportRepository.findPassport("parent-id", Passport.Status.ACTIVE))
-        .thenReturn(java.util.Optional.of(parentPassport));
+    when(passportRepository.findPassport(anyString(), eq(Passport.Status.ACTIVE)))
+        .thenAnswer(
+            i -> {
+              String id = i.getArgument(0);
+              if (!savedIds.contains(id)) {
+                return Optional.empty();
+              }
+              Passport found = new Passport();
+              found.setId(id);
+              found.setStatus(Passport.Status.ACTIVE);
+              return Optional.of(found);
+            });
 
     var createdPassports =
         passportService.batchCreatePassportsUsingPlatform(platform, batch, author);

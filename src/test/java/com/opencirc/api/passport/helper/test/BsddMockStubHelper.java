@@ -10,6 +10,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -335,8 +336,8 @@ public class BsddMockStubHelper {
     }
 
     /** Returns the creation timestamp of the passport. */
-    public OffsetDateTime getPassportCreatedTime() {
-      return this.passportCreatedTime;
+    public Instant getPassportCreatedTime() {
+      return this.passportCreatedTime == null ? null : this.passportCreatedTime.toInstant();
     }
 
     /** Returns the ID of the associated datasheet. */
@@ -395,8 +396,8 @@ public class BsddMockStubHelper {
     }
 
     /** Returns the creation timestamp of the datasheet. */
-    public OffsetDateTime getDatasheetCreatedTime() {
-      return this.datasheetCreatedTime;
+    public Instant getDatasheetCreatedTime() {
+      return this.datasheetCreatedTime == null ? null : this.datasheetCreatedTime.toInstant();
     }
 
     /** Returns the ID of the associated datasheet property. */
