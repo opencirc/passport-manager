@@ -66,6 +66,28 @@ public class TestPassportLogService {
   }
 
   @Test
+  public void shouldLogEventWithExplicitCreatedBy() {
+    String passportId = "test-passport-id-2";
+    PassportLogAction action = PassportLogAction.EPD_ENRICHMENT_FAILED;
+    Map<String, String> changes = Map.of("reason", "Unsafe URL");
+    com.opencirc.api.passport.dto.CreatedByDto createdBy =
+        new com.opencirc.api.passport.dto.CreatedByDto("Async Worker", "worker@opencirc.org");
+
+    passportLogService.logEvent(passportId, action, changes, createdBy, "worker-id");
+
+    ArgumentCaptor<PassportLog> logCaptor = ArgumentCaptor.forClass(PassportLog.class);
+    verify(passportLogRepository).save(logCaptor.capture());
+
+    PassportLog capturedLog = logCaptor.getValue();
+    org.junit.jupiter.api.Assertions.assertEquals(passportId, capturedLog.getPassportId());
+    org.junit.jupiter.api.Assertions.assertEquals("worker-id", capturedLog.getCreatedById());
+    org.junit.jupiter.api.Assertions.assertEquals(
+        "Async Worker", capturedLog.getCreatedBy().getFullName());
+    org.junit.jupiter.api.Assertions.assertEquals(
+        "EPD_ENRICHMENT_FAILED", capturedLog.getData().get("action").asText());
+  }
+
+  @Test
   public void shouldGetLogsByPassportId() {
     String passportId = "test-passport-id";
     PassportLog log = new PassportLog();

@@ -2,6 +2,8 @@ package com.opencirc.api.passport.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dao.DatasheetRepository;
+import com.opencirc.api.passport.dao.PassportRepository;
+import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.model.Passport;
@@ -16,10 +18,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -29,6 +33,8 @@ public class EpdEnrichmentService {
   private final RestTemplate restTemplate;
   private final DatasheetRepository datasheetRepository;
   private final Environment environment;
+  private final PassportRepository passportRepository;
+  private final PassportLogService passportLogService;
 
   private static final String GWP_UUID_31 = "a7ea142a-9749-11ed-a8fc-0242ac120002";
   private static final String GWP_UUID_30 = "6a37f984-a4b3-458a-a20a-64418c145fa2";
@@ -63,25 +69,66 @@ public class EpdEnrichmentService {
    * @param restTemplate the RestTemplate to use for HTTP requests
    * @param datasheetRepository the repository for Datasheet entities
    * @param environment the Spring environment used to relax loopback checks in local/test
+   * @param passportRepository the repository for Passport entities
+   * @param passportLogService the service to log passport audit events
    */
   public EpdEnrichmentService(
       RestTemplate restTemplate,
       DatasheetRepository datasheetRepository,
-      Environment environment) {
+      Environment environment,
+      PassportRepository passportRepository,
+      PassportLogService passportLogService) {
     this.restTemplate = restTemplate;
     this.datasheetRepository = datasheetRepository;
     this.environment = environment;
+    this.passportRepository = passportRepository;
+    this.passportLogService = passportLogService;
   }
 
   /**
    * Enriches a passport with data from an EPD URL asynchronously.
    *
-   * @param passport the passport to enrich
+   * @param passportId the ID of the passport to enrich
    * @param epdUrl the URL of the EPD data
    */
   @Async
+  @Transactional
+  public void enrich(String passportId, String epdUrl) {
+    log.info("Enriching passport {} from EPD URL: {}", passportId, epdUrl);
+    if (passportId == null || passportId.isBlank()) {
+      return;
+    }
+    Passport passport =
+        passportRepository != null ? passportRepository.findById(passportId).orElse(null) : null;
+    if (passport == null) {
+      log.warn("Passport {} not found for EPD enrichment", passportId);
+      return;
+    }
+    enrichPassport(passport, epdUrl);
+  }
+
+  /**
+   * Backward-compatible overload for enriching a passport.
+   *
+   * @param passport the passport entity
+   * @param epdUrl the URL of the EPD data
+   */
+  @Deprecated
   public void enrich(Passport passport, String epdUrl) {
-    log.info("Enriching passport {} from EPD URL: {}", passport.getId(), epdUrl);
+    if (passport == null) {
+      return;
+    }
+    if (passport.getId() != null && passportRepository != null) {
+      Optional<Passport> fresh = passportRepository.findById(passport.getId());
+      if (fresh.isPresent()) {
+        enrichPassport(fresh.get(), epdUrl);
+        return;
+      }
+    }
+    enrichPassport(passport, epdUrl);
+  }
+
+  private void enrichPassport(Passport passport, String epdUrl) {
     try {
       if (epdUrl == null || epdUrl.isBlank()) {
         return;
@@ -89,6 +136,7 @@ public class EpdEnrichmentService {
 
       if (!isSafeEpdUrl(epdUrl)) {
         log.warn("Rejected unsafe EPD URL for passport {}: {}", passport.getId(), epdUrl);
+        logEnrichmentFailed(passport, epdUrl, "Rejected unsafe EPD URL");
         return;
       }
 
@@ -98,12 +146,14 @@ public class EpdEnrichmentService {
             "Rejected unsafe EPD URL after query rewrite for passport {}: {}",
             passport.getId(),
             epdUrl);
+        logEnrichmentFailed(passport, epdUrl, "Rejected unsafe EPD URL after query rewrite");
         return;
       }
 
       JsonNode epdData = restTemplate.getForObject(epdUrl, JsonNode.class);
       if (epdData == null) {
         log.error("Failed to fetch EPD data from {}", epdUrl);
+        logEnrichmentFailed(passport, epdUrl, "Failed to fetch EPD data");
         return;
       }
 
@@ -116,15 +166,32 @@ public class EpdEnrichmentService {
 
       if (extractedData.isEmpty()) {
         log.warn("No data extracted from EPD at {}", epdUrl);
+        logEnrichmentFailed(passport, epdUrl, "No data extracted from EPD");
         return;
       }
       log.info("Extracted data: {}", extractedData);
 
       updateDatasheets(passport, extractedData);
+      if (passportRepository != null) {
+        passportRepository.save(passport);
+      }
       log.info("Successfully enriched passport {}", passport.getId());
     } catch (Exception e) {
       log.error(
           "Error during EPD enrichment for passport {}: {}", passport.getId(), e.getMessage(), e);
+      logEnrichmentFailed(
+          passport, epdUrl, e.getMessage() != null ? e.getMessage() : "Enrichment error");
+    }
+  }
+
+  private void logEnrichmentFailed(Passport passport, String epdUrl, String reason) {
+    if (passportLogService != null && passport != null && passport.getId() != null) {
+      passportLogService.logEvent(
+          passport.getId(),
+          PassportLogAction.EPD_ENRICHMENT_FAILED,
+          Map.of("url", epdUrl != null ? epdUrl : "", "reason", reason != null ? reason : ""),
+          passport.getCreatedBy(),
+          passport.getCreatedById());
     }
   }
 
@@ -201,8 +268,7 @@ public class EpdEnrichmentService {
   private boolean isLocalDevelopment() {
     return Arrays.stream(environment.getActiveProfiles())
         .anyMatch(
-            profile ->
-                "test".equals(profile) || "dev".equals(profile) || "local".equals(profile));
+            profile -> "test".equals(profile) || "dev".equals(profile) || "local".equals(profile));
   }
 
   private static boolean isBlockedAddress(InetAddress address) {
@@ -397,17 +463,18 @@ public class EpdEnrichmentService {
     if (lciaResults.isArray()) {
       for (JsonNode result : lciaResults) {
         String refId = result.path("referenceToLCIAMethodDataSet").path("refObjectId").asText();
+        if (refId == null || refId.isBlank()) {
+          refId = result.path("referenceToLCIAMethodFlowProperty").path("refObjectId").asText();
+        }
         if (GWP_UUID_31.equals(refId) || GWP_UUID_30.equals(refId)) {
-          Float gwpValue = null;
+          String gwpValue = null;
           JsonNode anies = result.path("other").path("anies");
           if (anies.isArray()) {
             for (JsonNode entry : anies) {
               if ("A1-A3".equals(entry.path("module").asText())) {
                 JsonNode valueNode = entry.path("value");
-                if (valueNode.isNumber()) {
-                  gwpValue = valueNode.floatValue();
-                } else if (valueNode.isTextual() && !valueNode.asText().isBlank()) {
-                  gwpValue = Float.parseFloat(valueNode.asText());
+                if (!valueNode.isMissingNode() && !valueNode.isNull()) {
+                  gwpValue = valueNode.asText();
                 }
                 break;
               }

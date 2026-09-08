@@ -70,6 +70,20 @@ public class PassportService {
 
   private final PassportLogService passportLogService;
 
+  private static final String EPD_TRIGGER_PLATFORM_ID =
+      "https://identifier.buildingsmart.org/uri/LCA/LCA/3.0/class/GeneralInformation/prop/ID/referencetooriginalEPD";
+  private static final String EPD_TRIGGER_CODE = "referencetooriginalEPD";
+  private static final String EPD_TRIGGER_GROUP = "GeneralInformation";
+
+  private boolean isEpdTriggerProperty(DatasheetProperty property) {
+    if (property == null) {
+      return false;
+    }
+    return EPD_TRIGGER_PLATFORM_ID.equals(property.getPlatformId())
+        || (EPD_TRIGGER_CODE.equals(property.getCode())
+            && EPD_TRIGGER_GROUP.equals(property.getGroupTag()));
+  }
+
   /** Constructor. */
   public PassportService(
       DatasheetRepository datasheetRepository,
@@ -96,6 +110,28 @@ public class PassportService {
       Platform platform, List<CreatePassportUsingPlatformRequestDto> dataArray, UserDto author)
       throws InvalidInputException, JsonValidationException, JsonProcessingException {
 
+    if (dataArray == null || dataArray.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    // Fast-fail check: ensure all external parent references exist and are active
+    Map<String, CreatePassportUsingPlatformRequestDto> idToDto = new HashMap<>();
+    for (var passportDto : dataArray) {
+      if (passportDto.getId() != null && !passportDto.getId().isBlank()) {
+        idToDto.put(passportDto.getId(), passportDto);
+      }
+    }
+
+    for (var passportDto : dataArray) {
+      String parentId = passportDto.getParentId();
+      if (parentId != null && !parentId.isBlank() && !idToDto.containsKey(parentId)) {
+        if (passportRepository.findPassport(parentId, Passport.Status.ACTIVE).isEmpty()) {
+          throw new HttpServerErrorException(
+              HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
+        }
+      }
+    }
+
     List<CreatePassportUsingPlatformRequestDto> sortedData = topologicalSort(dataArray);
 
     java.util.Map<CreatePassportUsingPlatformRequestDto, PassportDto> resultMap =
@@ -112,42 +148,49 @@ public class PassportService {
     return passportDtos;
   }
 
+  /**
+   * Sorts the batch of passport creation requests in topological order using Kahn's algorithm.
+   * Ensures that parent passports are processed and created before their children.
+   *
+   * <p>Step 1: Map all batch passport IDs to their corresponding request DTOs. Step 2: Build the
+   * adjacency list and in-degree counts via {@link #buildAdjacencyList}. Step 3: Queue all root
+   * passports with in-degree == 0 (no dependencies within the batch). Step 4: Iteratively dequeue
+   * elements, append them to sorted output, and decrement child in-degrees. Step 5: Verify all
+   * passports were sorted; if counts differ, a circular dependency exists.
+   *
+   * @param dataArray the batch of passport creation requests
+   * @return the topologically sorted list of requests
+   * @throws InvalidInputException if a circular dependency is detected
+   */
   private List<CreatePassportUsingPlatformRequestDto> topologicalSort(
       List<CreatePassportUsingPlatformRequestDto> dataArray) {
     if (dataArray == null || dataArray.isEmpty()) {
       return dataArray;
     }
 
+    // Step 1: Map all batch passport IDs to their corresponding DTOs
     Map<String, CreatePassportUsingPlatformRequestDto> idToDto = new HashMap<>();
-    for (var data : dataArray) {
-      if (data.getId() != null && !data.getId().isBlank()) {
-        idToDto.put(data.getId(), data);
+    for (var passportDto : dataArray) {
+      if (passportDto.getId() != null && !passportDto.getId().isBlank()) {
+        idToDto.put(passportDto.getId(), passportDto);
       }
     }
 
-    Map<String, List<CreatePassportUsingPlatformRequestDto>> childrenMap = new HashMap<>();
+    // Step 2: Build adjacency list and compute in-degrees for each passport
     Map<CreatePassportUsingPlatformRequestDto, Integer> inDegree =
         new java.util.IdentityHashMap<>();
+    Map<String, List<CreatePassportUsingPlatformRequestDto>> childrenMap =
+        buildAdjacencyList(dataArray, idToDto, inDegree);
 
-    for (var data : dataArray) {
-      inDegree.put(data, 0);
-    }
-
-    for (var data : dataArray) {
-      String parentId = data.getParentId();
-      if (parentId != null && !parentId.isBlank() && idToDto.containsKey(parentId)) {
-        childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(data);
-        inDegree.put(data, inDegree.get(data) + 1);
-      }
-    }
-
+    // Step 3: Queue all passports with an in-degree of 0 (no dependencies within the batch)
     java.util.Queue<CreatePassportUsingPlatformRequestDto> queue = new java.util.LinkedList<>();
-    for (var data : dataArray) {
-      if (inDegree.get(data) == 0) {
-        queue.add(data);
+    for (var passportDto : dataArray) {
+      if (inDegree.get(passportDto) == 0) {
+        queue.add(passportDto);
       }
     }
 
+    // Step 4: Process the queue using Kahn's algorithm
     List<CreatePassportUsingPlatformRequestDto> sortedData = new ArrayList<>();
     while (!queue.isEmpty()) {
       var current = queue.poll();
@@ -163,11 +206,48 @@ public class PassportService {
       }
     }
 
+    // Step 5: Check if all items were sorted. If not, a circular dependency is present.
     if (sortedData.size() != dataArray.size()) {
       throw new InvalidInputException("Circular dependency detected in passport batch creation");
     }
 
     return sortedData;
+  }
+
+  /**
+   * Builds the adjacency list and initializes in-degree counts for batch passports.
+   *
+   * <p>Step 1: Initialize in-degree count to 0 for each passport in the batch. Step 2: For each
+   * passport, check if it references a parent present in this batch. Step 3: If the parent is in
+   * the batch, map the parent to this child and increment in-degree.
+   *
+   * @param dataArray the batch of passport creation requests
+   * @param idToDto map of passport IDs to request DTOs
+   * @param inDegree map to populate with in-degree counts
+   * @return map of parent ID to list of child request DTOs within the batch
+   */
+  private Map<String, List<CreatePassportUsingPlatformRequestDto>> buildAdjacencyList(
+      List<CreatePassportUsingPlatformRequestDto> dataArray,
+      Map<String, CreatePassportUsingPlatformRequestDto> idToDto,
+      Map<CreatePassportUsingPlatformRequestDto, Integer> inDegree) {
+    Map<String, List<CreatePassportUsingPlatformRequestDto>> childrenMap = new HashMap<>();
+
+    // Step 1: Initialize in-degrees to 0
+    for (var passportDto : dataArray) {
+      inDegree.put(passportDto, 0);
+    }
+
+    // Step 2 & 3: For each passport with a parent in the batch, record relationship and update
+    // in-degree
+    for (var passportDto : dataArray) {
+      String parentId = passportDto.getParentId();
+      if (parentId != null && !parentId.isBlank() && idToDto.containsKey(parentId)) {
+        childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(passportDto);
+        inDegree.put(passportDto, inDegree.get(passportDto) + 1);
+      }
+    }
+
+    return childrenMap;
   }
 
   /** Creates a passport. */
@@ -620,7 +700,7 @@ public class PassportService {
     }
 
     List<Map<String, Object>> allChanges = new ArrayList<>();
-    boolean epdEnrichmentTriggered = false;
+    String epdUrlToEnrich = null;
     for (PassportDatasheetMapping mapping : mappings) {
       Datasheet datasheet = mapping.getDatasheet();
       if (datasheet == null) {
@@ -628,14 +708,12 @@ public class PassportService {
       }
 
       // Check for EPD enrichment trigger
-      if (!epdEnrichmentTriggered) {
+      if (epdUrlToEnrich == null) {
         for (DatasheetProperty property : datasheet.getDatasheetProperties()) {
-          if ("https://identifier.buildingsmart.org/uri/LCA/LCA/3.0/class/GeneralInformation/prop/ID/referencetooriginalEPD"
-              .equals(property.getPlatformId())) {
+          if (isEpdTriggerProperty(property)) {
             Object triggerValue = values.get(property.getId());
             if (triggerValue instanceof String epdUrl && !epdUrl.isBlank()) {
-              epdEnrichmentService.enrich(passport, epdUrl);
-              epdEnrichmentTriggered = true;
+              epdUrlToEnrich = epdUrl;
               break;
             }
           }
@@ -688,6 +766,10 @@ public class PassportService {
 
     if (!allChanges.isEmpty()) {
       passportLogService.logEvent(passportId, PassportLogAction.UPDATE_PROPERTIES, allChanges);
+    }
+
+    if (epdUrlToEnrich != null) {
+      epdEnrichmentService.enrich(passport.getId(), epdUrlToEnrich);
     }
 
     // if (updatedProperties.isEmpty()) {

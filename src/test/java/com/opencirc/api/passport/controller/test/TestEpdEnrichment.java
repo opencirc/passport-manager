@@ -123,7 +123,7 @@ public class TestEpdEnrichment {
 
     // Stub WireMock
     stubFor(
-        get(urlEqualTo("/epd-data.json"))
+        get(urlPathEqualTo("/epd-data.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -163,7 +163,7 @@ public class TestEpdEnrichment {
     DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
 
     // Stub WireMock for a 404
-    stubFor(get(urlEqualTo("/not-found.json")).willReturn(aResponse().withStatus(404)));
+    stubFor(get(urlPathEqualTo("/not-found.json")).willReturn(aResponse().withStatus(404)));
 
     Map<String, Object> values = new HashMap<>();
     values.put(triggerProp.getId(), "http://localhost:8089/not-found.json");
@@ -201,7 +201,7 @@ public class TestEpdEnrichment {
     DatasheetProperty nameProp2 = createProperty(ds2, NAME_CODE, NAME_GROUP);
 
     stubFor(
-        get(urlEqualTo("/multi.json"))
+        get(urlPathEqualTo("/multi.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -244,7 +244,7 @@ public class TestEpdEnrichment {
 
     // JSON without GWP
     stubFor(
-        get(urlEqualTo("/missing-gwp.json"))
+        get(urlPathEqualTo("/missing-gwp.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -298,7 +298,7 @@ public class TestEpdEnrichment {
         """;
 
     stubFor(
-        get(urlEqualTo("/new-path.json"))
+        get(urlPathEqualTo("/new-path.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -361,7 +361,7 @@ public class TestEpdEnrichment {
         """;
 
     stubFor(
-        get(urlEqualTo("/new-gwp-path.json"))
+        get(urlPathEqualTo("/new-gwp-path.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)

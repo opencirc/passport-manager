@@ -230,6 +230,7 @@ public class TestPassportService {
     when(platformAdapterFactory.getAdapter(platform)).thenReturn(adapter);
 
     java.util.Set<String> savedIds = new java.util.HashSet<>();
+    java.util.List<String> saveOrder = new java.util.ArrayList<>();
     java.util.Set<String> batchIds = new java.util.HashSet<>();
     for (var d : dataArray) {
       batchIds.add(d.getId());
@@ -240,6 +241,7 @@ public class TestPassportService {
             i -> {
               Passport p = i.getArgument(0);
               savedIds.add(p.getId());
+              saveOrder.add(p.getId());
               return p;
             });
 
@@ -275,6 +277,41 @@ public class TestPassportService {
 
     java.util.Set<CreatePassportUsingPlatformRequestDto> set = new java.util.HashSet<>(dataArray);
     org.junit.jupiter.api.Assertions.assertEquals(18, set.size(), "Set size should be 18");
+
+    // Verify topological order: every parent in the batch must be saved before its child
+    for (var d : dataArray) {
+      if (d.getParentId() != null && batchIds.contains(d.getParentId())) {
+        int parentIndex = saveOrder.indexOf(d.getParentId());
+        int childIndex = saveOrder.indexOf(d.getId());
+        org.junit.jupiter.api.Assertions.assertTrue(
+            parentIndex < childIndex,
+            "Parent " + d.getParentId() + " should be saved before child " + d.getId());
+      }
+    }
+  }
+
+  @Test
+  public void shouldThrowUnprocessableEntityWhenParentOutsideBatchDoesNotExist() {
+    Platform platform = Platform.BSDD;
+
+    CreatePassportUsingPlatformRequestDto p1 = new CreatePassportUsingPlatformRequestDto();
+    p1.setId("p1");
+    p1.setParentId("non-existent-parent");
+
+    List<CreatePassportUsingPlatformRequestDto> batch = List.of(p1);
+
+    when(passportRepository.findPassport("non-existent-parent", Passport.Status.ACTIVE))
+        .thenReturn(Optional.empty());
+
+    HttpServerErrorException exception =
+        assertThrows(
+            HttpServerErrorException.class,
+            () ->
+                passportService.batchCreatePassportsUsingPlatform(platform, batch, new UserDto()));
+
+    org.junit.jupiter.api.Assertions.assertEquals(
+        HttpStatus.UNPROCESSABLE_ENTITY, exception.getStatusCode());
+    assertTrue(exception.getMessage().contains("Invalid parentId: active parent not found"));
   }
 
   @Test

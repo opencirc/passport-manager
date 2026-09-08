@@ -31,12 +31,45 @@ public class PassportLogService {
    */
   @Transactional
   public void logEvent(String passportId, PassportLogAction action, Object changes) {
-    UserDto currentUser = userContext.getCurrentUser();
+    logEvent(passportId, action, changes, null, null);
+  }
 
+  /**
+   * Logs an event for a passport with explicit creator information.
+   *
+   * @param passportId the ID of the passport
+   * @param action the action performed
+   * @param changes the changes made
+   * @param createdBy the creator information
+   * @param createdById the creator user ID
+   */
+  @Transactional
+  public void logEvent(
+      String passportId,
+      PassportLogAction action,
+      Object changes,
+      CreatedByDto createdBy,
+      String createdById) {
     PassportLog log = new PassportLog();
     log.setPassportId(passportId);
-    log.setCreatedById(currentUser.getId());
-    log.setCreatedBy(CreatedByDto.from(currentUser));
+
+    if (createdBy != null) {
+      log.setCreatedById(createdById != null ? createdById : "system");
+      log.setCreatedBy(createdBy);
+    } else {
+      UserDto currentUser = null;
+      try {
+        currentUser = userContext.getCurrentUser();
+      } catch (Exception ignored) {
+      }
+      if (currentUser != null) {
+        log.setCreatedById(currentUser.getId());
+        log.setCreatedBy(CreatedByDto.from(currentUser));
+      } else {
+        log.setCreatedById(createdById != null ? createdById : "system");
+        log.setCreatedBy(new CreatedByDto("System", "system@opencirc.org"));
+      }
+    }
 
     ObjectNode data = objectMapper.createObjectNode();
     data.put("action", action.getValue());
