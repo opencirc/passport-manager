@@ -60,7 +60,8 @@ public class PassportLogService {
       UserDto currentUser = null;
       try {
         currentUser = userContext.getCurrentUser();
-      } catch (Exception ignored) {
+      } catch (Exception expected) {
+        // Fallback to system creator if no authenticated user context exists
       }
       if (currentUser != null) {
         log.setCreatedById(currentUser.getId());
