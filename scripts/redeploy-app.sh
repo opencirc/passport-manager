@@ -44,5 +44,8 @@ tmux new-session -d -s "$SESSION"
 tmux rename-window -t "${SESSION}:0" "app" 2>/dev/null || true
 tmux send-keys -t "${SESSION}:0.0" "bash -lc '$RUN_SCRIPT'" C-m
 
+step "5) Waiting for the app to become ready"
+SESSION="$SESSION" bash "$APP_DIR/scripts/wait-for-app.sh"
+
 echo "App started in tmux session: $SESSION"
-echo "To view logs: tmux attach -t $SESSION  (then Ctrl-b, d to detach)"
+echo "To view logs: app-logs (tmux attach -t $SESSION, then Ctrl-b, d to detach) or app-tail (log file)"
