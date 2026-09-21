@@ -37,27 +37,8 @@ step "1) Base packages (git, tmux, curl, certificates)"
 sudo apt-get update -y
 sudo apt-get install -y ca-certificates curl git tmux gnupg wget apt-transport-https
 
-step "2) Configure shell prompt + Maven memory cap (idempotent, persisted)"
-mkdir -p "$HOME/.bashrc.d"
-
-cat > "$HOME/.bashrc.d/opencirc.sh" <<'EOF'
-# --- opencirc server prompt + Maven JVM limits ---
-PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\[\033[01;33m\]@api.staging.opencirc.org\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+step "2) Maven memory cap for this session (prompt + helpers are installed after the clone in step 8)"
 export MAVEN_OPTS="-Xms128m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:MaxDirectMemorySize=128m -XX:+ExitOnOutOfMemoryError"
-# --- end ---
-EOF
-
-if ! grep -qs 'source ~/.bashrc.d/opencirc.sh' "$HOME/.bashrc"; then
-  cat >> "$HOME/.bashrc" <<'EOF'
-
-# Load OpenCirc staging helpers
-if [ -f ~/.bashrc.d/opencirc.sh ]; then
-  source ~/.bashrc.d/opencirc.sh
-fi
-EOF
-fi
-
-printf 'Note: Open a new shell (or re-login) for prompt/MAVEN_OPTS changes to apply.\n'
 
 step "3) Install Docker Engine + Compose plugin (official Docker repo)"
 sudo apt-get remove -y docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc || true
@@ -156,6 +137,23 @@ fi
 
 cd "$APP_DIR"
 
+step "8b) Install shell helpers, colored prompt and tmux config (idempotent, persisted)"
+mkdir -p "$HOME/.bashrc.d" "$HOME/logs"
+cp "$APP_DIR/scripts/staging-shell-helpers.sh" "$HOME/.bashrc.d/opencirc.sh"
+cp "$APP_DIR/scripts/staging-tmux.conf" "$HOME/.tmux.conf"
+
+if ! grep -qs 'source ~/.bashrc.d/opencirc.sh' "$HOME/.bashrc"; then
+  cat >> "$HOME/.bashrc" <<'EOF'
+
+# Load OpenCirc staging helpers (prompt, MAVEN_OPTS, app-* aliases)
+if [ -f ~/.bashrc.d/opencirc.sh ]; then
+  source ~/.bashrc.d/opencirc.sh
+fi
+EOF
+fi
+
+printf 'Note: Open a new shell (or re-login) for prompt/aliases to apply. Type app-status for an overview.\n'
+
 step "9) Start docker services (db, cache)"
 # Add user to docker group for future logins (no reliance on newgrp mid-script)
 if ! id -nG "$USER" | tr ' ' '\n' | grep -qx docker; then
@@ -197,9 +195,13 @@ export REDIS_PORT="6381"
 
 export MAVEN_OPTS="-Xms128m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:MaxDirectMemorySize=128m -XX:+ExitOnOutOfMemoryError"
 
-echo "Starting app at $(date -Is)"
+LOG_FILE="$HOME/logs/passport-manager.log"
+mkdir -p "$(dirname "$LOG_FILE")"
 
-java -jar target/*.jar
+echo "Starting app at $(date -Is), logging to $LOG_FILE" | tee -a "$LOG_FILE"
+
+# Keep output visible in the tmux pane and persisted to a file that survives restarts (app-tail).
+java -jar target/*.jar 2>&1 | tee -a "$LOG_FILE"
 EOF
 
 chmod +x "$RUN_SCRIPT"
@@ -216,4 +218,4 @@ tmux send-keys -t "${SESSION}:0.0" C-c 2>/dev/null || true
 tmux send-keys -t "${SESSION}:0.0" "bash -lc '$RUN_SCRIPT'" C-m
 
 echo "App started in tmux session: $SESSION"
-echo "To view logs: tmux attach -t $SESSION  (then Ctrl-b, d to detach)"
+echo "To view logs: app-logs (tmux attach -t $SESSION, then Ctrl-b, d to detach) or app-tail (log file)"
