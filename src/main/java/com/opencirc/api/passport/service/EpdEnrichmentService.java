@@ -8,8 +8,6 @@ import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import java.math.BigDecimal;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -24,10 +22,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,7 +36,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class EpdEnrichmentService {
 
-  @PersistenceContext public EntityManager entityManager;
+  @Autowired public ObjectProvider<EpdEnrichmentService> enrichmentServiceProvider;
 
   private final RestTemplate restTemplate;
   private final DatasheetRepository datasheetRepository;
@@ -99,14 +100,14 @@ public class EpdEnrichmentService {
    * @param epdUrl the URL of the EPD data
    */
   @Async
-  @Transactional
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public void enrich(String passportId, String epdUrl) {
     enrich(passportId, epdUrl, null, PassportLogService.systemActor());
   }
 
   /** Enriches only while the captured trigger is current, attributing failures to its actor. */
   @Async
-  @Transactional
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public void enrich(
       String passportId, String epdUrl, String triggerPropertyId, PassportLogService.Actor actor) {
     log.info("Enriching passport {} from EPD URL: {}", passportId, epdUrl);
@@ -129,6 +130,7 @@ public class EpdEnrichmentService {
    * @param epdUrl the URL of the EPD data
    */
   @Deprecated
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public void enrich(Passport passport, String epdUrl) {
     if (passport == null) {
       return;
@@ -144,6 +146,7 @@ public class EpdEnrichmentService {
   }
 
   /** Fetches and applies EPD data for the captured request. */
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public void enrichPassport(
       Passport passport, String epdUrl, String triggerPropertyId, PassportLogService.Actor actor) {
     String expectedTriggerUrl = epdUrl;
@@ -189,28 +192,34 @@ public class EpdEnrichmentService {
       }
       log.info("Extracted data: {}", extractedData);
 
-      if (triggerPropertyId != null) {
-        String passportId = passport.getId();
-        // Discard the persistence-context snapshot loaded before the HTTP request.
-        entityManager.clear();
-        passport = passportRepository.findById(passportId).orElse(null);
-        if (passport == null
-            || !hasExpectedTrigger(passport, triggerPropertyId, expectedTriggerUrl)) {
-          log.info("Discarding outdated EPD enrichment for passport {}", passportId);
-          return;
-        }
-      }
-      updateDatasheets(passport, extractedData);
-      if (passportRepository != null) {
-        passportRepository.save(passport);
-      }
-      log.info("Successfully enriched passport {}", passport.getId());
+      enrichmentServiceProvider
+          .getObject()
+          .applyEnrichment(passport.getId(), triggerPropertyId, expectedTriggerUrl, extractedData);
     } catch (Exception e) {
       log.error(
           "Error during EPD enrichment for passport {}: {}", passport.getId(), e.getMessage(), e);
       logEnrichmentFailed(
           passport, epdUrl, e.getMessage() != null ? e.getMessage() : "Enrichment error", actor);
     }
+  }
+
+  /** Reloads, validates and persists fetched data in an independent database transaction. */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void applyEnrichment(
+      String passportId,
+      String triggerPropertyId,
+      String expectedTriggerUrl,
+      Map<String, Object> extractedData) {
+    Passport passport = passportRepository.findById(passportId).orElse(null);
+    if (passport == null
+        || (triggerPropertyId != null
+            && !hasExpectedTrigger(passport, triggerPropertyId, expectedTriggerUrl))) {
+      log.info("Discarding outdated EPD enrichment for passport {}", passportId);
+      return;
+    }
+    updateDatasheets(passport, extractedData);
+    passportRepository.save(passport);
+    log.info("Successfully enriched passport {}", passportId);
   }
 
   /** Records an enrichment failure against the initiating actor. */

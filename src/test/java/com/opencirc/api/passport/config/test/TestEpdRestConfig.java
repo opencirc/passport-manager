@@ -32,9 +32,6 @@ public class TestEpdRestConfig {
         new ApplicationContextRunner()
             .withUserConfiguration(
                 RestConfig.class, BsddPlatformAdapter.class, EpdEnrichmentService.class)
-            .withBean(
-                jakarta.persistence.EntityManagerFactory.class,
-                () -> mock(jakarta.persistence.EntityManagerFactory.class))
             .withBean(AppProperties.class, () -> mock(AppProperties.class))
             .withBean(ObjectMapper.class, ObjectMapper::new)
             .withBean(CacheService.class, () -> mock(CacheService.class))

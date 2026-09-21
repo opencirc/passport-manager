@@ -20,7 +20,6 @@ import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
 import com.opencirc.api.passport.service.PassportLogService;
-import jakarta.persistence.EntityManager;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +43,6 @@ public class TestEpdEnrichmentService {
   @Mock private Environment environment;
   @Mock private PassportRepository passportRepository;
   @Mock private PassportLogService passportLogService;
-  @Mock public EntityManager entityManager;
 
   private EpdEnrichmentService epdEnrichmentService;
 
@@ -53,7 +51,10 @@ public class TestEpdEnrichmentService {
     epdEnrichmentService =
         new EpdEnrichmentService(
             restTemplate, datasheetRepository, environment, passportRepository, passportLogService);
-    epdEnrichmentService.entityManager = entityManager;
+    var beanFactory = new org.springframework.beans.factory.support.DefaultListableBeanFactory();
+    beanFactory.registerSingleton("epdEnrichmentService", epdEnrichmentService);
+    epdEnrichmentService.enrichmentServiceProvider =
+        beanFactory.getBeanProvider(EpdEnrichmentService.class);
   }
 
   @Test
@@ -187,7 +188,6 @@ public class TestEpdEnrichmentService {
     epdEnrichmentService.enrich(
         "passport-1", expectedUrl, "trigger", PassportLogService.systemActor());
 
-    verify(entityManager).clear();
     if (expectedUrl.equals(currentUrl)) {
       Datasheet datasheet = current.getDatasheetMappings().iterator().next().getDatasheet();
       verify(datasheetRepository).save(datasheet);
@@ -202,6 +202,7 @@ public class TestEpdEnrichmentService {
   @ValueSource(strings = {"lcax", "ilcd"})
   public void shouldStoreNumericGwpForBothFormats(String format) throws Exception {
     Passport passport = enrichmentPassport("http://localhost:8089/epd.json");
+    when(passportRepository.findById("passport-1")).thenReturn(Optional.of(passport));
     when(environment.getActiveProfiles()).thenReturn(new String[] {"test"});
     when(restTemplate.getForObject(anyString(), eq(com.fasterxml.jackson.databind.JsonNode.class)))
         .thenReturn(new ObjectMapper().readTree(gwpPayload(format, "123.45")));
