@@ -173,7 +173,6 @@
         </dependencies>
     </dependencyManagement>
     <build>
-        <directory>${project.basedir}/target-new</directory>
         <plugins>
             <!-- Keep a single Spring Boot Maven Plugin with your configuration -->
             <plugin>

@@ -68,11 +68,11 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   /** Constructor. */
   @Autowired
   public BsddPlatformAdapter(
-      RestTemplate injectedRestTemplate,
+      RestTemplate restTemplate,
       AppProperties appProperties,
       ObjectMapper mapper,
       CacheService cacheService) {
-    this.restTemplate = injectedRestTemplate;
+    this.restTemplate = restTemplate;
     this.appProperties = appProperties;
     this.objectMapper = mapper;
     this.cacheService = cacheService;

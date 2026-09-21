@@ -33,6 +33,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @ExtendWith(MockitoExtension.class)
 public class TestPassportServiceUpdateDataLogging {
@@ -60,6 +64,81 @@ public class TestPassportServiceUpdateDataLogging {
             appProperties,
             epdEnrichmentService,
             passportLogService);
+  }
+
+  @Test
+  public void shouldEnrichOnlyAfterCommit() {
+    prepareEnrichmentPassport();
+    TestTransactionManager transactionManager = new TestTransactionManager();
+    org.mockito.Mockito.doAnswer(
+            invocation -> {
+              org.junit.jupiter.api.Assertions.assertTrue(transactionManager.committed);
+              return null;
+            })
+        .when(epdEnrichmentService)
+        .enrich("passport", "https://example.com/epd");
+
+    new TransactionTemplate(transactionManager)
+        .executeWithoutResult(
+            status -> {
+              passportService.updateData("passport", Map.of("trigger", "https://example.com/epd"));
+              org.mockito.Mockito.verifyNoInteractions(epdEnrichmentService);
+            });
+
+    verify(epdEnrichmentService).enrich("passport", "https://example.com/epd");
+  }
+
+  @Test
+  public void shouldNotEnrichAfterRollback() {
+    prepareEnrichmentPassport();
+    new TransactionTemplate(new TestTransactionManager())
+        .executeWithoutResult(
+            status -> {
+              passportService.updateData("passport", Map.of("trigger", "https://example.com/epd"));
+              status.setRollbackOnly();
+            });
+
+    org.mockito.Mockito.verifyNoInteractions(epdEnrichmentService);
+  }
+
+  public void prepareEnrichmentPassport() {
+    Passport passport = new Passport();
+    passport.setId("passport");
+    passport.setStatus(Passport.Status.ACTIVE);
+    Datasheet datasheet = new Datasheet();
+    datasheet.setId("datasheet");
+    datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
+    DatasheetProperty property = new DatasheetProperty();
+    property.setId("trigger");
+    property.setDatasheet(datasheet);
+    property.setCode("referencetooriginalEPD");
+    property.setGroupTag("GeneralInformation");
+    datasheet.setDatasheetProperties(new HashSet<>(List.of(property)));
+    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
+    mapping.setDatasheet(datasheet);
+    passport.setDatasheetMappings(Collections.singleton(mapping));
+    when(passportRepository.findPassport("passport", Passport.Status.ACTIVE))
+        .thenReturn(Optional.of(passport));
+  }
+
+  public static class TestTransactionManager extends AbstractPlatformTransactionManager {
+    public boolean committed;
+
+    @Override
+    public Object doGetTransaction() {
+      return new Object();
+    }
+
+    @Override
+    public void doBegin(Object transaction, TransactionDefinition definition) {}
+
+    @Override
+    public void doCommit(DefaultTransactionStatus status) {
+      committed = true;
+    }
+
+    @Override
+    public void doRollback(DefaultTransactionStatus status) {}
   }
 
   @Test

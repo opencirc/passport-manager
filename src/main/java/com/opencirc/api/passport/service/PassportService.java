@@ -47,6 +47,8 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -118,7 +120,12 @@ public class PassportService {
     Map<String, CreatePassportUsingPlatformRequestDto> idToDto = new HashMap<>();
     for (var passportDto : dataArray) {
       if (passportDto.getId() != null && !passportDto.getId().isBlank()) {
-        idToDto.put(passportDto.getId(), passportDto);
+        if (idToDto.putIfAbsent(passportDto.getId(), passportDto) != null) {
+          throw new InvalidInputException("Duplicate passport ID in batch");
+        }
+        if (passportRepository.existsById(passportDto.getId())) {
+          throw new InvalidInputException("Passport ID already exists");
+        }
       }
     }
 
@@ -274,6 +281,10 @@ public class PassportService {
       id = cuid.toString();
     }
 
+    if (passportRepository.existsById(id)) {
+      throw new InvalidInputException("Passport ID already exists");
+    }
+
     Passport passport = new Passport();
     passport.setId(id);
     passport.setName(data.getName());
@@ -401,6 +412,14 @@ public class PassportService {
     final String oldParentId = passport.getParentId();
 
     if (newParentId != null && !newParentId.isBlank()) {
+      var visitedParentIds = new HashSet<String>();
+      String ancestorId = newParentId;
+      while (ancestorId != null && !ancestorId.isBlank()) {
+        if (passportId.equals(ancestorId) || !visitedParentIds.add(ancestorId)) {
+          throw new InvalidInputException("Parent relationship would contain a cycle");
+        }
+        ancestorId = passportRepository.getParentId(ancestorId);
+      }
       if (passportRepository.findPassport(newParentId, Passport.Status.ACTIVE).isEmpty()) {
         throw new ResponseStatusException(
             HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
@@ -769,7 +788,15 @@ public class PassportService {
     }
 
     if (epdUrlToEnrich != null) {
-      epdEnrichmentService.enrich(passport.getId(), epdUrlToEnrich);
+      String enrichmentPassportId = passport.getId();
+      String enrichmentUrl = epdUrlToEnrich;
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              epdEnrichmentService.enrich(enrichmentPassportId, enrichmentUrl);
+            }
+          });
     }
 
     // if (updatedProperties.isEmpty()) {

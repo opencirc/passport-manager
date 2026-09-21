@@ -22,12 +22,24 @@ public class RestConfig {
   /** Rest Template Bean Initialisation. */
   @Bean
   public RestTemplate restTemplate() {
+    return createRestTemplate(true);
+  }
+
+  /** EPD client that does not follow redirects to unvalidated destinations. */
+  @Bean
+  public RestTemplate epdRestTemplate() {
+    return createRestTemplate(false);
+  }
+
+  /** Creates an HTTP client with bounded timeouts and the requested redirect policy. */
+  public RestTemplate createRestTemplate(boolean redirectsEnabled) {
     PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
     connectionManager.setMaxTotal(10);
     connectionManager.setDefaultMaxPerRoute(10);
 
     RequestConfig requestConfig =
         RequestConfig.custom()
+            .setRedirectsEnabled(redirectsEnabled)
             .setConnectTimeout(Timeout.of(CONNECT_TIMEOUT))
             .setConnectionRequestTimeout(Timeout.of(CONNECTION_REQUEST_TIMEOUT))
             .setResponseTimeout(Timeout.of(RESPONSE_TIMEOUT))

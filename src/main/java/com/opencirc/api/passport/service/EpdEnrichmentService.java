@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -73,7 +74,7 @@ public class EpdEnrichmentService {
    * @param passportLogService the service to log passport audit events
    */
   public EpdEnrichmentService(
-      RestTemplate restTemplate,
+      @Qualifier("epdRestTemplate") RestTemplate restTemplate,
       DatasheetRepository datasheetRepository,
       Environment environment,
       PassportRepository passportRepository,

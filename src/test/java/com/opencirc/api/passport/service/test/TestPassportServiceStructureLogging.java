@@ -122,6 +122,51 @@ public class TestPassportServiceStructureLogging {
   }
 
   @Test
+  public void shouldRejectSelfParenting() {
+    Passport passport = new Passport();
+    passport.setId("passport");
+    when(passportRepository.findById("passport")).thenReturn(Optional.of(passport));
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.opencirc.api.passport.exception.InvalidInputException.class,
+        () -> passportService.updateParent("passport", "passport"));
+
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
+    org.mockito.Mockito.verifyNoInteractions(passportLogService);
+  }
+
+  @Test
+  public void shouldRejectDescendantAsParent() {
+    Passport passport = new Passport();
+    passport.setId("ancestor");
+    when(passportRepository.findById("ancestor")).thenReturn(Optional.of(passport));
+    when(passportRepository.getParentId("grandchild")).thenReturn("child");
+    when(passportRepository.getParentId("child")).thenReturn("ancestor");
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.opencirc.api.passport.exception.InvalidInputException.class,
+        () -> passportService.updateParent("ancestor", "grandchild"));
+
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
+    org.mockito.Mockito.verifyNoInteractions(passportLogService);
+  }
+
+  @Test
+  public void shouldRejectAnAlreadyCyclicParentChain() {
+    Passport passport = new Passport();
+    passport.setId("passport");
+    when(passportRepository.findById("passport")).thenReturn(Optional.of(passport));
+    when(passportRepository.getParentId("first-parent")).thenReturn("second-parent");
+    when(passportRepository.getParentId("second-parent")).thenReturn("first-parent");
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.opencirc.api.passport.exception.InvalidInputException.class,
+        () -> passportService.updateParent("passport", "first-parent"));
+
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
+  }
+
+  @Test
   public void shouldLogEventWhenParentUpdated() {
     String passportId = "passport-123";
     String oldParentId = "old-parent";

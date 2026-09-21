@@ -65,6 +65,59 @@ public class TestPassportService {
   }
 
   @Test
+  public void shouldRejectExistingPassportIdBeforeSaving() {
+    CreatePassportUsingPlatformRequestDto request = new CreatePassportUsingPlatformRequestDto();
+    request.setId("existing-passport");
+    when(passportRepository.existsById("existing-passport")).thenReturn(true);
+
+    assertThrows(
+        com.opencirc.api.passport.exception.InvalidInputException.class,
+        () -> passportService.createPassportUsingPlatform(Platform.BSDD, request, new UserDto()));
+
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
+    org.mockito.Mockito.verifyNoInteractions(platformAdapterFactory);
+  }
+
+  @Test
+  public void shouldRejectDuplicateBatchIdsBeforeSaving() {
+    CreatePassportUsingPlatformRequestDto firstRequest =
+        new CreatePassportUsingPlatformRequestDto();
+    firstRequest.setId("duplicate-passport");
+    CreatePassportUsingPlatformRequestDto secondRequest =
+        new CreatePassportUsingPlatformRequestDto();
+    secondRequest.setId("duplicate-passport");
+
+    assertThrows(
+        com.opencirc.api.passport.exception.InvalidInputException.class,
+        () ->
+            passportService.batchCreatePassportsUsingPlatform(
+                Platform.BSDD, List.of(firstRequest, secondRequest), new UserDto()));
+
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
+    org.mockito.Mockito.verifyNoInteractions(platformAdapterFactory);
+  }
+
+  @Test
+  public void shouldRejectBatchContainingExistingIdBeforeSavingAnyPassport() {
+    CreatePassportUsingPlatformRequestDto firstRequest =
+        new CreatePassportUsingPlatformRequestDto();
+    firstRequest.setId("new-passport");
+    CreatePassportUsingPlatformRequestDto secondRequest =
+        new CreatePassportUsingPlatformRequestDto();
+    secondRequest.setId("existing-passport");
+    when(passportRepository.existsById(anyString()))
+        .thenAnswer(invocation -> "existing-passport".equals(invocation.getArgument(0)));
+
+    assertThrows(
+        com.opencirc.api.passport.exception.InvalidInputException.class,
+        () ->
+            passportService.batchCreatePassportsUsingPlatform(
+                Platform.BSDD, List.of(firstRequest, secondRequest), new UserDto()));
+
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
+  }
+
+  @Test
   public void shouldLogEventWhenPassportCreated() throws Exception {
     Platform platform = Platform.BSDD;
     CreatePassportUsingPlatformRequestDto request = new CreatePassportUsingPlatformRequestDto();
