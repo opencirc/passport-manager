@@ -1,7 +1,5 @@
-<img src="https://github.com/user-attachments/assets/c57405ea-df1c-4dd4-b684-f49a9e1e1c67" alt="opencirc logo" width="80" style="vertical-align: down;">
+<img alt="OpenCirc" src="https://opencirc-public.s3.fr-par.scw.cloud/opencirc-logo.png" width="200" />
 
-
-  
 **Construction Materials Passport Generator and Manager**
 
   This application allows users to generate and manage passports for construction materials through a REST API. It uses external dictionaries such as bsDD (https://search.bsdd.buildingsmart.org/) and lexicon (https://definehub.com/en/) to generate passports in the defined templates.
@@ -165,3 +163,64 @@ docker-compose down -v
 docker-compose up --build
 ```
 
+
+**8. Staging Server**
+
+Staging runs at `api.staging.opencirc.org` on a single Ubuntu 24.04 box. The app runs as the `opencirc` user, not root: the checkout lives in `/home/opencirc/passport-manager`, the Java process runs inside a tmux session named `passport-manager`, and Postgres and Redis run in Docker (ports 5435 and 6381). If you log in as root, the home directory looks empty because nothing lives there.
+
+**8.1 SSH Access**
+
+You need the staging key (`passport-manager-staging.pem`, ask a maintainer) and must log in as `opencirc`. Logging in as `ubuntu` or your local username fails with `Permission denied (publickey)` because those users do not exist. Add this to `~/.ssh/config`:
+
+```
+Host opencirc-passport-manager-staging api.staging.opencirc.org
+    HostName api.staging.opencirc.org
+    User opencirc
+    IdentityFile ~/.opencirc/passport-manager/staging/passport-manager-staging.pem
+    IdentitiesOnly yes
+```
+
+Then:
+
+```bash
+ssh opencirc-passport-manager-staging
+```
+
+**8.2 Shell Helpers**
+
+The login shell loads `~/.bashrc.d/opencirc.sh` (source: `scripts/staging-shell-helpers.sh`), which provides:
+
+| Command | What it does |
+| --- | --- |
+| `app-status` | One-screen overview: deployed commit, Java process, tmux sessions, Docker containers, log file |
+| `app-logs` | Attach to the app's tmux session to watch live output (`Ctrl-b` then `d` to detach) |
+| `app-tail` | Follow the last 200 lines of `~/logs/passport-manager.log` without attaching to tmux |
+| `app-sessions` | List tmux sessions (`tmux ls`) |
+| `app-redeploy` | Pull `main`, build, restart the app, and wait until it is ready |
+| `app-cd` | `cd` into the checkout |
+
+tmux is configured with mouse scrolling and a 50,000-line scrollback (source: `scripts/staging-tmux.conf`).
+
+**8.3 Deploying**
+
+Only `main` is deployed. Merge first, then on the server:
+
+```bash
+tmux new -s deploy     # so the build survives a dropped SSH connection
+app-redeploy
+```
+
+`app-redeploy` runs `scripts/redeploy-app.sh`: it refuses to run with uncommitted changes in the checkout, resets to `origin/main`, builds with `mvn -DskipTests package` under the memory limits in `MAVEN_OPTS`, restarts the `passport-manager` tmux session running `run-host.sh`, and then runs `scripts/wait-for-app.sh`. That script waits up to 180 seconds for the app to listen on port 8080 with a live Java process, and fails with a pointer to the logs otherwise. "App started" is only printed once readiness succeeds.
+
+App output goes to both the tmux pane and `~/logs/passport-manager.log`, so logs survive restarts.
+
+**8.4 Setting Up a Fresh Server**
+
+`scripts/setup-staging.sh` provisions a blank Ubuntu 24.04 host end to end: packages, Docker, Temurin Java 21, Maven, swap, a GitHub deploy key, the clone, the shell helpers and tmux config, the Docker services, a first build, and the first app start. Run it as the user that should own the app (not root) and follow the prompts.
+
+**8.5 Staging Troubleshooting**
+
+- **`Permission denied (publickey)`**: you are logging in as the wrong user. Use `opencirc@`.
+- **"App process exited before becoming ready"**: the JVM died during startup. Run `app-tail` or `app-logs` for the stack trace. Usual causes are a failed Flyway migration or the database container being down (`docker ps`).
+- **"App did not become ready within 180s"**: the JVM is alive but not listening yet. Check `app-tail`; on a cold JVM under memory pressure startup can exceed the timeout, in which case `TIMEOUT_SECONDS=300 bash scripts/wait-for-app.sh` re-checks without restarting.
+- **`Invalid character found in method name [0x16...]` in the logs**: harmless. Internet scanners are sending TLS handshakes to the plain HTTP port.
