@@ -9,7 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -57,5 +57,5 @@ public class PassportLifecycle {
 
   /** Created time. */
   @Column(name = "created_time", updatable = false, insertable = false)
-  private LocalDateTime createdTime;
+  private OffsetDateTime createdTime;
 }

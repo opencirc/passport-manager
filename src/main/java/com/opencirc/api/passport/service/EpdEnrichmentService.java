@@ -2,24 +2,47 @@ package com.opencirc.api.passport.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dao.DatasheetRepository;
+import com.opencirc.api.passport.dao.PassportRepository;
+import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetProperty;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportDatasheetMapping;
+import java.math.BigDecimal;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 @Slf4j
 public class EpdEnrichmentService {
 
+  @Autowired public ObjectProvider<EpdEnrichmentService> enrichmentServiceProvider;
+
   private final RestTemplate restTemplate;
   private final DatasheetRepository datasheetRepository;
+  private final Environment environment;
+  private final PassportRepository passportRepository;
+  private final PassportLogService passportLogService;
 
   private static final String GWP_UUID_31 = "a7ea142a-9749-11ed-a8fc-0242ac120002";
   private static final String GWP_UUID_30 = "6a37f984-a4b3-458a-a20a-64418c145fa2";
@@ -41,41 +64,117 @@ public class EpdEnrichmentService {
   private static final String CODE_GWP = "ClimateChangePerUnit";
   private static final String CODE_LIFE_CYCLE_PHASE = "LifeCyclePhase";
 
+  private static final int HTTPS_PORT = 443;
+  private static final int IPV4_CGNAT_FIRST_OCTET = 100;
+  private static final int IPV4_CGNAT_SECOND_OCTET_MIN = 64;
+  private static final int IPV4_CGNAT_SECOND_OCTET_MAX = 127;
+  private static final int IPV6_ULA_MASK = 0xFE;
+  private static final int IPV6_ULA_PREFIX = 0xFC;
+
   /**
    * Constructs a new EpdEnrichmentService.
    *
    * @param restTemplate the RestTemplate to use for HTTP requests
    * @param datasheetRepository the repository for Datasheet entities
+   * @param environment the Spring environment used to relax loopback checks in local/test
+   * @param passportRepository the repository for Passport entities
+   * @param passportLogService the service to log passport audit events
    */
-  public EpdEnrichmentService(RestTemplate restTemplate, DatasheetRepository datasheetRepository) {
+  public EpdEnrichmentService(
+      @Qualifier("epdRestTemplate") RestTemplate restTemplate,
+      DatasheetRepository datasheetRepository,
+      Environment environment,
+      PassportRepository passportRepository,
+      PassportLogService passportLogService) {
     this.restTemplate = restTemplate;
     this.datasheetRepository = datasheetRepository;
+    this.environment = environment;
+    this.passportRepository = passportRepository;
+    this.passportLogService = passportLogService;
   }
 
   /**
    * Enriches a passport with data from an EPD URL asynchronously.
    *
-   * @param passport the passport to enrich
+   * @param passportId the ID of the passport to enrich
    * @param epdUrl the URL of the EPD data
    */
   @Async
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
+  public void enrich(String passportId, String epdUrl) {
+    enrich(passportId, epdUrl, null, PassportLogService.systemActor());
+  }
+
+  /** Enriches only while the captured trigger is current, attributing failures to its actor. */
+  @Async
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
+  public void enrich(
+      String passportId, String epdUrl, String triggerPropertyId, PassportLogService.Actor actor) {
+    log.info("Enriching passport {} from EPD URL: {}", passportId, epdUrl);
+    if (passportId == null || passportId.isBlank()) {
+      return;
+    }
+    Passport passport =
+        passportRepository != null ? passportRepository.findById(passportId).orElse(null) : null;
+    if (passport == null) {
+      log.warn("Passport {} not found for EPD enrichment", passportId);
+      return;
+    }
+    enrichPassport(passport, epdUrl, triggerPropertyId, actor);
+  }
+
+  /**
+   * Backward-compatible overload for enriching a passport.
+   *
+   * @param passport the passport entity
+   * @param epdUrl the URL of the EPD data
+   */
+  @Deprecated
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public void enrich(Passport passport, String epdUrl) {
-    log.info("Enriching passport {} from EPD URL: {}", passport.getId(), epdUrl);
+    if (passport == null) {
+      return;
+    }
+    if (passport.getId() != null && passportRepository != null) {
+      Optional<Passport> fresh = passportRepository.findById(passport.getId());
+      if (fresh.isPresent()) {
+        enrichPassport(fresh.get(), epdUrl, null, PassportLogService.systemActor());
+        return;
+      }
+    }
+    enrichPassport(passport, epdUrl, null, PassportLogService.systemActor());
+  }
+
+  /** Fetches and applies EPD data for the captured request. */
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
+  public void enrichPassport(
+      Passport passport, String epdUrl, String triggerPropertyId, PassportLogService.Actor actor) {
+    String expectedTriggerUrl = epdUrl;
     try {
       if (epdUrl == null || epdUrl.isBlank()) {
         return;
       }
 
-      // Security check: enforce HTTPS unless it's localhost
-      if (!epdUrl.startsWith("https://") && !epdUrl.contains("localhost")) {
-        log.warn("Security policy violation: Non-HTTPS EPD URL: {}", epdUrl);
+      if (!isSafeEpdUrl(epdUrl)) {
+        log.warn("Rejected unsafe EPD URL for passport {}: {}", passport.getId(), epdUrl);
+        logEnrichmentFailed(passport, epdUrl, "Rejected unsafe EPD URL", actor);
+        return;
       }
 
       epdUrl = addRequiredEpdQueryParams(epdUrl);
+      if (!isSafeEpdUrl(epdUrl)) {
+        log.warn(
+            "Rejected unsafe EPD URL after query rewrite for passport {}: {}",
+            passport.getId(),
+            epdUrl);
+        logEnrichmentFailed(passport, epdUrl, "Rejected unsafe EPD URL after query rewrite", actor);
+        return;
+      }
 
       JsonNode epdData = restTemplate.getForObject(epdUrl, JsonNode.class);
       if (epdData == null) {
         log.error("Failed to fetch EPD data from {}", epdUrl);
+        logEnrichmentFailed(passport, epdUrl, "Failed to fetch EPD data", actor);
         return;
       }
 
@@ -88,15 +187,78 @@ public class EpdEnrichmentService {
 
       if (extractedData.isEmpty()) {
         log.warn("No data extracted from EPD at {}", epdUrl);
+        logEnrichmentFailed(passport, epdUrl, "No data extracted from EPD", actor);
         return;
       }
       log.info("Extracted data: {}", extractedData);
 
-      updateDatasheets(passport, extractedData);
-      log.info("Successfully enriched passport {}", passport.getId());
+      enrichmentServiceProvider
+          .getObject()
+          .applyEnrichment(passport.getId(), triggerPropertyId, expectedTriggerUrl, extractedData);
     } catch (Exception e) {
       log.error(
           "Error during EPD enrichment for passport {}: {}", passport.getId(), e.getMessage(), e);
+      logEnrichmentFailed(
+          passport, epdUrl, e.getMessage() != null ? e.getMessage() : "Enrichment error", actor);
+    }
+  }
+
+  /** Reloads, validates and persists fetched data in an independent database transaction. */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void applyEnrichment(
+      String passportId,
+      String triggerPropertyId,
+      String expectedTriggerUrl,
+      Map<String, Object> extractedData) {
+    Passport passport = passportRepository.findById(passportId).orElse(null);
+    if (passport == null
+        || (triggerPropertyId != null
+            && !hasExpectedTrigger(passport, triggerPropertyId, expectedTriggerUrl))) {
+      log.info("Discarding outdated EPD enrichment for passport {}", passportId);
+      return;
+    }
+    updateDatasheets(passport, extractedData);
+    passportRepository.save(passport);
+    log.info("Successfully enriched passport {}", passportId);
+  }
+
+  /** Records an enrichment failure against the initiating actor. */
+  public void logEnrichmentFailed(
+      Passport passport, String epdUrl, String reason, PassportLogService.Actor actor) {
+    if (passportLogService != null && passport != null && passport.getId() != null) {
+      passportLogService.logEvent(
+          passport.getId(),
+          PassportLogAction.EPD_ENRICHMENT_FAILED,
+          Map.of("url", epdUrl != null ? epdUrl : "", "reason", reason != null ? reason : ""),
+          actor.createdBy(),
+          actor.createdById());
+    }
+  }
+
+  /** Checks the original trigger property against the latest committed datasheet value. */
+  public boolean hasExpectedTrigger(
+      Passport passport, String triggerPropertyId, String expectedUrl) {
+    for (PassportDatasheetMapping mapping : passport.getDatasheetMappings()) {
+      Datasheet datasheet = mapping.getDatasheet();
+      if (datasheet != null
+          && datasheet.getData() != null
+          && datasheet.getDatasheetProperties().stream()
+              .anyMatch(property -> triggerPropertyId.equals(property.getId()))) {
+        return Objects.equals(expectedUrl, datasheet.getData().get(triggerPropertyId));
+      }
+    }
+    return false;
+  }
+
+  /** Parses GWP values without coercing malformed or non-finite input to zero. */
+  public BigDecimal parseGwp(JsonNode value) {
+    if (!value.isNumber() && !value.isTextual()) {
+      throw new IllegalArgumentException("Invalid GWP value: " + value);
+    }
+    try {
+      return new BigDecimal(value.asText());
+    } catch (NumberFormatException exception) {
+      throw new IllegalArgumentException("Invalid GWP value: " + value, exception);
     }
   }
 
@@ -117,6 +279,88 @@ public class EpdEnrichmentService {
   private String appendQueryParam(String url, String queryParam) {
     String separator = url.contains("?") || url.contains("&") ? "&" : "?";
     return url + separator + queryParam;
+  }
+
+  private boolean isSafeEpdUrl(String epdUrl) {
+    URI uri;
+    try {
+      uri = new URI(epdUrl);
+    } catch (URISyntaxException e) {
+      return false;
+    }
+
+    if (uri.getUserInfo() != null && !uri.getUserInfo().isBlank()) {
+      return false;
+    }
+
+    String scheme = uri.getScheme();
+    String host = uri.getHost();
+    if (scheme == null || host == null || host.isBlank()) {
+      return false;
+    }
+    scheme = scheme.toLowerCase(Locale.ROOT);
+
+    InetAddress[] addresses;
+    try {
+      addresses = InetAddress.getAllByName(host);
+    } catch (UnknownHostException e) {
+      return false;
+    }
+    if (addresses.length == 0) {
+      return false;
+    }
+
+    boolean allowLocal = isLocalDevelopment();
+    boolean allLoopback = true;
+    for (InetAddress address : addresses) {
+      if (!address.isLoopbackAddress()) {
+        allLoopback = false;
+      }
+      if (isBlockedAddress(address) && !(allowLocal && address.isLoopbackAddress())) {
+        return false;
+      }
+    }
+
+    if ("https".equals(scheme)) {
+      int port = uri.getPort();
+      if (allowLocal && allLoopback) {
+        return true;
+      }
+      return port == -1 || port == HTTPS_PORT;
+    }
+
+    return "http".equals(scheme) && allowLocal && allLoopback;
+  }
+
+  private boolean isLocalDevelopment() {
+    return Arrays.stream(environment.getActiveProfiles())
+        .anyMatch(
+            profile -> "test".equals(profile) || "dev".equals(profile) || "local".equals(profile));
+  }
+
+  private static boolean isBlockedAddress(InetAddress address) {
+    if (address.isAnyLocalAddress()
+        || address.isLoopbackAddress()
+        || address.isLinkLocalAddress()
+        || address.isSiteLocalAddress()
+        || address.isMulticastAddress()) {
+      return true;
+    }
+
+    byte[] octets = address.getAddress();
+    if (octets.length == 4) {
+      int first = octets[0] & 0xFF;
+      int second = octets[1] & 0xFF;
+      return first == IPV4_CGNAT_FIRST_OCTET
+          && second >= IPV4_CGNAT_SECOND_OCTET_MIN
+          && second <= IPV4_CGNAT_SECOND_OCTET_MAX;
+    }
+
+    if (address instanceof Inet6Address inet6) {
+      byte[] addr = inet6.getAddress();
+      return (addr[0] & IPV6_ULA_MASK) == IPV6_ULA_PREFIX;
+    }
+    return false;
   }
 
   private boolean isLcax(JsonNode epdData) {
@@ -173,7 +417,7 @@ public class EpdEnrichmentService {
     if (!gwp.isMissingNode()) {
       JsonNode a1a3Node = gwp.path("a1a3");
       if (!a1a3Node.isMissingNode()) {
-        data.put(createKey(CODE_GWP, GROUP_ENV_INDICATORS), a1a3Node.asDouble());
+        data.put(createKey(CODE_GWP, GROUP_ENV_INDICATORS), parseGwp(a1a3Node));
         data.put(createKey(CODE_LIFE_CYCLE_PHASE, GROUP_ENV_INDICATORS), "A1-A3");
       }
     }
@@ -286,17 +530,18 @@ public class EpdEnrichmentService {
     if (lciaResults.isArray()) {
       for (JsonNode result : lciaResults) {
         String refId = result.path("referenceToLCIAMethodDataSet").path("refObjectId").asText();
+        if (refId == null || refId.isBlank()) {
+          refId = result.path("referenceToLCIAMethodFlowProperty").path("refObjectId").asText();
+        }
         if (GWP_UUID_31.equals(refId) || GWP_UUID_30.equals(refId)) {
-          Float gwpValue = null;
+          BigDecimal gwpValue = null;
           JsonNode anies = result.path("other").path("anies");
           if (anies.isArray()) {
             for (JsonNode entry : anies) {
               if ("A1-A3".equals(entry.path("module").asText())) {
                 JsonNode valueNode = entry.path("value");
-                if (valueNode.isNumber()) {
-                  gwpValue = valueNode.floatValue();
-                } else if (valueNode.isTextual() && !valueNode.asText().isBlank()) {
-                  gwpValue = Float.parseFloat(valueNode.asText());
+                if (!valueNode.isMissingNode() && !valueNode.isNull()) {
+                  gwpValue = parseGwp(valueNode);
                 }
                 break;
               }

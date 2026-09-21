@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.model.PassportTemplate;
 import jakarta.persistence.Column;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,7 +35,7 @@ public class PassportTemplateDto {
   /** Time of creation. */
   @JsonProperty
   @Column(name = "created_time", updatable = false)
-  private LocalDateTime createdTime;
+  private OffsetDateTime createdTime;
 
   /** Sets the passportTemplateDto from PassportTemplate. */
   public static PassportTemplateDto from(PassportTemplate passportTemplate) {

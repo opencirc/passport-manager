@@ -40,19 +40,19 @@ public class DatasheetProperty {
   private Datasheet datasheet;
 
   /** Code of the class. */
-  @Column(name = "code")
+  @Column(name = "code", columnDefinition = "TEXT")
   private String code;
 
   /** Uri of the platform. */
-  @Column(name = "platform_id")
+  @Column(name = "platform_id", columnDefinition = "TEXT")
   private String platformId;
 
   /** PropertySet to which a property belongs. */
-  @Column(name = "group_tag")
+  @Column(name = "group_tag", columnDefinition = "TEXT")
   private String groupTag;
 
   /** Type. */
-  @Column(name = "property_type")
+  @Column(name = "property_type", columnDefinition = "TEXT")
   private String propertyType;
 
   /** Definition. */

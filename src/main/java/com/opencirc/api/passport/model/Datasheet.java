@@ -59,16 +59,16 @@ public class Datasheet {
   @Convert(converter = DataDictionaryConverter.class)
   private DataDictionary dictionary;
 
-  @Column(name = "code")
+  @Column(name = "code", columnDefinition = "TEXT")
   private String code;
 
-  @Column(name = "name")
+  @Column(name = "name", columnDefinition = "TEXT")
   private String name;
 
-  @Column(name = "description")
+  @Column(name = "description", columnDefinition = "TEXT")
   private String description;
 
-  @Column(name = "platform_id")
+  @Column(name = "platform_id", columnDefinition = "TEXT")
   private String platformId;
 
   @Column(name = "data_category")
@@ -80,7 +80,7 @@ public class Datasheet {
   @ColumnTransformer(write = "?::jsonb")
   private Map<String, Object> data;
 
-  @Column(name = "created_by_id")
+  @Column(name = "created_by_id", columnDefinition = "TEXT")
   private String createdById;
 
   @Column(name = "created_by", columnDefinition = "jsonb", nullable = false)

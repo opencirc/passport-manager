@@ -2,6 +2,7 @@ package com.opencirc.api.passport.controller.test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.restassured.RestAssured.given;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -12,6 +13,7 @@ import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.dao.DatasheetPropertyRepository;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
+import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
@@ -26,6 +28,7 @@ import io.github.thibaultmeyer.cuid.CUID;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +52,8 @@ public class TestEpdEnrichment {
   @LocalServerPort private int port;
 
   @Autowired private PassportRepository passportRepository;
+
+  @Autowired public PassportLogRepository passportLogRepository;
 
   @Autowired private DatasheetRepository datasheetRepository;
 
@@ -89,7 +94,7 @@ public class TestEpdEnrichment {
   }
 
   @Test
-  public void shouldEnrichEPDDataWhenTriggerFieldIsUpdated() throws InterruptedException {
+  public void shouldEnrichEPDDataWhenTriggerFieldIsUpdated() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
 
     // Create a test passport
@@ -123,7 +128,7 @@ public class TestEpdEnrichment {
 
     // Stub WireMock
     stubFor(
-        get(urlEqualTo("/epd-data.json"))
+        get(urlPathEqualTo("/epd-data.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -145,17 +150,20 @@ public class TestEpdEnrichment {
         .then()
         .statusCode(HttpStatus.OK.value());
 
-    // Since it's async, we might need to wait a bit
-    Thread.sleep(2000);
-
-    // Verify that the product name was updated in the database
-    Datasheet updatedDatasheet = datasheetRepository.findById(datasheet.getId()).get();
-    assertThat(updatedDatasheet.getData(), notNullValue());
-    assertThat(updatedDatasheet.getData().get(nameProp.getId()), is("Enriched Product"));
+    String datasheetId = datasheet.getId();
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              // Verify that the product name was updated in the database
+              Datasheet updatedDatasheet = datasheetRepository.findById(datasheetId).get();
+              assertThat(updatedDatasheet.getData(), notNullValue());
+              assertThat(updatedDatasheet.getData().get(nameProp.getId()), is("Enriched Product"));
+            });
   }
 
   @Test
-  public void shouldHandleInvalidUrlGracefully() throws InterruptedException {
+  public void shouldHandleInvalidUrlGracefully() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
     Datasheet datasheet = createDatasheet(createdBy);
@@ -163,7 +171,7 @@ public class TestEpdEnrichment {
     DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
 
     // Stub WireMock for a 404
-    stubFor(get(urlEqualTo("/not-found.json")).willReturn(aResponse().withStatus(404)));
+    stubFor(get(urlPathEqualTo("/not-found.json")).willReturn(aResponse().withStatus(404)));
 
     Map<String, Object> values = new HashMap<>();
     values.put(triggerProp.getId(), "http://localhost:8089/not-found.json");
@@ -178,16 +186,29 @@ public class TestEpdEnrichment {
         .then()
         .statusCode(HttpStatus.OK.value());
 
-    Thread.sleep(1000);
-    // No exception thrown to user, and no data changed (except the URL itself)
-    Datasheet updatedDatasheet = datasheetRepository.findById(datasheet.getId()).get();
-    assertThat(
-        updatedDatasheet.getData().get(triggerProp.getId()),
-        is("http://localhost:8089/not-found.json"));
+    String datasheetId = datasheet.getId();
+    String passportId = passport.getId();
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              // No exception thrown to user, and no data changed (except the URL itself)
+              Datasheet updatedDatasheet = datasheetRepository.findById(datasheetId).get();
+              assertThat(
+                  updatedDatasheet.getData().get(triggerProp.getId()),
+                  is("http://localhost:8089/not-found.json"));
+              assertThat(
+                  passportLogRepository.findByPassportIdOrderByCreatedTimeAsc(passportId).stream()
+                      .anyMatch(
+                          log ->
+                              "EPD_ENRICHMENT_FAILED"
+                                  .equals(log.getData().path("action").asText())),
+                  is(true));
+            });
   }
 
   @Test
-  public void shouldEnrichMultipleDatasheets() throws InterruptedException {
+  public void shouldEnrichMultipleDatasheets() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
 
@@ -201,7 +222,7 @@ public class TestEpdEnrichment {
     DatasheetProperty nameProp2 = createProperty(ds2, NAME_CODE, NAME_GROUP);
 
     stubFor(
-        get(urlEqualTo("/multi.json"))
+        get(urlPathEqualTo("/multi.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -221,18 +242,21 @@ public class TestEpdEnrichment {
         .then()
         .statusCode(HttpStatus.OK.value());
 
-    Thread.sleep(2000);
-
-    assertThat(
-        datasheetRepository.findById(ds1.getId()).get().getData().get(nameProp1.getId()),
-        is("Multi Enriched"));
-    assertThat(
-        datasheetRepository.findById(ds2.getId()).get().getData().get(nameProp2.getId()),
-        is("Multi Enriched"));
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              assertThat(
+                  datasheetRepository.findById(ds1.getId()).get().getData().get(nameProp1.getId()),
+                  is("Multi Enriched"));
+              assertThat(
+                  datasheetRepository.findById(ds2.getId()).get().getData().get(nameProp2.getId()),
+                  is("Multi Enriched"));
+            });
   }
 
   @Test
-  public void shouldEnrichMetadataEvenIfGWPIsMissing() throws InterruptedException {
+  public void shouldEnrichMetadataEvenIfGWPIsMissing() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
     Datasheet datasheet = createDatasheet(createdBy);
@@ -244,7 +268,7 @@ public class TestEpdEnrichment {
 
     // JSON without GWP
     stubFor(
-        get(urlEqualTo("/missing-gwp.json"))
+        get(urlPathEqualTo("/missing-gwp.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -264,15 +288,19 @@ public class TestEpdEnrichment {
         .then()
         .statusCode(HttpStatus.OK.value());
 
-    Thread.sleep(2000);
-
-    Datasheet updated = datasheetRepository.findById(datasheet.getId()).get();
-    assertThat(updated.getData().get(nameProp.getId()), is("No GWP Product"));
-    assertThat(updated.getData().get(gwpProp.getId()), nullValue());
+    String datasheetId = datasheet.getId();
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              Datasheet updated = datasheetRepository.findById(datasheetId).get();
+              assertThat(updated.getData().get(nameProp.getId()), is("No GWP Product"));
+              assertThat(updated.getData().get(gwpProp.getId()), nullValue());
+            });
   }
 
   @Test
-  public void shouldExtractPublicationDateFromNewPath() throws InterruptedException {
+  public void shouldExtractPublicationDateFromNewPath() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
     Datasheet datasheet = createDatasheet(createdBy);
@@ -298,7 +326,7 @@ public class TestEpdEnrichment {
         """;
 
     stubFor(
-        get(urlEqualTo("/new-path.json"))
+        get(urlPathEqualTo("/new-path.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -317,14 +345,18 @@ public class TestEpdEnrichment {
         .then()
         .statusCode(HttpStatus.OK.value());
 
-    Thread.sleep(2000);
-
-    Datasheet updated = datasheetRepository.findById(datasheet.getId()).get();
-    assertThat(updated.getData().get(pubDateProp.getId()), is("2024-05-05"));
+    String datasheetId = datasheet.getId();
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              Datasheet updated = datasheetRepository.findById(datasheetId).get();
+              assertThat(updated.getData().get(pubDateProp.getId()), is("2024-05-05"));
+            });
   }
 
   @Test
-  public void shouldExtractGwpFromNewPath() throws InterruptedException {
+  public void shouldExtractGwpFromNewPath() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
     Datasheet datasheet = createDatasheet(createdBy);
@@ -361,7 +393,7 @@ public class TestEpdEnrichment {
         """;
 
     stubFor(
-        get(urlEqualTo("/new-gwp-path.json"))
+        get(urlPathEqualTo("/new-gwp-path.json"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -380,14 +412,20 @@ public class TestEpdEnrichment {
         .then()
         .statusCode(HttpStatus.OK.value());
 
-    Thread.sleep(2000);
-
-    Datasheet updated = datasheetRepository.findById(datasheet.getId()).get();
-    assertThat(updated.getData().get(gwpProp.getId()), is("123.45"));
+    String datasheetId = datasheet.getId();
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              Datasheet updated = datasheetRepository.findById(datasheetId).get();
+              assertThat(updated.getData().get(gwpProp.getId()), instanceOf(Number.class));
+              assertThat(
+                  ((Number) updated.getData().get(gwpProp.getId())).doubleValue(), is(123.45));
+            });
   }
 
   @Test
-  public void shouldEnrichLCAxData() throws InterruptedException {
+  public void shouldEnrichLCAxData() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
     Datasheet datasheet = createDatasheet(createdBy);
@@ -430,15 +468,20 @@ public class TestEpdEnrichment {
         .then()
         .statusCode(HttpStatus.OK.value());
 
-    Thread.sleep(2000);
-
-    Datasheet updated = datasheetRepository.findById(datasheet.getId()).get();
-    assertThat(updated.getData().get(nameProp.getId()), is("LCAx Product"));
-    assertThat(updated.getData().get(gwpProp.getId()).toString(), containsString("45.67"));
+    String datasheetId = datasheet.getId();
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              Datasheet updated = datasheetRepository.findById(datasheetId).get();
+              assertThat(updated.getData().get(nameProp.getId()), is("LCAx Product"));
+              assertThat(
+                  updated.getData().get(gwpProp.getId()).toString(), containsString("45.67"));
+            });
   }
 
   @Test
-  public void shouldEnrichLCAxDataWithAllFields() throws InterruptedException {
+  public void shouldEnrichLCAxDataWithAllFields() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
     Datasheet datasheet = createDatasheet(createdBy);
@@ -496,16 +539,21 @@ public class TestEpdEnrichment {
         .then()
         .statusCode(HttpStatus.OK.value());
 
-    Thread.sleep(2000);
-
-    Datasheet updated = datasheetRepository.findById(datasheet.getId()).get();
-    assertThat(updated.getData().get(nameProp.getId()), is("Full LCAx Product"));
-    assertThat(updated.getData().get(pubDateProp.getId()), is("2024-01-01"));
-    assertThat(updated.getData().get(validUntilProp.getId()), is("2029-01-01"));
-    assertThat(updated.getData().get(serviceLifeProp.getId()), is("50"));
-    assertThat(updated.getData().get(ownerProp.getId()), is("LCAx Owner"));
-    assertThat(updated.getData().get(unitProp.getId()), is("M2"));
-    assertThat(updated.getData().get(gwpProp.getId()).toString(), containsString("12.34"));
+    String datasheetId = datasheet.getId();
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              Datasheet updated = datasheetRepository.findById(datasheetId).get();
+              assertThat(updated.getData().get(nameProp.getId()), is("Full LCAx Product"));
+              assertThat(updated.getData().get(pubDateProp.getId()), is("2024-01-01"));
+              assertThat(updated.getData().get(validUntilProp.getId()), is("2029-01-01"));
+              assertThat(updated.getData().get(serviceLifeProp.getId()), is("50"));
+              assertThat(updated.getData().get(ownerProp.getId()), is("LCAx Owner"));
+              assertThat(updated.getData().get(unitProp.getId()), is("M2"));
+              assertThat(
+                  updated.getData().get(gwpProp.getId()).toString(), containsString("12.34"));
+            });
   }
 
   private Passport createPassport(CreatedByDto createdBy) {

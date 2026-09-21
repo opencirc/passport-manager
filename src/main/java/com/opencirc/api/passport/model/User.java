@@ -8,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -56,7 +56,7 @@ public class User {
   private String refreshToken;
 
   @Column(name = "created_time", updatable = false, insertable = false)
-  private LocalDateTime createdTime;
+  private OffsetDateTime createdTime;
 
   public String getFullName() {
     return firstName + " " + lastName;
