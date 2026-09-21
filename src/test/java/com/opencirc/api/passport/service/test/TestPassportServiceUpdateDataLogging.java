@@ -69,6 +69,11 @@ public class TestPassportServiceUpdateDataLogging {
   @Test
   public void shouldEnrichOnlyAfterCommit() {
     prepareEnrichmentPassport();
+    when(passportLogService.captureActor())
+        .thenReturn(
+            new PassportLogService.Actor(
+                new com.opencirc.api.passport.dto.CreatedByDto("Editor", "editor@example.com"),
+                "editor-id"));
     TestTransactionManager transactionManager = new TestTransactionManager();
     org.mockito.Mockito.doAnswer(
             invocation -> {
@@ -76,7 +81,7 @@ public class TestPassportServiceUpdateDataLogging {
               return null;
             })
         .when(epdEnrichmentService)
-        .enrich("passport", "https://example.com/epd");
+        .enrich(eq("passport"), eq("https://example.com/epd"), eq("trigger"), any());
 
     new TransactionTemplate(transactionManager)
         .executeWithoutResult(
@@ -85,12 +90,24 @@ public class TestPassportServiceUpdateDataLogging {
               org.mockito.Mockito.verifyNoInteractions(epdEnrichmentService);
             });
 
-    verify(epdEnrichmentService).enrich("passport", "https://example.com/epd");
+    verify(epdEnrichmentService)
+        .enrich(
+            "passport",
+            "https://example.com/epd",
+            "trigger",
+            new PassportLogService.Actor(
+                new com.opencirc.api.passport.dto.CreatedByDto("Editor", "editor@example.com"),
+                "editor-id"));
   }
 
   @Test
   public void shouldNotEnrichAfterRollback() {
     prepareEnrichmentPassport();
+    when(passportLogService.captureActor())
+        .thenReturn(
+            new PassportLogService.Actor(
+                new com.opencirc.api.passport.dto.CreatedByDto("Editor", "editor@example.com"),
+                "editor-id"));
     new TransactionTemplate(new TestTransactionManager())
         .executeWithoutResult(
             status -> {

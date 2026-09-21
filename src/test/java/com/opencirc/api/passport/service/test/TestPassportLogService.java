@@ -88,15 +88,57 @@ public class TestPassportLogService {
   }
 
   @Test
+  public void shouldUseSystemOnlyWhenAuthenticationIsMissing() {
+    when(userContext.getCurrentUser())
+        .thenThrow(
+            new org.springframework.security.authentication
+                .AuthenticationCredentialsNotFoundException("Missing"));
+    passportLogService.logEvent("passport", PassportLogAction.CREATE, java.util.List.of());
+    ArgumentCaptor<PassportLog> captured = ArgumentCaptor.forClass(PassportLog.class);
+    verify(passportLogRepository).save(captured.capture());
+    org.junit.jupiter.api.Assertions.assertEquals("system", captured.getValue().getCreatedById());
+  }
+
+  @Test
+  public void shouldPropagateUnexpectedActorFailures() {
+    IllegalStateException failure = new IllegalStateException("Broken context");
+    when(userContext.getCurrentUser()).thenThrow(failure);
+    org.junit.jupiter.api.Assertions.assertSame(
+        failure,
+        org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalStateException.class,
+            () ->
+                passportLogService.logEvent(
+                    "passport", PassportLogAction.CREATE, java.util.List.of())));
+    org.mockito.Mockito.verifyNoInteractions(passportLogRepository);
+  }
+
+  @Test
   public void shouldGetLogsByPassportId() {
     String passportId = "test-passport-id";
     PassportLog log = new PassportLog();
     log.setPassportId(passportId);
-    when(passportLogRepository.findByPassportId(passportId)).thenReturn(java.util.List.of(log));
+    log.setId("log-id");
+    log.setCreatedById("actor-id");
+    log.setCreatedBy(
+        new com.opencirc.api.passport.dto.CreatedByDto("Editor", "editor@example.com"));
+    log.setCreatedTime(java.time.OffsetDateTime.parse("2026-09-21T12:00:00Z"));
+    log.setData(objectMapper.createObjectNode().put("action", "CREATE"));
+    when(passportLogRepository.findByPassportIdOrderByCreatedTimeAsc(passportId))
+        .thenReturn(java.util.List.of(log));
 
-    java.util.List<PassportLog> logs = passportLogService.getLogsByPassportId(passportId);
+    java.util.List<com.opencirc.api.passport.dto.PassportLogDto> logs =
+        passportLogService.getLogsByPassportId(passportId);
 
     org.junit.jupiter.api.Assertions.assertEquals(1, logs.size());
     org.junit.jupiter.api.Assertions.assertEquals(passportId, logs.get(0).getPassportId());
+    org.junit.jupiter.api.Assertions.assertEquals(log.getId(), logs.get(0).getId());
+    org.junit.jupiter.api.Assertions.assertEquals(
+        log.getCreatedById(), logs.get(0).getCreatedById());
+    org.junit.jupiter.api.Assertions.assertEquals(log.getCreatedBy(), logs.get(0).getCreatedBy());
+    org.junit.jupiter.api.Assertions.assertEquals(log.getData(), logs.get(0).getData());
+    org.junit.jupiter.api.Assertions.assertEquals(
+        log.getCreatedTime(), logs.get(0).getCreatedTime());
+    verify(passportLogRepository).findByPassportIdOrderByCreatedTimeAsc(passportId);
   }
 }

@@ -15,5 +15,5 @@ public interface PassportLogRepository extends JpaRepository<PassportLog, String
    * @param passportId the ID of the passport
    * @return a list of passport logs
    */
-  List<PassportLog> findByPassportId(String passportId);
+  List<PassportLog> findByPassportIdOrderByCreatedTimeAsc(String passportId);
 }

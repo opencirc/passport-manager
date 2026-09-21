@@ -5,11 +5,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.dto.PassportLogDto;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.model.PassportLog;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,24 +55,15 @@ public class PassportLogService {
     PassportLog log = new PassportLog();
     log.setPassportId(passportId);
 
-    if (createdBy != null) {
-      log.setCreatedById(createdById != null ? createdById : "system");
-      log.setCreatedBy(createdBy);
-    } else {
-      UserDto currentUser = null;
-      try {
-        currentUser = userContext.getCurrentUser();
-      } catch (Exception expected) {
-        // Fallback to system creator if no authenticated user context exists
-      }
-      if (currentUser != null) {
-        log.setCreatedById(currentUser.getId());
-        log.setCreatedBy(CreatedByDto.from(currentUser));
-      } else {
-        log.setCreatedById(createdById != null ? createdById : "system");
-        log.setCreatedBy(new CreatedByDto("System", "system@opencirc.org"));
+    if (createdBy == null) {
+      Actor actor = captureActor();
+      createdBy = actor.createdBy();
+      if (!"system".equals(actor.createdById()) || createdById == null) {
+        createdById = actor.createdById();
       }
     }
+    log.setCreatedById(createdById != null ? createdById : "system");
+    log.setCreatedBy(createdBy);
 
     ObjectNode data = objectMapper.createObjectNode();
     data.put("action", action.getValue());
@@ -87,7 +80,38 @@ public class PassportLogService {
    * @return a list of passport logs
    */
   @Transactional(readOnly = true)
-  public List<PassportLog> getLogsByPassportId(String passportId) {
-    return passportLogRepository.findByPassportId(passportId);
+  public List<PassportLogDto> getLogsByPassportId(String passportId) {
+    return passportLogRepository.findByPassportIdOrderByCreatedTimeAsc(passportId).stream()
+        .map(
+            log ->
+                new PassportLogDto(
+                    log.getId(),
+                    log.getPassportId(),
+                    log.getData(),
+                    log.getCreatedById(),
+                    log.getCreatedBy(),
+                    log.getCreatedTime()))
+        .toList();
   }
+
+  /** Captures actor details on the request thread before asynchronous processing. */
+  public Actor captureActor() {
+    try {
+      UserDto currentUser = userContext.getCurrentUser();
+      if (currentUser != null) {
+        return new Actor(CreatedByDto.from(currentUser), currentUser.getId());
+      }
+    } catch (AuthenticationCredentialsNotFoundException expected) {
+      // No authenticated user is available for this operation.
+    }
+    return systemActor();
+  }
+
+  /** Identity used for operations without an authenticated actor. */
+  public static Actor systemActor() {
+    return new Actor(new CreatedByDto("System", "system@opencirc.org"), "system");
+  }
+
+  /** Snapshot of the identity responsible for an audit event. */
+  public record Actor(CreatedByDto createdBy, String createdById) {}
 }

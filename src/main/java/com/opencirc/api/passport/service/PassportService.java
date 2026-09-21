@@ -304,6 +304,7 @@ public class PassportService {
     }
 
     passport = passportRepository.save(passport);
+    passportLogService.logEvent(passport.getId(), PassportLogAction.CREATE, List.of());
 
     addDatasheetsToPassportUsingPlatform(
         passport,
@@ -358,8 +359,6 @@ public class PassportService {
         }
       }
     }
-
-    passportLogService.logEvent(passport.getId(), PassportLogAction.CREATE, List.of());
 
     return PassportDto.from(passport);
   }
@@ -720,6 +719,7 @@ public class PassportService {
 
     List<Map<String, Object>> allChanges = new ArrayList<>();
     String epdUrlToEnrich = null;
+    String epdTriggerPropertyId = null;
     for (PassportDatasheetMapping mapping : mappings) {
       Datasheet datasheet = mapping.getDatasheet();
       if (datasheet == null) {
@@ -733,6 +733,7 @@ public class PassportService {
             Object triggerValue = values.get(property.getId());
             if (triggerValue instanceof String epdUrl && !epdUrl.isBlank()) {
               epdUrlToEnrich = epdUrl;
+              epdTriggerPropertyId = property.getId();
               break;
             }
           }
@@ -790,11 +791,14 @@ public class PassportService {
     if (epdUrlToEnrich != null) {
       String enrichmentPassportId = passport.getId();
       String enrichmentUrl = epdUrlToEnrich;
+      String triggerPropertyId = epdTriggerPropertyId;
+      PassportLogService.Actor actor = passportLogService.captureActor();
       TransactionSynchronizationManager.registerSynchronization(
           new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-              epdEnrichmentService.enrich(enrichmentPassportId, enrichmentUrl);
+              epdEnrichmentService.enrich(
+                  enrichmentPassportId, enrichmentUrl, triggerPropertyId, actor);
             }
           });
     }

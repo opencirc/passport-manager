@@ -138,8 +138,14 @@ public class TestPassportService {
 
     passportService.createPassportUsingPlatform(platform, request, author);
 
-    verify(passportLogService)
+    var eventOrder = org.mockito.Mockito.inOrder(passportLogService, adapter);
+    eventOrder
+        .verify(passportLogService)
         .logEvent(anyString(), eq(PassportLogAction.CREATE), any(java.util.List.class));
+    eventOrder
+        .verify(adapter)
+        .generateDatasheetsFromPlatformId(
+            eq("platform-id"), org.mockito.ArgumentMatchers.anyBoolean());
   }
 
   @Test

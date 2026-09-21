@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.controller;
 
-import com.opencirc.api.passport.model.PassportLog;
+import com.opencirc.api.passport.dto.PassportLogDto;
 import com.opencirc.api.passport.service.PassportLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,8 +31,8 @@ public class PassportLogController {
   @Operation(
       summary = "Get logs for a passport",
       description = "Retrieves the audit trail for a specific passport")
-  public ResponseEntity<List<PassportLog>> getLogsByPassportId(@PathVariable String passportId) {
-    List<PassportLog> logs = passportLogService.getLogsByPassportId(passportId);
+  public ResponseEntity<List<PassportLogDto>> getLogsByPassportId(@PathVariable String passportId) {
+    List<PassportLogDto> logs = passportLogService.getLogsByPassportId(passportId);
     return ResponseEntity.ok(logs);
   }
 }

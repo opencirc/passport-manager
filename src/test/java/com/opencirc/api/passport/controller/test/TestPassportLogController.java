@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.controller.PassportLogController;
-import com.opencirc.api.passport.model.PassportLog;
+import com.opencirc.api.passport.dto.PassportLogDto;
 import com.opencirc.api.passport.service.PassportLogService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,9 +38,14 @@ public class TestPassportLogController {
   @Test
   public void shouldGetLogsForPassport() throws Exception {
     String passportId = "test-passport-id";
-    PassportLog log = new PassportLog();
-    log.setPassportId(passportId);
-    log.setData(objectMapper.createObjectNode().put("action", "CREATE"));
+    PassportLogDto log =
+        new PassportLogDto(
+            "log-id",
+            passportId,
+            objectMapper.createObjectNode().put("action", "CREATE"),
+            "actor-id",
+            null,
+            null);
 
     when(passportLogService.getLogsByPassportId(passportId)).thenReturn(List.of(log));
 

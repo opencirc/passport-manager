@@ -29,10 +29,48 @@ public class TestPassportLogRepository {
 
   @Autowired private ObjectMapper objectMapper;
 
+  @Autowired public org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
   @BeforeEach
   public void setUp() {
     passportLogRepository.deleteAll();
     passportRepository.deleteAll();
+  }
+
+  @Test
+  public void shouldFilterPassportAndOrderLogsByCreationTime() {
+    CreatedByDto creator = new CreatedByDto("Test User", "test@example.com");
+    for (String passportId : List.of("requested", "other")) {
+      Passport passport = new Passport();
+      passport.setId(passportId);
+      passport.setCreatedBy(creator);
+      passportRepository.save(passport);
+    }
+    PassportLog later = saveLog("requested", creator);
+    PassportLog earlier = saveLog("requested", creator);
+    saveLog("other", creator);
+    jdbcTemplate.update(
+        "UPDATE passport_logs SET created_time = ?::timestamptz WHERE id = ?",
+        "2026-09-21T12:00:00Z",
+        later.getId());
+    jdbcTemplate.update(
+        "UPDATE passport_logs SET created_time = ?::timestamptz WHERE id = ?",
+        "2026-09-21T11:00:00Z",
+        earlier.getId());
+
+    List<PassportLog> logs =
+        passportLogRepository.findByPassportIdOrderByCreatedTimeAsc("requested");
+
+    assertEquals(
+        List.of(earlier.getId(), later.getId()), logs.stream().map(PassportLog::getId).toList());
+  }
+
+  public PassportLog saveLog(String passportId, CreatedByDto creator) {
+    PassportLog log = new PassportLog();
+    log.setPassportId(passportId);
+    log.setCreatedBy(creator);
+    log.setData(objectMapper.createObjectNode().put("action", "CREATE"));
+    return passportLogRepository.save(log);
   }
 
   @Test
@@ -59,7 +97,8 @@ public class TestPassportLogRepository {
 
     passportLogRepository.save(log);
 
-    List<PassportLog> logs = passportLogRepository.findByPassportId(passportId);
+    List<PassportLog> logs =
+        passportLogRepository.findByPassportIdOrderByCreatedTimeAsc(passportId);
     assertNotNull(logs);
     assertEquals(1, logs.size());
     assertEquals(passportId, logs.get(0).getPassportId());
