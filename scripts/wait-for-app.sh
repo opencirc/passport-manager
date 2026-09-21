@@ -32,7 +32,8 @@ printf 'Waiting up to %ss for the app to listen on port %s...\n' "$TIMEOUT_SECON
 deadline=$(( $(date +%s) + TIMEOUT_SECONDS ))
 
 while (( $(date +%s) < deadline )); do
-  if app_is_listening; then
+  # Require our own java process too, so a stale process holding the port is not mistaken for readiness.
+  if app_is_listening && app_process_is_running; then
     printf 'App is ready on port %s.\n' "$APP_PORT"
     exit 0
   fi
