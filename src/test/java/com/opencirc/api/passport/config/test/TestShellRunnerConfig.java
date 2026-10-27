@@ -67,11 +67,25 @@ public class TestShellRunnerConfig {
   }
 
   @Test
-  public void shouldLeavePlainQuotedAndScriptArgumentsUnchanged() {
+  public void shouldLeavePlainAndScriptArgumentsUnchanged() {
     assertArrayEquals(
-        new String[] {"@my script.txt", "plain", "\"already quoted\""},
+        new String[] {"@my script.txt", "plain", "--flag=true"},
         ShellRunnerConfig.quoteNonInteractiveArguments(
-            new String[] {"@my script.txt", "plain", "\"already quoted\""}));
+            new String[] {"@my script.txt", "plain", "--flag=true"}));
+  }
+
+  @Test
+  public void shouldPreserveLiteralBoundaryQuotesThroughSpringShellParser() {
+    String[] quotedArguments =
+        ShellRunnerConfig.quoteNonInteractiveArguments(
+            new String[] {"create-api-key", "--name", "\"quoted\""});
+    DefaultCommandParser commandParser = new DefaultCommandParser(mock(CommandRegistry.class));
+
+    ParsedInput parsedInput = commandParser.parse(String.join(" ", quotedArguments));
+
+    assertEquals("\"\\\"quoted\\\"\"", quotedArguments[2]);
+    assertEquals("\"quoted\"", parsedInput.options().get(0).value());
+    assertTrue(parsedInput.arguments().isEmpty(), "no extra positional argument expected");
   }
 
   @Test

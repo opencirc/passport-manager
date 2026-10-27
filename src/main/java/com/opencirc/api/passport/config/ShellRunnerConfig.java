@@ -60,11 +60,17 @@ public class ShellRunnerConfig {
     return quoteValue(argument);
   }
 
-  /** Wraps a value in double quotes when it needs them and is not already quoted. */
+  /**
+   * Wraps a value in double quotes when it contains whitespace or quotes. Literal quotes, including
+   * a pair at both ends, are part of the value the operating system shell already resolved, so they
+   * are escaped rather than treated as Spring Shell quoting. Known limitation: Spring Shell 4.0.3
+   * splits words by counting raw quote characters, ignoring escapes, so a value that contains both
+   * whitespace and an even number of literal quotes after one of its spaces is still split
+   * upstream.
+   */
   public static String quoteValue(String value) {
-    boolean alreadyQuoted = value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"");
     boolean needsQuotes = value.chars().anyMatch(Character::isWhitespace) || value.contains("\"");
-    if (alreadyQuoted || !needsQuotes) {
+    if (!needsQuotes) {
       return value;
     }
     String escapedValue = value.replace("\\", "\\\\").replace("\"", "\\\"");
