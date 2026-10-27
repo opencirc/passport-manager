@@ -6,12 +6,24 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.dao.DatasheetRepository;
+import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
+import com.opencirc.api.passport.dao.PassportRepository;
+import com.opencirc.api.passport.dao.PassportTemplateRepository;
+import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import com.opencirc.api.passport.helper.test.TestConfig;
+import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.model.PassportDatasheetMapping;
+import com.opencirc.api.passport.model.PassportTemplate;
+import io.github.thibaultmeyer.cuid.CUID;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -56,6 +68,18 @@ public class TestPassportTemplateController {
   /** JWT token. */
   private String jwtToken = null;
 
+  @Autowired private PassportRepository passportRepository;
+  @Autowired private DatasheetRepository datasheetRepository;
+  @Autowired private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+  @Autowired private PassportTemplateRepository passportTemplateRepository;
+  @Autowired private ObjectMapper objectMapper;
+
+  /** Active passport created for each test, with one generic datasheet. */
+  private String fixturePassportId = null;
+
+  /** Template persisted for each test. */
+  private String persistedTemplateId = null;
+
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
     registry.add("bsdd.class.details.url", () -> "http://localhost:8089" + "/api/Class/v1");
@@ -75,8 +99,55 @@ public class TestPassportTemplateController {
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
     helper.mockUserDetails(authUserDetailsService, authenticationManager);
-
     generateMockJwtToken();
+    createPassportAndTemplateFixtures();
+  }
+
+  /** Creates an active passport with a generic datasheet, plus one persisted template. */
+  private void createPassportAndTemplateFixtures() {
+    CreatedByDto createdBy = new CreatedByDto("User One", "user1@test.com");
+    Map<String, Object> datasheetData =
+        Map.of(
+            "name",
+            "Space for human dwelling",
+            "classProperties",
+            List.of(Map.of("name", "Handicap Accessible", "actualValue", "true")));
+
+    Passport passport = new Passport();
+    passport.setId(CUID.randomCUID2(24).toString());
+    passport.setName("Template fixture passport");
+    passport.setStatus(Passport.Status.ACTIVE);
+    passport.setCreatedBy(createdBy);
+    passport = passportRepository.save(passport);
+    fixturePassportId = passport.getId();
+
+    Datasheet datasheet = new Datasheet();
+    datasheet.setName("Space for human dwelling");
+    datasheet.setPlatform(Platform.BSDD);
+    datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
+    datasheet.setData(datasheetData);
+    datasheet.setCreatedBy(createdBy);
+    datasheet = datasheetRepository.save(datasheet);
+
+    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
+    mapping.setPassport(passport);
+    mapping.setDatasheet(datasheet);
+    passportDatasheetMappingRepository.save(mapping);
+
+    Map<String, Object> templateData =
+        Map.of(
+            "name",
+            "Space for human dwelling",
+            "classProperties",
+            List.of(Map.of("name", "Handicap Accessible", "actualValue", "")));
+    PassportTemplate template =
+        PassportTemplate.builder()
+            .name("fixture template")
+            .template(objectMapper.valueToTree(templateData))
+            .createdById("87510a3c-4357-47bc-80a1-9ed02285fbae")
+            .createdBy(createdBy)
+            .build();
+    persistedTemplateId = passportTemplateRepository.save(template).getId();
   }
 
   private void generateMockJwtToken() {
@@ -96,7 +167,7 @@ public class TestPassportTemplateController {
     String templateName = "testtemplate";
     boolean dryRun = true;
 
-    String passportId = "oqj4p875porh0vpuqj1vob2jqgym4b706oe9";
+    String passportId = fixturePassportId;
 
     Response response =
         RestAssured.given()
@@ -156,7 +227,7 @@ public class TestPassportTemplateController {
    */
   @Test
   public void shouldRetrieveTemplateSuccessfullyById() {
-    String templateId = "f906156c-4602-4366-bc01-2790df93d803";
+    String templateId = persistedTemplateId;
 
     Response response =
         RestAssured.given()

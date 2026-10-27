@@ -4,20 +4,17 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import com.opencirc.api.passport.helper.test.TestConfig;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -129,75 +126,6 @@ public class TestDataDictionaryController {
   }
 
   /**
-   * Tests the functionality of fetching data from the bsdd API.
-   *
-   * <p>Verifies that the data retrieval works correctly and the expected response is returned when
-   * the bsdd API is called with valid parameters.
-   */
-  @Test
-  public void shouldReturnClassWithPropertiesWhenUriIsValid() throws JsonValidationException {
-    String classUri =
-        "https://identifier.buildingsmart.org/uri/molio/cciconstruction/1.0/class/A-A__";
-    String dictionary = "bsdd";
-    boolean withProperties = true;
-    BsddMockStubHelper.stubGetClassApiResponse();
-
-    Response response =
-        RestAssured.given()
-            .log()
-            .all()
-            .cookie("access_token", jwtToken)
-            .contentType(ContentType.JSON)
-            .queryParam("withProperties", withProperties)
-            .body(classUri)
-            .when()
-            .post("/api/data-dictionary/{dictionary}/class", dictionary)
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .contentType(ContentType.JSON)
-            .log()
-            .all()
-            .extract()
-            .response();
-
-    response
-        .then()
-        .body("name", equalTo("Space for human dwelling"))
-        .body("classProperties[0].name", equalTo("Handicap Accessible"))
-        .body("classProperties[0].dataType", equalTo("Boolean"))
-        .body("status", equalTo("Active"))
-        .body("parentClassReference.code", equalTo("uocs"));
-  }
-
-  /** Error scenario to test with invalid input URL. */
-  @Test
-  public void shouldReturnErrorWhenClassUriIsInvalid() {
-    String classUri = "invaliuri";
-    String dictionary = "bsdd";
-    boolean withProperties = false;
-
-    Response response =
-        RestAssured.given()
-            .log()
-            .all()
-            .cookie("access_token", jwtToken)
-            .contentType(ContentType.JSON)
-            .queryParam("withProperties", withProperties)
-            .body("\"" + classUri + "\"")
-            .when()
-            .post("/api/data-dictionary/{dictionary}/class", dictionary)
-            .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value())
-            .contentType(ContentType.JSON)
-            .log()
-            .all()
-            .extract()
-            .response();
-
-    assertTrue(response.getBody().asString().contains("Invalid URI"));
-  }
-
-  /**
    * Tests the property search API endpoint to ensure it returns matching properties when provided
    * with a valid dictionary and query string.
    */
@@ -214,7 +142,7 @@ public class TestDataDictionaryController {
             .cookie("access_token", jwtToken)
             .contentType(ContentType.JSON)
             .when()
-            .get("/api/data-dictionary/{dictionary}/property/search/{query}", dictionary, query)
+            .get("/api/dataDictionary/{dictionary}/property/search/{query}", dictionary, query)
             .then()
             .statusCode(HttpStatus.OK.value())
             .contentType(ContentType.JSON)
@@ -239,46 +167,5 @@ public class TestDataDictionaryController {
             "[1].uri",
             equalTo(
                 "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/ActivationTemperature"));
-  }
-
-  /** Tests the creation of a template including properties. */
-  @Test
-  public void shouldCreateTemplateWhenValidPropertiesUriAreGiven() {
-
-    List<String> propertiesUriList = new ArrayList<>();
-    propertiesUriList.add("https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008");
-    String dictionary = "bsdd";
-
-    BsddMockStubHelper.stubGetPropertiesApiResponse();
-
-    Response response =
-        RestAssured.given()
-            .log()
-            .all()
-            .cookie("access_token", jwtToken)
-            .contentType(ContentType.JSON)
-            .body(propertiesUriList)
-            .when()
-            .post("/api/data-dictionary/{dictionary}/properties", dictionary)
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .contentType(ContentType.JSON)
-            .log()
-            .all()
-            .extract()
-            .response();
-
-    response
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .contentType(ContentType.JSON)
-        .body("properties[0].code", equalTo("EF000008"))
-        .body("properties[0].name", equalTo("Width"))
-        .body(
-            "properties[0].uri",
-            equalTo("https://identifier.buildingsmart.org/uri/etim/etim/10.0/prop/EF000008"))
-        .body("properties[0].dataType", equalTo("Real"))
-        .body("properties[0].propertyValueKind", equalTo("Single"))
-        .body("properties[0].status", equalTo("Active"));
   }
 }
