@@ -2,6 +2,8 @@ package com.opencirc.api.passport.config.test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import com.opencirc.api.passport.config.ShellRunnerConfig;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.shell.core.ShellRunner;
 import org.springframework.shell.core.command.CommandRegistry;
@@ -86,6 +89,36 @@ public class TestShellRunnerConfig {
     assertEquals("\"\\\"quoted\\\"\"", quotedArguments[2]);
     assertEquals("\"quoted\"", parsedInput.options().get(0).value());
     assertTrue(parsedInput.arguments().isEmpty(), "no extra positional argument expected");
+  }
+
+  @Test
+  public void shouldRejectValuesSpringShellWouldSplitWithoutEchoingThem() {
+    String password = "pa ss\"word";
+
+    IllegalArgumentException rejection =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ShellRunnerConfig.quoteNonInteractiveArguments(
+                    new String[] {"register-user", "--email", "a@b.c", "--password", password}));
+
+    assertTrue(rejection.getMessage().startsWith("Argument 5 "), rejection.getMessage());
+    assertFalse(rejection.getMessage().contains(password), "message must not echo the value");
+  }
+
+  @Test
+  public void shouldNotRunTheShellWhenAValueWouldBeSplit() throws Exception {
+    ShellRunner shellRunner = mock(ShellRunner.class);
+    ApplicationRunner applicationRunner =
+        shellRunnerConfig.springShellApplicationRunner(shellRunner, false);
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            applicationRunner.run(
+                new DefaultApplicationArguments("register-user", "--password", "pa ss\"word")));
+
+    verify(shellRunner, never()).run(any());
   }
 
   @Test
