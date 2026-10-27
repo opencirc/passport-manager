@@ -10,12 +10,13 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.shell.command.annotation.Command;
-import org.springframework.shell.command.annotation.Option;
+import org.springframework.shell.core.command.annotation.Command;
+import org.springframework.shell.core.command.annotation.CommandGroup;
+import org.springframework.shell.core.command.annotation.Option;
 import org.springframework.stereotype.Component;
 
 @Component
-@Command(group = "API Key commands")
+@CommandGroup(name = "API Key commands")
 @Slf4j
 @RequiredArgsConstructor
 public class ApiKeyCommand {
@@ -26,7 +27,7 @@ public class ApiKeyCommand {
 
   /** Creates a new API key for the specified user. */
   @Command(
-      command = "create-api-key",
+      name = "create-api-key",
       description =
           """
             Create a new API key for a user.
@@ -39,9 +40,9 @@ public class ApiKeyCommand {
               --expiration-date 2025-12-31 --name test
             """)
   public void createApiKey(
-      @Option(longNames = "userId", required = true) String userId,
-      @Option(longNames = "expirationDate") String expirationDate,
-      @Option(longNames = "name", required = true) String name) {
+      @Option(longName = "userId", required = true) String userId,
+      @Option(longName = "expirationDate") String expirationDate,
+      @Option(longName = "name", required = true) String name) {
 
     try {
       if (userId == null || userId.isEmpty()) {
@@ -86,7 +87,7 @@ public class ApiKeyCommand {
 
   /** Lists all available API tokens for the specified user. */
   @Command(
-      command = "list-api-tokens",
+      name = "list-api-tokens",
       description =
           """
             Retrieves all the API tokens associated with the user.
@@ -95,7 +96,7 @@ public class ApiKeyCommand {
             Example:
               list-api-tokens --userId <<user id>>
             """)
-  public void getApiTokens(@Option(longNames = "userId", required = true) String userId) {
+  public void getApiTokens(@Option(longName = "userId", required = true) String userId) {
 
     if (userId == null || userId.isBlank()) {
       log.warn("Validation error: User ID is required.");
@@ -134,7 +135,7 @@ public class ApiKeyCommand {
 
   /** Deletes the api token for the given key. */
   @Command(
-      command = "delete-api-token",
+      name = "delete-api-token",
       description =
           """
             Deletes an API token by ID.
@@ -143,7 +144,7 @@ public class ApiKeyCommand {
             Example:
               delete-api-token --key <<key id>>
             """)
-  public void deleteApiToken(@Option(longNames = "key", required = true) String keyId) {
+  public void deleteApiToken(@Option(longName = "key", required = true) String keyId) {
 
     if (keyId == null || keyId.isBlank()) {
       log.warn("Validation error: Key ID is required.");

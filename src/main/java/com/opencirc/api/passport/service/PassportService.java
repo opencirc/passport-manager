@@ -1,10 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
@@ -51,6 +46,11 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Service class for Passport operations. */
 @Service
@@ -110,7 +110,7 @@ public class PassportService {
   @Transactional
   public List<PassportDto> batchCreatePassportsUsingPlatform(
       Platform platform, List<CreatePassportUsingPlatformRequestDto> dataArray, UserDto author)
-      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+      throws InvalidInputException, JsonValidationException {
 
     if (dataArray == null || dataArray.isEmpty()) {
       return Collections.emptyList();
@@ -261,7 +261,7 @@ public class PassportService {
   @Transactional
   public PassportDto createPassportUsingPlatform(
       Platform platform, CreatePassportUsingPlatformRequestDto data, UserDto author)
-      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+      throws InvalidInputException, JsonValidationException {
     return createPassportUsingPlatform(platform, data, author, false);
   }
 
@@ -272,7 +272,7 @@ public class PassportService {
       CreatePassportUsingPlatformRequestDto data,
       UserDto author,
       boolean asBatchOperation)
-      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+      throws InvalidInputException, JsonValidationException {
 
     String id = data.getId();
     if (id == null || id.isBlank()) {
@@ -449,7 +449,7 @@ public class PassportService {
       String platformId,
       Datasheet.DataCategory dataCategory,
       UserDto author)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
     Passport passport =
         passportRepository
             .findById(passportId)
@@ -473,7 +473,7 @@ public class PassportService {
       Datasheet.DataCategory dataCategory,
       UserDto author,
       boolean addRelatedIfcEntities)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
     var adapter = platformAdapterFactory.getAdapter(platform);
     var rawDatasheets = adapter.generateDatasheetsFromPlatformId(platformId, addRelatedIfcEntities);
     for (var rawDatasheet : rawDatasheets) {
@@ -622,8 +622,7 @@ public class PassportService {
       Map<String, Object> dataMap = null;
       String data = row.getData();
       if (data != null && !data.isBlank()) {
-        dataMap =
-            objectMapper.readValue(data, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+        dataMap = objectMapper.readValue(data, new tools.jackson.core.type.TypeReference<>() {});
       }
       dto.setData(dataMap);
 
@@ -635,7 +634,7 @@ public class PassportService {
       dto.setDatasheetProperties(new ArrayList<>());
 
       return dto;
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(
           "Error parsing datasheet JSON for datasheetId="
               + row.getDatasheetId()
@@ -665,7 +664,7 @@ public class PassportService {
       try {
         JsonNode definitionNode = objectMapper.readTree(definition);
         propertyDto.setDefinition(definitionNode);
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         throw new RuntimeException(
             "Error parsing datasheet property JSON for datasheetPropertyId = "
                 + row.getDatasheetPropertyId()
@@ -688,7 +687,7 @@ public class PassportService {
     }
     try {
       return objectMapper.readValue(createdByJson, CreatedByDto.class);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException("Error parsing createdBy JSON", e);
     }
   }
@@ -778,8 +777,7 @@ public class PassportService {
 
       if (isChanged) {
         datasheet.setData(
-            objectMapper.convertValue(
-                dataNode, new com.fasterxml.jackson.core.type.TypeReference<>() {}));
+            objectMapper.convertValue(dataNode, new tools.jackson.core.type.TypeReference<>() {}));
         datasheetRepository.save(datasheet);
       }
     }

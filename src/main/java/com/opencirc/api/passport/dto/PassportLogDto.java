@@ -1,9 +1,9 @@
 package com.opencirc.api.passport.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import tools.jackson.databind.JsonNode;
 
 /** Public representation of a passport audit event. */
 @Data

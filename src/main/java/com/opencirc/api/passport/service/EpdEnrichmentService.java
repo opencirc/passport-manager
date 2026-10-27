@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.enums.PassportLogAction;
@@ -31,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.JsonNode;
 
 @Service
 @Slf4j
@@ -613,8 +613,8 @@ public class EpdEnrichmentService {
         return en.asText();
       }
 
-      if (current.fieldNames().hasNext()) {
-        return current.path(current.fieldNames().next()).asText();
+      if (!current.propertyNames().isEmpty()) {
+        return current.path(current.propertyNames().iterator().next()).asText();
       }
     }
 

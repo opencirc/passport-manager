@@ -36,11 +36,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -61,9 +61,9 @@ public class TestEpdEnrichment {
 
   @Autowired private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
 
-  @MockBean private AuthUserDetailsService authUserDetailsService;
+  @MockitoBean private AuthUserDetailsService authUserDetailsService;
 
-  @MockBean private AuthenticationManager authenticationManager;
+  @MockitoBean private AuthenticationManager authenticationManager;
 
   private String jwtToken;
 

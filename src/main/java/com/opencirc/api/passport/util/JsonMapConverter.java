@@ -1,12 +1,12 @@
 package com.opencirc.api.passport.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /** Converts Map objects into JSON strings and vice versa. */
 @Converter(autoApply = true)
@@ -28,7 +28,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
     }
     try {
       return objectMapper.writeValueAsString(attribute);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new IllegalArgumentException("Error serializing Map to JSON", e);
     }
   }
@@ -41,7 +41,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
     }
     try {
       return objectMapper.readValue(dbData, new TypeReference<Map<String, Object>>() {});
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new IllegalArgumentException("Error deserializing JSON to Map", e);
     }
   }

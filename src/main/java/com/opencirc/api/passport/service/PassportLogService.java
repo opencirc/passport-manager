@@ -1,7 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
@@ -14,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Service to handle passport logging. */
 @Service

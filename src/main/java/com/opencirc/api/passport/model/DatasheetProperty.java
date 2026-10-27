@@ -1,7 +1,6 @@
 package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,6 +15,7 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UuidGenerator;
+import tools.jackson.databind.JsonNode;
 
 /** Model for datasheet_properties table. */
 @Entity

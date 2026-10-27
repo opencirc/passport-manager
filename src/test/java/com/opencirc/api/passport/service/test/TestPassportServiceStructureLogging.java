@@ -7,7 +7,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
@@ -31,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class TestPassportServiceStructureLogging {

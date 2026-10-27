@@ -1,12 +1,12 @@
 package com.opencirc.api.passport.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @Component
 @Converter(autoApply = true)
@@ -29,7 +29,7 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
     try {
       ObjectMapper mapper = (objectMapper != null ? objectMapper : FALLBACK_MAPPER);
       return attribute != null ? mapper.writeValueAsString(attribute) : null;
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new IllegalArgumentException("Error converting JsonNode to String", e);
     }
   }
@@ -40,7 +40,7 @@ public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
     try {
       ObjectMapper mapper = (objectMapper != null ? objectMapper : FALLBACK_MAPPER);
       return dbData != null ? mapper.readTree(dbData) : null;
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new IllegalArgumentException("Error converting String to JsonNode", e);
     }
   }

@@ -1,8 +1,5 @@
 package com.opencirc.api.passport.command;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
@@ -21,6 +18,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /** Seeder that creates passports from pre-filled templates stored in JSON file. */
 @Component
@@ -94,7 +93,7 @@ public class PassportFromJsonSeeder {
   }
 
   /** Seed passports using the loaded templates. */
-  public void seed() throws JsonValidationException, JsonProcessingException {
+  public void seed() throws JsonValidationException {
     User user =
         userRepository
             .findFirstByOrderByIdAsc()
@@ -119,7 +118,7 @@ public class PassportFromJsonSeeder {
   /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
       int level, String nameSuffix, String uri, int uriIndex, String parentId, UserDto author)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
     if (level > appProperties.getMaximumLevel()) {
       return;
     }

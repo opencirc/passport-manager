@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.enums.Platform;
@@ -25,7 +24,7 @@ public class PlatformService {
 
   /** Search and retrieves the class along with the properties. */
   public List<Datasheet> generateDatasheetsFromPlatformId(Platform platform, String code)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
     var adapter = platformAdapterFactory.getAdapter(platform);
     return adapter.generateDatasheetsFromPlatformId(code, true);
   }

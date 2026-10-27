@@ -1,7 +1,5 @@
 package com.opencirc.api.passport.adapter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
@@ -10,6 +8,7 @@ import com.opencirc.api.passport.model.Datasheet;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import tools.jackson.databind.JsonNode;
 
 /** Interface of Dictionary Adapter. */
 public interface PlatformAdapter {
@@ -27,7 +26,7 @@ public interface PlatformAdapter {
    * different scenarios affect the way the datasheet is created.
    */
   List<Datasheet> generateDatasheetsFromPlatformId(String platformId, boolean addRelatedIfcEntities)
-      throws JsonValidationException, JsonProcessingException;
+      throws JsonValidationException;
 
   /** Retrieves a list of properties matching the given search text. */
   List<Map<String, String>> listProperties(String text);
@@ -36,7 +35,7 @@ public interface PlatformAdapter {
   String validatePassportData(JsonNode jsonNode) throws JsonValidationException;
 
   /** Displays the template from the dictionary without any processing. */
-  JsonNode fetchRawTemplate(String uri) throws JsonProcessingException;
+  JsonNode fetchRawTemplate(String uri);
 
   /** Retrieves the tree structure of the dictionary. */
   List<DataDictionaryTreeStructureDto> getDictionaryTreeStructure(DataDictionary dictionary)

@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.exception.AuthenticationException;
@@ -24,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 /** Filter to validate the JWT token. */
 @Slf4j

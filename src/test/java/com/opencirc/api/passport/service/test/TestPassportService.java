@@ -9,7 +9,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
@@ -35,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpServerErrorException;
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class TestPassportService {
@@ -279,7 +279,7 @@ public class TestPassportService {
     java.util.List<CreatePassportUsingPlatformRequestDto> dataArray =
         mapper.readValue(
             new java.io.File("test.json"),
-            new com.fasterxml.jackson.core.type.TypeReference<
+            new tools.jackson.core.type.TypeReference<
                 java.util.List<CreatePassportUsingPlatformRequestDto>>() {});
 
     UserDto author = new UserDto();

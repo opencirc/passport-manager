@@ -23,13 +23,13 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(
@@ -47,10 +47,10 @@ public class TestDataDictionaryController {
   @LocalServerPort private int port;
 
   /** AuthUserDetailsService mock bean. */
-  @MockBean private AuthUserDetailsService authUserDetailsService;
+  @MockitoBean private AuthUserDetailsService authUserDetailsService;
 
   /** AuthUserDetailsService mock bean. */
-  @MockBean private AuthenticationManager authenticationManager;
+  @MockitoBean private AuthenticationManager authenticationManager;
 
   /** JWT token. */
   private String jwtToken = null;
