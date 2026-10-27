@@ -20,11 +20,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.HttpServerErrorException;
 
 @SpringBootTest(
@@ -36,11 +36,11 @@ public class TestPassportController {
 
   @LocalServerPort private int port;
 
-  @MockBean private AuthUserDetailsService authUserDetailsService;
+  @MockitoBean private AuthUserDetailsService authUserDetailsService;
 
-  @MockBean private AuthenticationManager authenticationManager;
+  @MockitoBean private AuthenticationManager authenticationManager;
 
-  @MockBean private PassportService passportService;
+  @MockitoBean private PassportService passportService;
 
   private String jwtToken = null;
 

@@ -3,8 +3,6 @@ package com.opencirc.api.passport.dao.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
@@ -18,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 @SpringBootTest(classes = {PassportManager.class, TestConfig.class})
 @ActiveProfiles("test")

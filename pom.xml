@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.16</version>
+        <version>4.1.2</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.opencirc.api</groupId>
@@ -29,17 +29,8 @@
         <maven.compiler.release></maven.compiler.release>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <jjwt.version>0.12.6</jjwt.version>
-        <!-- Security overrides of Spring Boot 3.5.16 managed versions (3.5 line ended OSS support June 2026) -->
-        <tomcat.version>10.1.61</tomcat.version>
-        <jackson-bom.version>2.21.7</jackson-bom.version>
-        <netty.version>4.1.137.Final</netty.version>
-        <commons-lang3.version>3.18.0</commons-lang3.version>
-        <httpclient5.version>5.6.3</httpclient5.version>
-        <httpcore5.version>5.4.4</httpcore5.version>
-        <log4j2.version>2.25.5</log4j2.version>
-        <postgresql.version>42.7.12</postgresql.version>
-        <jline.version>3.30.15</jline.version>
+        <jjwt.version>0.13.0</jjwt.version>
+        <spring-shell.version>4.0.3</spring-shell.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
@@ -52,16 +43,12 @@
             <artifactId>postgresql</artifactId>
             </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wiremock</groupId>
@@ -85,9 +72,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.10.0</version>
+            <version>3.2.0</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -97,7 +93,12 @@
         <dependency>
             <groupId>org.springframework.shell</groupId>
             <artifactId>spring-shell-starter</artifactId>
-            <version>3.4.3</version>
+            <version>${spring-shell.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.shell</groupId>
+            <artifactId>spring-shell-jline</artifactId>
+            <version>${spring-shell.version}</version>
         </dependency>
 
         <!-- For hot-reload -->
@@ -136,11 +137,7 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>spring-mock-mvc</artifactId>
+            <version>6.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -154,8 +151,8 @@
             <version>1.10.0</version>
         </dependency>
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -171,48 +168,6 @@
             <version>2.2.0</version>
         </dependency>
     </dependencies>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2025.0.3</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- JLine comes transitively from Spring Shell; pinned here for ReDoS fixes (CVE-2026-77420/1/2) -->
-            <dependency>
-                <groupId>org.jline</groupId>
-                <artifactId>jline-terminal</artifactId>
-                <version>${jline.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jline</groupId>
-                <artifactId>jline-reader</artifactId>
-                <version>${jline.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jline</groupId>
-                <artifactId>jline-builtins</artifactId>
-                <version>${jline.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jline</groupId>
-                <artifactId>jline-console</artifactId>
-                <version>${jline.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jline</groupId>
-                <artifactId>jline-style</artifactId>
-                <version>${jline.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jline</groupId>
-                <artifactId>jline-native</artifactId>
-                <version>${jline.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <build>
         <plugins>
             <!-- Keep a single Spring Boot Maven Plugin with your configuration -->

@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.command;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
@@ -68,7 +67,7 @@ public class PassportFromApiSeeder {
   /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
       int level, String nameSuffix, String uri, int uriIndex, String parentId, UserDto author)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
     if (level > appProperties.getMaximumLevel()) {
       return;
     }

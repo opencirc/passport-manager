@@ -1,8 +1,5 @@
 package com.opencirc.api.passport.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dao.PassportTemplateRepository;
@@ -20,6 +17,9 @@ import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Service class for PassportTemplate related operations. */
 @Service
@@ -76,7 +76,7 @@ public class PassportTemplateService {
   private void clearActualValues(JsonNode node) {
     if (node.isObject()) {
       ObjectNode objectNode = (ObjectNode) node;
-      Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
+      Iterator<Map.Entry<String, JsonNode>> fields = objectNode.properties().iterator();
       while (fields.hasNext()) {
         Map.Entry<String, JsonNode> entry = fields.next();
         if ("actualValue".equals(entry.getKey())) {

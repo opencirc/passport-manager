@@ -1,17 +1,17 @@
 package com.opencirc.api.passport.command;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.service.PlatformService;
-import org.springframework.shell.command.annotation.Command;
-import org.springframework.shell.command.annotation.Option;
+import org.springframework.shell.core.command.annotation.Command;
+import org.springframework.shell.core.command.annotation.CommandGroup;
+import org.springframework.shell.core.command.annotation.Option;
+import tools.jackson.databind.ObjectMapper;
 
 /** Data Dictionary commands. */
-@Command(group = "Data Dictionary commands")
+@CommandGroup(name = "Data Dictionary commands")
 public class DataDictionaryCommand {
 
   /** Injecting ObjectMapper. */
@@ -36,9 +36,9 @@ public class DataDictionaryCommand {
   /** Shell command to fetch a template from the required data dictionary. */
   @Command(description = "Fetch template from Data Dictionary.")
   public String fetchTemplate(
-      @Option(longNames = "platform", required = true) String platform,
-      @Option(longNames = "code", required = true) String code,
-      @Option(longNames = "raw", defaultValue = "false") boolean raw) {
+      @Option(longName = "platform", required = true) String platform,
+      @Option(longName = "code", required = true) String code,
+      @Option(longName = "raw", defaultValue = "false") boolean raw) {
 
     try {
       if (raw) {
@@ -53,21 +53,20 @@ public class DataDictionaryCommand {
 
   /** Gets the processed template. */
   private String generateDatasheetsFromPlatformId(Platform dictionaryPlatform, String platformId)
-      throws JsonValidationException, JsonProcessingException {
+      throws JsonValidationException {
 
     var response = platformService.generateDatasheetsFromPlatformId(dictionaryPlatform, platformId);
     return formatJsonResponse(response);
   }
 
   /** Gets the raw template fetched from the given data dictionary. */
-  private String generateRawTemplate(Platform dictionaryPlatform, String platformId)
-      throws JsonProcessingException {
+  private String generateRawTemplate(Platform dictionaryPlatform, String platformId) {
     PlatformAdapter adapter = platformAdapterFactory.getAdapter(dictionaryPlatform);
     return formatJsonResponse(adapter.fetchRawTemplate(platformId));
   }
 
   /** Formats the json. */
-  private String formatJsonResponse(Object response) throws JsonProcessingException {
+  private String formatJsonResponse(Object response) {
     return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
   }
 }

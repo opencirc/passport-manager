@@ -1,11 +1,11 @@
 package com.opencirc.api.passport.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** Converts CreatedByDto objects into JSON strings and vice versa. */
 @Converter(autoApply = true)
@@ -27,7 +27,7 @@ public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, S
     }
     try {
       return objectMapper.writeValueAsString(createdByDto);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new IllegalArgumentException("Error serializing" + " CreatedByDto to JSON", e);
     }
   }
@@ -40,7 +40,7 @@ public class CreatedByDtoConverter implements AttributeConverter<CreatedByDto, S
     }
     try {
       return objectMapper.readValue(dbData, CreatedByDto.class);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new IllegalArgumentException("Error deserializing" + " JSON to CreatedByDto", e);
     }
   }

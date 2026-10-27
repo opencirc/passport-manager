@@ -1,7 +1,6 @@
 package com.opencirc.api.passport.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.model.PassportTemplate;
 import jakarta.persistence.Column;
 import java.time.OffsetDateTime;
@@ -9,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import tools.jackson.databind.JsonNode;
 
 /** Passport DTO. */
 @Data

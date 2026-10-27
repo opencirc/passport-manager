@@ -9,7 +9,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
@@ -34,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class TestEpdEnrichmentService {
@@ -182,7 +182,7 @@ public class TestEpdEnrichmentService {
     when(passportRepository.findById("passport-1"))
         .thenReturn(Optional.of(original), Optional.of(current));
     when(environment.getActiveProfiles()).thenReturn(new String[] {"test"});
-    when(restTemplate.getForObject(anyString(), eq(com.fasterxml.jackson.databind.JsonNode.class)))
+    when(restTemplate.getForObject(anyString(), eq(tools.jackson.databind.JsonNode.class)))
         .thenReturn(new ObjectMapper().readTree("{\"impacts\":{\"gwp\":{\"a1a3\":12.34}}}"));
 
     epdEnrichmentService.enrich(
@@ -204,7 +204,7 @@ public class TestEpdEnrichmentService {
     Passport passport = enrichmentPassport("http://localhost:8089/epd.json");
     when(passportRepository.findById("passport-1")).thenReturn(Optional.of(passport));
     when(environment.getActiveProfiles()).thenReturn(new String[] {"test"});
-    when(restTemplate.getForObject(anyString(), eq(com.fasterxml.jackson.databind.JsonNode.class)))
+    when(restTemplate.getForObject(anyString(), eq(tools.jackson.databind.JsonNode.class)))
         .thenReturn(new ObjectMapper().readTree(gwpPayload(format, "123.45")));
 
     epdEnrichmentService.enrich(passport, "http://localhost:8089/epd.json");
@@ -219,7 +219,7 @@ public class TestEpdEnrichmentService {
   public void shouldRejectInvalidNumericGwpForBothFormats(String format) throws Exception {
     Passport passport = enrichmentPassport("http://localhost:8089/epd.json");
     when(environment.getActiveProfiles()).thenReturn(new String[] {"test"});
-    when(restTemplate.getForObject(anyString(), eq(com.fasterxml.jackson.databind.JsonNode.class)))
+    when(restTemplate.getForObject(anyString(), eq(tools.jackson.databind.JsonNode.class)))
         .thenReturn(new ObjectMapper().readTree(gwpPayload(format, "NaN")));
 
     epdEnrichmentService.enrich(passport, "http://localhost:8089/epd.json");

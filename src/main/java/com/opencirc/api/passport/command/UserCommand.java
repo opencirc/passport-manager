@@ -6,11 +6,12 @@ import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.model.User.Role;
 import com.opencirc.api.passport.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.shell.command.annotation.Command;
-import org.springframework.shell.command.annotation.Option;
+import org.springframework.shell.core.command.annotation.Command;
+import org.springframework.shell.core.command.annotation.CommandGroup;
+import org.springframework.shell.core.command.annotation.Option;
 
 /** Commands to interact with users. */
-@Command(group = "User commands")
+@CommandGroup(name = "User commands")
 @Slf4j
 public class UserCommand {
 
@@ -29,11 +30,11 @@ public class UserCommand {
   /** Shell command to register a new user. */
   @Command(description = "Register a user.")
   public String registerUser(
-      @Option(longNames = "email", required = true) String email,
-      @Option(longNames = "password", required = true) String password,
-      @Option(longNames = "firstName", required = true) String firstName,
-      @Option(longNames = "lastName", required = true) String lastName,
-      @Option(longNames = "role", defaultValue = "user") String role) {
+      @Option(longName = "email", required = true) String email,
+      @Option(longName = "password", required = true) String password,
+      @Option(longName = "firstName", required = true) String firstName,
+      @Option(longName = "lastName", required = true) String lastName,
+      @Option(longName = "role", defaultValue = "user") String role) {
 
     Role parsedRole;
     try {

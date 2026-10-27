@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.adapter.bsdd.BsddPlatformAdapter;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.config.RestConfig;
@@ -19,9 +18,10 @@ import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.util.ReflectionTestUtils;
+import tools.jackson.databind.ObjectMapper;
 
 /** Tests redirect handling using the actual configured HTTP clients. */
 public class TestEpdRestConfig {
@@ -32,6 +32,7 @@ public class TestEpdRestConfig {
         new ApplicationContextRunner()
             .withUserConfiguration(
                 RestConfig.class, BsddPlatformAdapter.class, EpdEnrichmentService.class)
+            .withBean(RestTemplateBuilder.class, RestTemplateBuilder::new)
             .withBean(AppProperties.class, () -> mock(AppProperties.class))
             .withBean(ObjectMapper.class, ObjectMapper::new)
             .withBean(CacheService.class, () -> mock(CacheService.class))
@@ -51,7 +52,6 @@ public class TestEpdRestConfig {
         });
     contextRunner
         .withUserConfiguration(TestConfig.class)
-        .withBean(RestTemplateBuilder.class, RestTemplateBuilder::new)
         .run(
             context -> {
               assertSame(
@@ -86,7 +86,7 @@ public class TestEpdRestConfig {
     server.start();
     try {
       String url = "http://127.0.0.1:" + server.getAddress().getPort() + "/redirect";
-      RestConfig configuration = new RestConfig();
+      RestConfig configuration = new RestConfig(new RestTemplateBuilder());
 
       var epdResponse = configuration.epdRestTemplate().getForEntity(url, String.class);
       assertTrue(epdResponse.getStatusCode().is3xxRedirection());

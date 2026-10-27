@@ -1,8 +1,5 @@
 package com.opencirc.api.passport.mapping;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.enums.Platform;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +9,9 @@ import java.util.Properties;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Dictionary mapping class. */
 @Component
@@ -69,8 +69,8 @@ public class DictionaryMapping {
       Map<String, String> reverseMapping = getReverseMapping(dictionaryName, dictionaryMappings);
 
       template
-          .fields()
-          .forEachRemaining(
+          .properties()
+          .forEach(
               entry -> {
                 String originalKey = entry.getKey();
                 String mappedKey = reverseMapping.getOrDefault(originalKey, originalKey);

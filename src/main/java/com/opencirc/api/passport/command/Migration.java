@@ -3,11 +3,12 @@ package com.opencirc.api.passport.command;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.shell.command.annotation.Command;
+import org.springframework.shell.core.command.annotation.Command;
+import org.springframework.shell.core.command.annotation.CommandGroup;
 import org.springframework.stereotype.Component;
 
 @Component
-@Command(group = "Migration commands")
+@CommandGroup(name = "Migration commands")
 @Slf4j
 public class Migration {
 
@@ -24,7 +25,7 @@ public class Migration {
   private String databasePassword;
 
   /** Shell command to run migrations. */
-  @Command(command = "run", description = "Run database migrations")
+  @Command(name = "run", description = "Run database migrations")
   public void run() {
     try {
       log.info("Starting database migration...");

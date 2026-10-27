@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dto.AddDatasheetsToPassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
@@ -55,7 +54,7 @@ public class PassportController {
       @PathVariable
           @Parameter(description = "Dictionary platform", required = true, in = ParameterIn.PATH)
           String platform)
-      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+      throws InvalidInputException, JsonValidationException {
     return ResponseEntity.ok(
         passportService.createPassportUsingPlatform(
             Platform.fromValue(platform), data, userContext.getCurrentUser()));
@@ -76,7 +75,7 @@ public class PassportController {
       @PathVariable
           @Parameter(description = "Dictionary platform", required = true, in = ParameterIn.PATH)
           String platform)
-      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+      throws InvalidInputException, JsonValidationException {
     return ResponseEntity.ok(
         passportService.batchCreatePassportsUsingPlatform(
             Platform.fromValue(platform), data, userContext.getCurrentUser()));
@@ -100,7 +99,7 @@ public class PassportController {
           AddDatasheetsToPassportUsingPlatformRequestDto data,
       @PathVariable @Parameter(description = "Passport ID", required = true, in = ParameterIn.PATH)
           String passportId)
-      throws InvalidInputException, JsonValidationException, JsonProcessingException {
+      throws InvalidInputException, JsonValidationException {
     return ResponseEntity.ok(
         passportService.addDatasheetsToPassportUsingPlatform(
             passportId,

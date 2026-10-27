@@ -1,19 +1,19 @@
 package com.opencirc.api.passport.command;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import java.util.Arrays;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.shell.command.annotation.Command;
-import org.springframework.shell.command.annotation.Option;
+import org.springframework.shell.core.command.annotation.Command;
+import org.springframework.shell.core.command.annotation.CommandGroup;
+import org.springframework.shell.core.command.annotation.Option;
 import org.springframework.stereotype.Component;
 
 /**
  * Seeder command entry point for running seed operations. Supports seeding of users, passports, or
  * both.
  */
-@Command(group = "Seeder commands")
+@CommandGroup(name = "Seeder commands")
 @Slf4j
 @Component
 public class Seeder {
@@ -77,7 +77,7 @@ public class Seeder {
 
   /** Executes the seeding process for the given type. */
   @Command(
-      command = "seed",
+      name = "seed",
       description =
           """
             Seed database tables with initial or sample data.
@@ -95,7 +95,7 @@ public class Seeder {
               seed --type all
               seed                 (defaults to ALL)
             """)
-  public void seed(@Option(longNames = "type", defaultValue = "all") String seedTypeText) {
+  public void seed(@Option(longName = "type", defaultValue = "all") String seedTypeText) {
     log.info("Seeding started.");
     var seedType = SeedType.fromValue(seedTypeText);
     try {
@@ -117,7 +117,7 @@ public class Seeder {
     }
   }
 
-  private void seedAll() throws JsonValidationException, JsonProcessingException {
+  private void seedAll() throws JsonValidationException {
     userSeeder.seed();
     passportFromJsonSeeder.seed();
   }

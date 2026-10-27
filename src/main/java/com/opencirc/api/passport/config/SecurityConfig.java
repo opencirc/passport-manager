@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.service.ApiKeyService;
@@ -25,6 +24,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import tools.jackson.databind.ObjectMapper;
 
 /** Spring security configuration. */
 @Configuration
@@ -78,9 +78,8 @@ public class SecurityConfig {
   @Bean
   public AuthenticationProvider authenticationProvider(
       BCryptPasswordEncoder bcryptPasswordEncoder) {
-    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
     provider.setPasswordEncoder(bcryptPasswordEncoder);
-    provider.setUserDetailsService(userDetailsService);
     return provider;
   }
 

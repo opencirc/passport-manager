@@ -3,7 +3,6 @@ package com.opencirc.api.passport.service.test;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencirc.api.passport.context.UserContext;
 import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dto.UserDto;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class TestPassportLogService {

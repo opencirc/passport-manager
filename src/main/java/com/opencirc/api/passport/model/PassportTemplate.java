@@ -1,6 +1,5 @@
 package com.opencirc.api.passport.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import jakarta.persistence.Column;
@@ -17,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.UuidGenerator;
+import tools.jackson.databind.JsonNode;
 
 /** DTO for Template table. */
 @Entity

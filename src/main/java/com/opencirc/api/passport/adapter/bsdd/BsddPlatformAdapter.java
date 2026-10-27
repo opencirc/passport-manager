@@ -1,9 +1,5 @@
 package com.opencirc.api.passport.adapter.bsdd;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
@@ -46,6 +42,10 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /** BSDD implementation of PlatformAdapter. */
 @Service
@@ -90,7 +90,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   @Override
   public List<Map<String, String>> listClass(String text) {
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassSearchByTextUrl())
+        UriComponentsBuilder.fromUriString(appProperties.getBsddClassSearchByTextUrl())
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
             .queryParam(AppConstants.QP_BSDD_LIMIT, AppConstants.BSDD_LIMIT);
     String url = uriBuilder.toUriString();
@@ -199,7 +199,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   /** Fetches class template with property details. */
   private BsddClassTemplateDto getClassTemplate(String uri) throws JsonValidationException {
     URI requestUri =
-        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassDetailsUrl())
+        UriComponentsBuilder.fromUriString(appProperties.getBsddClassDetailsUrl())
             .queryParam("Uri", uri)
             .queryParam("IncludeClassProperties", true)
             .build(false) // don't re-encode the nested URL parameter
@@ -249,7 +249,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   @Override
   public List<Map<String, String>> listProperties(String text) {
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(appProperties.getBsddTextSearchUrl())
+        UriComponentsBuilder.fromUriString(appProperties.getBsddTextSearchUrl())
             .queryParam(AppConstants.QP_BSDD_SEARCHTEXT, text)
             .queryParam(AppConstants.QP_BSDD_TYPEFILTER, "Property")
             .queryParam("IncludeSearchDescriptions", "false")
@@ -351,7 +351,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
 
     try {
       var uri =
-          UriComponentsBuilder.fromHttpUrl(appProperties.getBsddClassDetailsUrl())
+          UriComponentsBuilder.fromUriString(appProperties.getBsddClassDetailsUrl())
               .queryParam("Uri", uriString)
               .queryParam("IncludeClassProperties", true)
               .encode()
@@ -518,7 +518,7 @@ public class BsddPlatformAdapter implements PlatformAdapter {
   public JsonNode fetchRawTemplate(String uri) {
     String uriPrefix = appProperties.getBsddClassDetailsUrl();
     UriComponentsBuilder uriBuilder =
-        UriComponentsBuilder.fromHttpUrl(uriPrefix)
+        UriComponentsBuilder.fromUriString(uriPrefix)
             .queryParam("Uri", uri)
             .queryParam("IncludeClassProperties", true);
     String url = uriBuilder.toUriString();
