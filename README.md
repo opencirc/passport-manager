@@ -98,12 +98,12 @@ This application also provides a CLI tool to manage users, API keys, templates, 
 **6.1 Register a New User:**
 
 ```bash
-register-user --email <email> --password <password> --firstName <firstName> --lastName <lastName> --role <user/admin>
+register-user --email <email> --firstName <firstName> --lastName <lastName> --role <user/admin>
 ```
 
 > --role : Defaults to user
 
-> --password : Use at least 12 characters with a mix of uppercase, lowercase, digits, or symbols.
+> --password : Optional. When omitted you are prompted for it without echo, which keeps it out of the process list and the shell history. Passing `--password <password>` still works for scripts. Use at least 12 characters with a mix of uppercase, lowercase, digits, or symbols.
 
 **6.2 Create API Key Command:**
 
@@ -166,9 +166,20 @@ docker-compose up --build
 
 **8. Staging Server**
 
-Staging runs at `api.staging.opencirc.org` on a single Ubuntu 24.04 box. The app runs as the `opencirc` user, not root: the checkout lives in `/home/opencirc/passport-manager`, the Java process runs inside a tmux session named `passport-manager`, and Postgres and Redis run in Docker (ports 5435 and 6381). If you log in as root, the home directory looks empty because nothing lives there.
+Staging runs at `https://api.staging.opencirc.org` on a single Ubuntu 24.04 box. Caddy terminates TLS and proxies to the app, which listens only on `127.0.0.1:8080` (see 8.2). The app runs as the `opencirc` user, not root: the checkout lives in `/home/opencirc/passport-manager`, the Java process runs inside a tmux session named `passport-manager`, and Postgres and Redis run in Docker (ports 5435 and 6381). If you log in as root, the home directory looks empty because nothing lives there.
 
 **8.1 SSH Access**
+
+SSH is closed by default. The Scaleway security group of the instance drops all inbound traffic except ports 80 and 443, so `ssh` times out until a port-22 rule for your current public IP is added. Maintainers have a local `opencirc-ssh-open staging` / `opencirc-ssh-close staging` helper pair for this (kept outside this repository on purpose); without it, add and remove the rule with the Scaleway CLI after `scw login`:
+
+```bash
+scw instance security-group create-rule security-group-id=<staging security group id> zone=fr-par-1 \
+    direction=inbound action=accept protocol=TCP ip-range=<your public ip>/32 dest-port-from=22 dest-port-to=22
+# ... work ...
+scw instance security-group delete-rule security-group-id=<staging security group id> security-group-rule-id=<rule id> zone=fr-par-1
+```
+
+Close the port again when you are done. Deleting the rule also drops a live SSH session.
 
 You need the staging key (`passport-manager-staging.pem`, ask a maintainer) and must log in as `opencirc`. Logging in as `ubuntu` or your local username fails with `Permission denied (publickey)` because those users do not exist. Add this to `~/.ssh/config`:
 
@@ -186,7 +197,26 @@ Then:
 ssh opencirc-passport-manager-staging
 ```
 
-**8.2 Shell Helpers**
+**8.2 HTTPS and Reverse Proxy**
+
+Caddy (installed from the official Caddy apt repository, `systemctl status caddy`) owns ports 80 and 443. It obtains and renews the Let's Encrypt certificate for `api.staging.opencirc.org` by itself and redirects plain HTTP to HTTPS. The whole configuration is `/etc/caddy/Caddyfile`:
+
+```
+api.staging.opencirc.org {
+    reverse_proxy 127.0.0.1:8080
+}
+```
+
+The app is told about the proxy through two environment variables exported in `~/passport-manager/run-host.sh` on the server, so nothing in `application.properties` is staging-specific:
+
+```bash
+export SERVER_ADDRESS="127.0.0.1"                # only Caddy talks to the app directly
+export SERVER_FORWARD_HEADERS_STRATEGY="native"  # trust X-Forwarded-* from Caddy on localhost
+```
+
+With these, Spring sees the original `https` scheme and host (the OpenAPI document's server URL and the `Strict-Transport-Security` header confirm it), and port 8080 is unreachable from outside even if the security group were opened. Caddy logs go to `journalctl -u caddy`; after editing the Caddyfile run `caddy validate --config /etc/caddy/Caddyfile` and `sudo systemctl reload caddy`. `scripts/setup-staging.sh` does not install Caddy yet; on a fresh server these steps are manual.
+
+**8.3 Shell Helpers**
 
 The login shell loads `~/.bashrc.d/opencirc.sh` (source: `scripts/staging-shell-helpers.sh`), which provides:
 
@@ -201,7 +231,7 @@ The login shell loads `~/.bashrc.d/opencirc.sh` (source: `scripts/staging-shell-
 
 tmux is configured with mouse scrolling and a 50,000-line scrollback (source: `scripts/staging-tmux.conf`).
 
-**8.3 Deploying**
+**8.4 Deploying**
 
 Only `main` is deployed. Merge first, then on the server:
 
@@ -210,17 +240,19 @@ tmux new -s deploy     # so the build survives a dropped SSH connection
 app-redeploy
 ```
 
-`app-redeploy` runs `scripts/redeploy-app.sh`: it refuses to run with uncommitted changes in the checkout, resets to `origin/main`, builds with `mvn -DskipTests package` under the memory limits in `MAVEN_OPTS`, restarts the `passport-manager` tmux session running `run-host.sh`, and then runs `scripts/wait-for-app.sh`. That script waits up to 180 seconds for the app to listen on port 8080 with a live Java process, and fails with a pointer to the logs otherwise. "App started" is only printed once readiness succeeds.
+`app-redeploy` runs `scripts/redeploy-app.sh`: it refuses to run with uncommitted changes in the checkout, resets to `origin/main`, builds with `mvn -DskipTests package` under the memory limits in `MAVEN_OPTS`, restarts the `passport-manager` tmux session running `run-host.sh`, and then runs `scripts/wait-for-app.sh`. That script waits up to 180 seconds for the app to listen on port 8080 (on localhost, behind Caddy) with a live Java process, and fails with a pointer to the logs otherwise. "App started" is only printed once readiness succeeds.
 
 App output goes to both the tmux pane and `~/logs/passport-manager.log`, so logs survive restarts.
 
-**8.4 Setting Up a Fresh Server**
+**8.5 Setting Up a Fresh Server**
 
 `scripts/setup-staging.sh` provisions a blank Ubuntu 24.04 host end to end: packages, Docker, Temurin Java 21, Maven, swap, a GitHub deploy key, the clone, the shell helpers and tmux config, the Docker services, a first build, and the first app start. Run it as the user that should own the app (not root) and follow the prompts.
 
-**8.5 Staging Troubleshooting**
+**8.6 Staging Troubleshooting**
 
+- **`ssh: connect to host ... Operation timed out`**: SSH is closed, not the server. Add the port-22 rule for your IP (8.1). The server is probably fine if `https://api.staging.opencirc.org/v3/api-docs` answers.
 - **`Permission denied (publickey)`**: you are logging in as the wrong user. Use `opencirc@`.
+- **`502 Bad Gateway` from the public URL**: Caddy is up but the app is not listening on 8080, usually because it is restarting (a redeploy takes about a minute) or died. Check `app-status` and `app-tail`.
 - **"App process exited before becoming ready"**: the JVM died during startup. Run `app-tail` or `app-logs` for the stack trace. Usual causes are a failed Flyway migration or the database container being down (`docker ps`).
 - **"App did not become ready within 180s"**: the JVM is alive but not listening yet. Check `app-tail`; on a cold JVM under memory pressure startup can exceed the timeout, in which case `TIMEOUT_SECONDS=300 bash scripts/wait-for-app.sh` re-checks without restarting.
-- **`Invalid character found in method name [0x16...]` in the logs**: harmless. Internet scanners are sending TLS handshakes to the plain HTTP port.
+- **`Invalid character found in method name [0x16...]` in old logs**: harmless. Internet scanners sent TLS handshakes to port 8080 while it was public; since Caddy fronts the app this no longer happens.

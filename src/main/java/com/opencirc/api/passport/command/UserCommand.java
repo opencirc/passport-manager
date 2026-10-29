@@ -27,11 +27,17 @@ public class UserCommand {
     this.userRepository = userRepository;
   }
 
-  /** Shell command to register a new user. */
+  /**
+   * Shell command to register a new user. The password is prompted for when the option is omitted,
+   * so it does not end up in the process list or the shell history.
+   */
   @Command(description = "Register a user.")
   public String registerUser(
       @Option(longName = "email", required = true) String email,
-      @Option(longName = "password", required = true) String password,
+      @Option(
+              longName = "password",
+              description = "Omit to be prompted without echo (recommended).")
+          String password,
       @Option(longName = "firstName", required = true) String firstName,
       @Option(longName = "lastName", required = true) String lastName,
       @Option(longName = "role", defaultValue = "user") String role) {
@@ -43,14 +49,40 @@ public class UserCommand {
       return "Invalid role. Valid roles are 'user' or 'admin'.";
     }
 
+    String resolvedPassword = password;
+    if (resolvedPassword == null || resolvedPassword.isBlank()) {
+      resolvedPassword = readPasswordFromConsole();
+    }
+    if (resolvedPassword == null || resolvedPassword.isBlank()) {
+      return "No password given. Run from a terminal to be prompted, or pass --password.";
+    }
+
     User user =
         authService.register(
             StringUtil.normalizeEmail(email),
-            password.trim(),
+            resolvedPassword.trim(),
             firstName.trim(),
             lastName.trim(),
             parsedRole);
     return String.format("User created with id: %s", user.getId());
+  }
+
+  /**
+   * Prompts for the password on the attached terminal without echoing it. Returns null when no
+   * terminal is attached, for example when the output is piped.
+   */
+  public String readPasswordFromConsole() {
+    java.io.Console console = System.console();
+    if (console == null) {
+      return null;
+    }
+    char[] passwordCharacters = console.readPassword("Password: ");
+    if (passwordCharacters == null) {
+      return null;
+    }
+    String enteredPassword = new String(passwordCharacters);
+    java.util.Arrays.fill(passwordCharacters, '\0');
+    return enteredPassword;
   }
 
   /** Shell command to list existing users. */
