@@ -192,6 +192,8 @@ export DATABASE_USER="postgres"
 export DATABASE_PASSWORD="opencirc"
 export REDIS_HOST="127.0.0.1"
 export REDIS_PORT="6381"
+export SERVER_ADDRESS="127.0.0.1"               # only Caddy (reverse proxy on this box) talks to the app directly
+export SERVER_FORWARD_HEADERS_STRATEGY="native" # trust X-Forwarded-* from Caddy on localhost
 
 export MAVEN_OPTS="-Xms128m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:MaxDirectMemorySize=128m -XX:+ExitOnOutOfMemoryError"
 

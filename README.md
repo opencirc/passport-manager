@@ -103,7 +103,7 @@ register-user --email <email> --firstName <firstName> --lastName <lastName> --ro
 
 > --role : Defaults to user
 
-> --password : Optional. When omitted you are prompted for it without echo, which keeps it out of the process list and the shell history. Passing `--password <password>` still works for scripts. Use at least 12 characters with a mix of uppercase, lowercase, digits, or symbols.
+> --password : Optional. When omitted you are prompted for it with masked input, which keeps it out of the process list and the shell history. The prompt needs an interactive terminal: when the shell's input or output is piped (for example through `tee`), the command refuses instead of reading the password from the pipe, so pass `--password <password>` in scripts. Use at least 12 characters with a mix of uppercase, lowercase, digits, or symbols.
 
 **6.2 Create API Key Command:**
 
@@ -247,6 +247,8 @@ App output goes to both the tmux pane and `~/logs/passport-manager.log`, so logs
 **8.5 Setting Up a Fresh Server**
 
 `scripts/setup-staging.sh` provisions a blank Ubuntu 24.04 host end to end: packages, Docker, Temurin Java 21, Maven, swap, a GitHub deploy key, the clone, the shell helpers and tmux config, the Docker services, a first build, and the first app start. Run it as the user that should own the app (not root) and follow the prompts.
+
+The generated `run-host.sh` already exports `SERVER_ADDRESS=127.0.0.1` and `SERVER_FORWARD_HEADERS_STRATEGY=native` (8.2), so the app comes up bound to localhost and is not reachable from outside until Caddy is installed and configured as described in 8.2. The server is not finished until that step is done; the security group also needs inbound rules for ports 80 and 443 (and none for 8080).
 
 **8.6 Staging Troubleshooting**
 
