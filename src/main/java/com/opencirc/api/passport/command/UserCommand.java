@@ -63,11 +63,14 @@ public class UserCommand {
       return "Invalid role. Valid roles are 'user' or 'admin'.";
     }
 
-    String resolvedPassword = password;
-    if (resolvedPassword == null || resolvedPassword.isBlank()) {
+    // Only an explicit option is trimmed; a prompted password is kept exactly as typed.
+    String resolvedPassword;
+    if (password == null || password.isBlank()) {
       resolvedPassword = promptForPassword();
+    } else {
+      resolvedPassword = password.trim();
     }
-    if (resolvedPassword == null || resolvedPassword.isBlank()) {
+    if (resolvedPassword == null || resolvedPassword.isEmpty()) {
       return "No password given. Run from an interactive terminal to be prompted, or pass"
           + " --password.";
     }
@@ -75,7 +78,7 @@ public class UserCommand {
     User user =
         authService.register(
             StringUtil.normalizeEmail(email),
-            resolvedPassword.trim(),
+            resolvedPassword,
             firstName.trim(),
             lastName.trim(),
             parsedRole);

@@ -101,6 +101,27 @@ public class TestUserCommand {
   }
 
   @Test
+  public void keepsPromptedPasswordExactlyAsTyped() {
+    AuthService authService = registeringAuthService();
+    UserCommand userCommand =
+        new UserCommand(
+            authService,
+            mock(UserRepository.class),
+            promptAnswering(" Spaced-Pass-123 "),
+            terminalOfType("xterm"));
+
+    userCommand.registerUser("smoke@example.com", null, "Smoke Test", "Boot Four", "user");
+
+    verify(authService)
+        .register(
+            eq("smoke@example.com"),
+            eq(" Spaced-Pass-123 "),
+            eq("Smoke Test"),
+            eq("Boot Four"),
+            eq(Role.USER));
+  }
+
+  @Test
   public void refusesWithoutPasswordOnDumbTerminal() {
     AuthService authService = registeringAuthService();
     ComponentFlow.Builder componentFlowBuilder = promptAnswering("Should-Not-Be-Read");
