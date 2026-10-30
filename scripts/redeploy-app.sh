@@ -47,9 +47,11 @@ ensure_launcher_export() {
   grep -qE '^export REDIS_PORT=' "$RUN_SCRIPT" \
     || die "Cannot add ${variable_name}: no 'export REDIS_PORT=' line in $RUN_SCRIPT to anchor on"
   printf 'Adding %s to %s\n' "$variable_name" "$RUN_SCRIPT"
+  # cp -p gives the temporary file the launcher's own mode and owner before it is rewritten, so
+  # the replacement keeps the original permissions instead of the umask default plus chmod +x.
+  cp -p "$RUN_SCRIPT" "$RUN_SCRIPT.tmp"
   awk -v line="$export_line" '{ print } /^export REDIS_PORT=/ { print line }' "$RUN_SCRIPT" > "$RUN_SCRIPT.tmp"
   mv "$RUN_SCRIPT.tmp" "$RUN_SCRIPT"
-  chmod +x "$RUN_SCRIPT"
 }
 
 # Each line is inserted directly after the anchor, so the last one added ends up first.

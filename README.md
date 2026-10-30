@@ -240,6 +240,12 @@ tmux new -s deploy     # so the build survives a dropped SSH connection
 app-redeploy
 ```
 
+`app-redeploy` pulls the checkout it runs from, and bash has already read the old script by then, so a change to `scripts/redeploy-app.sh` itself only takes effect on the following run. On a server whose checkout predates the current redeploy script (for example one set up before the Caddy launcher migration), pull once before the first `app-redeploy`:
+
+```bash
+app-cd && git pull --ff-only origin main
+```
+
 `app-redeploy` runs `scripts/redeploy-app.sh`: it refuses to run with uncommitted changes in the checkout, resets to `origin/main`, builds with `mvn -DskipTests package` under the memory limits in `MAVEN_OPTS`, adds the `SERVER_ADDRESS` and `SERVER_FORWARD_HEADERS_STRATEGY` exports to `run-host.sh` if a launcher from before the Caddy setup still lacks them, restarts the `passport-manager` tmux session running `run-host.sh`, and then runs `scripts/wait-for-app.sh`. That script waits up to 180 seconds for the app to listen on port 8080 (on localhost, behind Caddy) with a live Java process, and fails with a pointer to the logs otherwise. "App started" is only printed once readiness succeeds.
 
 App output goes to both the tmux pane and `~/logs/passport-manager.log`, so logs survive restarts.
