@@ -2,7 +2,7 @@
 
 **Construction Materials Passport Generator and Manager**
 
-  This application allows users to generate and manage passports for construction materials through a REST API. It uses external dictionaries such as bsDD (https://search.bsdd.buildingsmart.org/) and lexicon (https://definehub.com/en/) to generate passports in the defined templates.
+  This application lets administrators set up projects and machine integrations, and lets those integrations generate and manage passports for construction materials through a REST API. It uses external dictionaries such as bsDD (https://search.bsdd.buildingsmart.org/) and lexicon (https://definehub.com/en/) to generate passports in the defined templates.
 
 This README will guide you through the steps to clone the code, set up the application on your local machine, and use the API to generate passports.
 
@@ -62,65 +62,126 @@ Base API URL
 
 	http://localhost:8080/
 
-**5. Authentication**
+**5. Access Model**
 
-To use the API, login using the test admin credentials:
+The API has two kinds of actors, and they never share endpoints:
 
- **With login credentials :**
+| Actor | Authenticates with | Works on |
+| --- | --- | --- |
+| **Administrator** (`admins`) | Email and password, then JWT cookies | Owners, projects, access groups and API keys under `/api/admin/**` |
+| **Machine integration** (`api_keys`) | A bearer token issued under an access group | Passports, datasheets and audit logs under `/api/passport/**` and `/api/audit-logs/**` |
+
+Every project is created together with its **root passport**, the anchor all machine-authored child passports hang from. An **access group** belongs to one project and holds the CRUD permissions (`canCreate`, `canRead`, `canUpdate`, `canDelete`) of the API keys issued under it. Each API key is therefore scoped to exactly one project: it can only read and change passports of that project, and the HTTP method decides which permission applies (GET → read, POST → create, PUT → update, DELETE → delete).
+
+Deleting a project through the API soft-archives it and every passport in it (`status = archived`); nothing is physically removed. Archived records are hidden from default listings and can be shown with `?include_archived=true`. Every mutation of a passport, a passport datasheet or a datasheet definition is recorded in the audit log as an RFC 6902 JSON Patch, and an audit log entry can be approved or rejected with a signed validation tag.
+
+**5.1 Administrator Login**
+
+Log in with an administrator account (see 6.1 for creating one; the seeder creates `admin@test.com` with the configured seed password):
 
 ```bash
+POST /api/auth/login
 {
   "email": "admin@test.com",
   "password": "Password123!"
 }
 ```
 
-Once logged in, you will receive a JWT access and refresh token which must be included in requests via cookies or headers.
+The response sets the `access_token` and `refresh_token` cookies, which authenticate all `/api/admin/**` calls. The usual flow is:
 
 ```bash
-access_token = <received JWT access token>
-refresh_token = <received JWT refresh token>
+POST /api/admin/owners                                  # optional: { "name": "Owner Org" }
+POST /api/admin/projects                                # { "name": "Building B", "description": "...", "ownerId": "<optional>" }
+POST /api/admin/projects/{projectId}/access-groups      # { "name": "BIM pipeline", "permissions": { "canCreate": true, "canRead": true, "canUpdate": true, "canDelete": false } }
+POST /api/admin/access-groups/{groupId}/api-keys        # { "name": "Revit production", "expirationTime": "2027-12-31T23:59:59Z" }
 ```
 
-**With Api Keys :**
-Add the below keys in the request header in the `X-Api-Key` and `X-Api-Secret` fields.
+The project response carries `rootPassportId`. The API key response carries the `token` exactly once; only its SHA-256 hash is stored. Revoke a key with `POST /api/admin/api-keys/{id}/revoke`.
+
+**5.2 Machine Requests**
+
+Send the token as a bearer token (or in the `X-Api-Key` header):
+
 ```bash
-X-Api-Key: fa76a9d9-caa7-41ba-b929-f468620fa023
-X-Api-Secret: API_sRynttcLE0OfRM3kFi1RXFdP_34b0c0ed5ed2
+Authorization: Bearer opc_live_<key_id>_<secret>
 ```
 
-You can pass them either through Request header.
+The token is resolved with one indexed lookup on `<key_id>` and a constant-time comparison of the hashed `<secret>`. Revoked or expired keys, and keys of archived projects, are rejected with `401`. Child passports are created under a parent of the same project:
+
+```bash
+POST /api/passport/platform/bsdd
+{
+  "name": "Wall W-01",
+  "parentId": "<rootPassportId or any passport of the project>",
+  "platformId": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcWall",
+  "dataCategory": "generic"
+}
+```
+
+Datasheet definitions fetched from bSDD are cached globally, so the same classification is fetched once and reused by every passport. `DELETE /api/passport/{id}` soft-archives the passport and its subtree.
+
+**5.3 Audit Logs and Validation**
+
+```bash
+GET  /api/audit-logs/project/{projectId}            # project-wide stream, newest first
+GET  /api/audit-logs/passport/{passportId}          # passport-wide stream, newest first
+GET  /api/audit-logs/target/{targetType}/{targetId} # history of one PASSPORT, PASSPORT_DATASHEET or DATASHEET_DEFINITION
+POST /api/audit-logs/{logId}/tags                   # { "tag": "APPROVED", "email": "lead.auditor@certifier.org" }
+GET  /api/audit-logs/{logId}/tag/verify             # { "valid": true|false, ... }
+```
+
+A tag is signed with HMAC-SHA256 over `log_id:target_id:email:tag:sha256(diff)` keyed by the secret of the token that created it. Because only the hash of the secret is stored, verification has to be called with the same key's token; any later change to the diff, the validator or the state makes `valid` false.
 
 **6. CLI Tool Commands**
 
-This application also provides a CLI tool to manage users, API keys, templates, and seed the database.
+This application also provides a CLI tool to manage administrators, projects, access groups, API keys, data dictionary templates, and to seed the database.
 
-**6.1 Register a New User:**
+**6.1 Register an Administrator:**
 
 ```bash
-register-user --email <email> --firstName <firstName> --lastName <lastName> --role <user/admin>
+register-admin --email <email> --firstName <firstName> --lastName <lastName>
 ```
-
-> --role : Defaults to user
 
 > --password : Optional. When omitted you are prompted for it with masked input, which keeps it out of the process list and the shell history. The prompt needs an interactive terminal: when the shell's input or output is piped (for example through `tee`), the command refuses instead of reading the password from the pipe, so pass `--password <password>` in scripts. Use at least 12 characters with a mix of uppercase, lowercase, digits, or symbols.
 
-**6.2 Create API Key Command:**
+`list-admins` lists the existing accounts.
+
+**6.2 Owners, Projects and Access Groups:**
 
 ```bash
-create-api-key --userId <user id> --expiration-date (optional) <Expiration date in yyyy-MM-dd  --name  name of the token
+create-owner --name <owner name>
+create-project --name <project name> [--description <text>] [--ownerId <owner id>]
+list-projects [--includeArchived true]
+archive-project --projectId <project id>
+create-access-group --projectId <project id> --name <name> [--description <text>] \
+    [--canCreate true] [--canRead true] [--canUpdate true] [--canDelete false]
 ```
 
-**6.3 List API Keys:**
+`create-project` prints the id of the root passport provisioned with the project.
+
+**6.3 API Keys:**
 
 ```bash
-list-api-tokens --user-id <user id>
+create-api-key --accessGroupId <access group id> --name <key name> [--expirationDate yyyy-MM-dd]
+list-api-keys --accessGroupId <access group id>
+revoke-api-key --key <key id>
 ```
 
-**6.4 Data Dictionary Command:**
+`create-api-key` prints the full token once.
+
+**6.4 Passports:**
 
 ```bash
-fetch-template --dictionaryType <<bsdd/lexicon>> --type <<class/property>> --uri <<URI of the template>> --raw <<true/false>>
+create-passport-using-platform --apiKeyId <key id> --parentId <passport id> --platform bsdd \
+    --platformId <classification URI> --name <passport name> [--dataCategory generic|unique]
+```
+
+The passport is created on behalf of the given key, inside its project; the key's secret is not needed from the shell.
+
+**6.5 Data Dictionary Command:**
+
+```bash
+fetch-template --platform bsdd --code <<URI of the classification>> --raw <<true/false>>
 ```
 
 > --raw : default is false
@@ -130,17 +191,19 @@ fetch-template --dictionaryType <<bsdd/lexicon>> --type <<class/property>> --uri
 >false: returns processed templates with added fields
 
 
-**6.5 Seeder Commands:**
+**6.6 Seeder Commands:**
 
 Seed initial data into the database:
 
 ```bash
-seed --type USER                 # Adds only user data
-seed --type PASSPORT_FROM_API    # Adds passport data fetched from external API templates
-seed --type PASSPORT_FROM_JSON   # Adds passport data from pre-saved bsdd_templates.json
-seed --type ALL                  # Adds both user and passport data using templates from bsdd_templates.json
-seed                             # Defaults to ALL
+seed --type admin               # Adds the test administrator only
+seed --type passportFromApi     # Adds passport data fetched from external API templates
+seed --type passportFromJson    # Adds passport data from pre-saved bsdd_templates.json
+seed --type all                 # Adds the administrator and passport data from bsdd_templates.json
+seed                            # Defaults to all
 ```
+
+The passport seeders provision a `Seed Owner`, a `Seed Project` with its root passport, a `Seed Integrator` access group with full permissions and a `Seed Key` API key, reusing them on later runs. The key's token is printed once when it is first issued.
 
 
 **7.Common Issues and Troubleshooting**
