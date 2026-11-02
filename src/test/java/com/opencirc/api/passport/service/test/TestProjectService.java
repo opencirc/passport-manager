@@ -15,11 +15,12 @@ import com.opencirc.api.passport.dao.ProjectRepository;
 import com.opencirc.api.passport.dto.CreateProjectRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.ProjectDto;
-import com.opencirc.api.passport.enums.PassportLogAction;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.ProjectStatus;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.Project;
-import com.opencirc.api.passport.service.PassportLogService;
+import com.opencirc.api.passport.service.AuditLogService;
 import com.opencirc.api.passport.service.ProjectService;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,15 +39,14 @@ public class TestProjectService {
   @Mock private ProjectRepository projectRepository;
   @Mock private OwnerRepository ownerRepository;
   @Mock private PassportRepository passportRepository;
-  @Mock private PassportLogService passportLogService;
+  @Mock private AuditLogService auditLogService;
 
   private ProjectService projectService;
 
   @BeforeEach
   void setUp() {
     projectService =
-        new ProjectService(
-            projectRepository, ownerRepository, passportRepository, passportLogService);
+        new ProjectService(projectRepository, ownerRepository, passportRepository, auditLogService);
   }
 
   @Test
@@ -78,8 +78,16 @@ public class TestProjectService {
     assertEquals("active", dto.getStatus());
     assertEquals("admin-1", dto.getCreatedById());
     assertEquals(ADMIN, dto.getCreatedBy());
-    verify(passportLogService)
-        .logEvent(eq(root.getValue().getId()), eq(PassportLogAction.CREATE), any());
+    verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT),
+            eq(root.getValue().getId()),
+            eq("project-1"),
+            eq(root.getValue().getId()),
+            eq(AuditLogAction.CREATE),
+            any(),
+            any(),
+            eq(AuditLogService.Actor.system()));
   }
 
   @Test
@@ -114,7 +122,17 @@ public class TestProjectService {
     verify(passportRepository)
         .archiveByProjectId(eq("project-1"), any(), eq(Passport.Status.ARCHIVED));
     verify(projectRepository, org.mockito.Mockito.never()).delete(any());
-    verify(passportLogService).logEvent(eq("root-1"), eq(PassportLogAction.ARCHIVE), any());
+    assertEquals(Passport.Status.ARCHIVED, root.getStatus());
+    verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT),
+            eq("root-1"),
+            eq("project-1"),
+            eq("root-1"),
+            eq(AuditLogAction.UPDATE),
+            any(),
+            any(),
+            eq(AuditLogService.Actor.system()));
   }
 
   @Test

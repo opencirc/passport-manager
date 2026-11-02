@@ -81,7 +81,7 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/api/admin/**")
                     .hasAuthority(AppConstants.AUTHORITY_ADMIN)
-                    .requestMatchers("/api/passport/**")
+                    .requestMatchers("/api/passport/**", "/api/audit-logs/**")
                     .hasAuthority(AppConstants.AUTHORITY_API_KEY)
                     .anyRequest()
                     .authenticated())

@@ -7,7 +7,8 @@ import com.opencirc.api.passport.dao.ProjectRepository;
 import com.opencirc.api.passport.dto.CreateProjectRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.ProjectDto;
-import com.opencirc.api.passport.enums.PassportLogAction;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.ProjectStatus;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.Passport;
@@ -16,7 +17,6 @@ import io.github.thibaultmeyer.cuid.CUID;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,18 +35,18 @@ public class ProjectService {
 
   private final PassportRepository passportRepository;
 
-  private final PassportLogService passportLogService;
+  private final AuditLogService auditLogService;
 
   /** Constructor. */
   public ProjectService(
       ProjectRepository projectRepository,
       OwnerRepository ownerRepository,
       PassportRepository passportRepository,
-      PassportLogService passportLogService) {
+      AuditLogService auditLogService) {
     this.projectRepository = projectRepository;
     this.ownerRepository = ownerRepository;
     this.passportRepository = passportRepository;
-    this.passportLogService = passportLogService;
+    this.auditLogService = auditLogService;
   }
 
   /**
@@ -82,7 +82,15 @@ public class ProjectService {
     root.setCreatedById(null);
     root.setDatasheets(new HashSet<>());
     root = passportRepository.save(root);
-    passportLogService.logEvent(root.getId(), PassportLogAction.CREATE, List.of());
+    auditLogService.record(
+        AuditTargetType.PASSPORT,
+        root.getId(),
+        project.getId(),
+        root.getId(),
+        AuditLogAction.CREATE,
+        null,
+        auditLogService.passportSnapshot(root),
+        AuditLogService.Actor.system());
 
     return ProjectDto.from(project, root.getId());
   }
@@ -120,16 +128,24 @@ public class ProjectService {
     project = projectRepository.save(project);
     final String projectId = project.getId();
 
-    int archived =
-        passportRepository.archiveByProjectId(project.getId(), now, Passport.Status.ARCHIVED);
     passportRepository
-        .findFirstByProjectIdAndParentIdIsNull(project.getId())
+        .findFirstByProjectIdAndParentIdIsNull(projectId)
         .ifPresent(
-            root ->
-                passportLogService.logEvent(
-                    root.getId(),
-                    PassportLogAction.ARCHIVE,
-                    List.of(Map.of("projectId", projectId, "archivedPassports", archived))));
+            root -> {
+              final var before = auditLogService.passportSnapshot(root);
+              passportRepository.archiveByProjectId(projectId, now, Passport.Status.ARCHIVED);
+              root.setStatus(Passport.Status.ARCHIVED);
+              root.setArchivedTime(now);
+              auditLogService.record(
+                  AuditTargetType.PASSPORT,
+                  root.getId(),
+                  projectId,
+                  root.getId(),
+                  AuditLogAction.UPDATE,
+                  before,
+                  auditLogService.passportSnapshot(root),
+                  AuditLogService.Actor.system());
+            });
     return toDto(project);
   }
 
