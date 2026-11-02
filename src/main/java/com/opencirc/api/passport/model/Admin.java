@@ -1,29 +1,29 @@
 package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.opencirc.api.passport.util.RoleConverter;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
-/** DTO for User table. */
+/**
+ * Human system administrator. Administrators govern owners, projects, access groups and API keys;
+ * every account in this table carries the same, full administrative authority.
+ */
 @Entity
-@Table(name = "users")
+@Table(name = "admins")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Admin {
 
   @Id
   @GeneratedValue
@@ -44,10 +44,6 @@ public class User {
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private String password;
 
-  @Column(nullable = false)
-  @Convert(converter = RoleConverter.class)
-  private Role role;
-
   @Column(name = "is_active", nullable = false)
   private boolean isActive;
 
@@ -60,37 +56,5 @@ public class User {
 
   public String getFullName() {
     return firstName + " " + lastName;
-  }
-
-  /** Enum representing the roles. */
-  @Getter
-  public enum Role {
-
-    /** Administrator role. */
-    ADMIN("admin"),
-
-    /** Standard user role. */
-    USER("user");
-
-    private final String value;
-
-    /** Constructs a Role enum with the specified string value. */
-    Role(String value) {
-      this.value = value;
-    }
-
-    /** Returns the string representation of the role. */
-    @Override
-    public String toString() {
-      return value;
-    }
-
-    /** Parses a string value to its corresponding enum. */
-    public static Role fromValue(String value) {
-      return Arrays.stream(Role.values())
-          .filter(role -> role.value.equalsIgnoreCase(value))
-          .findFirst()
-          .orElseThrow(() -> new IllegalArgumentException("Invalid role: " + value));
-    }
   }
 }

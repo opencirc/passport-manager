@@ -1,8 +1,6 @@
 package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.opencirc.api.passport.dto.CreatedByDto;
-import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import com.opencirc.api.passport.util.StatusConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,9 +20,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.ColumnTransformer;
 
-/** Model for Passports. */
+/**
+ * Model for Passports. A root passport ({@code parentId == null}) is provisioned together with its
+ * project; child passports are authored by machine credentials.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -40,6 +40,10 @@ public class Passport {
   @Column(name = "id")
   private String id;
 
+  /** Project the passport belongs to; every passport carries it for O(1) authorization. */
+  @Column(name = "project_id", nullable = false)
+  private String projectId;
+
   @Column(name = "name", columnDefinition = "TEXT")
   private String name;
 
@@ -50,27 +54,31 @@ public class Passport {
   @Column(name = "parent_id")
   private String parentId;
 
-  @Column(name = "created_by_id", columnDefinition = "TEXT")
+  /** Id of the API key that created the passport; null for the root passport. */
+  @Column(name = "created_by_id")
   private String createdById;
-
-  @Column(name = "created_by", columnDefinition = "jsonb", nullable = false)
-  @Convert(converter = CreatedByDtoConverter.class)
-  @ColumnTransformer(write = "?::jsonb")
-  private CreatedByDto createdBy;
 
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;
+
+  @Column(name = "archived_time")
+  private OffsetDateTime archivedTime;
 
   @OneToMany(mappedBy = "passport", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JsonManagedReference
   private Set<Datasheet> datasheets = new HashSet<>();
 
-  /** Enum representing the status of a Passport. */
+  /** Lifecycle and archiving status of a passport. */
   @Getter
   public enum Status {
+    /** Component is installed in the building assembly. */
     ACTIVE("active"),
 
-    INACTIVE("inactive");
+    /** Component has been uninstalled, decommissioned, or staged for reuse. */
+    INACTIVE("inactive"),
+
+    /** Record is soft-deleted; hidden from default queries but preserved. */
+    ARCHIVED("archived");
 
     private final String value;
 

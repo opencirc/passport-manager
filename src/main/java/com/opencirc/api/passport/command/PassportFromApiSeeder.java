@@ -1,14 +1,12 @@
 package com.opencirc.api.passport.command;
 
+import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
-import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
-import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.PassportService;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -21,30 +19,25 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class PassportFromApiSeeder {
   private final AppProperties appProperties;
-  private final UserRepository userRepository;
+  private final SeedInfrastructure seedInfrastructure;
   private final PassportService passportService;
   private final Platform platform = Platform.BSDD;
 
   /** Constructor-based dependency injection. */
   public PassportFromApiSeeder(
-      PassportService passportService, AppProperties appProperties, UserRepository userRepository) {
+      PassportService passportService,
+      AppProperties appProperties,
+      SeedInfrastructure seedInfrastructure) {
     this.passportService = passportService;
     this.appProperties = appProperties;
-    this.userRepository = userRepository;
+    this.seedInfrastructure = seedInfrastructure;
   }
 
   /** Seeds sample passports recursively using the predefined URI list. */
   public void seed() {
     try {
 
-      User user =
-          userRepository
-              .findFirstByOrderByIdAsc()
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "No users found in the database. "
-                              + "Please seed users before running passport seeding."));
+      SeedInfrastructure.SeedContext seed = seedInfrastructure.ensure();
 
       List<String> uris = appProperties.getUriList();
       if (uris == null || uris.isEmpty()) {
@@ -52,7 +45,8 @@ public class PassportFromApiSeeder {
       }
       for (int index = 0; index < appProperties.getChildrenPerLevel(); index++) {
         String uri = uris.get(index % uris.size());
-        createPassportRecursive(1, String.valueOf(index + 1), uri, index, null, UserDto.from(user));
+        createPassportRecursive(
+            1, String.valueOf(index + 1), uri, index, seed.rootPassportId(), seed.actor());
       }
       log.info("Passport seeding completed.");
     } catch (RuntimeException e) {
@@ -66,7 +60,12 @@ public class PassportFromApiSeeder {
 
   /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
-      int level, String nameSuffix, String uri, int uriIndex, String parentId, UserDto author)
+      int level,
+      String nameSuffix,
+      String uri,
+      int uriIndex,
+      String parentId,
+      ApiKeyPrincipal author)
       throws JsonValidationException {
     if (level > appProperties.getMaximumLevel()) {
       return;

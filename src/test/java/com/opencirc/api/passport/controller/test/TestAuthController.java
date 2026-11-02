@@ -4,7 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.opencirc.api.passport.PassportManager;
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.auth.service.AdminDetailsService;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -28,8 +28,8 @@ public class TestAuthController {
   /** The port number for url. */
   @LocalServerPort private int port;
 
-  /** AuthUserDetailsService mock bean. */
-  @MockitoBean private AuthUserDetailsService authUserDetailsService;
+  /** AdminDetailsService mock bean. */
+  @MockitoBean private AdminDetailsService adminDetailsService;
 
   /** AuthenticationManager mock bean. */
   @MockitoBean private AuthenticationManager authenticationManager;
@@ -40,7 +40,7 @@ public class TestAuthController {
     RestAssured.port = port;
     MockitoAnnotations.openMocks(this);
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetails(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(adminDetailsService, authenticationManager);
   }
 
   /**

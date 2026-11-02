@@ -157,7 +157,6 @@ public class TestEpdEnrichmentService {
     when(environment.getActiveProfiles()).thenReturn(new String[0]);
     Passport passport = passport("passport-1");
     passport.setCreatedById("owner-id");
-    passport.setCreatedBy(new CreatedByDto("Owner", "owner@example.com"));
     when(passportRepository.findById("passport-1")).thenReturn(Optional.of(passport));
     PassportLogService.Actor actor =
         new PassportLogService.Actor(new CreatedByDto("Editor", "editor@example.com"), "editor-id");

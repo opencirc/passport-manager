@@ -1,16 +1,14 @@
 package com.opencirc.api.passport.command;
 
+import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
-import com.opencirc.api.passport.dao.UserRepository;
 import com.opencirc.api.passport.dto.BsddClassTemplateDto;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet.DataCategory;
-import com.opencirc.api.passport.model.User;
 import com.opencirc.api.passport.service.PassportService;
 import java.io.InputStream;
 import java.util.List;
@@ -29,8 +27,8 @@ public class PassportFromJsonSeeder {
   /** Application properties class. */
   private final AppProperties appProperties;
 
-  /** Service to get user details. */
-  private final UserRepository userRepository;
+  /** Provisions the seed project, access group and API key. */
+  private final SeedInfrastructure seedInfrastructure;
 
   /** Service responsible for creating passports. */
   private final PassportService passportService;
@@ -53,11 +51,11 @@ public class PassportFromJsonSeeder {
   /** Constructor-based dependency injection. */
   public PassportFromJsonSeeder(
       AppProperties appProperties,
-      UserRepository userRepository,
+      SeedInfrastructure seedInfrastructure,
       PassportService passportService,
       ObjectMapper objectMapper) {
     this.appProperties = appProperties;
-    this.userRepository = userRepository;
+    this.seedInfrastructure = seedInfrastructure;
     this.passportService = passportService;
     this.objectMapper = objectMapper;
     loadTemplatesFromFile();
@@ -94,13 +92,6 @@ public class PassportFromJsonSeeder {
 
   /** Seed passports using the loaded templates. */
   public void seed() throws JsonValidationException {
-    User user =
-        userRepository
-            .findFirstByOrderByIdAsc()
-            .orElseThrow(
-                () ->
-                    new IllegalStateException("No users found in the database. Seed users first."));
-
     if (uriList == null || uriList.isEmpty()) {
       throw new IllegalStateException(
           "No templates loaded; ensure template file at "
@@ -108,16 +99,23 @@ public class PassportFromJsonSeeder {
               + " is present on the classpath and non-empty.");
     }
 
+    SeedInfrastructure.SeedContext seed = seedInfrastructure.ensure();
     for (int i = 0; i < appProperties.getChildrenPerLevel(); i++) {
       String uri = uriList.get(i % uriList.size());
-      createPassportRecursive(1, String.valueOf(i + 1), uri, i, null, UserDto.from(user));
+      createPassportRecursive(
+          1, String.valueOf(i + 1), uri, i, seed.rootPassportId(), seed.actor());
     }
     log.info("Passport seeding from JSON templates completed.");
   }
 
   /** Recursively creates passports and their child passports. */
   private void createPassportRecursive(
-      int level, String nameSuffix, String uri, int uriIndex, String parentId, UserDto author)
+      int level,
+      String nameSuffix,
+      String uri,
+      int uriIndex,
+      String parentId,
+      ApiKeyPrincipal author)
       throws JsonValidationException {
     if (level > appProperties.getMaximumLevel()) {
       return;

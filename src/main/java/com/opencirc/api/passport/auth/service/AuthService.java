@@ -1,16 +1,14 @@
 package com.opencirc.api.passport.auth.service;
 
-import com.opencirc.api.passport.auth.principal.UserPrincipal;
+import com.opencirc.api.passport.auth.principal.AdminPrincipal;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
-import com.opencirc.api.passport.dao.UserRepository;
+import com.opencirc.api.passport.dao.AdminRepository;
+import com.opencirc.api.passport.dto.AdminDto;
 import com.opencirc.api.passport.dto.LoginRequestDto;
-import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
 import com.opencirc.api.passport.exception.InvalidInputException;
-import com.opencirc.api.passport.model.ApiKey;
-import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.model.User.Role;
+import com.opencirc.api.passport.model.Admin;
 import com.opencirc.api.passport.service.ApiKeyService;
 import com.opencirc.api.passport.service.JwtService;
 import com.opencirc.api.passport.service.PasswordService;
@@ -18,7 +16,6 @@ import com.opencirc.api.passport.util.StringUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.Instant;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,11 +28,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Service class for authentication related operations. */
+/** Service class for administrator authentication. */
 @Service
 public class AuthService {
 
-  private final UserRepository userRepository;
+  private final AdminRepository adminRepository;
 
   private final AppProperties properties;
 
@@ -45,54 +42,53 @@ public class AuthService {
 
   private final JwtService jwtService;
 
-  private final AuthUserDetailsService authUserDetailsService;
+  private final AdminDetailsService adminDetailsService;
 
   private final ApiKeyService apiKeyService;
 
   /** Constructor. */
   public AuthService(
-      UserRepository userRepository,
+      AdminRepository adminRepository,
       AppProperties properties,
       PasswordService passwordService,
       AuthenticationManager authenticationManager,
       JwtService jwtService,
-      AuthUserDetailsService authUserDetailsService,
+      AdminDetailsService adminDetailsService,
       ApiKeyService apiKeyService) {
-    this.userRepository = userRepository;
+    this.adminRepository = adminRepository;
     this.properties = properties;
     this.passwordService = passwordService;
     this.authenticationManager = authenticationManager;
     this.jwtService = jwtService;
-    this.authUserDetailsService = authUserDetailsService;
+    this.adminDetailsService = adminDetailsService;
     this.apiKeyService = apiKeyService;
   }
 
-  /** Register new user. */
+  /** Registers a new administrator. */
   @Transactional
-  public User register(String email, String password, String firstName, String lastName, Role role)
+  public Admin register(String email, String password, String firstName, String lastName)
       throws AuthenticationException {
     validateRegistrationFields(email, password);
-    if (userRepository.existsByEmail(email)) {
+    if (adminRepository.existsByEmail(email)) {
       throw new AuthenticationException(
-          "A user by the provided email " + "already exists: " + email);
+          "An admin by the provided email " + "already exists: " + email);
     }
 
-    User user = new User();
+    Admin admin = new Admin();
 
-    user.setEmail(email);
-    user.setFirstName(firstName);
-    user.setLastName(lastName);
-    user.setRole(role != null ? role : Role.USER);
-    user.setActive(true);
-    user.setPassword(passwordService.hashPassword(password));
+    admin.setEmail(email);
+    admin.setFirstName(firstName);
+    admin.setLastName(lastName);
+    admin.setActive(true);
+    admin.setPassword(passwordService.hashPassword(password));
 
     try {
-      return userRepository.save(user);
+      return adminRepository.save(admin);
     } catch (DataIntegrityViolationException e) {
       throw new AuthenticationException(
-          "A user by the provided email " + "already exists: " + email);
+          "An admin by the provided email " + "already exists: " + email);
     } catch (Exception e) {
-      throw new AuthenticationException("Error during user registration.", e);
+      throw new AuthenticationException("Error during admin registration.", e);
     }
   }
 
@@ -128,8 +124,8 @@ public class AuthService {
     }
   }
 
-  /** Verifies the user and logs them in. */
-  public UserDto login(LoginRequestDto loginRequest, HttpServletResponse response) {
+  /** Verifies the administrator and logs them in. */
+  public AdminDto login(LoginRequestDto loginRequest, HttpServletResponse response) {
 
     final String email = StringUtil.normalizeEmail(loginRequest.getEmail());
 
@@ -147,14 +143,14 @@ public class AuthService {
         throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
       }
 
-      UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-      String userId = userPrincipal.getUserId();
+      AdminPrincipal adminPrincipal = (AdminPrincipal) authentication.getPrincipal();
+      String adminId = adminPrincipal.getAdminId();
 
-      String accessToken = jwtService.generateToken(userId, properties.getAccessTokenExpiryTime());
+      String accessToken = jwtService.generateToken(adminId, properties.getAccessTokenExpiryTime());
       String refreshToken =
-          jwtService.generateToken(userId, properties.getRefreshTokenExpiryTime());
+          jwtService.generateToken(adminId, properties.getRefreshTokenExpiryTime());
 
-      userRepository.updateRefreshTokenById(userId, refreshToken);
+      adminRepository.updateRefreshTokenById(adminId, refreshToken);
 
       jwtService.generateTokenCookie(
           response,
@@ -167,7 +163,7 @@ public class AuthService {
           AppConstants.COOKIE_REFRESH_TOKEN,
           properties.getRefreshTokenExpiryTime());
 
-      return UserDto.from(userPrincipal);
+      return AdminDto.from(adminPrincipal);
 
     } catch (BadCredentialsException ex) {
       throw new AuthenticationException(AppConstants.ERR_INVALID_CREDENTIALS);
@@ -193,8 +189,8 @@ public class AuthService {
   /** Validates the token. */
   public boolean validateToken(String token) {
     try {
-      String userId = jwtService.extractUserId(token);
-      UserDetails userDetails = authUserDetailsService.loadUserById(userId);
+      String adminId = jwtService.extractUserId(token);
+      UserDetails userDetails = adminDetailsService.loadUserById(adminId);
 
       return jwtService.validateToken(token, userDetails);
     } catch (Exception e) {
@@ -202,24 +198,24 @@ public class AuthService {
     }
   }
 
-  /** Logs the user out. */
+  /** Logs the administrator out. */
   public void logout(String refreshToken, HttpServletResponse response) {
     SecurityContextHolder.clearContext();
-    String userId = jwtService.extractUserId(refreshToken);
-    User existingUser =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-    existingUser.setRefreshToken(null);
-    userRepository.save(existingUser);
+    String adminId = jwtService.extractUserId(refreshToken);
+    Admin existingAdmin =
+        adminRepository
+            .findById(adminId)
+            .orElseThrow(() -> new UsernameNotFoundException("Admin not found"));
+    existingAdmin.setRefreshToken(null);
+    adminRepository.save(existingAdmin);
 
     // Removing the JWT cookies (access_token, refresh_token)
     jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_ACCESS_TOKEN, 0);
     jwtService.generateTokenCookie(response, "", AppConstants.COOKIE_REFRESH_TOKEN, 0);
   }
 
-  /** Gets the details of current logged in user. */
-  public UserDto getCurrentUser(HttpServletRequest request) {
+  /** Gets the details of the currently logged in administrator, or null for machine requests. */
+  public AdminDto getCurrentAdmin(HttpServletRequest request) {
 
     String token = null;
     Cookie[] cookies = request.getCookies();
@@ -231,43 +227,27 @@ public class AuthService {
         }
       }
     }
-    User user = null;
+    Admin admin = null;
 
     if (token != null && validateToken(token)) {
-      String userId = jwtService.extractUserId(token);
-      user = userRepository.findById(userId).orElse(null);
-
-    } else if (validateApiKeySecret(request)) {
-      String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
-      ApiKey apiKey = apiKeyService.findById(apiKeyHeader);
-      if (apiKey != null && apiKey.getUserId() != null) {
-        user = userRepository.findById(apiKey.getUserId()).orElse(null);
-      }
+      String adminId = jwtService.extractUserId(token);
+      admin = adminRepository.findById(adminId).orElse(null);
     }
 
-    return user != null ? UserDto.from(user) : null;
+    return admin != null ? AdminDto.from(admin) : null;
   }
 
-  /** Validates API Key. */
-  public boolean validateApiKeySecret(HttpServletRequest request) {
-    String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
-    String apiSecretHeader = request.getHeader(AppConstants.HEADER_API_SECRET);
-    if (apiKeyHeader == null || apiKeyHeader.isBlank()) {
+  /** Whether the request carries a valid machine token. */
+  public boolean validateApiKey(HttpServletRequest request) {
+    String token = ApiKeyService.resolveToken(request);
+    if (token == null) {
       return false;
     }
-    if (apiSecretHeader == null || apiSecretHeader.isBlank()) {
+    try {
+      apiKeyService.authenticate(token);
+      return true;
+    } catch (AuthenticationException e) {
       return false;
     }
-    ApiKey apiKey = apiKeyService.findById(apiKeyHeader);
-    if (apiKey == null) {
-      return false;
-    }
-
-    if (!passwordService.verifyPassword(apiSecretHeader.trim(), apiKey.getSecret())) {
-      return false;
-    }
-
-    return apiKey.getExpirationTime() == null
-        || Instant.now().isBefore(apiKey.getExpirationTime().toInstant());
   }
 }

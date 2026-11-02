@@ -306,6 +306,11 @@ public class BsddMockStubHelper {
     }
 
     /** Returns the ID of the passport. */
+    @Override
+    public String getProjectId() {
+      return "project-1";
+    }
+
     public String getPassportId() {
       return this.passportId;
     }
