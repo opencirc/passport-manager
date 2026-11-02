@@ -9,15 +9,16 @@ import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
-import com.opencirc.api.passport.enums.PassportLogAction;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.model.AccessGroupPermissions;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetDefinition;
 import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.service.AuditLogService;
 import com.opencirc.api.passport.service.DatasheetDefinitionService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
-import com.opencirc.api.passport.service.PassportLogService;
 import com.opencirc.api.passport.service.PassportService;
 import java.util.HashSet;
 import java.util.List;
@@ -42,7 +43,7 @@ public class TestPassportServiceStructureLogging {
   @Mock private PlatformAdapterFactory platformAdapterFactory;
   @Mock private ObjectMapper objectMapper;
   @Mock private EpdEnrichmentService epdEnrichmentService;
-  @Mock private PassportLogService passportLogService;
+  @Mock private AuditLogService auditLogService;
 
   private PassportService passportService;
 
@@ -56,7 +57,7 @@ public class TestPassportServiceStructureLogging {
             platformAdapterFactory,
             objectMapper,
             epdEnrichmentService,
-            passportLogService);
+            auditLogService);
   }
 
   private static Passport activePassport(String id) {
@@ -91,8 +92,15 @@ public class TestPassportServiceStructureLogging {
     passportService.addDatasheetsToPassportUsingPlatform(
         passportId, platform, platformId, category, ACTOR);
 
-    verify(passportLogService)
-        .logEvent(eq(passportId), eq(PassportLogAction.ADD_DATASHEET), any(List.class));
+    verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT_DATASHEET),
+            any(),
+            eq(PROJECT_ID),
+            eq(passportId),
+            eq(AuditLogAction.CREATE),
+            any(),
+            any());
     org.junit.jupiter.api.Assertions.assertEquals(1, passport.getDatasheets().size());
     Datasheet attached = passport.getDatasheets().iterator().next();
     org.junit.jupiter.api.Assertions.assertSame(definition, attached.getDefinition());
@@ -121,7 +129,7 @@ public class TestPassportServiceStructureLogging {
         passportId, Platform.BSDD, "platform-abc", Datasheet.DataCategory.GENERIC, ACTOR);
 
     verify(datasheetRepository, org.mockito.Mockito.never()).save(any());
-    org.mockito.Mockito.verifyNoInteractions(passportLogService);
+    org.mockito.Mockito.verifyNoInteractions(auditLogService);
     org.junit.jupiter.api.Assertions.assertEquals(1, passport.getDatasheets().size());
   }
 
@@ -160,8 +168,15 @@ public class TestPassportServiceStructureLogging {
     passportService.removeDatasheet(passportId, datasheetId, ACTOR);
 
     verify(datasheetRepository).delete(datasheet);
-    verify(passportLogService)
-        .logEvent(eq(passportId), eq(PassportLogAction.REMOVE_DATASHEET), any(List.class));
+    verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT_DATASHEET),
+            eq(datasheetId),
+            eq(PROJECT_ID),
+            eq(passportId),
+            eq(AuditLogAction.DELETE),
+            any(),
+            any());
     org.junit.jupiter.api.Assertions.assertTrue(passport.getDatasheets().isEmpty());
   }
 
@@ -175,7 +190,7 @@ public class TestPassportServiceStructureLogging {
         () -> passportService.updateParent("passport", "passport", ACTOR));
 
     org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
-    org.mockito.Mockito.verifyNoInteractions(passportLogService);
+    org.mockito.Mockito.verifyNoInteractions(auditLogService);
   }
 
   @Test
@@ -190,7 +205,7 @@ public class TestPassportServiceStructureLogging {
         () -> passportService.updateParent("ancestor", "grandchild", ACTOR));
 
     org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
-    org.mockito.Mockito.verifyNoInteractions(passportLogService);
+    org.mockito.Mockito.verifyNoInteractions(auditLogService);
   }
 
   @Test
@@ -238,7 +253,14 @@ public class TestPassportServiceStructureLogging {
     passportService.updateParent(passportId, newParentId, ACTOR);
 
     verify(passportRepository).save(passport);
-    verify(passportLogService)
-        .logEvent(eq(passportId), eq(PassportLogAction.UPDATE_RELATIONSHIPS), any(List.class));
+    verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT),
+            eq(passportId),
+            eq(PROJECT_ID),
+            eq(passportId),
+            eq(AuditLogAction.UPDATE),
+            any(),
+            any());
   }
 }

@@ -3,6 +3,8 @@ package com.opencirc.api.passport.service;
 import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.dao.DatasheetDefinitionRepository;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.DatasheetDefinition;
@@ -28,6 +30,8 @@ public class DatasheetDefinitionService {
 
   private final PlatformAdapterFactory platformAdapterFactory;
 
+  private final AuditLogService auditLogService;
+
   /**
    * Runs each new definition insert in its own transaction so a conflict cannot abort the caller.
    */
@@ -37,9 +41,11 @@ public class DatasheetDefinitionService {
   public DatasheetDefinitionService(
       DatasheetDefinitionRepository definitionRepository,
       PlatformAdapterFactory platformAdapterFactory,
+      AuditLogService auditLogService,
       PlatformTransactionManager transactionManager) {
     this.definitionRepository = definitionRepository;
     this.platformAdapterFactory = platformAdapterFactory;
+    this.auditLogService = auditLogService;
     this.independentTransaction = new TransactionTemplate(transactionManager);
     this.independentTransaction.setPropagationBehavior(
         TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -94,11 +100,23 @@ public class DatasheetDefinitionService {
    */
   DatasheetDefinition persistOrReuse(DatasheetDefinition definition) {
     String platformId = definition.getPlatformId();
+    boolean persisted = false;
     try {
       independentTransaction.executeWithoutResult(
           status -> definitionRepository.saveAndFlush(definition));
+      persisted = true;
     } catch (DataIntegrityViolationException e) {
       log.info("Datasheet definition {} was persisted concurrently; reusing it", platformId);
+    }
+    if (persisted) {
+      auditLogService.record(
+          AuditTargetType.DATASHEET_DEFINITION,
+          definition.getId(),
+          null,
+          null,
+          AuditLogAction.CREATE,
+          null,
+          auditLogService.definitionSnapshot(definition));
     }
     return definitionRepository
         .findByPlatformId(platformId)

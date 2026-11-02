@@ -3,7 +3,6 @@ package com.opencirc.api.passport.service.test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -14,8 +13,8 @@ import static org.mockito.Mockito.when;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.service.AuditLogService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
-import com.opencirc.api.passport.service.PassportLogService;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,7 @@ public class TestEpdEnrichmentTransactions {
     RestTemplate restTemplate = mock(RestTemplate.class);
     PassportRepository passportRepository = mock(PassportRepository.class);
     DatasheetRepository datasheetRepository = mock(DatasheetRepository.class);
-    PassportLogService passportLogService = mock(PassportLogService.class);
+    AuditLogService auditLogService = mock(AuditLogService.class);
     DataSource dataSource = mock(DataSource.class);
     List<Connection> connections = new ArrayList<>();
     when(dataSource.getConnection())
@@ -87,7 +86,7 @@ public class TestEpdEnrichmentTransactions {
         .withBean("epdRestTemplate", RestTemplate.class, () -> restTemplate)
         .withBean(PassportRepository.class, () -> passportRepository)
         .withBean(DatasheetRepository.class, () -> datasheetRepository)
-        .withBean(PassportLogService.class, () -> passportLogService)
+        .withBean(AuditLogService.class, () -> auditLogService)
         .withBean(DataSourceTransactionManager.class, () -> transactionManager)
         .run(
             context -> {
@@ -98,10 +97,7 @@ public class TestEpdEnrichmentTransactions {
                         Object outerResource =
                             TransactionSynchronizationManager.getResource(dataSource);
                         service.enrichPassport(
-                            passport,
-                            "http://localhost/epd",
-                            null,
-                            PassportLogService.systemActor());
+                            passport, "http://localhost/epd", null, AuditLogService.Actor.system());
                         assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
                         assertSame(
                             outerResource,
@@ -113,8 +109,7 @@ public class TestEpdEnrichmentTransactions {
               if (persistenceFails) {
                 verify(connections.get(1)).rollback();
                 verify(connections.get(1), never()).commit();
-                verify(passportLogService)
-                    .logEvent(eq("passport"), any(), any(), any(), eq("system"));
+                org.mockito.Mockito.verifyNoInteractions(auditLogService);
               } else {
                 verify(connections.get(1)).commit();
               }

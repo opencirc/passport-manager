@@ -17,6 +17,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(accessGroupPermissionInterceptor).addPathPatterns("/api/passport/**");
+    registry
+        .addInterceptor(accessGroupPermissionInterceptor)
+        .addPathPatterns("/api/passport/**", "/api/audit-logs/**");
   }
 }

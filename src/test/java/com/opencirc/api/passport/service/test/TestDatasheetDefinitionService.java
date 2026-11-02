@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -12,8 +13,11 @@ import static org.mockito.Mockito.when;
 import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.dao.DatasheetDefinitionRepository;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.model.DatasheetDefinition;
+import com.opencirc.api.passport.service.AuditLogService;
 import com.opencirc.api.passport.service.DatasheetDefinitionService;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +43,7 @@ public class TestDatasheetDefinitionService {
   @Mock private DatasheetDefinitionRepository definitionRepository;
   @Mock private PlatformAdapterFactory platformAdapterFactory;
   @Mock private PlatformAdapter platformAdapter;
+  @Mock private AuditLogService auditLogService;
 
   private DatasheetDefinitionService service;
 
@@ -48,6 +53,7 @@ public class TestDatasheetDefinitionService {
         new DatasheetDefinitionService(
             definitionRepository,
             platformAdapterFactory,
+            auditLogService,
             new TestPassportServiceUpdateDataLogging.TestTransactionManager());
     when(platformAdapterFactory.getAdapter(Platform.BSDD)).thenReturn(platformAdapter);
   }
@@ -64,6 +70,15 @@ public class TestDatasheetDefinitionService {
 
     verify(platformAdapter, times(1)).generateDatasheetFromPlatformId(anyString());
     verify(definitionRepository, times(1)).saveAndFlush(any(DatasheetDefinition.class));
+    verify(auditLogService, times(1))
+        .record(
+            eq(AuditTargetType.DATASHEET_DEFINITION),
+            any(),
+            org.mockito.ArgumentMatchers.isNull(),
+            org.mockito.ArgumentMatchers.isNull(),
+            eq(AuditLogAction.CREATE),
+            any(),
+            any());
     assertSame(persisted, first.get(0));
     assertSame(persisted, second.get(0));
   }
@@ -81,6 +96,7 @@ public class TestDatasheetDefinitionService {
 
     assertEquals(1, result.size());
     assertSame(winner, result.get(0));
+    verify(auditLogService, never()).record(any(), any(), any(), any(), any(), any(), any());
   }
 
   @Test

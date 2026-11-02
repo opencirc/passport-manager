@@ -156,7 +156,7 @@ public class ApiKeyService {
         && !Instant.now().isBefore(apiKey.getExpirationTime().toInstant())) {
       throw new AuthenticationException("API key expired");
     }
-    return toPrincipal(apiKey);
+    return toPrincipal(apiKey, parsed.secret());
   }
 
   /**
@@ -176,6 +176,10 @@ public class ApiKeyService {
   }
 
   private ApiKeyPrincipal toPrincipal(ApiKey apiKey) {
+    return toPrincipal(apiKey, null);
+  }
+
+  private ApiKeyPrincipal toPrincipal(ApiKey apiKey, String rawSecret) {
     AccessGroup accessGroup =
         accessGroupRepository
             .findById(apiKey.getAccessGroupId())
@@ -192,7 +196,8 @@ public class ApiKeyService {
         apiKey.getName(),
         accessGroup.getId(),
         project.getId(),
-        accessGroup.getPermissions());
+        accessGroup.getPermissions(),
+        rawSecret);
   }
 
   /**
