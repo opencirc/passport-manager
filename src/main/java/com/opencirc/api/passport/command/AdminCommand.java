@@ -1,9 +1,8 @@
 package com.opencirc.api.passport.command;
 
 import com.opencirc.api.passport.auth.service.AuthService;
-import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.model.User.Role;
+import com.opencirc.api.passport.dao.AdminRepository;
+import com.opencirc.api.passport.model.Admin;
 import com.opencirc.api.passport.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jline.terminal.Terminal;
@@ -12,56 +11,48 @@ import org.springframework.shell.core.command.annotation.CommandGroup;
 import org.springframework.shell.core.command.annotation.Option;
 import org.springframework.shell.jline.tui.component.flow.ComponentFlow;
 
-/** Commands to interact with users. */
-@CommandGroup(name = "User commands")
+/** Commands to manage administrator accounts. */
+@CommandGroup(name = "Admin commands")
 @Slf4j
-public class UserCommand {
+public class AdminCommand {
 
-  private static final String USER_LIST_ROW_FORMAT = "%-40s %-20s %-25s%n";
+  private static final String ADMIN_LIST_ROW_FORMAT = "%-40s %-30s %-30s%n";
 
   public static final String PASSWORD_PROMPT_KEY = "password";
 
   private final AuthService authService;
 
-  private final UserRepository userRepository;
+  private final AdminRepository adminRepository;
 
   private final ComponentFlow.Builder componentFlowBuilder;
 
   private final Terminal terminal;
 
   /** Constructor. */
-  public UserCommand(
+  public AdminCommand(
       AuthService authService,
-      UserRepository userRepository,
+      AdminRepository adminRepository,
       ComponentFlow.Builder componentFlowBuilder,
       Terminal terminal) {
     this.authService = authService;
-    this.userRepository = userRepository;
+    this.adminRepository = adminRepository;
     this.componentFlowBuilder = componentFlowBuilder;
     this.terminal = terminal;
   }
 
   /**
-   * Shell command to register a new user. The password is prompted for when the option is omitted,
-   * so it does not end up in the process list or the shell history.
+   * Shell command to register a new administrator. The password is prompted for when the option is
+   * omitted, so it does not end up in the process list or the shell history.
    */
-  @Command(description = "Register a user.")
-  public String registerUser(
+  @Command(description = "Register an administrator.")
+  public String registerAdmin(
       @Option(longName = "email", required = true) String email,
       @Option(
               longName = "password",
               description = "Omit to be prompted without echo (recommended).")
           String password,
       @Option(longName = "firstName", required = true) String firstName,
-      @Option(longName = "lastName", required = true) String lastName,
-      @Option(longName = "role", defaultValue = "user") String role) {
-
-    Role parsedRole;
-    try {
-      parsedRole = Role.fromValue(role.toUpperCase());
-    } catch (IllegalArgumentException ex) {
-      return "Invalid role. Valid roles are 'user' or 'admin'.";
-    }
+      @Option(longName = "lastName", required = true) String lastName) {
 
     // Only an explicit option is trimmed; a prompted password is kept exactly as typed.
     String resolvedPassword;
@@ -75,14 +66,10 @@ public class UserCommand {
           + " --password.";
     }
 
-    User user =
+    Admin admin =
         authService.register(
-            StringUtil.normalizeEmail(email),
-            resolvedPassword,
-            firstName.trim(),
-            lastName.trim(),
-            parsedRole);
-    return String.format("User created with id: %s", user.getId());
+            StringUtil.normalizeEmail(email), resolvedPassword, firstName.trim(), lastName.trim());
+    return String.format("Admin created with id: %s", admin.getId());
   }
 
   /**
@@ -106,13 +93,14 @@ public class UserCommand {
     return passwordFlow.run().getContext().get(PASSWORD_PROMPT_KEY);
   }
 
-  /** Shell command to list existing users. */
-  @Command(description = "List users.")
-  public String listUsers() {
+  /** Shell command to list existing administrators. */
+  @Command(description = "List administrators.")
+  public String listAdmins() {
     StringBuilder sb = new StringBuilder();
-    for (var user : userRepository.findAll()) {
+    for (var admin : adminRepository.findAll()) {
       sb.append(
-          String.format(USER_LIST_ROW_FORMAT, user.getId(), user.getFullName(), user.getRole()));
+          String.format(
+              ADMIN_LIST_ROW_FORMAT, admin.getId(), admin.getFullName(), admin.getEmail()));
     }
 
     return sb.toString();

@@ -10,16 +10,16 @@ import org.springframework.shell.core.command.annotation.Option;
 import org.springframework.stereotype.Component;
 
 /**
- * Seeder command entry point for running seed operations. Supports seeding of users, passports, or
- * both.
+ * Seeder command entry point for running seed operations. Supports seeding of the administrator,
+ * passports, or both.
  */
 @CommandGroup(name = "Seeder commands")
 @Slf4j
 @Component
 public class Seeder {
 
-  /** UserSeeder bean. */
-  private final UserSeeder userSeeder;
+  /** AdminSeeder bean. */
+  private final AdminSeeder adminSeeder;
 
   /** Passport seeder via data dictionary API. */
   private final PassportFromApiSeeder passportFromApiSeeder;
@@ -29,10 +29,10 @@ public class Seeder {
 
   /** Constructor-based dependency injection for seeder components. */
   public Seeder(
-      UserSeeder userSeeder,
+      AdminSeeder adminSeeder,
       PassportFromApiSeeder passportFromApiSeeder,
       PassportFromJsonSeeder passportFromJsonSeeder) {
-    this.userSeeder = userSeeder;
+    this.adminSeeder = adminSeeder;
     this.passportFromApiSeeder = passportFromApiSeeder;
     this.passportFromJsonSeeder = passportFromJsonSeeder;
   }
@@ -41,8 +41,8 @@ public class Seeder {
   @Getter
   public enum SeedType {
 
-    /** Seed only user-related data. */
-    USER("user"),
+    /** Seed only the administrator account. */
+    ADMIN("admin"),
 
     /** Seed passport-related data from API. */
     PASSPORT_FROM_API("passportFromApi"),
@@ -50,7 +50,7 @@ public class Seeder {
     /** Seed passport-related data from stored JSON. */
     PASSPORT_FROM_JSON("passportFromJson"),
 
-    /** Seed both user and passport data(From JSON). */
+    /** Seed the administrator and passport data (from JSON). */
     ALL("all");
 
     private final String value;
@@ -83,13 +83,13 @@ public class Seeder {
             Seed database tables with initial or sample data.
 
             Available seed types:
-              user               - Seed only user data
+              admin              - Seed only the administrator account
               passportFromApi    - Seed passport data via API
               passportFromJson   - Seed passport data from local JSON templates
-              all (default)      - Seed users + passports (from JSON)
+              all (default)      - Seed the administrator + passports (from JSON)
 
             Examples:
-              seed --type user
+              seed --type admin
               seed --type passportFromApi
               seed --type passportFromJson
               seed --type all
@@ -101,7 +101,7 @@ public class Seeder {
     try {
 
       switch (seedType) {
-        case USER -> userSeeder.seed();
+        case ADMIN -> adminSeeder.seed();
         case PASSPORT_FROM_API -> passportFromApiSeeder.seed();
         case PASSPORT_FROM_JSON -> passportFromJsonSeeder.seed();
         default -> seedAll();
@@ -118,7 +118,7 @@ public class Seeder {
   }
 
   private void seedAll() throws JsonValidationException {
-    userSeeder.seed();
+    adminSeeder.seed();
     passportFromJsonSeeder.seed();
   }
 }

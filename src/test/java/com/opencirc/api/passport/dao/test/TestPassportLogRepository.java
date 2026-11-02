@@ -6,10 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
+import com.opencirc.api.passport.dao.ProjectRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.enums.ProjectStatus;
 import com.opencirc.api.passport.helper.test.TestConfig;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.PassportLog;
+import com.opencirc.api.passport.model.Project;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,25 +30,32 @@ public class TestPassportLogRepository {
 
   @Autowired private PassportRepository passportRepository;
 
+  @Autowired private ProjectRepository projectRepository;
+
   @Autowired private ObjectMapper objectMapper;
 
   @Autowired public org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
+  private String projectId;
+
   @BeforeEach
   public void setUp() {
-    passportLogRepository.deleteAll();
-    passportRepository.deleteAll();
+    // Bulk deletes let the database cascades clear passport trees and their datasheets.
+    passportLogRepository.deleteAllInBatch();
+    projectRepository.deleteAllInBatch();
+
+    Project project = new Project();
+    project.setName("Log repository project");
+    project.setStatus(ProjectStatus.ACTIVE);
+    project.setCreatedBy(new CreatedByDto("Test User", "test@example.com"));
+    projectId = projectRepository.save(project).getId();
   }
 
   @Test
   public void shouldFilterPassportAndOrderLogsByCreationTime() {
     CreatedByDto creator = new CreatedByDto("Test User", "test@example.com");
-    for (String passportId : List.of("requested", "other")) {
-      Passport passport = new Passport();
-      passport.setId(passportId);
-      passport.setCreatedBy(creator);
-      passportRepository.save(passport);
-    }
+    savePassport("requested", null);
+    savePassport("other", "requested");
     PassportLog later = saveLog("requested", creator);
     PassportLog earlier = saveLog("requested", creator);
     saveLog("other", creator);
@@ -73,18 +83,22 @@ public class TestPassportLogRepository {
     return passportLogRepository.save(log);
   }
 
+  private Passport savePassport(String id, String parentId) {
+    Passport passport = new Passport();
+    passport.setId(id);
+    passport.setProjectId(projectId);
+    passport.setParentId(parentId);
+    passport.setName("Passport " + id);
+    passport.setStatus(Passport.Status.ACTIVE);
+    return passportRepository.save(passport);
+  }
+
   @Test
   public void shouldSaveAndRetrievePassportLog() {
     String passportId = "test-passport-id";
     CreatedByDto createdBy = new CreatedByDto("Test User", "test@example.com");
 
-    Passport passport = new Passport();
-    passport.setId(passportId);
-    passport.setName("Test Passport");
-    passport.setStatus(Passport.Status.ACTIVE);
-    passport.setCreatedBy(createdBy);
-    passport.setCreatedById("test-user-id");
-    passportRepository.save(passport);
+    savePassport(passportId, null);
 
     ObjectNode data = objectMapper.createObjectNode();
     data.put("action", "CREATE");

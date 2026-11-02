@@ -3,10 +3,13 @@ package com.opencirc.api.passport.exception;
 import com.opencirc.api.passport.constants.AppConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /** Global Exception Handler. */
@@ -49,6 +52,38 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleNoResourceFound(NoResourceFoundException ex) {
     ErrorResponse errorResponse = new ErrorResponse("Not Found", ex.getMessage());
     return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+  }
+
+  /** Handler for an actor acting outside its project or permissions. */
+  @ExceptionHandler(ForbiddenException.class)
+  public ResponseEntity<Object> handleForbidden(ForbiddenException ex) {
+    ErrorResponse errorResponse = new ErrorResponse("Forbidden", ex.getMessage());
+    return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+  }
+
+  /** Handler for a request without the credentials the endpoint requires. */
+  @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+  public ResponseEntity<Object> handleMissingCredentials(
+      AuthenticationCredentialsNotFoundException ex) {
+    ErrorResponse errorResponse = new ErrorResponse("Unauthorized", ex.getMessage());
+    return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+  }
+
+  /** Handler for exceptions that already carry their HTTP status. */
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<Object> handleResponseStatus(ResponseStatusException ex) {
+    ErrorResponse errorResponse =
+        new ErrorResponse(
+            ex.getStatusCode().toString(), ex.getReason() != null ? ex.getReason() : "");
+    return new ResponseEntity<>(errorResponse, ex.getStatusCode());
+  }
+
+  /** Handler for client errors raised with an explicit HTTP status. */
+  @ExceptionHandler(HttpStatusCodeException.class)
+  public ResponseEntity<Object> handleHttpStatusCode(HttpStatusCodeException ex) {
+    ErrorResponse errorResponse =
+        new ErrorResponse(ex.getStatusCode().toString(), ex.getStatusText());
+    return new ResponseEntity<>(errorResponse, ex.getStatusCode());
   }
 
   /** Handler for All other exception. */

@@ -1,11 +1,11 @@
 package com.opencirc.api.passport.service;
 
-import com.opencirc.api.passport.auth.principal.UserPrincipal;
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.auth.principal.AdminPrincipal;
+import com.opencirc.api.passport.auth.service.AdminDetailsService;
 import com.opencirc.api.passport.config.AppProperties;
-import com.opencirc.api.passport.dao.UserRepository;
+import com.opencirc.api.passport.dao.AdminRepository;
 import com.opencirc.api.passport.exception.AuthenticationException;
-import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.model.Admin;
 import com.opencirc.api.passport.util.EncryptionUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -31,11 +31,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
-  private final UserRepository userRepository;
+  private final AdminRepository adminRepository;
 
   private final AppProperties appProperties;
 
-  private final AuthUserDetailsService authUserDetailsService;
+  private final AdminDetailsService adminDetailsService;
 
   private String secretKey = null;
 
@@ -43,11 +43,11 @@ public class JwtService {
   @Autowired
   public JwtService(
       AppProperties appProperties,
-      UserRepository userRepository,
-      AuthUserDetailsService authUserDetailsService) {
+      AdminRepository adminRepository,
+      AdminDetailsService adminDetailsService) {
     this.appProperties = appProperties;
-    this.userRepository = userRepository;
-    this.authUserDetailsService = authUserDetailsService;
+    this.adminRepository = adminRepository;
+    this.adminDetailsService = adminDetailsService;
   }
 
   /** Loading Secret Key after initialization. */
@@ -109,13 +109,13 @@ public class JwtService {
 
   /** Validates the token. */
   public boolean validateToken(String token, UserDetails userDetails) {
-    if (!(userDetails instanceof UserPrincipal userPrincipal)) {
+    if (!(userDetails instanceof AdminPrincipal adminPrincipal)) {
       return false;
     }
 
     final String userIdFromToken = extractUserId(token);
 
-    return (userIdFromToken.equals(userPrincipal.getUserId()) && !isTokenExpired(token));
+    return (userIdFromToken.equals(adminPrincipal.getAdminId()) && !isTokenExpired(token));
   }
 
   private boolean isTokenExpired(String token) {
@@ -125,16 +125,16 @@ public class JwtService {
   /** Validates the refresh token. If it is valid, generates a new access token. */
   public String generateAccessTokenUsingRefreshToken(String refreshToken) {
     String userId = extractUserId(refreshToken);
-    UserDetails userDetails = authUserDetailsService.loadUserById(userId);
-    User user =
-        userRepository
+    UserDetails userDetails = adminDetailsService.loadUserById(userId);
+    Admin admin =
+        adminRepository
             .findById(userId)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            .orElseThrow(() -> new UsernameNotFoundException("Admin not found"));
     if (userDetails == null || !validateToken(refreshToken, userDetails)) {
       throw new AuthenticationException("Invalid refresh token");
     }
 
-    if (!refreshToken.equals(user.getRefreshToken())) {
+    if (!refreshToken.equals(admin.getRefreshToken())) {
       throw new AuthenticationException("Invalid Refresh Token");
     }
 

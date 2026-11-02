@@ -1,15 +1,16 @@
 package com.opencirc.api.passport.service;
 
-import com.opencirc.api.passport.context.UserContext;
+import com.opencirc.api.passport.auth.principal.AdminPrincipal;
+import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
+import com.opencirc.api.passport.context.ActorContext;
 import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.PassportLogDto;
-import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.model.PassportLog;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -21,7 +22,7 @@ import tools.jackson.databind.node.ObjectNode;
 public class PassportLogService {
 
   private final PassportLogRepository passportLogRepository;
-  private final UserContext userContext;
+  private final ActorContext actorContext;
   private final ObjectMapper objectMapper;
 
   /**
@@ -43,7 +44,7 @@ public class PassportLogService {
    * @param action the action performed
    * @param changes the changes made
    * @param createdBy the creator information
-   * @param createdById the creator user ID
+   * @param createdById the creator id (admin id or API key id)
    */
   @Transactional
   public void logEvent(
@@ -94,15 +95,20 @@ public class PassportLogService {
         .toList();
   }
 
-  /** Captures actor details on the request thread before asynchronous processing. */
+  /**
+   * Captures the actor on the request thread before asynchronous processing: the API key of a
+   * machine request, the administrator of an admin session, or the system identity.
+   */
   public Actor captureActor() {
-    try {
-      UserDto currentUser = userContext.getCurrentUser();
-      if (currentUser != null) {
-        return new Actor(CreatedByDto.from(currentUser), currentUser.getId());
-      }
-    } catch (AuthenticationCredentialsNotFoundException expected) {
-      // No authenticated user is available for this operation.
+    Optional<ApiKeyPrincipal> apiKey = actorContext.currentApiKey();
+    if (apiKey.isPresent()) {
+      return new Actor(new CreatedByDto(apiKey.get().getKeyName(), null), apiKey.get().getKeyId());
+    }
+    Optional<AdminPrincipal> admin = actorContext.currentAdmin();
+    if (admin.isPresent() && admin.get().getAdminId() != null) {
+      return new Actor(
+          new CreatedByDto(admin.get().getFullName(), admin.get().getEmail()),
+          admin.get().getAdminId());
     }
     return systemActor();
   }

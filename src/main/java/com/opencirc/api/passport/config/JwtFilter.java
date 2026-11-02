@@ -1,12 +1,12 @@
 package com.opencirc.api.passport.config;
 
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.auth.principal.ApiKeyAuthenticationToken;
+import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
+import com.opencirc.api.passport.auth.service.AdminDetailsService;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.exception.AuthenticationException;
-import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.service.ApiKeyService;
 import com.opencirc.api.passport.service.JwtService;
-import com.opencirc.api.passport.service.PasswordService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -14,7 +14,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,7 +24,11 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 import tools.jackson.databind.ObjectMapper;
 
-/** Filter to validate the JWT token. */
+/**
+ * Authenticates requests. A machine token ({@code Authorization: Bearer opc_live_...} or {@code
+ * X-Api-Key}) is resolved with one indexed lookup and a constant-time hash comparison; otherwise
+ * the administrator JWT cookies are validated.
+ */
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -38,11 +41,8 @@ public class JwtFilter extends OncePerRequestFilter {
   /** Injecting ApiKeyService class. */
   private final ApiKeyService apiKeyService;
 
-  /** Injecting PasswordService class. */
-  private final PasswordService passwordService;
-
-  /** Injecting AuthUserDetailsService class. */
-  private final AuthUserDetailsService authUserDetailsService;
+  /** Injecting AdminDetailsService class. */
+  private final AdminDetailsService adminDetailsService;
 
   /** Injecting ObjectMapper class. */
   private final ObjectMapper objectMapper;
@@ -52,14 +52,12 @@ public class JwtFilter extends OncePerRequestFilter {
       JwtService jwtService,
       AppProperties properties,
       ApiKeyService apiKeyService,
-      PasswordService passwordService,
-      AuthUserDetailsService authUserDetailsService,
+      AdminDetailsService adminDetailsService,
       ObjectMapper objectMapper) {
     this.jwtService = jwtService;
     this.properties = properties;
     this.apiKeyService = apiKeyService;
-    this.passwordService = passwordService;
-    this.authUserDetailsService = authUserDetailsService;
+    this.adminDetailsService = adminDetailsService;
     this.objectMapper = objectMapper;
   }
 
@@ -69,9 +67,11 @@ public class JwtFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-    String apiKeyHeader = request.getHeader(AppConstants.HEADER_API_KEY);
-    if (apiKeyHeader != null && !apiKeyHeader.isBlank()) {
-      handleApiKeyAuth(request, response, filterChain, apiKeyHeader.trim());
+    String apiToken = ApiKeyService.resolveToken(request);
+    if (apiToken != null) {
+      if (authenticateApiKey(request, response, apiToken)) {
+        filterChain.doFilter(request, response);
+      }
       return;
     }
 
@@ -92,83 +92,42 @@ public class JwtFilter extends OncePerRequestFilter {
       return;
     }
 
-    String userId = extractUserIdFromToken(accessToken, response);
-    if (userId == null) {
+    String adminId = extractUserIdFromToken(accessToken, response);
+    if (adminId == null) {
       return;
     }
 
     if (SecurityContextHolder.getContext().getAuthentication() == null) {
-      authenticateUser(request, response, accessToken, userId);
+      authenticateAdmin(request, response, accessToken, adminId);
     }
 
     filterChain.doFilter(request, response);
   }
 
-  /** Handles authentication using API key and secret headers. */
-  private void handleApiKeyAuth(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      FilterChain filterChain,
-      String apiKeyHeader)
-      throws IOException, ServletException {
-
-    if (apiKeyHeader == null) {
-      sendErrorResponse(
-          response, HttpServletResponse.SC_BAD_REQUEST, AppConstants.ERR_INVALID_CREDENTIALS);
-      return;
-    }
-
-    ApiKey apiKey = apiKeyService.findById(apiKeyHeader);
-
-    if (apiKey == null) {
-      sendErrorResponse(
-          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
-      return;
-    }
-
-    String apiSecretHeader = request.getHeader(AppConstants.HEADER_API_SECRET);
-    if (apiSecretHeader == null || apiSecretHeader.isBlank()) {
-      sendErrorResponse(
-          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
-      return;
-    }
-
-    if (!passwordService.verifyPassword(apiSecretHeader.trim(), apiKey.getSecret())) {
-      sendErrorResponse(
-          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
-      return;
-    }
-
-    if (apiKey.getExpirationTime() != null
-        && !Instant.now().isBefore(apiKey.getExpirationTime().toInstant())) {
-      sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "API key expired");
-      return;
-    }
-
+  /**
+   * Authenticates a machine token. Returns true when the security context was populated; writes the
+   * error response and returns false otherwise.
+   */
+  private boolean authenticateApiKey(
+      HttpServletRequest request, HttpServletResponse response, String token) throws IOException {
+    ApiKeyPrincipal principal;
     try {
-      if (apiKey.getUserId() == null) {
-        log.warn("API-key auth: missing userId on ApiKey {}", apiKey.getId());
-        sendErrorResponse(
-            response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
-        return;
-      }
-      UserDetails userDetails = authUserDetailsService.loadUserById(apiKey.getUserId());
-
-      UsernamePasswordAuthenticationToken authToken =
-          new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-      authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-      SecurityContextHolder.getContext().setAuthentication(authToken);
-
-      filterChain.doFilter(request, response);
-    } catch (UsernameNotFoundException e) {
-      log.warn("API-key auth: user not found for provided API key");
-      sendErrorResponse(
-          response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_CREDENTIALS);
+      principal = apiKeyService.authenticate(token);
+    } catch (AuthenticationException e) {
+      log.warn("API-key auth rejected: {}", e.getMessage());
+      sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+      return false;
     } catch (Exception e) {
       log.error("API-key auth error", e);
       sendErrorResponse(
           response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+      return false;
     }
+
+    ApiKeyAuthenticationToken authToken = new ApiKeyAuthenticationToken(principal);
+    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+    SecurityContextHolder.getContext().setAuthentication(authToken);
+    return true;
   }
 
   /** Extracts the token from cookies. */
@@ -202,7 +161,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
   }
 
-  /** Extracts the user ID from the token. */
+  /** Extracts the admin ID from the token. */
   private String extractUserIdFromToken(String token, HttpServletResponse response)
       throws IOException {
     try {
@@ -214,13 +173,13 @@ public class JwtFilter extends OncePerRequestFilter {
     }
   }
 
-  /** Authenticates the user using extracted user ID. */
-  private void authenticateUser(
-      HttpServletRequest request, HttpServletResponse response, String accessToken, String userId)
+  /** Authenticates the administrator using the extracted ID. */
+  private void authenticateAdmin(
+      HttpServletRequest request, HttpServletResponse response, String accessToken, String adminId)
       throws IOException {
     try {
 
-      UserDetails userDetails = authUserDetailsService.loadUserById(userId);
+      UserDetails userDetails = adminDetailsService.loadUserById(adminId);
 
       if (!jwtService.validateToken(accessToken, userDetails)) {
         throw new AuthenticationException(AppConstants.ERR_INVALID_TOKEN);
@@ -232,7 +191,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
       SecurityContextHolder.getContext().setAuthentication(authToken);
     } catch (UsernameNotFoundException e) {
-      log.warn("JWT auth: user not found for id {}", userId);
+      log.warn("JWT auth: admin not found for id {}", adminId);
       sendErrorResponse(
           response, HttpServletResponse.SC_UNAUTHORIZED, AppConstants.ERR_INVALID_TOKEN);
     } catch (AuthenticationException e) {

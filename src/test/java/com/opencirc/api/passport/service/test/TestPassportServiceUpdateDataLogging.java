@@ -9,10 +9,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
-import com.opencirc.api.passport.config.AppProperties;
+import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.enums.PassportLogAction;
+import com.opencirc.api.passport.model.AccessGroupPermissions;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetDefinition;
 import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
@@ -45,9 +46,11 @@ public class TestPassportServiceUpdateDataLogging {
   @Mock private DatasheetDefinitionService datasheetDefinitionService;
   @Mock private PassportRepository passportRepository;
   @Mock private PlatformAdapterFactory platformAdapterFactory;
-  @Mock private AppProperties appProperties;
   @Mock private EpdEnrichmentService epdEnrichmentService;
   @Mock private PassportLogService passportLogService;
+
+  private static final ApiKeyPrincipal ACTOR =
+      new ApiKeyPrincipal("key-1", "Key", "group-1", "project-1", AccessGroupPermissions.full());
 
   private ObjectMapper objectMapper = new ObjectMapper();
   private PassportService passportService;
@@ -61,7 +64,6 @@ public class TestPassportServiceUpdateDataLogging {
             passportRepository,
             platformAdapterFactory,
             objectMapper,
-            appProperties,
             epdEnrichmentService,
             passportLogService);
   }
@@ -86,7 +88,8 @@ public class TestPassportServiceUpdateDataLogging {
     new TransactionTemplate(transactionManager)
         .executeWithoutResult(
             status -> {
-              passportService.updateData("passport", Map.of("trigger", "https://example.com/epd"));
+              passportService.updateData(
+                  "passport", Map.of("trigger", "https://example.com/epd"), ACTOR);
               org.mockito.Mockito.verifyNoInteractions(epdEnrichmentService);
             });
 
@@ -111,7 +114,8 @@ public class TestPassportServiceUpdateDataLogging {
     new TransactionTemplate(new TestTransactionManager())
         .executeWithoutResult(
             status -> {
-              passportService.updateData("passport", Map.of("trigger", "https://example.com/epd"));
+              passportService.updateData(
+                  "passport", Map.of("trigger", "https://example.com/epd"), ACTOR);
               status.setRollbackOnly();
             });
 
@@ -121,6 +125,7 @@ public class TestPassportServiceUpdateDataLogging {
   public void prepareEnrichmentPassport() {
     Passport passport = new Passport();
     passport.setId("passport");
+    passport.setProjectId("project-1");
     passport.setStatus(Passport.Status.ACTIVE);
     DatasheetDefinitionProperty property = new DatasheetDefinitionProperty();
     property.setId("trigger");
@@ -183,6 +188,7 @@ public class TestPassportServiceUpdateDataLogging {
 
     Passport passport = new Passport();
     passport.setId(passportId);
+    passport.setProjectId("project-1");
     passport.setStatus(Passport.Status.ACTIVE);
     passport.setDatasheets(
         Collections.singleton(datasheet("ds-1", Map.of(propId, "old-value"), property(propId))));
@@ -190,7 +196,7 @@ public class TestPassportServiceUpdateDataLogging {
     when(passportRepository.findPassport(passportId, Passport.Status.ACTIVE))
         .thenReturn(Optional.of(passport));
 
-    passportService.updateData(passportId, values);
+    passportService.updateData(passportId, values, ACTOR);
 
     ArgumentCaptor<List<Map<String, Object>>> captor = ArgumentCaptor.forClass(List.class);
     verify(passportLogService)
@@ -213,6 +219,7 @@ public class TestPassportServiceUpdateDataLogging {
 
     Passport passport = new Passport();
     passport.setId(passportId);
+    passport.setProjectId("project-1");
     passport.setStatus(Passport.Status.ACTIVE);
     passport.setDatasheets(
         Collections.singleton(datasheet("ds-1", Map.of(propId, "same-value"), property(propId))));
@@ -220,7 +227,7 @@ public class TestPassportServiceUpdateDataLogging {
     when(passportRepository.findPassport(passportId, Passport.Status.ACTIVE))
         .thenReturn(Optional.of(passport));
 
-    passportService.updateData(passportId, values);
+    passportService.updateData(passportId, values, ACTOR);
 
     verify(passportLogService, never()).logEvent(anyString(), any(), any());
   }
@@ -232,6 +239,7 @@ public class TestPassportServiceUpdateDataLogging {
 
     Passport passport = new Passport();
     passport.setId(passportId);
+    passport.setProjectId("project-1");
     passport.setStatus(Passport.Status.ACTIVE);
     passport.setDatasheets(
         new HashSet<>(
@@ -242,7 +250,7 @@ public class TestPassportServiceUpdateDataLogging {
     when(passportRepository.findPassport(passportId, Passport.Status.ACTIVE))
         .thenReturn(Optional.of(passport));
 
-    passportService.updateData(passportId, values);
+    passportService.updateData(passportId, values, ACTOR);
 
     ArgumentCaptor<List<Map<String, Object>>> captor = ArgumentCaptor.forClass(List.class);
     verify(passportLogService)

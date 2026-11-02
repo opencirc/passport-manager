@@ -12,20 +12,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.opencirc.api.passport.auth.service.AuthService;
-import com.opencirc.api.passport.command.UserCommand;
-import com.opencirc.api.passport.dao.UserRepository;
-import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.model.User.Role;
+import com.opencirc.api.passport.command.AdminCommand;
+import com.opencirc.api.passport.dao.AdminRepository;
+import com.opencirc.api.passport.model.Admin;
 import org.jline.terminal.Terminal;
 import org.junit.jupiter.api.Test;
 import org.springframework.shell.jline.tui.component.flow.ComponentFlow;
 
-public class TestUserCommand {
+public class TestAdminCommand {
 
   public static AuthService registeringAuthService() {
     AuthService authService = mock(AuthService.class);
-    when(authService.register(anyString(), anyString(), anyString(), anyString(), any()))
-        .thenReturn(mock(User.class));
+    when(authService.register(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(mock(Admin.class));
     return authService;
   }
 
@@ -42,14 +41,14 @@ public class TestUserCommand {
     // Deep stubs leave Object methods such as clone() unstubbed, so answer it explicitly.
     when(componentFlowBuilder.clone()).thenReturn(componentFlowBuilder);
     when(componentFlowBuilder
-            .withStringInput(UserCommand.PASSWORD_PROMPT_KEY)
+            .withStringInput(AdminCommand.PASSWORD_PROMPT_KEY)
             .name("Password")
             .maskCharacter('*')
             .and()
             .build()
             .run()
             .getContext()
-            .<String>get(UserCommand.PASSWORD_PROMPT_KEY))
+            .<String>get(AdminCommand.PASSWORD_PROMPT_KEY))
         .thenReturn(promptedPassword);
     return componentFlowBuilder;
   }
@@ -58,117 +57,91 @@ public class TestUserCommand {
   public void registersWithPasswordOption() {
     AuthService authService = registeringAuthService();
     ComponentFlow.Builder componentFlowBuilder = mock(ComponentFlow.Builder.class);
-    UserCommand userCommand =
-        new UserCommand(
-            authService, mock(UserRepository.class), componentFlowBuilder, terminalOfType("xterm"));
+    AdminCommand adminCommand =
+        new AdminCommand(
+            authService,
+            mock(AdminRepository.class),
+            componentFlowBuilder,
+            terminalOfType("xterm"));
 
     String result =
-        userCommand.registerUser(
-            "Smoke@Example.com", " Secret-Pass-123 ", "Smoke Test", "Boot Four", "admin");
+        adminCommand.registerAdmin(
+            "Smoke@Example.com", " Secret-Pass-123 ", "Smoke Test", "Boot Four");
 
-    assertTrue(result.startsWith("User created with id: "), result);
+    assertTrue(result.startsWith("Admin created with id: "), result);
     verify(authService)
         .register(
-            eq("smoke@example.com"),
-            eq("Secret-Pass-123"),
-            eq("Smoke Test"),
-            eq("Boot Four"),
-            eq(Role.ADMIN));
+            eq("smoke@example.com"), eq("Secret-Pass-123"), eq("Smoke Test"), eq("Boot Four"));
     verify(componentFlowBuilder, never()).clone();
   }
 
   @Test
   public void promptsWithMaskWhenPasswordOptionIsOmitted() {
     AuthService authService = registeringAuthService();
-    UserCommand userCommand =
-        new UserCommand(
+    AdminCommand adminCommand =
+        new AdminCommand(
             authService,
-            mock(UserRepository.class),
+            mock(AdminRepository.class),
             promptAnswering("Prompted-Pass-123"),
             terminalOfType("xterm-256color"));
 
     String result =
-        userCommand.registerUser("smoke@example.com", null, "Smoke Test", "Boot Four", "user");
+        adminCommand.registerAdmin("smoke@example.com", null, "Smoke Test", "Boot Four");
 
-    assertTrue(result.startsWith("User created with id: "), result);
+    assertTrue(result.startsWith("Admin created with id: "), result);
     verify(authService)
         .register(
-            eq("smoke@example.com"),
-            eq("Prompted-Pass-123"),
-            eq("Smoke Test"),
-            eq("Boot Four"),
-            eq(Role.USER));
+            eq("smoke@example.com"), eq("Prompted-Pass-123"), eq("Smoke Test"), eq("Boot Four"));
   }
 
   @Test
   public void keepsPromptedPasswordExactlyAsTyped() {
     AuthService authService = registeringAuthService();
-    UserCommand userCommand =
-        new UserCommand(
+    AdminCommand adminCommand =
+        new AdminCommand(
             authService,
-            mock(UserRepository.class),
+            mock(AdminRepository.class),
             promptAnswering(" Spaced-Pass-123 "),
             terminalOfType("xterm"));
 
-    userCommand.registerUser("smoke@example.com", null, "Smoke Test", "Boot Four", "user");
+    adminCommand.registerAdmin("smoke@example.com", null, "Smoke Test", "Boot Four");
 
     verify(authService)
         .register(
-            eq("smoke@example.com"),
-            eq(" Spaced-Pass-123 "),
-            eq("Smoke Test"),
-            eq("Boot Four"),
-            eq(Role.USER));
+            eq("smoke@example.com"), eq(" Spaced-Pass-123 "), eq("Smoke Test"), eq("Boot Four"));
   }
 
   @Test
   public void refusesWithoutPasswordOnDumbTerminal() {
     AuthService authService = registeringAuthService();
     ComponentFlow.Builder componentFlowBuilder = promptAnswering("Should-Not-Be-Read");
-    UserCommand userCommand =
-        new UserCommand(
+    AdminCommand adminCommand =
+        new AdminCommand(
             authService,
-            mock(UserRepository.class),
+            mock(AdminRepository.class),
             componentFlowBuilder,
             terminalOfType(Terminal.TYPE_DUMB));
 
-    String result =
-        userCommand.registerUser("smoke@example.com", "", "Smoke Test", "Boot Four", "user");
+    String result = adminCommand.registerAdmin("smoke@example.com", "", "Smoke Test", "Boot Four");
 
     assertEquals(
         "No password given. Run from an interactive terminal to be prompted, or pass --password.",
         result);
-    verify(authService, never()).register(any(), any(), any(), any(), any());
+    verify(authService, never()).register(any(), any(), any(), any());
     verify(componentFlowBuilder, never()).clone();
   }
 
   @Test
   public void refusesWhenPromptReturnsNothing() {
     AuthService authService = registeringAuthService();
-    UserCommand userCommand =
-        new UserCommand(
-            authService, mock(UserRepository.class), promptAnswering(""), terminalOfType("xterm"));
+    AdminCommand adminCommand =
+        new AdminCommand(
+            authService, mock(AdminRepository.class), promptAnswering(""), terminalOfType("xterm"));
 
     String result =
-        userCommand.registerUser("smoke@example.com", null, "Smoke Test", "Boot Four", "user");
+        adminCommand.registerAdmin("smoke@example.com", null, "Smoke Test", "Boot Four");
 
     assertTrue(result.startsWith("No password given."), result);
-    verify(authService, never()).register(any(), any(), any(), any(), any());
-  }
-
-  @Test
-  public void rejectsUnknownRoleBeforePrompting() {
-    AuthService authService = registeringAuthService();
-    ComponentFlow.Builder componentFlowBuilder = promptAnswering("Prompted-Pass-123");
-    UserCommand userCommand =
-        new UserCommand(
-            authService, mock(UserRepository.class), componentFlowBuilder, terminalOfType("xterm"));
-
-    String result =
-        userCommand.registerUser("smoke@example.com", null, "Smoke Test", "Boot Four", "root");
-
-    assertEquals("Invalid role. Valid roles are 'user' or 'admin'.", result);
-    verify(authService, never()).register(any(), any(), any(), any(), any());
-    verify(componentFlowBuilder, never()).clone();
+    verify(authService, never()).register(any(), any(), any(), any());
   }
 }

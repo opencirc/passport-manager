@@ -5,39 +5,36 @@ import com.opencirc.api.passport.config.AppProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-/** Seeder for creating initial test users in the system. */
+/** Seeder for creating the initial test administrator. */
 @Component
 @Slf4j
-public class UserSeeder {
+public class AdminSeeder {
 
-  /** Service for handling authentication and user registration. */
+  /** Service for handling authentication and registration. */
   private final AuthService authService;
 
   /** Injecting Properties class. */
   private final AppProperties appProperties;
 
   /** Constructor-based dependency injection for AuthService. */
-  public UserSeeder(AuthService authService, AppProperties appProperties) {
+  public AdminSeeder(AuthService authService, AppProperties appProperties) {
     this.authService = authService;
     this.appProperties = appProperties;
   }
 
-  /** Seeds predefined test users into the system. */
+  /** Seeds the predefined test administrator. */
   public void seed() {
-
     registerSafely("admin@test.com", "test", "admin");
-    registerSafely("user@test.com", "test", "user");
-    log.info("User seeding completed.");
+    log.info("Admin seeding completed.");
   }
 
-  /** Registers new user. Skips if user is already present. */
+  /** Registers a new administrator. Skips if already present. */
   private void registerSafely(String email, String firstName, String lastName) {
     try {
-      authService.register(
-          email, appProperties.getDefaultSeedPassword(), firstName, lastName, null);
+      authService.register(email, appProperties.getDefaultSeedPassword(), firstName, lastName);
     } catch (Exception e) {
       if (e.getMessage() != null && e.getMessage().toLowerCase().contains("exists")) {
-        log.info("User '{}' already exists. Skipping.", email);
+        log.info("Admin '{}' already exists. Skipping.", email);
         return;
       }
       throw e;

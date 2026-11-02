@@ -1,22 +1,21 @@
 package com.opencirc.api.passport.service;
 
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
-import com.opencirc.api.passport.config.AppProperties;
+import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
-import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.dto.DatasheetDto;
 import com.opencirc.api.passport.dto.DatasheetPropertyDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
-import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.ForbiddenException;
 import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
@@ -51,9 +50,18 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
-/** Service class for Passport operations. */
+/**
+ * Service class for passport operations. Every operation runs on behalf of a machine credential
+ * ({@link ApiKeyPrincipal}) and is confined to that credential's project: the check is a single
+ * comparison of the passport's {@code projectId}, no hierarchy traversal.
+ */
 @Service
 public class PassportService {
+
+  private static final String ERR_PARENT_NOT_FOUND = "Invalid parentId: active parent not found";
+
+  private static final String ERR_CHILD_REQUIRES_PARENT =
+      "A parentId is required: root passports are provisioned together with their project";
 
   private final DatasheetRepository datasheetRepository;
 
@@ -64,8 +72,6 @@ public class PassportService {
   private final ObjectMapper objectMapper;
 
   private final PlatformAdapterFactory platformAdapterFactory;
-
-  private final AppProperties appProperties;
 
   private final EpdEnrichmentService epdEnrichmentService;
 
@@ -92,7 +98,6 @@ public class PassportService {
       PassportRepository passportRepository,
       PlatformAdapterFactory platformAdapterFactory,
       ObjectMapper objectMapper,
-      AppProperties appProperties,
       EpdEnrichmentService epdEnrichmentService,
       PassportLogService passportLogService) {
     this.datasheetRepository = datasheetRepository;
@@ -100,15 +105,16 @@ public class PassportService {
     this.passportRepository = passportRepository;
     this.platformAdapterFactory = platformAdapterFactory;
     this.objectMapper = objectMapper;
-    this.appProperties = appProperties;
     this.epdEnrichmentService = epdEnrichmentService;
     this.passportLogService = passportLogService;
   }
 
-  /** Creates multiple passports. */
+  /** Creates multiple child passports in the actor's project. */
   @Transactional
   public List<PassportDto> batchCreatePassportsUsingPlatform(
-      Platform platform, List<CreatePassportUsingPlatformRequestDto> dataArray, UserDto author)
+      Platform platform,
+      List<CreatePassportUsingPlatformRequestDto> dataArray,
+      ApiKeyPrincipal actor)
       throws InvalidInputException, JsonValidationException {
 
     if (dataArray == null || dataArray.isEmpty()) {
@@ -130,11 +136,12 @@ public class PassportService {
 
     for (var passportDto : dataArray) {
       String parentId = passportDto.getParentId();
-      if (parentId != null && !parentId.isBlank() && !idToDto.containsKey(parentId)) {
-        if (passportRepository.findPassport(parentId, Passport.Status.ACTIVE).isEmpty()) {
-          throw new HttpServerErrorException(
-              HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
-        }
+      if (parentId == null || parentId.isBlank()) {
+        throw new ResponseStatusException(
+            HttpStatus.UNPROCESSABLE_ENTITY, ERR_CHILD_REQUIRES_PARENT);
+      }
+      if (!idToDto.containsKey(parentId)) {
+        requireActiveParent(parentId, actor);
       }
     }
 
@@ -143,8 +150,7 @@ public class PassportService {
     java.util.Map<CreatePassportUsingPlatformRequestDto, PassportDto> resultMap =
         new java.util.IdentityHashMap<>();
     for (var passportData : sortedData) {
-      resultMap.put(
-          passportData, createPassportUsingPlatform(platform, passportData, author, true));
+      resultMap.put(passportData, createPassportUsingPlatform(platform, passportData, actor, true));
     }
 
     var passportDtos = new ArrayList<PassportDto>();
@@ -256,20 +262,20 @@ public class PassportService {
     return childrenMap;
   }
 
-  /** Creates a passport. */
+  /** Creates a child passport in the actor's project. */
   @Transactional
   public PassportDto createPassportUsingPlatform(
-      Platform platform, CreatePassportUsingPlatformRequestDto data, UserDto author)
+      Platform platform, CreatePassportUsingPlatformRequestDto data, ApiKeyPrincipal actor)
       throws InvalidInputException, JsonValidationException {
-    return createPassportUsingPlatform(platform, data, author, false);
+    return createPassportUsingPlatform(platform, data, actor, false);
   }
 
-  /** Creates a passport. */
+  /** Creates a child passport in the actor's project. */
   @Transactional
   public PassportDto createPassportUsingPlatform(
       Platform platform,
       CreatePassportUsingPlatformRequestDto data,
-      UserDto author,
+      ApiKeyPrincipal actor,
       boolean asBatchOperation)
       throws InvalidInputException, JsonValidationException {
 
@@ -284,23 +290,21 @@ public class PassportService {
       throw new InvalidInputException("Passport ID already exists");
     }
 
+    String parentId = data.getParentId();
+    if (parentId == null || parentId.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, ERR_CHILD_REQUIRES_PARENT);
+    }
+    requireActiveParent(parentId, actor);
+
     Passport passport = new Passport();
     passport.setId(id);
+    passport.setProjectId(actor.getProjectId());
     passport.setName(data.getName());
     passport.setStatus(Passport.Status.ACTIVE);
-    passport.setCreatedById(author != null ? author.getId() : null);
+    passport.setParentId(parentId);
+    passport.setCreatedById(actor.getKeyId());
     passport.setCreatedTime(OffsetDateTime.now());
-    passport.setCreatedBy(getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
     passport.setDatasheets(new HashSet<>());
-
-    String parentId = data.getParentId();
-    if (parentId != null && !parentId.isBlank()) {
-      if (passportRepository.findPassport(parentId, Passport.Status.ACTIVE).isEmpty()) {
-        throw new HttpServerErrorException(
-            HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
-      }
-      passport.setParentId(parentId);
-    }
 
     passport = passportRepository.save(passport);
     passportLogService.logEvent(passport.getId(), PassportLogAction.CREATE, List.of());
@@ -310,7 +314,7 @@ public class PassportService {
         platform,
         data.getPlatformId(),
         Datasheet.DataCategory.fromValue(data.getDataCategory()),
-        author,
+        actor,
         true);
 
     if (asBatchOperation) {
@@ -320,7 +324,7 @@ public class PassportService {
           platform,
           "https://identifier.buildingsmart.org/uri/LCA/LCA/3.0/class/GeneralInformation",
           Datasheet.DataCategory.fromValue(data.getDataCategory()),
-          author,
+          actor,
           false);
     }
 
@@ -353,7 +357,7 @@ public class PassportService {
         }
 
         if (!updateValues.isEmpty()) {
-          updateData(passport.getId(), updateValues);
+          updateData(passport.getId(), updateValues, actor);
         }
       }
     }
@@ -361,14 +365,45 @@ public class PassportService {
     return PassportDto.from(passport);
   }
 
-  /** Removes a datasheet from the passport. */
-  @Transactional
-  public PassportDto removeDatasheet(String passportId, String datasheetId) {
+  /**
+   * Loads an active parent in the actor's project. A parent outside the project is reported the
+   * same way as a missing one so passports of other projects are not revealed.
+   */
+  private Passport requireActiveParent(String parentId, ApiKeyPrincipal actor) {
+    Passport parent =
+        passportRepository
+            .findPassport(parentId, Passport.Status.ACTIVE)
+            .orElseThrow(
+                () ->
+                    new HttpServerErrorException(
+                        HttpStatus.UNPROCESSABLE_ENTITY, ERR_PARENT_NOT_FOUND));
+    if (!Objects.equals(parent.getProjectId(), actor.getProjectId())) {
+      throw new HttpServerErrorException(HttpStatus.UNPROCESSABLE_ENTITY, ERR_PARENT_NOT_FOUND);
+    }
+    return parent;
+  }
+
+  /** Loads a passport of any status and verifies it belongs to the actor's project. */
+  private Passport loadOwnedPassport(String passportId, ApiKeyPrincipal actor) {
     Passport passport =
         passportRepository
             .findById(passportId)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+    assertOwned(passport, actor);
+    return passport;
+  }
+
+  private static void assertOwned(Passport passport, ApiKeyPrincipal actor) {
+    if (!Objects.equals(passport.getProjectId(), actor.getProjectId())) {
+      throw new ForbiddenException("Passport belongs to another project");
+    }
+  }
+
+  /** Removes a datasheet from the passport. */
+  @Transactional
+  public PassportDto removeDatasheet(String passportId, String datasheetId, ApiKeyPrincipal actor) {
+    Passport passport = loadOwnedPassport(passportId, actor);
 
     Datasheet datasheetToRemove =
         passport.getDatasheets().stream()
@@ -396,31 +431,29 @@ public class PassportService {
     return PassportDto.from(passport);
   }
 
-  /** Updates the parent of a passport. */
+  /** Moves a passport under another active passport of the same project. */
   @Transactional
-  public PassportDto updateParent(String passportId, String newParentId) {
-    Passport passport =
-        passportRepository
-            .findById(passportId)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+  public PassportDto updateParent(String passportId, String newParentId, ApiKeyPrincipal actor) {
+    Passport passport = loadOwnedPassport(passportId, actor);
 
     final String oldParentId = passport.getParentId();
 
-    if (newParentId != null && !newParentId.isBlank()) {
-      var visitedParentIds = new HashSet<String>();
-      String ancestorId = newParentId;
-      while (ancestorId != null && !ancestorId.isBlank()) {
-        if (passportId.equals(ancestorId) || !visitedParentIds.add(ancestorId)) {
-          throw new InvalidInputException("Parent relationship would contain a cycle");
-        }
-        ancestorId = passportRepository.getParentId(ancestorId);
-      }
-      if (passportRepository.findPassport(newParentId, Passport.Status.ACTIVE).isEmpty()) {
-        throw new ResponseStatusException(
-            HttpStatus.UNPROCESSABLE_ENTITY, "Invalid parentId: active parent not found");
-      }
+    if (newParentId == null || newParentId.isBlank()) {
+      throw new ResponseStatusException(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          "A passport cannot be detached from its parent; "
+              + "the root passport belongs to the project");
     }
+
+    var visitedParentIds = new HashSet<String>();
+    String ancestorId = newParentId;
+    while (ancestorId != null && !ancestorId.isBlank()) {
+      if (passportId.equals(ancestorId) || !visitedParentIds.add(ancestorId)) {
+        throw new InvalidInputException("Parent relationship would contain a cycle");
+      }
+      ancestorId = passportRepository.getParentId(ancestorId);
+    }
+    requireActiveParent(newParentId, actor);
 
     passport.setParentId(newParentId);
     passport = passportRepository.save(passport);
@@ -430,8 +463,10 @@ public class PassportService {
         PassportLogAction.UPDATE_RELATIONSHIPS,
         List.of(
             Map.of(
-                "oldParentId", oldParentId != null ? oldParentId : "",
-                "newParentId", newParentId != null ? newParentId : "")));
+                "oldParentId",
+                oldParentId != null ? oldParentId : "",
+                "newParentId",
+                newParentId)));
 
     return PassportDto.from(passport);
   }
@@ -445,18 +480,14 @@ public class PassportService {
       Platform platform,
       String platformId,
       Datasheet.DataCategory dataCategory,
-      UserDto author)
+      ApiKeyPrincipal actor)
       throws JsonValidationException {
-    Passport passport =
-        passportRepository
-            .findById(passportId)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+    Passport passport = loadOwnedPassport(passportId, actor);
     if (passport.getStatus() != Passport.Status.ACTIVE) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passport is not active");
     }
     return addDatasheetsToPassportUsingPlatform(
-        passport, platform, platformId, dataCategory, author, false);
+        passport, platform, platformId, dataCategory, actor, false);
   }
 
   /**
@@ -470,7 +501,7 @@ public class PassportService {
       Platform platform,
       String platformId,
       Datasheet.DataCategory dataCategory,
-      UserDto author,
+      ApiKeyPrincipal actor,
       boolean addRelatedIfcEntities)
       throws JsonValidationException {
     List<DatasheetDefinition> definitions =
@@ -489,9 +520,7 @@ public class PassportService {
       datasheet.setPassport(passport);
       datasheet.setDefinition(definition);
       datasheet.setDataCategory(dataCategory);
-      datasheet.setCreatedById(author != null ? author.getId() : null);
-      datasheet.setCreatedBy(
-          getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
+      datasheet.setCreatedById(actor != null ? actor.getKeyId() : null);
       datasheet = datasheetRepository.save(datasheet);
       passport.getDatasheets().add(datasheet);
 
@@ -520,19 +549,14 @@ public class PassportService {
                         && attached.getPlatformId().equals(definition.getPlatformId())));
   }
 
-  private CreatedByDto getOrDefaultCreatedBy(CreatedByDto createdBy) {
-    if (createdBy != null) {
-      return createdBy;
-    }
-    return new CreatedByDto(
-        appProperties.getSystemAdminName(), appProperties.getSystemAdminEmail());
-  }
-
-  /** Retrieves passport. */
-  public PassportDto getPassport(String passportId) {
+  /** Retrieves a passport of the actor's project; archived ones only when requested. */
+  @Transactional(readOnly = true)
+  public PassportDto getPassport(
+      String passportId, ApiKeyPrincipal actor, boolean includeArchived) {
     Optional<Passport> optionalPassport =
-        passportRepository.findPassport(passportId, Passport.Status.ACTIVE);
-    if (optionalPassport.isEmpty()) {
+        passportRepository.findByIdInProject(passportId, actor.getProjectId());
+    if (optionalPassport.isEmpty()
+        || (!includeArchived && optionalPassport.get().getStatus() == Passport.Status.ARCHIVED)) {
       throw new HttpServerErrorException(
           HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId);
     }
@@ -540,10 +564,13 @@ public class PassportService {
     return PassportDto.from(optionalPassport.get());
   }
 
-  /** Retrieves passport and its children for the given id. */
-  public List<PassportDto> getPassportChildren(String id) {
+  /** Retrieves a passport of the actor's project and its non-archived descendants. */
+  @Transactional(readOnly = true)
+  public List<PassportDto> getPassportChildren(String id, ApiKeyPrincipal actor) {
     List<PassportDatasheetResultMapQueryResult> resultRows =
-        passportRepository.findPassportWithDescendants(id).orElse(Collections.emptyList());
+        passportRepository
+            .findPassportWithDescendants(id, actor.getProjectId())
+            .orElse(Collections.emptyList());
 
     if (resultRows.isEmpty()) {
       throw new HttpServerErrorException(
@@ -586,21 +613,29 @@ public class PassportService {
     return new ArrayList<>(passportMap.values());
   }
 
-  /** Retrieves the passports with the given parent ID. */
-  public List<PassportDto> getImmediateChildren(String passportId) {
-    if (!passportRepository.existsById(passportId)) {
-      throw new HttpServerErrorException(
-          HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId);
-    }
+  /** Retrieves the non-archived passports with the given parent ID in the actor's project. */
+  @Transactional(readOnly = true)
+  public List<PassportDto> getImmediateChildren(String passportId, ApiKeyPrincipal actor) {
+    Passport parent =
+        passportRepository
+            .findById(passportId)
+            .orElseThrow(
+                () ->
+                    new HttpServerErrorException(
+                        HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId));
+    assertOwned(parent, actor);
     List<PassportDatasheetResultMapQueryResult> resultRows =
-        passportRepository.findImmediateChildren(passportId).orElse(Collections.emptyList());
+        passportRepository
+            .findImmediateChildren(passportId, actor.getProjectId())
+            .orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
   }
 
-  /** Retrieves all the root passports. */
-  public List<PassportDto> getRootPassports() {
-    List<Passport> passports = passportRepository.getRootPassports();
+  /** Retrieves the non-archived root passports of the actor's project. */
+  @Transactional(readOnly = true)
+  public List<PassportDto> getRootPassports(ApiKeyPrincipal actor) {
+    List<Passport> passports = passportRepository.getRootPassports(actor.getProjectId());
     if (passports == null) {
       throw new HttpServerErrorException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Could not retrieve root passports");
@@ -608,14 +643,38 @@ public class PassportService {
     return passports.stream().map(PassportDto::from).collect(Collectors.toList());
   }
 
+  /**
+   * Soft-archives a passport and its whole subtree. The root passport cannot be archived on its
+   * own; archiving the project does that. Nothing is deleted.
+   */
+  @Transactional
+  public PassportDto archivePassport(String passportId, ApiKeyPrincipal actor) {
+    Passport passport = loadOwnedPassport(passportId, actor);
+    if (passport.getParentId() == null) {
+      throw new InvalidInputException("The root passport is archived together with its project");
+    }
+    if (passport.getStatus() == Passport.Status.ARCHIVED) {
+      return PassportDto.from(passport);
+    }
+
+    int archived = passportRepository.archiveSubtree(passportId, OffsetDateTime.now());
+    passportLogService.logEvent(
+        passportId, PassportLogAction.ARCHIVE, List.of(Map.of("archivedPassports", archived)));
+
+    return passportRepository
+        .findById(passportId)
+        .map(PassportDto::from)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+  }
+
   private PassportDto buildPassportDto(PassportDatasheetResultMapQueryResult row) {
     PassportDto dto = new PassportDto();
     dto.setId(row.getPassportId());
+    dto.setProjectId(row.getProjectId());
     dto.setParentId(row.getParentId());
     dto.setName(row.getPassportName());
     dto.setStatus(row.getStatus());
     dto.setCreatedById(row.getPassportCreatedById());
-    dto.setCreatedBy(parseCreatedBy(row.getPassportCreatedBy()));
     if (row.getPassportCreatedTime() != null) {
       dto.setCreatedTime(row.getPassportCreatedTime().atOffset(ZoneOffset.UTC));
     }
@@ -646,7 +705,6 @@ public class PassportService {
       dto.setData(dataMap);
 
       dto.setCreatedById(row.getDatasheetCreatedById());
-      dto.setCreatedBy(parseCreatedBy(row.getDatasheetCreatedBy()));
       if (row.getDatasheetCreatedTime() != null) {
         dto.setCreatedTime(row.getDatasheetCreatedTime().atOffset(ZoneOffset.UTC));
       }
@@ -700,34 +758,26 @@ public class PassportService {
     return propertyDto;
   }
 
-  private CreatedByDto parseCreatedBy(String createdByJson) {
-    if (createdByJson == null || createdByJson.isBlank()) {
-      return null;
-    }
-    try {
-      return objectMapper.readValue(createdByJson, CreatedByDto.class);
-    } catch (JacksonException e) {
-      throw new RuntimeException("Error parsing createdBy JSON", e);
-    }
-  }
-
   /** Update passport datasheet data from a DTO. */
   @Transactional
-  public PassportDto updateData(String passportId, UpdateDataRequestDto updateDataRequestDto) {
-    return updateData(passportId, updateDataRequestDto.getValues());
+  public PassportDto updateData(
+      String passportId, UpdateDataRequestDto updateDataRequestDto, ApiKeyPrincipal actor) {
+    return updateData(passportId, updateDataRequestDto.getValues(), actor);
   }
 
   /**
    * Updates datasheet property values for the given passport and group. Only properties present in
-   * {@code updateDataRequestDto.values} are updated.
+   * {@code values} are updated.
    */
   @Transactional
-  public PassportDto updateData(String passportId, Map<String, Object> values) {
+  public PassportDto updateData(
+      String passportId, Map<String, Object> values, ApiKeyPrincipal actor) {
     Passport passport =
         passportRepository
             .findPassport(passportId, Passport.Status.ACTIVE)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
+    assertOwned(passport, actor);
 
     var datasheets = passport.getDatasheets();
     if (datasheets == null || datasheets.isEmpty()) {
@@ -812,13 +862,13 @@ public class PassportService {
       String enrichmentPassportId = passport.getId();
       String enrichmentUrl = epdUrlToEnrich;
       String triggerPropertyId = epdTriggerPropertyId;
-      PassportLogService.Actor actor = passportLogService.captureActor();
+      PassportLogService.Actor enrichmentActor = passportLogService.captureActor();
       TransactionSynchronizationManager.registerSynchronization(
           new TransactionSynchronization() {
             @Override
             public void afterCommit() {
               epdEnrichmentService.enrich(
-                  enrichmentPassportId, enrichmentUrl, triggerPropertyId, actor);
+                  enrichmentPassportId, enrichmentUrl, triggerPropertyId, enrichmentActor);
             }
           });
     }
@@ -830,11 +880,14 @@ public class PassportService {
     return PassportDto.from(passport);
   }
 
-  /** Retrieves all passports associated with the specified code. */
-  public List<PassportDto> listPassportsByCode(String code) {
+  /** Retrieves the non-archived passports of the actor's project carrying the given code. */
+  @Transactional(readOnly = true)
+  public List<PassportDto> listPassportsByCode(String code, ApiKeyPrincipal actor) {
 
     List<PassportDatasheetResultMapQueryResult> resultRows =
-        passportRepository.findPassportsByCode(code).orElse(Collections.emptyList());
+        passportRepository
+            .findPassportsByCode(code, actor.getProjectId())
+            .orElse(Collections.emptyList());
 
     return assemblePassportsFromResultRows(resultRows);
   }

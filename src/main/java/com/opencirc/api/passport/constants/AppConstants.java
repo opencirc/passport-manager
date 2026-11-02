@@ -54,9 +54,25 @@ public final class AppConstants {
   /** API_KEY_HMAC_HEX_LENGTH. */
   public static final int API_KEY_HMAC_HEX_LENGTH = 12;
 
-  /** HEADER_API_KEY. */
+  /** Header that may carry the full API key token instead of the Authorization header. */
   public static final String HEADER_API_KEY = "X-Api-Key";
 
-  /** HEADER_API_SECRET. */
-  public static final String HEADER_API_SECRET = "X-Api-Secret";
+  /** Prefix of every machine token: {@code opc_live_<key_id>_<secret>}. */
+  public static final String API_KEY_PREFIX = "opc_live_";
+
+  /** Length of the public key id component of a token. */
+  public static final int API_KEY_ID_LENGTH = 12;
+
+  /** Length of the secret component of a token. */
+  public static final int API_KEY_SECRET_LENGTH = 32;
+
+  /** Authority granted to authenticated administrators. */
+  public static final String AUTHORITY_ADMIN = "ADMIN";
+
+  /** Authority granted to requests authenticated with an API key. */
+  public static final String AUTHORITY_API_KEY = "API_KEY";
+
+  /** Error message for a missing access group permission. */
+  public static final String ERR_PERMISSION_DENIED =
+      "The access group does not grant this operation";
 }
