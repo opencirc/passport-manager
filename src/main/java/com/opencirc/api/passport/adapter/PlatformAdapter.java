@@ -4,7 +4,7 @@ import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
 import com.opencirc.api.passport.enums.DataDictionary;
 import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.JsonValidationException;
-import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.DatasheetDefinition;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -21,11 +21,18 @@ public interface PlatformAdapter {
    *   but this is not a good implementation.
    */
   /**
-   * Generates a set of datasheets using the given platform ID. We can tell the service whether we
-   * are invoking this method directly from an endpoint or as part of another flow, because the
-   * different scenarios affect the way the datasheet is created.
+   * Fetches the datasheet definition(s) for the given platform ID. Element 0 is the definition for
+   * the URI itself; when {@code addRelatedIfcEntities} is true, the definitions of its related IFC
+   * entities are appended.
    */
-  List<Datasheet> generateDatasheetsFromPlatformId(String platformId, boolean addRelatedIfcEntities)
+  List<DatasheetDefinition> generateDatasheetsFromPlatformId(
+      String platformId, boolean addRelatedIfcEntities) throws JsonValidationException;
+
+  /**
+   * Fetches and builds the datasheet definition for a single URI. The URIs of related IFC entities
+   * are recorded on the definition but not fetched.
+   */
+  DatasheetDefinition generateDatasheetFromPlatformId(String platformId)
       throws JsonValidationException;
 
   /** Retrieves a list of properties matching the given search text. */

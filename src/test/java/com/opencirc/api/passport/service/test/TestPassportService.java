@@ -9,11 +9,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.DatasheetRepository;
-import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
@@ -22,6 +20,7 @@ import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.service.DatasheetDefinitionService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
 import com.opencirc.api.passport.service.PassportLogService;
 import com.opencirc.api.passport.service.PassportService;
@@ -41,7 +40,7 @@ public class TestPassportService {
 
   @Mock private DatasheetRepository datasheetRepository;
   @Mock private PassportRepository passportRepository;
-  @Mock private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+  @Mock private DatasheetDefinitionService datasheetDefinitionService;
   @Mock private PlatformAdapterFactory platformAdapterFactory;
   @Mock private ObjectMapper objectMapper;
   @Mock private AppProperties appProperties;
@@ -55,8 +54,8 @@ public class TestPassportService {
     passportService =
         new PassportService(
             datasheetRepository,
+            datasheetDefinitionService,
             passportRepository,
-            passportDatasheetMappingRepository,
             platformAdapterFactory,
             objectMapper,
             appProperties,
@@ -75,7 +74,7 @@ public class TestPassportService {
         () -> passportService.createPassportUsingPlatform(Platform.BSDD, request, new UserDto()));
 
     org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
-    org.mockito.Mockito.verifyNoInteractions(platformAdapterFactory);
+    org.mockito.Mockito.verifyNoInteractions(datasheetDefinitionService);
   }
 
   @Test
@@ -94,7 +93,7 @@ public class TestPassportService {
                 Platform.BSDD, List.of(firstRequest, secondRequest), new UserDto()));
 
     org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
-    org.mockito.Mockito.verifyNoInteractions(platformAdapterFactory);
+    org.mockito.Mockito.verifyNoInteractions(datasheetDefinitionService);
   }
 
   @Test
@@ -126,9 +125,6 @@ public class TestPassportService {
     UserDto author = new UserDto();
     author.setId("author-id");
 
-    PlatformAdapter adapter = mock(PlatformAdapter.class);
-    when(platformAdapterFactory.getAdapter(platform)).thenReturn(adapter);
-
     // Passport created inside the service
     Passport passport = new Passport();
     passport.setId("generated-id");
@@ -138,14 +134,13 @@ public class TestPassportService {
 
     passportService.createPassportUsingPlatform(platform, request, author);
 
-    var eventOrder = org.mockito.Mockito.inOrder(passportLogService, adapter);
+    var eventOrder = org.mockito.Mockito.inOrder(passportLogService, datasheetDefinitionService);
     eventOrder
         .verify(passportLogService)
         .logEvent(anyString(), eq(PassportLogAction.CREATE), any(java.util.List.class));
     eventOrder
-        .verify(adapter)
-        .generateDatasheetsFromPlatformId(
-            eq("platform-id"), org.mockito.ArgumentMatchers.anyBoolean());
+        .verify(datasheetDefinitionService)
+        .resolveDefinitions(eq(platform), eq("platform-id"), eq(true));
   }
 
   @Test
@@ -157,9 +152,6 @@ public class TestPassportService {
     request.setPlatformId("platform-id");
     UserDto author = new UserDto();
     author.setId("author-id");
-
-    PlatformAdapter adapter = mock(PlatformAdapter.class);
-    when(platformAdapterFactory.getAdapter(platform)).thenReturn(adapter);
 
     // Passport created inside the service
     Passport passport = new Passport();
@@ -198,9 +190,6 @@ public class TestPassportService {
 
     UserDto author = new UserDto();
     author.setId("author-id");
-
-    PlatformAdapter adapter = mock(PlatformAdapter.class);
-    when(platformAdapterFactory.getAdapter(platform)).thenReturn(adapter);
 
     // For parent creation
     Passport parentPassport = new Passport();
@@ -284,9 +273,6 @@ public class TestPassportService {
 
     UserDto author = new UserDto();
     author.setId("author-id");
-
-    PlatformAdapter adapter = mock(PlatformAdapter.class);
-    when(platformAdapterFactory.getAdapter(platform)).thenReturn(adapter);
 
     java.util.Set<String> savedIds = new java.util.HashSet<>();
     java.util.List<String> saveOrder = new java.util.ArrayList<>();
