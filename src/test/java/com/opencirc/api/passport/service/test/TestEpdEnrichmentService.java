@@ -14,9 +14,9 @@ import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.DatasheetProperty;
+import com.opencirc.api.passport.model.DatasheetDefinition;
+import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
 import com.opencirc.api.passport.service.PassportLogService;
 import java.util.HashMap;
@@ -189,7 +189,7 @@ public class TestEpdEnrichmentService {
         "passport-1", expectedUrl, "trigger", PassportLogService.systemActor());
 
     if (expectedUrl.equals(currentUrl)) {
-      Datasheet datasheet = current.getDatasheetMappings().iterator().next().getDatasheet();
+      Datasheet datasheet = current.getDatasheets().iterator().next();
       verify(datasheetRepository).save(datasheet);
       assertEquals(new java.math.BigDecimal("12.34"), datasheet.getData().get("gwp"));
     } else {
@@ -209,7 +209,7 @@ public class TestEpdEnrichmentService {
 
     epdEnrichmentService.enrich(passport, "http://localhost:8089/epd.json");
 
-    Datasheet datasheet = passport.getDatasheetMappings().iterator().next().getDatasheet();
+    Datasheet datasheet = passport.getDatasheets().iterator().next();
     assertInstanceOf(java.math.BigDecimal.class, datasheet.getData().get("gwp"));
     assertEquals(new java.math.BigDecimal("123.45"), datasheet.getData().get("gwp"));
   }
@@ -247,19 +247,20 @@ public class TestEpdEnrichmentService {
 
   public Passport enrichmentPassport(String triggerUrl) {
     Passport passport = passport("passport-1");
-    Datasheet datasheet = new Datasheet();
-    datasheet.setId("datasheet");
-    datasheet.setData(new HashMap<>(Map.of("trigger", triggerUrl)));
-    DatasheetProperty trigger = new DatasheetProperty();
+    DatasheetDefinitionProperty trigger = new DatasheetDefinitionProperty();
     trigger.setId("trigger");
-    DatasheetProperty gwp = new DatasheetProperty();
+    DatasheetDefinitionProperty gwp = new DatasheetDefinitionProperty();
     gwp.setId("gwp");
     gwp.setCode("ClimateChangePerUnit");
     gwp.setGroupTag("Pset_EnvironmentalImpactIndicators");
-    datasheet.setDatasheetProperties(new HashSet<>(List.of(trigger, gwp)));
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setDatasheet(datasheet);
-    passport.setDatasheetMappings(new HashSet<>(List.of(mapping)));
+    DatasheetDefinition definition = new DatasheetDefinition();
+    definition.setId("definition");
+    definition.setProperties(new HashSet<>(List.of(trigger, gwp)));
+    Datasheet datasheet = new Datasheet();
+    datasheet.setId("datasheet");
+    datasheet.setDefinition(definition);
+    datasheet.setData(new HashMap<>(Map.of("trigger", triggerUrl)));
+    passport.setDatasheets(new HashSet<>(List.of(datasheet)));
     return passport;
   }
 

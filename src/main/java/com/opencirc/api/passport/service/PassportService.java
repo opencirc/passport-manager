@@ -4,7 +4,6 @@ import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.dao.DatasheetRepository;
-import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
@@ -22,9 +21,9 @@ import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.exception.JsonValidationException;
 import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.DatasheetProperty;
+import com.opencirc.api.passport.model.DatasheetDefinition;
+import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -58,9 +57,9 @@ public class PassportService {
 
   private final DatasheetRepository datasheetRepository;
 
-  private final PassportRepository passportRepository;
+  private final DatasheetDefinitionService datasheetDefinitionService;
 
-  private final PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+  private final PassportRepository passportRepository;
 
   private final ObjectMapper objectMapper;
 
@@ -77,7 +76,7 @@ public class PassportService {
   private static final String EPD_TRIGGER_CODE = "referencetooriginalEPD";
   private static final String EPD_TRIGGER_GROUP = "GeneralInformation";
 
-  private boolean isEpdTriggerProperty(DatasheetProperty property) {
+  private boolean isEpdTriggerProperty(DatasheetDefinitionProperty property) {
     if (property == null) {
       return false;
     }
@@ -89,16 +88,16 @@ public class PassportService {
   /** Constructor. */
   public PassportService(
       DatasheetRepository datasheetRepository,
+      DatasheetDefinitionService datasheetDefinitionService,
       PassportRepository passportRepository,
-      PassportDatasheetMappingRepository passportDatasheetMappingRepository,
       PlatformAdapterFactory platformAdapterFactory,
       ObjectMapper objectMapper,
       AppProperties appProperties,
       EpdEnrichmentService epdEnrichmentService,
       PassportLogService passportLogService) {
     this.datasheetRepository = datasheetRepository;
+    this.datasheetDefinitionService = datasheetDefinitionService;
     this.passportRepository = passportRepository;
-    this.passportDatasheetMappingRepository = passportDatasheetMappingRepository;
     this.platformAdapterFactory = platformAdapterFactory;
     this.objectMapper = objectMapper;
     this.appProperties = appProperties;
@@ -292,7 +291,7 @@ public class PassportService {
     passport.setCreatedById(author != null ? author.getId() : null);
     passport.setCreatedTime(OffsetDateTime.now());
     passport.setCreatedBy(getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
-    passport.setDatasheetMappings(new HashSet<>());
+    passport.setDatasheets(new HashSet<>());
 
     String parentId = data.getParentId();
     if (parentId != null && !parentId.isBlank()) {
@@ -333,16 +332,15 @@ public class PassportService {
 
     var dataValues = data.getValues();
     if (dataValues != null) {
-      var mappings = passport.getDatasheetMappings();
-      if (mappings != null && !mappings.isEmpty()) {
+      var datasheets = passport.getDatasheets();
+      if (datasheets != null && !datasheets.isEmpty()) {
         Map<String, Object> updateValues = new HashMap<>();
-        for (var mapping : mappings) {
-          var datasheet = mapping.getDatasheet();
-          if (datasheet == null) {
+        for (var datasheet : datasheets) {
+          if (datasheet == null || datasheet.getDefinition() == null) {
             continue;
           }
 
-          var properties = datasheet.getDatasheetProperties();
+          var properties = datasheet.getDefinition().getProperties();
           if (properties == null || properties.isEmpty()) {
             continue;
           }
@@ -372,18 +370,19 @@ public class PassportService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
 
-    PassportDatasheetMapping mappingToRemove =
-        passport.getDatasheetMappings().stream()
-            .filter(m -> m.getDatasheet().getId().equals(datasheetId))
+    Datasheet datasheetToRemove =
+        passport.getDatasheets().stream()
+            .filter(datasheet -> datasheetId.equals(datasheet.getId()))
             .findFirst()
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Datasheet mapping not found"));
 
-    passportDatasheetMappingRepository.delete(mappingToRemove);
-    passport.getDatasheetMappings().remove(mappingToRemove);
+    passport.getDatasheets().remove(datasheetToRemove);
+    datasheetRepository.delete(datasheetToRemove);
 
+    DatasheetDefinition definition = datasheetToRemove.getDefinition();
     passportLogService.logEvent(
         passportId,
         PassportLogAction.REMOVE_DATASHEET,
@@ -392,9 +391,7 @@ public class PassportService {
                 "datasheetId",
                 datasheetId,
                 "datasheetName",
-                mappingToRemove.getDatasheet().getName() != null
-                    ? mappingToRemove.getDatasheet().getName()
-                    : "")));
+                definition != null && definition.getName() != null ? definition.getName() : "")));
 
     return PassportDto.from(passport);
   }
@@ -463,7 +460,9 @@ public class PassportService {
   }
 
   /**
-   * Creates a datasheet and adds it to the passport using information from the provided platform.
+   * Attaches datasheet instances to the passport for the given classification, resolving the shared
+   * definitions from the global catalogue. A definition already attached to the passport is
+   * skipped.
    */
   @Transactional
   public PassportDto addDatasheetsToPassportUsingPlatform(
@@ -474,31 +473,51 @@ public class PassportService {
       UserDto author,
       boolean addRelatedIfcEntities)
       throws JsonValidationException {
-    var adapter = platformAdapterFactory.getAdapter(platform);
-    var rawDatasheets = adapter.generateDatasheetsFromPlatformId(platformId, addRelatedIfcEntities);
-    for (var rawDatasheet : rawDatasheets) {
-      rawDatasheet.setCreatedById(author != null ? author.getId() : null);
-      rawDatasheet.setCreatedBy(
+    List<DatasheetDefinition> definitions =
+        datasheetDefinitionService.resolveDefinitions(platform, platformId, addRelatedIfcEntities);
+
+    if (passport.getDatasheets() == null) {
+      passport.setDatasheets(new HashSet<>());
+    }
+
+    for (DatasheetDefinition definition : definitions) {
+      if (isDefinitionAttached(passport, definition)) {
+        continue;
+      }
+
+      Datasheet datasheet = new Datasheet();
+      datasheet.setPassport(passport);
+      datasheet.setDefinition(definition);
+      datasheet.setDataCategory(dataCategory);
+      datasheet.setCreatedById(author != null ? author.getId() : null);
+      datasheet.setCreatedBy(
           getOrDefaultCreatedBy(author != null ? CreatedByDto.from(author) : null));
-      rawDatasheet.setDataCategory(dataCategory);
-      var datasheet = datasheetRepository.save(rawDatasheet);
-      PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-      mapping.setPassport(passport);
-      mapping.setDatasheet(datasheet);
-      mapping = passportDatasheetMappingRepository.save(mapping);
-      passport.getDatasheetMappings().add(mapping);
+      datasheet = datasheetRepository.save(datasheet);
+      passport.getDatasheets().add(datasheet);
+
       passportLogService.logEvent(
           passport.getId(),
           PassportLogAction.ADD_DATASHEET,
           List.of(
               Map.of(
                   "datasheetId",
-                  datasheet.getId(),
+                  datasheet.getId() != null ? datasheet.getId() : "",
                   "datasheetName",
-                  datasheet.getName() != null ? datasheet.getName() : "")));
+                  definition.getName() != null ? definition.getName() : "")));
     }
 
     return PassportDto.from(passport);
+  }
+
+  private boolean isDefinitionAttached(Passport passport, DatasheetDefinition definition) {
+    return passport.getDatasheets().stream()
+        .map(Datasheet::getDefinition)
+        .filter(Objects::nonNull)
+        .anyMatch(
+            attached ->
+                (attached.getId() != null && attached.getId().equals(definition.getId()))
+                    || (attached.getPlatformId() != null
+                        && attached.getPlatformId().equals(definition.getPlatformId())));
   }
 
   private CreatedByDto getOrDefaultCreatedBy(CreatedByDto createdBy) {
@@ -710,8 +729,8 @@ public class PassportService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Passport not found"));
 
-    var mappings = passport.getDatasheetMappings();
-    if (mappings == null || mappings.isEmpty()) {
+    var datasheets = passport.getDatasheets();
+    if (datasheets == null || datasheets.isEmpty()) {
       throw new ResponseStatusException(
           HttpStatus.NOT_FOUND, "Passport does not have any datasheet mappings: " + passportId);
     }
@@ -719,15 +738,18 @@ public class PassportService {
     List<Map<String, Object>> allChanges = new ArrayList<>();
     String epdUrlToEnrich = null;
     String epdTriggerPropertyId = null;
-    for (PassportDatasheetMapping mapping : mappings) {
-      Datasheet datasheet = mapping.getDatasheet();
-      if (datasheet == null) {
+    for (Datasheet datasheet : datasheets) {
+      if (datasheet == null || datasheet.getDefinition() == null) {
+        continue;
+      }
+      var properties = datasheet.getDefinition().getProperties();
+      if (properties == null) {
         continue;
       }
 
       // Check for EPD enrichment trigger
       if (epdUrlToEnrich == null) {
-        for (DatasheetProperty property : datasheet.getDatasheetProperties()) {
+        for (DatasheetDefinitionProperty property : properties) {
           if (isEpdTriggerProperty(property)) {
             Object triggerValue = values.get(property.getId());
             if (triggerValue instanceof String epdUrl && !epdUrl.isBlank()) {
@@ -747,7 +769,7 @@ public class PassportService {
       boolean isChanged = false;
 
       // List<String> errorMessages = new ArrayList<>();
-      for (DatasheetProperty property : datasheet.getDatasheetProperties()) {
+      for (DatasheetDefinitionProperty property : properties) {
         String propertyId = property.getId();
 
         if (!values.containsKey(propertyId)) {
