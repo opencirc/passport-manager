@@ -69,7 +69,7 @@ public class AuditLogTagService {
             log.getDiff(),
             secret));
     tag.setUpdatedTime(transition ? OffsetDateTime.now() : null);
-    return AuditLogTagDto.from(auditLogTagRepository.save(tag));
+    return AuditLogTagDto.from(auditLogTagRepository.saveAndFlush(tag));
   }
 
   /** Re-computes the signature of a log entry's tag with the actor's key and compares. */

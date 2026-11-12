@@ -184,7 +184,7 @@ public class TestPassportService {
 
     // Passport created inside the service
     Passport passport = activePassport("generated-id");
-    when(passportRepository.save(any(Passport.class))).thenAnswer(i -> i.getArguments()[0]);
+    when(passportRepository.saveAndFlush(any(Passport.class))).thenAnswer(i -> i.getArguments()[0]);
     when(passportRepository.findById(anyString())).thenReturn(Optional.of(passport));
 
     passportService.createPassportUsingPlatform(platform, request, ACTOR);
@@ -216,7 +216,7 @@ public class TestPassportService {
     stubRoot();
 
     Passport passport = activePassport("my-custom-id");
-    when(passportRepository.save(any(Passport.class))).thenAnswer(i -> i.getArguments()[0]);
+    when(passportRepository.saveAndFlush(any(Passport.class))).thenAnswer(i -> i.getArguments()[0]);
     when(passportRepository.findById("my-custom-id")).thenReturn(Optional.of(passport));
 
     var createdPassport = passportService.createPassportUsingPlatform(platform, request, ACTOR);
@@ -233,7 +233,7 @@ public class TestPassportService {
     assertEquals("my-custom-id", createdPassport.getId());
 
     ArgumentCaptor<Passport> saved = ArgumentCaptor.forClass(Passport.class);
-    verify(passportRepository).save(saved.capture());
+    verify(passportRepository).saveAndFlush(saved.capture());
     assertEquals(PROJECT_ID, saved.getValue().getProjectId());
     assertEquals("key-1", saved.getValue().getCreatedById());
     assertEquals(ROOT_ID, saved.getValue().getParentId());
@@ -267,7 +267,7 @@ public class TestPassportService {
 
     java.util.List<String> saveOrder = new java.util.ArrayList<>();
     java.util.Set<String> savedIds = new java.util.HashSet<>();
-    when(passportRepository.save(any(Passport.class)))
+    when(passportRepository.saveAndFlush(any(Passport.class)))
         .thenAnswer(
             i -> {
               Passport p = i.getArgument(0);
@@ -343,7 +343,7 @@ public class TestPassportService {
       batchIds.add(d.getId());
     }
 
-    when(passportRepository.save(any(Passport.class)))
+    when(passportRepository.saveAndFlush(any(Passport.class)))
         .thenAnswer(
             i -> {
               Passport p = i.getArgument(0);

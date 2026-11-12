@@ -1,12 +1,16 @@
 package com.opencirc.api.passport.service;
 
 import com.opencirc.api.passport.constants.AppConstants;
+import com.opencirc.api.passport.dao.AccessGroupRepository;
+import com.opencirc.api.passport.dao.ApiKeyRepository;
 import com.opencirc.api.passport.dao.OwnerRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dao.ProjectRepository;
 import com.opencirc.api.passport.dto.CreateProjectRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.ProjectDto;
+import com.opencirc.api.passport.dto.UpdateProjectRequestDto;
+import com.opencirc.api.passport.enums.ApiKeyStatus;
 import com.opencirc.api.passport.enums.AuditLogAction;
 import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.ProjectStatus;
@@ -15,6 +19,7 @@ import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.Project;
 import io.github.thibaultmeyer.cuid.CUID;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -37,16 +42,24 @@ public class ProjectService {
 
   private final AuditLogService auditLogService;
 
+  private final ApiKeyRepository apiKeyRepository;
+
+  private final AccessGroupRepository accessGroupRepository;
+
   /** Constructor. */
   public ProjectService(
       ProjectRepository projectRepository,
       OwnerRepository ownerRepository,
       PassportRepository passportRepository,
-      AuditLogService auditLogService) {
+      AuditLogService auditLogService,
+      ApiKeyRepository apiKeyRepository,
+      AccessGroupRepository accessGroupRepository) {
     this.projectRepository = projectRepository;
     this.ownerRepository = ownerRepository;
     this.passportRepository = passportRepository;
     this.auditLogService = auditLogService;
+    this.apiKeyRepository = apiKeyRepository;
+    this.accessGroupRepository = accessGroupRepository;
   }
 
   /**
@@ -71,7 +84,7 @@ public class ProjectService {
     project.setStatus(ProjectStatus.ACTIVE);
     project.setCreatedById(createdById);
     project.setCreatedBy(createdBy);
-    project = projectRepository.save(project);
+    project = projectRepository.saveAndFlush(project);
 
     Passport root = new Passport();
     root.setId(CUID.randomCUID2(AppConstants.CUID_LENGTH).toString());
@@ -81,7 +94,7 @@ public class ProjectService {
     root.setParentId(null);
     root.setCreatedById(null);
     root.setDatasheets(new HashSet<>());
-    root = passportRepository.save(root);
+    root = passportRepository.saveAndFlush(root);
     auditLogService.record(
         AuditTargetType.PASSPORT,
         root.getId(),
@@ -93,6 +106,26 @@ public class ProjectService {
         AuditLogService.Actor.system());
 
     return ProjectDto.from(project, root.getId());
+  }
+
+  /**
+   * Updates the name, description and owner of an active project. Ownership is set as given: a
+   * missing or blank owner id leaves the project without an owner.
+   */
+  @Transactional
+  public ProjectDto updateProject(String id, UpdateProjectRequestDto request) {
+    if (request == null || request.getName() == null || request.getName().isBlank()) {
+      throw new InvalidInputException("Project name is required");
+    }
+    Project project = requireActiveProject(id);
+    String ownerId = request.getOwnerId();
+    if (ownerId != null && !ownerId.isBlank() && !ownerRepository.existsById(ownerId)) {
+      throw new InvalidInputException("No owner found with id: " + ownerId);
+    }
+    project.setName(request.getName().trim());
+    project.setDescription(request.getDescription());
+    project.setOwnerId(ownerId != null && !ownerId.isBlank() ? ownerId : null);
+    return toDto(projectRepository.save(project));
   }
 
   /** Lists projects; archived ones only when requested. */
@@ -198,6 +231,11 @@ public class ProjectService {
             .findFirstByProjectIdAndParentIdIsNull(project.getId())
             .map(Passport::getId)
             .orElse(null);
-    return ProjectDto.from(project, rootPassportId);
+    ProjectDto dto = ProjectDto.from(project, rootPassportId);
+    dto.setAccessGroupCount(accessGroupRepository.countByProjectId(project.getId()));
+    dto.setActiveApiKeyCount(
+        apiKeyRepository.countUsableByProjectId(
+            project.getId(), ApiKeyStatus.ACTIVE, ZonedDateTime.now()));
+    return dto;
   }
 }

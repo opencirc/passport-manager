@@ -19,4 +19,6 @@ public interface ProjectRepository extends JpaRepository<Project, String> {
 
   /** Finds a project by name and status. */
   Optional<Project> findFirstByNameAndStatus(String name, ProjectStatus status);
+
+  long countByOwnerIdAndStatus(String ownerId, ProjectStatus status);
 }

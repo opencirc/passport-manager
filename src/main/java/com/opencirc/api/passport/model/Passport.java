@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Generated;
 
 /**
  * Model for Passports. A root passport ({@code parentId == null}) is provisioned together with its
@@ -58,6 +59,7 @@ public class Passport {
   @Column(name = "created_by_id")
   private String createdById;
 
+  @Generated
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;
 

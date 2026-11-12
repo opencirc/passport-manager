@@ -9,15 +9,19 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.opencirc.api.passport.dao.AccessGroupRepository;
+import com.opencirc.api.passport.dao.ApiKeyRepository;
 import com.opencirc.api.passport.dao.OwnerRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dao.ProjectRepository;
 import com.opencirc.api.passport.dto.CreateProjectRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.ProjectDto;
+import com.opencirc.api.passport.dto.UpdateProjectRequestDto;
 import com.opencirc.api.passport.enums.AuditLogAction;
 import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.ProjectStatus;
+import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.model.Project;
 import com.opencirc.api.passport.service.AuditLogService;
@@ -40,32 +44,40 @@ public class TestProjectService {
   @Mock private OwnerRepository ownerRepository;
   @Mock private PassportRepository passportRepository;
   @Mock private AuditLogService auditLogService;
+  @Mock private ApiKeyRepository apiKeyRepository;
+  @Mock private AccessGroupRepository accessGroupRepository;
 
   private ProjectService projectService;
 
   @BeforeEach
   void setUp() {
     projectService =
-        new ProjectService(projectRepository, ownerRepository, passportRepository, auditLogService);
+        new ProjectService(
+            projectRepository,
+            ownerRepository,
+            passportRepository,
+            auditLogService,
+            apiKeyRepository,
+            accessGroupRepository);
   }
 
   @Test
   void createsProjectAndRootPassportTogether() {
-    when(projectRepository.save(any(Project.class)))
+    when(projectRepository.saveAndFlush(any(Project.class)))
         .thenAnswer(
             i -> {
               Project project = i.getArgument(0);
               project.setId("project-1");
               return project;
             });
-    when(passportRepository.save(any(Passport.class))).thenAnswer(i -> i.getArgument(0));
+    when(passportRepository.saveAndFlush(any(Passport.class))).thenAnswer(i -> i.getArgument(0));
 
     ProjectDto dto =
         projectService.createProject(
             new CreateProjectRequestDto("EcoOffice", "Office complex", null), ADMIN, "admin-1");
 
     ArgumentCaptor<Passport> root = ArgumentCaptor.forClass(Passport.class);
-    verify(passportRepository).save(root.capture());
+    verify(passportRepository).saveAndFlush(root.capture());
     assertNotNull(root.getValue().getId());
     assertEquals("project-1", root.getValue().getProjectId());
     assertNull(root.getValue().getParentId());
@@ -173,5 +185,50 @@ public class TestProjectService {
     project.setStatus(ProjectStatus.ACTIVE);
     project.setCreatedBy(ADMIN);
     return project;
+  }
+
+  @Test
+  void updatesNameDescriptionAndOwnerOfAnActiveProject() {
+    Project project = new Project();
+    project.setId("project-1");
+    project.setName("Old");
+    project.setStatus(ProjectStatus.ACTIVE);
+    when(projectRepository.findById("project-1")).thenReturn(Optional.of(project));
+    when(ownerRepository.existsById("owner-2")).thenReturn(true);
+    when(projectRepository.save(any(Project.class))).thenAnswer(i -> i.getArgument(0));
+    when(passportRepository.findFirstByProjectIdAndParentIdIsNull("project-1"))
+        .thenReturn(Optional.empty());
+
+    ProjectDto updated =
+        projectService.updateProject(
+            "project-1", new UpdateProjectRequestDto("New name", "desc", "owner-2"));
+
+    assertEquals("New name", updated.getName());
+    assertEquals("desc", updated.getDescription());
+    assertEquals("owner-2", updated.getOwnerId());
+  }
+
+  @Test
+  void clearsTheOwnerWhenNoneIsGivenAndRejectsUnknownOwners() {
+    Project project = new Project();
+    project.setId("project-1");
+    project.setName("Old");
+    project.setOwnerId("owner-1");
+    project.setStatus(ProjectStatus.ACTIVE);
+    when(projectRepository.findById("project-1")).thenReturn(Optional.of(project));
+    when(projectRepository.save(any(Project.class))).thenAnswer(i -> i.getArgument(0));
+    when(passportRepository.findFirstByProjectIdAndParentIdIsNull("project-1"))
+        .thenReturn(Optional.empty());
+
+    ProjectDto cleared =
+        projectService.updateProject("project-1", new UpdateProjectRequestDto("Old", null, null));
+    assertNull(cleared.getOwnerId());
+
+    when(ownerRepository.existsById("missing")).thenReturn(false);
+    assertThrows(
+        InvalidInputException.class,
+        () ->
+            projectService.updateProject(
+                "project-1", new UpdateProjectRequestDto("Old", null, "missing")));
   }
 }

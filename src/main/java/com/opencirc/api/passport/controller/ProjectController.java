@@ -5,6 +5,7 @@ import com.opencirc.api.passport.dto.AdminDto;
 import com.opencirc.api.passport.dto.CreateProjectRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.ProjectDto;
+import com.opencirc.api.passport.dto.UpdateProjectRequestDto;
 import com.opencirc.api.passport.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -59,6 +61,14 @@ public class ProjectController {
       @PathVariable String id,
       @RequestParam(name = "include_archived", defaultValue = "false") boolean includeArchived) {
     return ResponseEntity.ok(projectService.getProject(id, includeArchived));
+  }
+
+  /** Updates name, description and owner of a project. */
+  @Operation(summary = "Updates a project; the owner is assigned as given, null clears it")
+  @PutMapping("/{id}")
+  public ResponseEntity<ProjectDto> updateProject(
+      @PathVariable String id, @Valid @RequestBody UpdateProjectRequestDto request) {
+    return ResponseEntity.ok(projectService.updateProject(id, request));
   }
 
   /** Soft-archives a project and every passport in it. */

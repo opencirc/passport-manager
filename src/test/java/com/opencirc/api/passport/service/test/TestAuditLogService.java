@@ -58,7 +58,7 @@ public class TestAuditLogService {
   @Test
   void recordsDiffAttributedToTheRequestsApiKey() {
     when(actorContext.currentApiKey()).thenReturn(Optional.of(ACTOR));
-    when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> i.getArgument(0));
+    when(auditLogRepository.saveAndFlush(any(AuditLog.class))).thenAnswer(i -> i.getArgument(0));
     Passport before = passport("p1", "Wall");
     Passport after = passport("p1", "Wall A");
 
@@ -72,7 +72,7 @@ public class TestAuditLogService {
         service.passportSnapshot(after));
 
     ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
-    verify(auditLogRepository).save(captor.capture());
+    verify(auditLogRepository).saveAndFlush(captor.capture());
     AuditLog log = captor.getValue();
     assertEquals("key-1", log.getCreatedById());
     assertEquals(AuditTargetType.PASSPORT, log.getTargetType());
@@ -87,7 +87,7 @@ public class TestAuditLogService {
   @Test
   void recordsSystemActionsWithoutCreator() {
     when(actorContext.currentApiKey()).thenReturn(Optional.empty());
-    when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(i -> i.getArgument(0));
+    when(auditLogRepository.saveAndFlush(any(AuditLog.class))).thenAnswer(i -> i.getArgument(0));
 
     service.record(
         AuditTargetType.PASSPORT,
@@ -99,7 +99,7 @@ public class TestAuditLogService {
         service.passportSnapshot(passport("root", "Building")));
 
     ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
-    verify(auditLogRepository).save(captor.capture());
+    verify(auditLogRepository).saveAndFlush(captor.capture());
     assertNull(captor.getValue().getCreatedById());
     assertEquals("add", captor.getValue().getDiff().get(0).get("op").asText());
     assertEquals("", captor.getValue().getDiff().get(0).get("path").asText());

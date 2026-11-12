@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Generated;
 
 /**
  * Machine credential issued to an access group. The id is the public key id embedded in the token
@@ -51,6 +52,7 @@ public class ApiKey {
   private ApiKeyStatus status;
 
   /** Timestamp when the key was created. */
+  @Generated
   @Column(name = "created_time", nullable = false, updatable = false, insertable = false)
   private ZonedDateTime createdTime;
 

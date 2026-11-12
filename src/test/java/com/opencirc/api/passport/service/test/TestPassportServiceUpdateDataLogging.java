@@ -70,7 +70,7 @@ public class TestPassportServiceUpdateDataLogging {
   public void setUp() {
     lenient().when(actorContext.currentApiKey()).thenReturn(Optional.of(ACTOR));
     lenient()
-        .when(auditLogRepository.save(any(AuditLog.class)))
+        .when(auditLogRepository.saveAndFlush(any(AuditLog.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
     AuditLogService auditLogService =
         new AuditLogService(
@@ -206,7 +206,7 @@ public class TestPassportServiceUpdateDataLogging {
     passportService.updateData(passportId, values, ACTOR);
 
     ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
-    verify(auditLogRepository).save(captor.capture());
+    verify(auditLogRepository).saveAndFlush(captor.capture());
 
     AuditLog log = captor.getValue();
     assertEquals(AuditTargetType.PASSPORT_DATASHEET, log.getTargetType());
@@ -240,7 +240,7 @@ public class TestPassportServiceUpdateDataLogging {
 
     passportService.updateData(passportId, values, ACTOR);
 
-    verify(auditLogRepository, never()).save(any());
+    verify(auditLogRepository, never()).saveAndFlush(any());
     verify(datasheetRepository, never()).save(any());
   }
 
@@ -265,7 +265,7 @@ public class TestPassportServiceUpdateDataLogging {
     passportService.updateData(passportId, values, ACTOR);
 
     ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
-    verify(auditLogRepository, org.mockito.Mockito.times(2)).save(captor.capture());
+    verify(auditLogRepository, org.mockito.Mockito.times(2)).saveAndFlush(captor.capture());
 
     List<AuditLog> logs = captor.getAllValues();
     AuditLog first =
