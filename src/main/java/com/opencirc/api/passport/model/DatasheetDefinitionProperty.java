@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.OnDelete;
@@ -17,45 +18,46 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UuidGenerator;
 import tools.jackson.databind.JsonNode;
 
-/** Model for datasheet_properties table. */
+/** Property schema belonging to a globally shared datasheet definition. */
 @Entity
-@Table(name = "datasheet_properties")
+@Table(name = "datasheet_definition_properties")
 @Data
 @ToString
-public class DatasheetProperty {
+public class DatasheetDefinitionProperty {
 
-  /** Unique Id for Datasheet. */
+  /** Unique id of the property definition. */
   @Id
   @GeneratedValue
   @UuidGenerator
   @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
-  /** Datasheet id. */
+  /** Datasheet definition this property belongs to. */
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "datasheet_id", referencedColumnName = "id", nullable = false)
+  @JoinColumn(name = "definition_id", referencedColumnName = "id", nullable = false)
   @OnDelete(action = OnDeleteAction.CASCADE)
   @ToString.Exclude
-  @JsonBackReference
-  private Datasheet datasheet;
+  @EqualsAndHashCode.Exclude
+  @JsonBackReference("definition")
+  private DatasheetDefinition datasheetDefinition;
 
-  /** Code of the class. */
+  /** Standard property code. */
   @Column(name = "code", columnDefinition = "TEXT")
   private String code;
 
-  /** Uri of the platform. */
+  /** Property URI on the external platform. */
   @Column(name = "platform_id", columnDefinition = "TEXT")
   private String platformId;
 
-  /** PropertySet to which a property belongs. */
+  /** Property set / group the property belongs to. */
   @Column(name = "group_tag", columnDefinition = "TEXT")
   private String groupTag;
 
-  /** Type. */
+  /** Data type specifier. */
   @Column(name = "property_type", columnDefinition = "TEXT")
   private String propertyType;
 
-  /** Definition. */
+  /** Property schema detailing metadata, units, and constraints. */
   @Column(name = "definition", columnDefinition = "jsonb")
   @ColumnTransformer(write = "?::jsonb")
   private JsonNode definition;

@@ -11,13 +11,13 @@ import static org.mockito.Mockito.when;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.DatasheetRepository;
-import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.DatasheetProperty;
+import com.opencirc.api.passport.model.DatasheetDefinition;
+import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetMapping;
+import com.opencirc.api.passport.service.DatasheetDefinitionService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
 import com.opencirc.api.passport.service.PassportLogService;
 import com.opencirc.api.passport.service.PassportService;
@@ -42,8 +42,8 @@ import tools.jackson.databind.ObjectMapper;
 public class TestPassportServiceUpdateDataLogging {
 
   @Mock private DatasheetRepository datasheetRepository;
+  @Mock private DatasheetDefinitionService datasheetDefinitionService;
   @Mock private PassportRepository passportRepository;
-  @Mock private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
   @Mock private PlatformAdapterFactory platformAdapterFactory;
   @Mock private AppProperties appProperties;
   @Mock private EpdEnrichmentService epdEnrichmentService;
@@ -57,8 +57,8 @@ public class TestPassportServiceUpdateDataLogging {
     passportService =
         new PassportService(
             datasheetRepository,
+            datasheetDefinitionService,
             passportRepository,
-            passportDatasheetMappingRepository,
             platformAdapterFactory,
             objectMapper,
             appProperties,
@@ -122,20 +122,37 @@ public class TestPassportServiceUpdateDataLogging {
     Passport passport = new Passport();
     passport.setId("passport");
     passport.setStatus(Passport.Status.ACTIVE);
-    Datasheet datasheet = new Datasheet();
-    datasheet.setId("datasheet");
-    datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
-    DatasheetProperty property = new DatasheetProperty();
+    DatasheetDefinitionProperty property = new DatasheetDefinitionProperty();
     property.setId("trigger");
-    property.setDatasheet(datasheet);
     property.setCode("referencetooriginalEPD");
     property.setGroupTag("GeneralInformation");
-    datasheet.setDatasheetProperties(new HashSet<>(List.of(property)));
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setDatasheet(datasheet);
-    passport.setDatasheetMappings(Collections.singleton(mapping));
+    Datasheet datasheet = datasheet("datasheet", null, property);
+    passport.setDatasheets(Collections.singleton(datasheet));
     when(passportRepository.findPassport("passport", Passport.Status.ACTIVE))
         .thenReturn(Optional.of(passport));
+  }
+
+  /** Builds a datasheet instance whose shared definition declares the given properties. */
+  private static Datasheet datasheet(
+      String id, Map<String, Object> data, DatasheetDefinitionProperty... properties) {
+    DatasheetDefinition definition = new DatasheetDefinition();
+    definition.setId("definition-" + id);
+    definition.setProperties(new HashSet<>(List.of(properties)));
+    for (DatasheetDefinitionProperty property : properties) {
+      property.setDatasheetDefinition(definition);
+    }
+    Datasheet datasheet = new Datasheet();
+    datasheet.setId(id);
+    datasheet.setDefinition(definition);
+    datasheet.setData(data);
+    datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
+    return datasheet;
+  }
+
+  private static DatasheetDefinitionProperty property(String id) {
+    DatasheetDefinitionProperty property = new DatasheetDefinitionProperty();
+    property.setId(id);
+    return property;
   }
 
   public static class TestTransactionManager extends AbstractPlatformTransactionManager {
@@ -167,20 +184,8 @@ public class TestPassportServiceUpdateDataLogging {
     Passport passport = new Passport();
     passport.setId(passportId);
     passport.setStatus(Passport.Status.ACTIVE);
-
-    Datasheet datasheet = new Datasheet();
-    datasheet.setId("ds-1");
-    datasheet.setData(Map.of(propId, "old-value"));
-    datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
-
-    DatasheetProperty property = new DatasheetProperty();
-    property.setId(propId);
-    property.setDatasheet(datasheet);
-    datasheet.setDatasheetProperties(new HashSet<>(List.of(property)));
-
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setDatasheet(datasheet);
-    passport.setDatasheetMappings(Collections.singleton(mapping));
+    passport.setDatasheets(
+        Collections.singleton(datasheet("ds-1", Map.of(propId, "old-value"), property(propId))));
 
     when(passportRepository.findPassport(passportId, Passport.Status.ACTIVE))
         .thenReturn(Optional.of(passport));
@@ -209,20 +214,8 @@ public class TestPassportServiceUpdateDataLogging {
     Passport passport = new Passport();
     passport.setId(passportId);
     passport.setStatus(Passport.Status.ACTIVE);
-
-    Datasheet datasheet = new Datasheet();
-    datasheet.setId("ds-1");
-    datasheet.setData(Map.of(propId, "same-value"));
-    datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
-
-    DatasheetProperty property = new DatasheetProperty();
-    property.setId(propId);
-    property.setDatasheet(datasheet);
-    datasheet.setDatasheetProperties(new HashSet<>(List.of(property)));
-
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setDatasheet(datasheet);
-    passport.setDatasheetMappings(Collections.singleton(mapping));
+    passport.setDatasheets(
+        Collections.singleton(datasheet("ds-1", Map.of(propId, "same-value"), property(propId))));
 
     when(passportRepository.findPassport(passportId, Passport.Status.ACTIVE))
         .thenReturn(Optional.of(passport));
@@ -240,34 +233,11 @@ public class TestPassportServiceUpdateDataLogging {
     Passport passport = new Passport();
     passport.setId(passportId);
     passport.setStatus(Passport.Status.ACTIVE);
-
-    // Datasheet 1
-    Datasheet ds1 = new Datasheet();
-    ds1.setId("ds-1");
-    ds1.setData(Map.of("prop-1", "old-1"));
-    ds1.setDataCategory(Datasheet.DataCategory.GENERIC);
-    DatasheetProperty p1 = new DatasheetProperty();
-    p1.setId("prop-1");
-    p1.setDatasheet(ds1);
-    ds1.setDatasheetProperties(new HashSet<>(List.of(p1)));
-
-    // Datasheet 2
-    Datasheet ds2 = new Datasheet();
-    ds2.setId("ds-2");
-    ds2.setData(Map.of("prop-2", "old-2"));
-    ds2.setDataCategory(Datasheet.DataCategory.GENERIC);
-    DatasheetProperty p2 = new DatasheetProperty();
-    p2.setId("prop-2");
-    p2.setDatasheet(ds2);
-    ds2.setDatasheetProperties(new HashSet<>(List.of(p2)));
-
-    PassportDatasheetMapping m1 = new PassportDatasheetMapping();
-    m1.setId("m1");
-    m1.setDatasheet(ds1);
-    PassportDatasheetMapping m2 = new PassportDatasheetMapping();
-    m2.setId("m2");
-    m2.setDatasheet(ds2);
-    passport.setDatasheetMappings(new HashSet<>(List.of(m1, m2)));
+    passport.setDatasheets(
+        new HashSet<>(
+            List.of(
+                datasheet("ds-1", Map.of("prop-1", "old-1"), property("prop-1")),
+                datasheet("ds-2", Map.of("prop-2", "old-2"), property("prop-2")))));
 
     when(passportRepository.findPassport(passportId, Passport.Status.ACTIVE))
         .thenReturn(Optional.of(passport));

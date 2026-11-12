@@ -4,7 +4,7 @@ import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.JsonValidationException;
-import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.DatasheetDefinition;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +22,8 @@ public class PlatformService {
     return adapter.listClass(text);
   }
 
-  /** Search and retrieves the class along with the properties. */
-  public List<Datasheet> generateDatasheetsFromPlatformId(Platform platform, String code)
+  /** Fetches the datasheet definition for a classification along with its related entities. */
+  public List<DatasheetDefinition> generateDatasheetsFromPlatformId(Platform platform, String code)
       throws JsonValidationException {
     var adapter = platformAdapterFactory.getAdapter(platform);
     return adapter.generateDatasheetsFromPlatformId(code, true);

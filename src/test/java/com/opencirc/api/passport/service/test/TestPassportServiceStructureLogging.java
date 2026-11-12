@@ -1,24 +1,21 @@
 package com.opencirc.api.passport.service.test;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.opencirc.api.passport.adapter.PlatformAdapter;
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
 import com.opencirc.api.passport.config.AppProperties;
 import com.opencirc.api.passport.dao.DatasheetRepository;
-import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.model.Datasheet;
+import com.opencirc.api.passport.model.DatasheetDefinition;
 import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetMapping;
+import com.opencirc.api.passport.service.DatasheetDefinitionService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
 import com.opencirc.api.passport.service.PassportLogService;
 import com.opencirc.api.passport.service.PassportService;
@@ -36,8 +33,8 @@ import tools.jackson.databind.ObjectMapper;
 public class TestPassportServiceStructureLogging {
 
   @Mock private DatasheetRepository datasheetRepository;
+  @Mock private DatasheetDefinitionService datasheetDefinitionService;
   @Mock private PassportRepository passportRepository;
-  @Mock private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
   @Mock private PlatformAdapterFactory platformAdapterFactory;
   @Mock private ObjectMapper objectMapper;
   @Mock private AppProperties appProperties;
@@ -51,8 +48,8 @@ public class TestPassportServiceStructureLogging {
     passportService =
         new PassportService(
             datasheetRepository,
+            datasheetDefinitionService,
             passportRepository,
-            passportDatasheetMappingRepository,
             platformAdapterFactory,
             objectMapper,
             appProperties,
@@ -66,7 +63,7 @@ public class TestPassportServiceStructureLogging {
     Passport passport = new Passport();
     passport.setId(passportId);
     passport.setStatus(Passport.Status.ACTIVE);
-    passport.setDatasheetMappings(new HashSet<>());
+    passport.setDatasheets(new HashSet<>());
 
     when(passportRepository.findById(passportId)).thenReturn(Optional.of(passport));
 
@@ -76,15 +73,13 @@ public class TestPassportServiceStructureLogging {
     UserDto author = new UserDto();
     author.setId("user-456");
 
-    PlatformAdapter adapter = mock(PlatformAdapter.class);
-    when(platformAdapterFactory.getAdapter(platform)).thenReturn(adapter);
-
-    Datasheet rawDatasheet = new Datasheet();
-    rawDatasheet.setId("datasheet-789");
-    when(adapter.generateDatasheetsFromPlatformId(eq(platformId), anyBoolean()))
-        .thenReturn(List.of(rawDatasheet));
-    when(datasheetRepository.save(any(Datasheet.class))).thenReturn(rawDatasheet);
-    when(passportDatasheetMappingRepository.save(any(PassportDatasheetMapping.class)))
+    DatasheetDefinition definition = new DatasheetDefinition();
+    definition.setId("definition-789");
+    definition.setPlatformId(platformId);
+    definition.setName("Test Definition");
+    when(datasheetDefinitionService.resolveDefinitions(platform, platformId, false))
+        .thenReturn(List.of(definition));
+    when(datasheetRepository.save(any(Datasheet.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     passportService.addDatasheetsToPassportUsingPlatform(
@@ -92,6 +87,37 @@ public class TestPassportServiceStructureLogging {
 
     verify(passportLogService)
         .logEvent(eq(passportId), eq(PassportLogAction.ADD_DATASHEET), any(List.class));
+    org.junit.jupiter.api.Assertions.assertEquals(1, passport.getDatasheets().size());
+    org.junit.jupiter.api.Assertions.assertSame(
+        definition, passport.getDatasheets().iterator().next().getDefinition());
+  }
+
+  @Test
+  public void shouldNotAttachSameDefinitionTwice() throws Exception {
+    String passportId = "passport-123";
+    Passport passport = new Passport();
+    passport.setId(passportId);
+    passport.setStatus(Passport.Status.ACTIVE);
+
+    DatasheetDefinition definition = new DatasheetDefinition();
+    definition.setId("definition-789");
+    definition.setPlatformId("platform-abc");
+
+    Datasheet existing = new Datasheet();
+    existing.setId("ds-1");
+    existing.setDefinition(definition);
+    passport.setDatasheets(new HashSet<>(List.of(existing)));
+
+    when(passportRepository.findById(passportId)).thenReturn(Optional.of(passport));
+    when(datasheetDefinitionService.resolveDefinitions(Platform.BSDD, "platform-abc", false))
+        .thenReturn(List.of(definition));
+
+    passportService.addDatasheetsToPassportUsingPlatform(
+        passportId, Platform.BSDD, "platform-abc", Datasheet.DataCategory.GENERIC, null);
+
+    verify(datasheetRepository, org.mockito.Mockito.never()).save(any());
+    org.mockito.Mockito.verifyNoInteractions(passportLogService);
+    org.junit.jupiter.api.Assertions.assertEquals(1, passport.getDatasheets().size());
   }
 
   @Test
@@ -103,22 +129,23 @@ public class TestPassportServiceStructureLogging {
     passport.setId(passportId);
     passport.setStatus(Passport.Status.ACTIVE);
 
+    DatasheetDefinition definition = new DatasheetDefinition();
+    definition.setId("definition-1");
+    definition.setName("Test Datasheet");
+
     Datasheet datasheet = new Datasheet();
     datasheet.setId(datasheetId);
-    datasheet.setName("Test Datasheet");
-
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setPassport(passport);
-    mapping.setDatasheet(datasheet);
-    passport.setDatasheetMappings(new HashSet<>(List.of(mapping)));
+    datasheet.setDefinition(definition);
+    passport.setDatasheets(new HashSet<>(List.of(datasheet)));
 
     when(passportRepository.findById(passportId)).thenReturn(Optional.of(passport));
 
     passportService.removeDatasheet(passportId, datasheetId);
 
-    verify(passportDatasheetMappingRepository).delete(mapping);
+    verify(datasheetRepository).delete(datasheet);
     verify(passportLogService)
         .logEvent(eq(passportId), eq(PassportLogAction.REMOVE_DATASHEET), any(List.class));
+    org.junit.jupiter.api.Assertions.assertTrue(passport.getDatasheets().isEmpty());
   }
 
   @Test

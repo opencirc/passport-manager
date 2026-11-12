@@ -4,9 +4,8 @@ import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.DatasheetProperty;
+import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import java.math.BigDecimal;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -238,11 +237,15 @@ public class EpdEnrichmentService {
   /** Checks the original trigger property against the latest committed datasheet value. */
   public boolean hasExpectedTrigger(
       Passport passport, String triggerPropertyId, String expectedUrl) {
-    for (PassportDatasheetMapping mapping : passport.getDatasheetMappings()) {
-      Datasheet datasheet = mapping.getDatasheet();
+    if (passport.getDatasheets() == null) {
+      return false;
+    }
+    for (Datasheet datasheet : passport.getDatasheets()) {
       if (datasheet != null
           && datasheet.getData() != null
-          && datasheet.getDatasheetProperties().stream()
+          && datasheet.getDefinition() != null
+          && datasheet.getDefinition().getProperties() != null
+          && datasheet.getDefinition().getProperties().stream()
               .anyMatch(property -> triggerPropertyId.equals(property.getId()))) {
         return Objects.equals(expectedUrl, datasheet.getData().get(triggerPropertyId));
       }
@@ -630,12 +633,16 @@ public class EpdEnrichmentService {
   }
 
   private void updateDatasheets(Passport passport, Map<String, Object> enrichedData) {
-    if (passport.getDatasheetMappings() == null) {
+    if (passport.getDatasheets() == null) {
       return;
     }
 
-    for (PassportDatasheetMapping mapping : passport.getDatasheetMappings()) {
-      Datasheet datasheet = mapping.getDatasheet();
+    for (Datasheet datasheet : passport.getDatasheets()) {
+      if (datasheet == null
+          || datasheet.getDefinition() == null
+          || datasheet.getDefinition().getProperties() == null) {
+        continue;
+      }
       log.info("Got datasheet: {}", datasheet.getId());
 
       boolean updated = false;
@@ -644,7 +651,7 @@ public class EpdEnrichmentService {
         data = new HashMap<>();
       }
 
-      for (DatasheetProperty property : datasheet.getDatasheetProperties()) {
+      for (DatasheetDefinitionProperty property : datasheet.getDefinition().getProperties()) {
         String key = createKey(property.getCode(), property.getGroupTag());
         log.info("Looking for property: {} & key: {}", property.getId(), key);
         if (enrichedData.containsKey(key)) {

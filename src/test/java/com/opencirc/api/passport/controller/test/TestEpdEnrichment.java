@@ -10,9 +10,9 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
 import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.dao.DatasheetPropertyRepository;
+import com.opencirc.api.passport.dao.DatasheetDefinitionPropertyRepository;
+import com.opencirc.api.passport.dao.DatasheetDefinitionRepository;
 import com.opencirc.api.passport.dao.DatasheetRepository;
-import com.opencirc.api.passport.dao.PassportDatasheetMappingRepository;
 import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
@@ -21,9 +21,9 @@ import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import com.opencirc.api.passport.helper.test.TestConfig;
 import com.opencirc.api.passport.model.Datasheet;
-import com.opencirc.api.passport.model.DatasheetProperty;
+import com.opencirc.api.passport.model.DatasheetDefinition;
+import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.model.Passport;
-import com.opencirc.api.passport.model.PassportDatasheetMapping;
 import io.github.thibaultmeyer.cuid.CUID;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -31,6 +31,7 @@ import io.restassured.response.Response;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -57,9 +58,9 @@ public class TestEpdEnrichment {
 
   @Autowired private DatasheetRepository datasheetRepository;
 
-  @Autowired private DatasheetPropertyRepository datasheetPropertyRepository;
+  @Autowired private DatasheetDefinitionRepository definitionRepository;
 
-  @Autowired private PassportDatasheetMappingRepository passportDatasheetMappingRepository;
+  @Autowired private DatasheetDefinitionPropertyRepository definitionPropertyRepository;
 
   @MockitoBean private AuthUserDetailsService authUserDetailsService;
 
@@ -105,26 +106,13 @@ public class TestEpdEnrichment {
     passport.setCreatedBy(createdBy);
     passport = passportRepository.save(passport);
 
-    // Create a datasheet
-    Datasheet datasheet = new Datasheet();
-    datasheet.setName("Test Datasheet");
-    datasheet.setPlatform(Platform.BSDD);
-    datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
-    datasheet.setCreatedBy(createdBy);
-    datasheet = datasheetRepository.save(datasheet);
-
-    // Map datasheet to passport
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setPassport(passport);
-    mapping.setDatasheet(datasheet);
-    passportDatasheetMappingRepository.save(mapping);
-
-    // Reload passport to have mappings
-    passport = passportRepository.findById(passport.getId()).get();
+    // Create a datasheet instance bound to a fresh shared definition
+    Datasheet datasheet = createDatasheet(passport, createdBy);
 
     // Setup properties
-    DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
-    DatasheetProperty nameProp = createProperty(datasheet, NAME_CODE, NAME_GROUP);
+    DatasheetDefinitionProperty triggerProp =
+        createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
+    DatasheetDefinitionProperty nameProp = createProperty(datasheet, NAME_CODE, NAME_GROUP);
 
     // Stub WireMock
     stubFor(
@@ -166,9 +154,9 @@ public class TestEpdEnrichment {
   public void shouldHandleInvalidUrlGracefully() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
-    Datasheet datasheet = createDatasheet(createdBy);
-    mapDatasheetToPassport(passport, datasheet);
-    DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
+    Datasheet datasheet = createDatasheet(passport, createdBy);
+    DatasheetDefinitionProperty triggerProp =
+        createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
 
     // Stub WireMock for a 404
     stubFor(get(urlPathEqualTo("/not-found.json")).willReturn(aResponse().withStatus(404)));
@@ -212,14 +200,12 @@ public class TestEpdEnrichment {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
 
-    Datasheet ds1 = createDatasheet(createdBy);
-    mapDatasheetToPassport(passport, ds1);
-    DatasheetProperty triggerProp = createProperty(ds1, TRIGGER_CODE, TRIGGER_GROUP);
-    DatasheetProperty nameProp1 = createProperty(ds1, NAME_CODE, NAME_GROUP);
+    Datasheet ds1 = createDatasheet(passport, createdBy);
+    DatasheetDefinitionProperty triggerProp = createProperty(ds1, TRIGGER_CODE, TRIGGER_GROUP);
+    DatasheetDefinitionProperty nameProp1 = createProperty(ds1, NAME_CODE, NAME_GROUP);
 
-    Datasheet ds2 = createDatasheet(createdBy);
-    mapDatasheetToPassport(passport, ds2);
-    DatasheetProperty nameProp2 = createProperty(ds2, NAME_CODE, NAME_GROUP);
+    Datasheet ds2 = createDatasheet(passport, createdBy);
+    DatasheetDefinitionProperty nameProp2 = createProperty(ds2, NAME_CODE, NAME_GROUP);
 
     stubFor(
         get(urlPathEqualTo("/multi.json"))
@@ -259,11 +245,11 @@ public class TestEpdEnrichment {
   public void shouldEnrichMetadataEvenIfGWPIsMissing() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
-    Datasheet datasheet = createDatasheet(createdBy);
-    mapDatasheetToPassport(passport, datasheet);
-    DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
-    DatasheetProperty nameProp = createProperty(datasheet, NAME_CODE, NAME_GROUP);
-    DatasheetProperty gwpProp =
+    Datasheet datasheet = createDatasheet(passport, createdBy);
+    DatasheetDefinitionProperty triggerProp =
+        createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
+    DatasheetDefinitionProperty nameProp = createProperty(datasheet, NAME_CODE, NAME_GROUP);
+    DatasheetDefinitionProperty gwpProp =
         createProperty(datasheet, "ClimateChangePerUnit", "Pset_EnvironmentalImpactIndicators");
 
     // JSON without GWP
@@ -303,10 +289,11 @@ public class TestEpdEnrichment {
   public void shouldExtractPublicationDateFromNewPath() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
-    Datasheet datasheet = createDatasheet(createdBy);
-    mapDatasheetToPassport(passport, datasheet);
-    DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
-    DatasheetProperty pubDateProp = createProperty(datasheet, "publicationdateofEPD", "Date");
+    Datasheet datasheet = createDatasheet(passport, createdBy);
+    DatasheetDefinitionProperty triggerProp =
+        createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
+    DatasheetDefinitionProperty pubDateProp =
+        createProperty(datasheet, "publicationdateofEPD", "Date");
 
     String json =
         """
@@ -359,10 +346,10 @@ public class TestEpdEnrichment {
   public void shouldExtractGwpFromNewPath() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
-    Datasheet datasheet = createDatasheet(createdBy);
-    mapDatasheetToPassport(passport, datasheet);
-    DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
-    DatasheetProperty gwpProp =
+    Datasheet datasheet = createDatasheet(passport, createdBy);
+    DatasheetDefinitionProperty triggerProp =
+        createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
+    DatasheetDefinitionProperty gwpProp =
         createProperty(datasheet, "ClimateChangePerUnit", "Pset_EnvironmentalImpactIndicators");
 
     String json =
@@ -428,11 +415,12 @@ public class TestEpdEnrichment {
   public void shouldEnrichLCAxData() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
-    Datasheet datasheet = createDatasheet(createdBy);
-    mapDatasheetToPassport(passport, datasheet);
-    DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
-    DatasheetProperty nameProp = createProperty(datasheet, "productname", "ProductInformation");
-    DatasheetProperty gwpProp =
+    Datasheet datasheet = createDatasheet(passport, createdBy);
+    DatasheetDefinitionProperty triggerProp =
+        createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
+    DatasheetDefinitionProperty nameProp =
+        createProperty(datasheet, "productname", "ProductInformation");
+    DatasheetDefinitionProperty gwpProp =
         createProperty(datasheet, "ClimateChangePerUnit", "Pset_EnvironmentalImpactIndicators");
 
     String json =
@@ -484,19 +472,23 @@ public class TestEpdEnrichment {
   public void shouldEnrichLCAxDataWithAllFields() {
     CreatedByDto createdBy = new CreatedByDto("System", "system@opencirc.org");
     Passport passport = createPassport(createdBy);
-    Datasheet datasheet = createDatasheet(createdBy);
-    mapDatasheetToPassport(passport, datasheet);
-    DatasheetProperty triggerProp = createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
-    DatasheetProperty nameProp = createProperty(datasheet, "productname", "ProductInformation");
-    DatasheetProperty pubDateProp = createProperty(datasheet, "publicationdateofEPD", "Date");
-    DatasheetProperty validUntilProp = createProperty(datasheet, "datasetvaliduntil", "Date");
-    DatasheetProperty serviceLifeProp =
+    Datasheet datasheet = createDatasheet(passport, createdBy);
+    DatasheetDefinitionProperty triggerProp =
+        createProperty(datasheet, TRIGGER_CODE, TRIGGER_GROUP);
+    DatasheetDefinitionProperty nameProp =
+        createProperty(datasheet, "productname", "ProductInformation");
+    DatasheetDefinitionProperty pubDateProp =
+        createProperty(datasheet, "publicationdateofEPD", "Date");
+    DatasheetDefinitionProperty validUntilProp =
+        createProperty(datasheet, "datasetvaliduntil", "Date");
+    DatasheetDefinitionProperty serviceLifeProp =
         createProperty(
             datasheet, "referenceservicelifeaccordingtoISO15686-8", "ProductInformation");
-    DatasheetProperty ownerProp = createProperty(datasheet, "nameofowner", "PartiesInvolved");
-    DatasheetProperty unitProp =
+    DatasheetDefinitionProperty ownerProp =
+        createProperty(datasheet, "nameofowner", "PartiesInvolved");
+    DatasheetDefinitionProperty unitProp =
         createProperty(datasheet, "referenceunittype", "ReferenceUnitType");
-    DatasheetProperty gwpProp =
+    DatasheetDefinitionProperty gwpProp =
         createProperty(datasheet, "ClimateChangePerUnit", "Pset_EnvironmentalImpactIndicators");
 
     String json =
@@ -565,29 +557,28 @@ public class TestEpdEnrichment {
     return passportRepository.save(passport);
   }
 
-  private Datasheet createDatasheet(CreatedByDto createdBy) {
+  /** Creates a datasheet instance on the passport, backed by a fresh shared definition. */
+  private Datasheet createDatasheet(Passport passport, CreatedByDto createdBy) {
+    DatasheetDefinition definition = new DatasheetDefinition();
+    definition.setName("Test Datasheet");
+    definition.setPlatform(Platform.BSDD);
+    definition.setPlatformId("urn:test:definition:" + UUID.randomUUID());
+    definition = definitionRepository.save(definition);
+
     Datasheet datasheet = new Datasheet();
-    datasheet.setName("Test Datasheet");
-    datasheet.setPlatform(Platform.BSDD);
+    datasheet.setPassport(passport);
+    datasheet.setDefinition(definition);
     datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
     datasheet.setCreatedBy(createdBy);
     return datasheetRepository.save(datasheet);
   }
 
-  private void mapDatasheetToPassport(Passport passport, Datasheet datasheet) {
-    PassportDatasheetMapping mapping = new PassportDatasheetMapping();
-    mapping.setPassport(passport);
-    mapping.setDatasheet(datasheet);
-    passportDatasheetMappingRepository.save(mapping);
-    // Reload to ensure mappings are present
-    passport.getDatasheetMappings().add(mapping);
-  }
-
-  private DatasheetProperty createProperty(Datasheet datasheet, String code, String groupTag) {
-    DatasheetProperty prop = new DatasheetProperty();
-    prop.setDatasheet(datasheet);
+  private DatasheetDefinitionProperty createProperty(
+      Datasheet datasheet, String code, String groupTag) {
+    DatasheetDefinitionProperty prop = new DatasheetDefinitionProperty();
+    prop.setDatasheetDefinition(datasheet.getDefinition());
     prop.setCode(code);
     prop.setGroupTag(groupTag);
-    return datasheetPropertyRepository.save(prop);
+    return definitionPropertyRepository.save(prop);
   }
 }

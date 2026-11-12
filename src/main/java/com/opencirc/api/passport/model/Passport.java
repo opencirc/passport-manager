@@ -32,7 +32,7 @@ import org.hibernate.annotations.ColumnTransformer;
 @Entity
 @Table(name = "passports")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"datasheetMappings"})
+@ToString(exclude = {"datasheets"})
 public class Passport {
 
   @Id
@@ -63,7 +63,7 @@ public class Passport {
 
   @OneToMany(mappedBy = "passport", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JsonManagedReference
-  private Set<PassportDatasheetMapping> datasheetMappings = new HashSet<>();
+  private Set<Datasheet> datasheets = new HashSet<>();
 
   /** Enum representing the status of a Passport. */
   @Getter
