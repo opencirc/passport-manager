@@ -17,14 +17,15 @@ import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
-import com.opencirc.api.passport.enums.PassportLogAction;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.ForbiddenException;
 import com.opencirc.api.passport.model.AccessGroupPermissions;
 import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.service.AuditLogService;
 import com.opencirc.api.passport.service.DatasheetDefinitionService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
-import com.opencirc.api.passport.service.PassportLogService;
 import com.opencirc.api.passport.service.PassportService;
 import java.util.List;
 import java.util.Optional;
@@ -53,7 +54,7 @@ public class TestPassportService {
   @Mock private PlatformAdapterFactory platformAdapterFactory;
   @Mock private ObjectMapper objectMapper;
   @Mock private EpdEnrichmentService epdEnrichmentService;
-  @Mock private PassportLogService passportLogService;
+  @Mock private AuditLogService auditLogService;
 
   private PassportService passportService;
 
@@ -67,7 +68,7 @@ public class TestPassportService {
             platformAdapterFactory,
             objectMapper,
             epdEnrichmentService,
-            passportLogService);
+            auditLogService);
   }
 
   private static Passport activePassport(String id) {
@@ -188,10 +189,17 @@ public class TestPassportService {
 
     passportService.createPassportUsingPlatform(platform, request, ACTOR);
 
-    var eventOrder = org.mockito.Mockito.inOrder(passportLogService, datasheetDefinitionService);
+    var eventOrder = org.mockito.Mockito.inOrder(auditLogService, datasheetDefinitionService);
     eventOrder
-        .verify(passportLogService)
-        .logEvent(anyString(), eq(PassportLogAction.CREATE), any(java.util.List.class));
+        .verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT),
+            anyString(),
+            eq(PROJECT_ID),
+            anyString(),
+            eq(AuditLogAction.CREATE),
+            any(),
+            any());
     eventOrder
         .verify(datasheetDefinitionService)
         .resolveDefinitions(eq(platform), eq("platform-id"), eq(true));
@@ -213,8 +221,15 @@ public class TestPassportService {
 
     var createdPassport = passportService.createPassportUsingPlatform(platform, request, ACTOR);
 
-    verify(passportLogService)
-        .logEvent(eq("my-custom-id"), eq(PassportLogAction.CREATE), any(java.util.List.class));
+    verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT),
+            eq("my-custom-id"),
+            eq(PROJECT_ID),
+            eq("my-custom-id"),
+            eq(AuditLogAction.CREATE),
+            any(),
+            any());
     assertEquals("my-custom-id", createdPassport.getId());
 
     ArgumentCaptor<Passport> saved = ArgumentCaptor.forClass(Passport.class);
@@ -487,7 +502,14 @@ public class TestPassportService {
     PassportDto result = passportService.archivePassport("child-id", ACTOR);
 
     assertEquals("archived", result.getStatus());
-    verify(passportLogService)
-        .logEvent(eq("child-id"), eq(PassportLogAction.ARCHIVE), any(java.util.List.class));
+    verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT),
+            eq("child-id"),
+            eq(PROJECT_ID),
+            eq("child-id"),
+            eq(AuditLogAction.UPDATE),
+            any(),
+            any());
   }
 }

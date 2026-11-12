@@ -12,8 +12,9 @@ import com.opencirc.api.passport.dto.DatasheetPropertyDto;
 import com.opencirc.api.passport.dto.PassportDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.enums.DataDictionary;
-import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.enums.Platform;
 import com.opencirc.api.passport.exception.ForbiddenException;
 import com.opencirc.api.passport.exception.InvalidDataDictionaryException;
@@ -53,7 +54,8 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * Service class for passport operations. Every operation runs on behalf of a machine credential
  * ({@link ApiKeyPrincipal}) and is confined to that credential's project: the check is a single
- * comparison of the passport's {@code projectId}, no hierarchy traversal.
+ * comparison of the passport's {@code projectId}, no hierarchy traversal. Every mutation is
+ * recorded in the audit log as an RFC 6902 diff.
  */
 @Service
 public class PassportService {
@@ -75,7 +77,7 @@ public class PassportService {
 
   private final EpdEnrichmentService epdEnrichmentService;
 
-  private final PassportLogService passportLogService;
+  private final AuditLogService auditLogService;
 
   private static final String EPD_TRIGGER_PLATFORM_ID =
       "https://identifier.buildingsmart.org/uri/LCA/LCA/3.0/class/GeneralInformation/prop/ID/referencetooriginalEPD";
@@ -99,14 +101,14 @@ public class PassportService {
       PlatformAdapterFactory platformAdapterFactory,
       ObjectMapper objectMapper,
       EpdEnrichmentService epdEnrichmentService,
-      PassportLogService passportLogService) {
+      AuditLogService auditLogService) {
     this.datasheetRepository = datasheetRepository;
     this.datasheetDefinitionService = datasheetDefinitionService;
     this.passportRepository = passportRepository;
     this.platformAdapterFactory = platformAdapterFactory;
     this.objectMapper = objectMapper;
     this.epdEnrichmentService = epdEnrichmentService;
-    this.passportLogService = passportLogService;
+    this.auditLogService = auditLogService;
   }
 
   /** Creates multiple child passports in the actor's project. */
@@ -307,7 +309,14 @@ public class PassportService {
     passport.setDatasheets(new HashSet<>());
 
     passport = passportRepository.save(passport);
-    passportLogService.logEvent(passport.getId(), PassportLogAction.CREATE, List.of());
+    auditLogService.record(
+        AuditTargetType.PASSPORT,
+        passport.getId(),
+        passport.getProjectId(),
+        passport.getId(),
+        AuditLogAction.CREATE,
+        null,
+        auditLogService.passportSnapshot(passport));
 
     addDatasheetsToPassportUsingPlatform(
         passport,
@@ -414,19 +423,18 @@ public class PassportService {
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Datasheet mapping not found"));
 
+    JsonNode before = auditLogService.datasheetSnapshot(datasheetToRemove);
     passport.getDatasheets().remove(datasheetToRemove);
     datasheetRepository.delete(datasheetToRemove);
 
-    DatasheetDefinition definition = datasheetToRemove.getDefinition();
-    passportLogService.logEvent(
+    auditLogService.record(
+        AuditTargetType.PASSPORT_DATASHEET,
+        datasheetId,
+        passport.getProjectId(),
         passportId,
-        PassportLogAction.REMOVE_DATASHEET,
-        List.of(
-            Map.of(
-                "datasheetId",
-                datasheetId,
-                "datasheetName",
-                definition != null && definition.getName() != null ? definition.getName() : "")));
+        AuditLogAction.DELETE,
+        before,
+        null);
 
     return PassportDto.from(passport);
   }
@@ -434,9 +442,7 @@ public class PassportService {
   /** Moves a passport under another active passport of the same project. */
   @Transactional
   public PassportDto updateParent(String passportId, String newParentId, ApiKeyPrincipal actor) {
-    Passport passport = loadOwnedPassport(passportId, actor);
-
-    final String oldParentId = passport.getParentId();
+    final Passport passport = loadOwnedPassport(passportId, actor);
 
     if (newParentId == null || newParentId.isBlank()) {
       throw new ResponseStatusException(
@@ -455,20 +461,20 @@ public class PassportService {
     }
     requireActiveParent(newParentId, actor);
 
+    final JsonNode before = auditLogService.passportSnapshot(passport);
     passport.setParentId(newParentId);
-    passport = passportRepository.save(passport);
+    Passport saved = passportRepository.save(passport);
 
-    passportLogService.logEvent(
+    auditLogService.record(
+        AuditTargetType.PASSPORT,
         passportId,
-        PassportLogAction.UPDATE_RELATIONSHIPS,
-        List.of(
-            Map.of(
-                "oldParentId",
-                oldParentId != null ? oldParentId : "",
-                "newParentId",
-                newParentId)));
+        saved.getProjectId(),
+        passportId,
+        AuditLogAction.UPDATE,
+        before,
+        auditLogService.passportSnapshot(saved));
 
-    return PassportDto.from(passport);
+    return PassportDto.from(saved);
   }
 
   /**
@@ -524,15 +530,14 @@ public class PassportService {
       datasheet = datasheetRepository.save(datasheet);
       passport.getDatasheets().add(datasheet);
 
-      passportLogService.logEvent(
+      auditLogService.record(
+          AuditTargetType.PASSPORT_DATASHEET,
+          datasheet.getId(),
+          passport.getProjectId(),
           passport.getId(),
-          PassportLogAction.ADD_DATASHEET,
-          List.of(
-              Map.of(
-                  "datasheetId",
-                  datasheet.getId() != null ? datasheet.getId() : "",
-                  "datasheetName",
-                  definition.getName() != null ? definition.getName() : "")));
+          AuditLogAction.CREATE,
+          null,
+          auditLogService.datasheetSnapshot(datasheet));
     }
 
     return PassportDto.from(passport);
@@ -657,9 +662,19 @@ public class PassportService {
       return PassportDto.from(passport);
     }
 
-    int archived = passportRepository.archiveSubtree(passportId, OffsetDateTime.now());
-    passportLogService.logEvent(
-        passportId, PassportLogAction.ARCHIVE, List.of(Map.of("archivedPassports", archived)));
+    final JsonNode before = auditLogService.passportSnapshot(passport);
+    OffsetDateTime now = OffsetDateTime.now();
+    passportRepository.archiveSubtree(passportId, now);
+    passport.setStatus(Passport.Status.ARCHIVED);
+    passport.setArchivedTime(now);
+    auditLogService.record(
+        AuditTargetType.PASSPORT,
+        passportId,
+        passport.getProjectId(),
+        passportId,
+        AuditLogAction.UPDATE,
+        before,
+        auditLogService.passportSnapshot(passport));
 
     return passportRepository
         .findById(passportId)
@@ -767,7 +782,7 @@ public class PassportService {
 
   /**
    * Updates datasheet property values for the given passport and group. Only properties present in
-   * {@code values} are updated.
+   * {@code values} are updated; each changed datasheet is audited with its RFC 6902 diff.
    */
   @Transactional
   public PassportDto updateData(
@@ -785,7 +800,6 @@ public class PassportService {
           HttpStatus.NOT_FOUND, "Passport does not have any datasheet mappings: " + passportId);
     }
 
-    List<Map<String, Object>> allChanges = new ArrayList<>();
     String epdUrlToEnrich = null;
     String epdTriggerPropertyId = null;
     for (Datasheet datasheet : datasheets) {
@@ -811,6 +825,7 @@ public class PassportService {
         }
       }
 
+      JsonNode before = auditLogService.datasheetSnapshot(datasheet);
       ObjectNode dataNode =
           datasheet.getData() != null
               ? objectMapper.valueToTree(datasheet.getData())
@@ -818,7 +833,6 @@ public class PassportService {
 
       boolean isChanged = false;
 
-      // List<String> errorMessages = new ArrayList<>();
       for (DatasheetDefinitionProperty property : properties) {
         String propertyId = property.getId();
 
@@ -834,35 +848,28 @@ public class PassportService {
 
         isChanged = true;
         dataNode.set(propertyId, newValueNode);
-
-        Map<String, Object> diff = new HashMap<>();
-        diff.put("propertyId", propertyId);
-        diff.put("datasheetId", datasheet.getId());
-        diff.put(
-            "old",
-            existingValueNode != null
-                ? objectMapper.convertValue(existingValueNode, Object.class)
-                : "");
-        diff.put("new", values.get(propertyId) != null ? values.get(propertyId) : "");
-        allChanges.add(diff);
       }
 
       if (isChanged) {
         datasheet.setData(
             objectMapper.convertValue(dataNode, new tools.jackson.core.type.TypeReference<>() {}));
         datasheetRepository.save(datasheet);
+        auditLogService.record(
+            AuditTargetType.PASSPORT_DATASHEET,
+            datasheet.getId(),
+            passport.getProjectId(),
+            passportId,
+            AuditLogAction.UPDATE,
+            before,
+            auditLogService.datasheetSnapshot(datasheet));
       }
-    }
-
-    if (!allChanges.isEmpty()) {
-      passportLogService.logEvent(passportId, PassportLogAction.UPDATE_PROPERTIES, allChanges);
     }
 
     if (epdUrlToEnrich != null) {
       String enrichmentPassportId = passport.getId();
       String enrichmentUrl = epdUrlToEnrich;
       String triggerPropertyId = epdTriggerPropertyId;
-      PassportLogService.Actor enrichmentActor = passportLogService.captureActor();
+      AuditLogService.Actor enrichmentActor = auditLogService.captureActor();
       TransactionSynchronizationManager.registerSynchronization(
           new TransactionSynchronization() {
             @Override
@@ -872,10 +879,6 @@ public class PassportService {
             }
           });
     }
-
-    // if (updatedProperties.isEmpty()) {
-    //  throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No valid properties found");
-    // }
 
     return PassportDto.from(passport);
   }

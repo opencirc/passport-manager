@@ -2,7 +2,6 @@ package com.opencirc.api.passport.auth.principal;
 
 import com.opencirc.api.passport.model.AccessGroupPermissions;
 import java.security.Principal;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,7 +11,6 @@ import lombok.ToString;
  * profile of its access group so authorization checks need no further lookups.
  */
 @Getter
-@AllArgsConstructor
 @EqualsAndHashCode
 @ToString
 public class ApiKeyPrincipal implements Principal {
@@ -31,6 +29,38 @@ public class ApiKeyPrincipal implements Principal {
 
   /** Permission profile of the access group. */
   private final AccessGroupPermissions permissions;
+
+  /**
+   * Secret component of the token the request was authenticated with, kept only for signing
+   * validation tags during this request. Null when the actor was built without a token.
+   */
+  @ToString.Exclude @EqualsAndHashCode.Exclude private final String rawSecret;
+
+  /** Creates a principal without the token secret. */
+  public ApiKeyPrincipal(
+      String keyId,
+      String keyName,
+      String accessGroupId,
+      String projectId,
+      AccessGroupPermissions permissions) {
+    this(keyId, keyName, accessGroupId, projectId, permissions, null);
+  }
+
+  /** Creates a principal that can sign with the token secret. */
+  public ApiKeyPrincipal(
+      String keyId,
+      String keyName,
+      String accessGroupId,
+      String projectId,
+      AccessGroupPermissions permissions,
+      String rawSecret) {
+    this.keyId = keyId;
+    this.keyName = keyName;
+    this.accessGroupId = accessGroupId;
+    this.projectId = projectId;
+    this.permissions = permissions;
+    this.rawSecret = rawSecret;
+  }
 
   /** The principal name is the public key id. */
   @Override

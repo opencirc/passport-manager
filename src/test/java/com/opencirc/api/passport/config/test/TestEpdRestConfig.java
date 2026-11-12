@@ -11,9 +11,9 @@ import com.opencirc.api.passport.config.RestConfig;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.helper.test.TestConfig;
+import com.opencirc.api.passport.service.AuditLogService;
 import com.opencirc.api.passport.service.CacheService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
-import com.opencirc.api.passport.service.PassportLogService;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,7 +38,7 @@ public class TestEpdRestConfig {
             .withBean(CacheService.class, () -> mock(CacheService.class))
             .withBean(DatasheetRepository.class, () -> mock(DatasheetRepository.class))
             .withBean(PassportRepository.class, () -> mock(PassportRepository.class))
-            .withBean(PassportLogService.class, () -> mock(PassportLogService.class));
+            .withBean(AuditLogService.class, () -> mock(AuditLogService.class));
     contextRunner.run(
         context -> {
           assertSame(

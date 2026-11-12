@@ -9,10 +9,10 @@ import static org.hamcrest.Matchers.*;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
+import com.opencirc.api.passport.dao.AuditLogRepository;
 import com.opencirc.api.passport.dao.DatasheetDefinitionPropertyRepository;
 import com.opencirc.api.passport.dao.DatasheetDefinitionRepository;
 import com.opencirc.api.passport.dao.DatasheetRepository;
-import com.opencirc.api.passport.dao.PassportLogRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
@@ -53,7 +53,7 @@ public class TestEpdEnrichment {
 
   @Autowired private PassportRepository passportRepository;
 
-  @Autowired public PassportLogRepository passportLogRepository;
+  @Autowired public AuditLogRepository auditLogRepository;
 
   @Autowired private DatasheetRepository datasheetRepository;
 
@@ -175,13 +175,18 @@ public class TestEpdEnrichment {
               assertThat(
                   updatedDatasheet.getData().get(triggerProp.getId()),
                   is("http://localhost:8089/not-found.json"));
+              // The trigger update itself is audited; the failed enrichment changes nothing.
               assertThat(
-                  passportLogRepository.findByPassportIdOrderByCreatedTimeAsc(passportId).stream()
-                      .anyMatch(
+                  auditLogRepository.findByPassportIdOrderByCreatedTimeDesc(passportId).stream()
+                      .filter(
                           log ->
-                              "EPD_ENRICHMENT_FAILED"
-                                  .equals(log.getData().path("action").asText())),
-                  is(true));
+                              log.getTargetType()
+                                      == com.opencirc.api.passport.enums.AuditTargetType
+                                          .PASSPORT_DATASHEET
+                                  && log.getAction()
+                                      == com.opencirc.api.passport.enums.AuditLogAction.UPDATE)
+                      .count(),
+                  is(1L));
             });
   }
 

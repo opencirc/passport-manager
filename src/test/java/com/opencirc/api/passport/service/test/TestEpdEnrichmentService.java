@@ -11,14 +11,14 @@ import static org.mockito.Mockito.when;
 
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
-import com.opencirc.api.passport.dto.CreatedByDto;
-import com.opencirc.api.passport.enums.PassportLogAction;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetDefinition;
 import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.service.AuditLogService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
-import com.opencirc.api.passport.service.PassportLogService;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,7 +42,7 @@ public class TestEpdEnrichmentService {
   @Mock private DatasheetRepository datasheetRepository;
   @Mock private Environment environment;
   @Mock private PassportRepository passportRepository;
-  @Mock private PassportLogService passportLogService;
+  @Mock private AuditLogService auditLogService;
 
   private EpdEnrichmentService epdEnrichmentService;
 
@@ -50,7 +50,7 @@ public class TestEpdEnrichmentService {
   public void setUp() {
     epdEnrichmentService =
         new EpdEnrichmentService(
-            restTemplate, datasheetRepository, environment, passportRepository, passportLogService);
+            restTemplate, datasheetRepository, environment, passportRepository, auditLogService);
     var beanFactory = new org.springframework.beans.factory.support.DefaultListableBeanFactory();
     beanFactory.registerSingleton("epdEnrichmentService", epdEnrichmentService);
     epdEnrichmentService.enrichmentServiceProvider =
@@ -121,15 +121,14 @@ public class TestEpdEnrichmentService {
   }
 
   @Test
-  public void shouldLogFailedEnrichmentWhenUrlIsUnsafe() {
+  public void shouldNotAuditFailedEnrichment() {
     when(environment.getActiveProfiles()).thenReturn(new String[0]);
     Passport passport = passport("passport-1");
 
     epdEnrichmentService.enrich(passport, "http://1.1.1.1/epd.json");
 
-    verify(passportLogService)
-        .logEvent(
-            eq("passport-1"), eq(PassportLogAction.EPD_ENRICHMENT_FAILED), any(), any(), any());
+    org.mockito.Mockito.verifyNoInteractions(auditLogService);
+    verify(datasheetRepository, never()).save(any());
   }
 
   @Test
@@ -153,23 +152,26 @@ public class TestEpdEnrichmentService {
   }
 
   @Test
-  public void shouldAttributeFailureToEditorRatherThanPassportCreator() {
-    when(environment.getActiveProfiles()).thenReturn(new String[0]);
-    Passport passport = passport("passport-1");
-    passport.setCreatedById("owner-id");
+  public void shouldAttributeEnrichmentToTheEditorsApiKey() throws Exception {
+    Passport passport = enrichmentPassport("http://localhost:8089/epd.json");
     when(passportRepository.findById("passport-1")).thenReturn(Optional.of(passport));
-    PassportLogService.Actor actor =
-        new PassportLogService.Actor(new CreatedByDto("Editor", "editor@example.com"), "editor-id");
+    when(environment.getActiveProfiles()).thenReturn(new String[] {"test"});
+    when(restTemplate.getForObject(anyString(), eq(tools.jackson.databind.JsonNode.class)))
+        .thenReturn(new ObjectMapper().readTree("{\"impacts\":{\"gwp\":{\"a1a3\":12.34}}}"));
+    AuditLogService.Actor actor = new AuditLogService.Actor("editor-key");
 
-    epdEnrichmentService.enrich("passport-1", "http://1.1.1.1/epd.json", "trigger", actor);
+    epdEnrichmentService.enrich("passport-1", "http://localhost:8089/epd.json", "trigger", actor);
 
-    verify(passportLogService)
-        .logEvent(
-            eq("passport-1"),
-            eq(PassportLogAction.EPD_ENRICHMENT_FAILED),
+    verify(auditLogService)
+        .record(
+            eq(AuditTargetType.PASSPORT_DATASHEET),
+            eq("datasheet"),
             any(),
-            eq(actor.createdBy()),
-            eq("editor-id"));
+            eq("passport-1"),
+            eq(AuditLogAction.UPDATE),
+            any(),
+            any(),
+            eq(actor));
   }
 
   @ParameterizedTest
@@ -185,7 +187,7 @@ public class TestEpdEnrichmentService {
         .thenReturn(new ObjectMapper().readTree("{\"impacts\":{\"gwp\":{\"a1a3\":12.34}}}"));
 
     epdEnrichmentService.enrich(
-        "passport-1", expectedUrl, "trigger", PassportLogService.systemActor());
+        "passport-1", expectedUrl, "trigger", AuditLogService.Actor.system());
 
     if (expectedUrl.equals(currentUrl)) {
       Datasheet datasheet = current.getDatasheets().iterator().next();
@@ -224,13 +226,7 @@ public class TestEpdEnrichmentService {
     epdEnrichmentService.enrich(passport, "http://localhost:8089/epd.json");
 
     verify(datasheetRepository, never()).save(any());
-    verify(passportLogService)
-        .logEvent(
-            eq("passport-1"),
-            eq(PassportLogAction.EPD_ENRICHMENT_FAILED),
-            any(),
-            any(),
-            eq("system"));
+    org.mockito.Mockito.verifyNoInteractions(auditLogService);
   }
 
   public String gwpPayload(String format, String value) {

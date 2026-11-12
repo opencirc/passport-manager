@@ -2,7 +2,8 @@ package com.opencirc.api.passport.service;
 
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
-import com.opencirc.api.passport.enums.PassportLogAction;
+import com.opencirc.api.passport.enums.AuditLogAction;
+import com.opencirc.api.passport.enums.AuditTargetType;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.model.Passport;
@@ -41,7 +42,7 @@ public class EpdEnrichmentService {
   private final DatasheetRepository datasheetRepository;
   private final Environment environment;
   private final PassportRepository passportRepository;
-  private final PassportLogService passportLogService;
+  private final AuditLogService auditLogService;
 
   private static final String GWP_UUID_31 = "a7ea142a-9749-11ed-a8fc-0242ac120002";
   private static final String GWP_UUID_30 = "6a37f984-a4b3-458a-a20a-64418c145fa2";
@@ -77,19 +78,19 @@ public class EpdEnrichmentService {
    * @param datasheetRepository the repository for Datasheet entities
    * @param environment the Spring environment used to relax loopback checks in local/test
    * @param passportRepository the repository for Passport entities
-   * @param passportLogService the service to log passport audit events
+   * @param auditLogService the service recording datasheet mutations
    */
   public EpdEnrichmentService(
       @Qualifier("epdRestTemplate") RestTemplate restTemplate,
       DatasheetRepository datasheetRepository,
       Environment environment,
       PassportRepository passportRepository,
-      PassportLogService passportLogService) {
+      AuditLogService auditLogService) {
     this.restTemplate = restTemplate;
     this.datasheetRepository = datasheetRepository;
     this.environment = environment;
     this.passportRepository = passportRepository;
-    this.passportLogService = passportLogService;
+    this.auditLogService = auditLogService;
   }
 
   /**
@@ -101,14 +102,14 @@ public class EpdEnrichmentService {
   @Async
   @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public void enrich(String passportId, String epdUrl) {
-    enrich(passportId, epdUrl, null, PassportLogService.systemActor());
+    enrich(passportId, epdUrl, null, AuditLogService.Actor.system());
   }
 
   /** Enriches only while the captured trigger is current, attributing failures to its actor. */
   @Async
   @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public void enrich(
-      String passportId, String epdUrl, String triggerPropertyId, PassportLogService.Actor actor) {
+      String passportId, String epdUrl, String triggerPropertyId, AuditLogService.Actor actor) {
     log.info("Enriching passport {} from EPD URL: {}", passportId, epdUrl);
     if (passportId == null || passportId.isBlank()) {
       return;
@@ -137,17 +138,17 @@ public class EpdEnrichmentService {
     if (passport.getId() != null && passportRepository != null) {
       Optional<Passport> fresh = passportRepository.findById(passport.getId());
       if (fresh.isPresent()) {
-        enrichPassport(fresh.get(), epdUrl, null, PassportLogService.systemActor());
+        enrichPassport(fresh.get(), epdUrl, null, AuditLogService.Actor.system());
         return;
       }
     }
-    enrichPassport(passport, epdUrl, null, PassportLogService.systemActor());
+    enrichPassport(passport, epdUrl, null, AuditLogService.Actor.system());
   }
 
   /** Fetches and applies EPD data for the captured request. */
   @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public void enrichPassport(
-      Passport passport, String epdUrl, String triggerPropertyId, PassportLogService.Actor actor) {
+      Passport passport, String epdUrl, String triggerPropertyId, AuditLogService.Actor actor) {
     String expectedTriggerUrl = epdUrl;
     try {
       if (epdUrl == null || epdUrl.isBlank()) {
@@ -193,7 +194,8 @@ public class EpdEnrichmentService {
 
       enrichmentServiceProvider
           .getObject()
-          .applyEnrichment(passport.getId(), triggerPropertyId, expectedTriggerUrl, extractedData);
+          .applyEnrichment(
+              passport.getId(), triggerPropertyId, expectedTriggerUrl, extractedData, actor);
     } catch (Exception e) {
       log.error(
           "Error during EPD enrichment for passport {}: {}", passport.getId(), e.getMessage(), e);
@@ -208,7 +210,8 @@ public class EpdEnrichmentService {
       String passportId,
       String triggerPropertyId,
       String expectedTriggerUrl,
-      Map<String, Object> extractedData) {
+      Map<String, Object> extractedData,
+      AuditLogService.Actor actor) {
     Passport passport = passportRepository.findById(passportId).orElse(null);
     if (passport == null
         || (triggerPropertyId != null
@@ -216,22 +219,23 @@ public class EpdEnrichmentService {
       log.info("Discarding outdated EPD enrichment for passport {}", passportId);
       return;
     }
-    updateDatasheets(passport, extractedData);
+    updateDatasheets(passport, extractedData, actor);
     passportRepository.save(passport);
     log.info("Successfully enriched passport {}", passportId);
   }
 
-  /** Records an enrichment failure against the initiating actor. */
+  /**
+   * Reports an enrichment failure. Failures change no state, so they are not audit log entries;
+   * they are logged with the initiating actor for operators.
+   */
   public void logEnrichmentFailed(
-      Passport passport, String epdUrl, String reason, PassportLogService.Actor actor) {
-    if (passportLogService != null && passport != null && passport.getId() != null) {
-      passportLogService.logEvent(
-          passport.getId(),
-          PassportLogAction.EPD_ENRICHMENT_FAILED,
-          Map.of("url", epdUrl != null ? epdUrl : "", "reason", reason != null ? reason : ""),
-          actor.createdBy(),
-          actor.createdById());
-    }
+      Passport passport, String epdUrl, String reason, AuditLogService.Actor actor) {
+    log.warn(
+        "EPD enrichment failed for passport {} (url={}, actor={}): {}",
+        passport != null ? passport.getId() : null,
+        epdUrl,
+        actor != null ? actor.createdById() : null,
+        reason);
   }
 
   /** Checks the original trigger property against the latest committed datasheet value. */
@@ -632,7 +636,8 @@ public class EpdEnrichmentService {
     return current.isMissingNode() ? null : current.asText(null);
   }
 
-  private void updateDatasheets(Passport passport, Map<String, Object> enrichedData) {
+  private void updateDatasheets(
+      Passport passport, Map<String, Object> enrichedData, AuditLogService.Actor actor) {
     if (passport.getDatasheets() == null) {
       return;
     }
@@ -645,6 +650,7 @@ public class EpdEnrichmentService {
       }
       log.info("Got datasheet: {}", datasheet.getId());
 
+      final var before = auditLogService.datasheetSnapshot(datasheet);
       boolean updated = false;
       Map<String, Object> data = datasheet.getData();
       if (data == null) {
@@ -664,6 +670,15 @@ public class EpdEnrichmentService {
       if (updated) {
         datasheet.setData(data);
         datasheetRepository.save(datasheet);
+        auditLogService.record(
+            AuditTargetType.PASSPORT_DATASHEET,
+            datasheet.getId(),
+            passport.getProjectId(),
+            passport.getId(),
+            AuditLogAction.UPDATE,
+            before,
+            auditLogService.datasheetSnapshot(datasheet),
+            actor);
       }
     }
   }
