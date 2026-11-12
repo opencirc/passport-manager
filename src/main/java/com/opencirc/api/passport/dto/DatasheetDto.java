@@ -36,9 +36,8 @@ public class DatasheetDto {
 
   @JsonProperty private Map<String, Object> data;
 
+  /** Id of the API key that attached the datasheet. */
   @JsonProperty private String createdById;
-
-  @JsonProperty private CreatedByDto createdBy;
 
   @JsonProperty private OffsetDateTime createdTime;
 
@@ -69,7 +68,6 @@ public class DatasheetDto {
         datasheet.getDataCategory() != null ? datasheet.getDataCategory().getValue() : null;
     datasheetDto.data = datasheet.getData();
     datasheetDto.createdById = datasheet.getCreatedById();
-    datasheetDto.createdBy = datasheet.getCreatedBy();
     datasheetDto.createdTime = datasheet.getCreatedTime();
 
     if (definition != null && definition.getProperties() != null) {

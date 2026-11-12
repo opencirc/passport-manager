@@ -1,15 +1,15 @@
 package com.opencirc.api.passport.config;
 
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.auth.service.AdminDetailsService;
 import com.opencirc.api.passport.constants.AppConstants;
 import com.opencirc.api.passport.service.ApiKeyService;
 import com.opencirc.api.passport.service.JwtService;
-import com.opencirc.api.passport.service.PasswordService;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,18 +18,22 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
-/** Spring security configuration. */
+/**
+ * Spring security configuration. Administrative endpoints require an admin session; passport
+ * endpoints require a machine API key; reference lookups accept either.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
   /** Injecting Properties class. */
-  private AppProperties properties;
+  private final AppProperties properties;
 
   /** Constructor. */
   public SecurityConfig(AppProperties properties) {
@@ -42,16 +46,9 @@ public class SecurityConfig {
       JwtService jwtService,
       AppProperties properties,
       ApiKeyService apiKeyService,
-      PasswordService passwordService,
-      AuthUserDetailsService authUserDetailsService,
+      AdminDetailsService adminDetailsService,
       ObjectMapper objectMapper) {
-    return new JwtFilter(
-        jwtService,
-        properties,
-        apiKeyService,
-        passwordService,
-        authUserDetailsService,
-        objectMapper);
+    return new JwtFilter(jwtService, properties, apiKeyService, adminDetailsService, objectMapper);
   }
 
   /** PasswordEncoder bean. */
@@ -82,8 +79,16 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/v3/api-docs/**")
                     .permitAll()
+                    .requestMatchers("/api/admin/**")
+                    .hasAuthority(AppConstants.AUTHORITY_ADMIN)
+                    .requestMatchers("/api/passport/**")
+                    .hasAuthority(AppConstants.AUTHORITY_API_KEY)
                     .anyRequest()
                     .authenticated())
+        .exceptionHandling(
+            handling ->
+                handling.authenticationEntryPoint(
+                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
         .httpBasic(AbstractHttpConfigurer::disable)
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

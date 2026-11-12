@@ -9,7 +9,6 @@ import static org.hamcrest.Matchers.*;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
 import com.opencirc.api.passport.dao.DatasheetDefinitionPropertyRepository;
 import com.opencirc.api.passport.dao.DatasheetDefinitionRepository;
 import com.opencirc.api.passport.dao.DatasheetRepository;
@@ -18,30 +17,30 @@ import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatedByDto;
 import com.opencirc.api.passport.dto.UpdateDataRequestDto;
 import com.opencirc.api.passport.enums.Platform;
-import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
+import com.opencirc.api.passport.helper.test.MachineAuthTestHelper;
 import com.opencirc.api.passport.helper.test.TestConfig;
+import com.opencirc.api.passport.model.AccessGroupPermissions;
 import com.opencirc.api.passport.model.Datasheet;
 import com.opencirc.api.passport.model.DatasheetDefinition;
 import com.opencirc.api.passport.model.DatasheetDefinitionProperty;
 import com.opencirc.api.passport.model.Passport;
+import com.opencirc.api.passport.service.AccessGroupService;
+import com.opencirc.api.passport.service.ApiKeyService;
+import com.opencirc.api.passport.service.ProjectService;
 import io.github.thibaultmeyer.cuid.CUID;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.response.Response;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -62,11 +61,13 @@ public class TestEpdEnrichment {
 
   @Autowired private DatasheetDefinitionPropertyRepository definitionPropertyRepository;
 
-  @MockitoBean private AuthUserDetailsService authUserDetailsService;
+  @Autowired private ProjectService projectService;
 
-  @MockitoBean private AuthenticationManager authenticationManager;
+  @Autowired private AccessGroupService accessGroupService;
 
-  private String jwtToken;
+  @Autowired private ApiKeyService apiKeyService;
+
+  private MachineAuthTestHelper.MachineFixture fixture;
 
   private static final String TRIGGER_CODE = "referencetooriginalEPD";
   private static final String TRIGGER_GROUP = "GeneralInformation";
@@ -77,21 +78,9 @@ public class TestEpdEnrichment {
   @BeforeEach
   void setup(WireMockRuntimeInfo wmInfo) {
     RestAssured.port = port;
-    MockitoAnnotations.openMocks(this);
-    MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetails(authUserDetailsService, authenticationManager);
-    generateMockJwtToken();
-  }
-
-  private void generateMockJwtToken() {
-    String requestBody = "{\"email\": \"user\", \"password\": \"user1password\"}";
-    Response response =
-        given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
-    if (response.getStatusCode() == 200) {
-      jwtToken = response.getCookie("access_token");
-    } else {
-      jwtToken = "mock-token";
-    }
+    fixture =
+        MachineAuthTestHelper.provision(
+            projectService, accessGroupService, apiKeyService, AccessGroupPermissions.full());
   }
 
   @Test
@@ -103,7 +92,8 @@ public class TestEpdEnrichment {
     passport.setId(CUID.randomCUID2(24).toString());
     passport.setName("Test Passport for EPD");
     passport.setStatus(Passport.Status.ACTIVE);
-    passport.setCreatedBy(createdBy);
+    passport.setProjectId(fixture.projectId());
+    passport.setParentId(fixture.rootPassportId());
     passport = passportRepository.save(passport);
 
     // Create a datasheet instance bound to a fresh shared definition
@@ -130,7 +120,7 @@ public class TestEpdEnrichment {
     UpdateDataRequestDto request = new UpdateDataRequestDto(values);
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .contentType(ContentType.JSON)
         .body(request)
         .when()
@@ -166,7 +156,7 @@ public class TestEpdEnrichment {
     UpdateDataRequestDto request = new UpdateDataRequestDto(values);
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .contentType(ContentType.JSON)
         .body(request)
         .when()
@@ -220,7 +210,7 @@ public class TestEpdEnrichment {
     values.put(triggerProp.getId(), "http://localhost:8089/multi.json");
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .contentType(ContentType.JSON)
         .body(new UpdateDataRequestDto(values))
         .when()
@@ -266,7 +256,7 @@ public class TestEpdEnrichment {
     values.put(triggerProp.getId(), "http://localhost:8089/missing-gwp.json");
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .contentType(ContentType.JSON)
         .body(new UpdateDataRequestDto(values))
         .when()
@@ -324,7 +314,7 @@ public class TestEpdEnrichment {
     values.put(triggerProp.getId(), "http://localhost:8089/new-path.json");
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .contentType(ContentType.JSON)
         .body(new UpdateDataRequestDto(values))
         .when()
@@ -391,7 +381,7 @@ public class TestEpdEnrichment {
     values.put(triggerProp.getId(), "http://localhost:8089/new-gwp-path.json");
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .contentType(ContentType.JSON)
         .body(new UpdateDataRequestDto(values))
         .when()
@@ -448,7 +438,7 @@ public class TestEpdEnrichment {
     values.put(triggerProp.getId(), "http://localhost:8089/lcax-epd.json");
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .contentType(ContentType.JSON)
         .body(new UpdateDataRequestDto(values))
         .when()
@@ -523,7 +513,7 @@ public class TestEpdEnrichment {
     values.put(triggerProp.getId(), "http://localhost:8089/full-lcax-epd.json");
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .contentType(ContentType.JSON)
         .body(new UpdateDataRequestDto(values))
         .when()
@@ -553,7 +543,8 @@ public class TestEpdEnrichment {
     passport.setId(CUID.randomCUID2(24).toString());
     passport.setName("Test Passport");
     passport.setStatus(Passport.Status.ACTIVE);
-    passport.setCreatedBy(createdBy);
+    passport.setProjectId(fixture.projectId());
+    passport.setParentId(fixture.rootPassportId());
     return passportRepository.save(passport);
   }
 
@@ -569,7 +560,6 @@ public class TestEpdEnrichment {
     datasheet.setPassport(passport);
     datasheet.setDefinition(definition);
     datasheet.setDataCategory(Datasheet.DataCategory.GENERIC);
-    datasheet.setCreatedBy(createdBy);
     return datasheetRepository.save(datasheet);
   }
 

@@ -1,8 +1,6 @@
 package com.opencirc.api.passport.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.opencirc.api.passport.dto.CreatedByDto;
-import com.opencirc.api.passport.util.CreatedByDtoConverter;
 import com.opencirc.api.passport.util.DataCategoryConverter;
 import com.opencirc.api.passport.util.JsonMapConverter;
 import jakarta.persistence.Column;
@@ -67,13 +65,9 @@ public class Datasheet {
   @ColumnTransformer(write = "?::jsonb")
   private Map<String, Object> data;
 
-  @Column(name = "created_by_id", columnDefinition = "TEXT")
+  /** Id of the API key that attached this datasheet. */
+  @Column(name = "created_by_id")
   private String createdById;
-
-  @Column(name = "created_by", columnDefinition = "jsonb", nullable = false)
-  @Convert(converter = CreatedByDtoConverter.class)
-  @ColumnTransformer(write = "?::jsonb")
-  private CreatedByDto createdBy;
 
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;

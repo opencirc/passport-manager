@@ -1,9 +1,9 @@
 package com.opencirc.api.passport.auth.controller;
 
 import com.opencirc.api.passport.auth.service.AuthService;
+import com.opencirc.api.passport.dto.AdminDto;
 import com.opencirc.api.passport.dto.LoginRequestDto;
 import com.opencirc.api.passport.dto.StatusResponseDto;
-import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.exception.AuthenticationException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Controller for authentication operatinos. */
+/** Controller for administrator authentication. */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -27,14 +27,14 @@ public class AuthController {
 
   /** Log in. */
   @PostMapping("/login")
-  public ResponseEntity<UserDto> login(
+  public ResponseEntity<AdminDto> login(
       @RequestBody LoginRequestDto loginRequest, HttpServletResponse response)
       throws AuthenticationException {
-    UserDto userDto = authService.login(loginRequest, response);
-    return ResponseEntity.ok(userDto);
+    AdminDto adminDto = authService.login(loginRequest, response);
+    return ResponseEntity.ok(adminDto);
   }
 
-  /** Verifies the status of authentication. */
+  /** Verifies the status of authentication, for an admin session or a machine token. */
   @GetMapping("/status")
   public ResponseEntity<StatusResponseDto> checkAuth(HttpServletRequest request) {
     Cookie[] cookies = request.getCookies();
@@ -50,8 +50,7 @@ public class AuthController {
     }
 
     boolean isAuthenticated =
-        (token != null && authService.validateToken(token))
-            || authService.validateApiKeySecret(request);
+        (token != null && authService.validateToken(token)) || authService.validateApiKey(request);
 
     if (!isAuthenticated) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -61,11 +60,11 @@ public class AuthController {
     return ResponseEntity.ok(new StatusResponseDto("Authenticated"));
   }
 
-  /** Returns the currently authenticated user. */
+  /** Returns the currently authenticated administrator. */
   @GetMapping("/currentUser")
-  public ResponseEntity<UserDto> getCurrentUser(HttpServletRequest request) {
-    UserDto userDto = authService.getCurrentUser(request);
-    return ResponseEntity.ok(userDto);
+  public ResponseEntity<AdminDto> getCurrentUser(HttpServletRequest request) {
+    AdminDto adminDto = authService.getCurrentAdmin(request);
+    return ResponseEntity.ok(adminDto);
   }
 
   /** Refresh an expired token. */

@@ -2,27 +2,35 @@ package com.opencirc.api.passport.controller.test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
 import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
+import com.opencirc.api.passport.helper.test.MachineAuthTestHelper;
+import com.opencirc.api.passport.helper.test.MachineAuthTestHelper.MachineFixture;
 import com.opencirc.api.passport.helper.test.TestConfig;
+import com.opencirc.api.passport.model.AccessGroupPermissions;
+import com.opencirc.api.passport.service.AccessGroupService;
+import com.opencirc.api.passport.service.ApiKeyService;
 import com.opencirc.api.passport.service.PassportService;
+import com.opencirc.api.passport.service.ProjectService;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.response.Response;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.HttpServerErrorException;
@@ -36,32 +44,22 @@ public class TestPassportController {
 
   @LocalServerPort private int port;
 
-  @MockitoBean private AuthUserDetailsService authUserDetailsService;
-
-  @MockitoBean private AuthenticationManager authenticationManager;
-
   @MockitoBean private PassportService passportService;
 
-  private String jwtToken = null;
+  @Autowired private ProjectService projectService;
+
+  @Autowired private AccessGroupService accessGroupService;
+
+  @Autowired private ApiKeyService apiKeyService;
+
+  private MachineFixture fixture;
 
   @BeforeEach
-  void setPortsAndMocks(WireMockRuntimeInfo wmInfo) {
+  void setPortsAndFixtures() {
     RestAssured.port = port;
-    MockitoAnnotations.openMocks(this);
-    MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetails(authUserDetailsService, authenticationManager);
-    generateMockJwtToken();
-  }
-
-  private void generateMockJwtToken() {
-    String requestBody = "{\"email\": \"user\", \"password\": \"user1password\"}";
-    Response response =
-        given().contentType(ContentType.JSON).body(requestBody).when().post("/api/auth/login");
-    if (response.getStatusCode() == 200) {
-      jwtToken = response.getCookie("access_token");
-    } else {
-      throw new AssertionError("Expected status 200, but got " + response.getStatusCode());
-    }
+    fixture =
+        MachineAuthTestHelper.provision(
+            projectService, accessGroupService, apiKeyService, AccessGroupPermissions.full());
   }
 
   @Test
@@ -71,32 +69,142 @@ public class TestPassportController {
     child.setId("child-id");
     child.setName("Child Name");
 
-    when(passportService.getImmediateChildren(passportId)).thenReturn(List.of(child));
+    when(passportService.getImmediateChildren(eq(passportId), any())).thenReturn(List.of(child));
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .pathParam("passportId", passportId)
         .when()
         .get("/api/passport/{passportId}/immediateChildren")
         .then()
         .statusCode(HttpStatus.OK.value())
+        .contentType(ContentType.JSON)
         .body("[0].id", equalTo("child-id"))
         .body("[0].name", equalTo("Child Name"));
   }
 
   @Test
   public void getImmediateChildren_ShouldReturnNotFound_WhenPassportDoesNotExist() {
-    String passportId = "non-existent-id";
-
-    when(passportService.getImmediateChildren(passportId))
-        .thenThrow(new HttpServerErrorException(HttpStatus.NOT_FOUND, "Not found"));
+    String passportId = "missing-id";
+    when(passportService.getImmediateChildren(eq(passportId), any()))
+        .thenThrow(
+            new HttpServerErrorException(
+                HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId));
 
     given()
-        .cookie("access_token", jwtToken)
+        .header("Authorization", fixture.bearer())
         .pathParam("passportId", passportId)
         .when()
         .get("/api/passport/{passportId}/immediateChildren")
         .then()
-        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        .statusCode(HttpStatus.NOT_FOUND.value());
+  }
+
+  @Test
+  public void shouldPassTheKeyScopedToItsProject() {
+    when(passportService.getRootPassports(any())).thenReturn(List.of());
+
+    given()
+        .header("Authorization", fixture.bearer())
+        .when()
+        .get("/api/passport/root")
+        .then()
+        .statusCode(HttpStatus.OK.value());
+
+    ArgumentCaptor<ApiKeyPrincipal> actor = ArgumentCaptor.forClass(ApiKeyPrincipal.class);
+    verify(passportService).getRootPassports(actor.capture());
+    assertEquals(fixture.projectId(), actor.getValue().getProjectId());
+    assertEquals(fixture.apiKeyId(), actor.getValue().getKeyId());
+    assertEquals(fixture.accessGroupId(), actor.getValue().getAccessGroupId());
+  }
+
+  @Test
+  public void shouldAcceptTokenInApiKeyHeader() {
+    when(passportService.getRootPassports(any())).thenReturn(List.of());
+
+    given()
+        .header("X-Api-Key", fixture.token())
+        .when()
+        .get("/api/passport/root")
+        .then()
+        .statusCode(HttpStatus.OK.value());
+  }
+
+  @Test
+  public void shouldRejectMissingCredentials() {
+    given().when().get("/api/passport/root").then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    verify(passportService, never()).getRootPassports(any());
+  }
+
+  @Test
+  public void shouldRejectWrongSecret() {
+    String tampered = fixture.token().substring(0, fixture.token().length() - 4) + "zzzz";
+
+    given()
+        .header("Authorization", "Bearer " + tampered)
+        .when()
+        .get("/api/passport/root")
+        .then()
+        .statusCode(HttpStatus.UNAUTHORIZED.value());
+    verify(passportService, never()).getRootPassports(any());
+  }
+
+  @Test
+  public void shouldRejectRevokedKey() {
+    apiKeyService.revokeApiKey(fixture.apiKeyId());
+
+    given()
+        .header("Authorization", fixture.bearer())
+        .when()
+        .get("/api/passport/root")
+        .then()
+        .statusCode(HttpStatus.UNAUTHORIZED.value());
+    verify(passportService, never()).getRootPassports(any());
+  }
+
+  @Test
+  public void shouldRejectKeyOfArchivedProject() {
+    projectService.archiveProject(fixture.projectId());
+
+    given()
+        .header("Authorization", fixture.bearer())
+        .when()
+        .get("/api/passport/root")
+        .then()
+        .statusCode(HttpStatus.UNAUTHORIZED.value());
+  }
+
+  @Test
+  public void shouldForbidWritesWithoutCreatePermission() throws Exception {
+    MachineFixture readOnly =
+        MachineAuthTestHelper.provision(
+            projectService, accessGroupService, apiKeyService, AccessGroupPermissions.readOnly());
+
+    given()
+        .header("Authorization", readOnly.bearer())
+        .contentType(ContentType.JSON)
+        .body("{\"platform\":\"bsdd\",\"platformId\":\"https://example.org/class/IfcWall\"}")
+        .when()
+        .post("/api/passport/{passportId}/datasheet", readOnly.rootPassportId())
+        .then()
+        .statusCode(HttpStatus.FORBIDDEN.value());
+
+    verify(passportService, never())
+        .addDatasheetsToPassportUsingPlatform(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  public void shouldAllowReadsWithReadOnlyPermission() {
+    MachineFixture readOnly =
+        MachineAuthTestHelper.provision(
+            projectService, accessGroupService, apiKeyService, AccessGroupPermissions.readOnly());
+    when(passportService.getRootPassports(any())).thenReturn(List.of());
+
+    given()
+        .header("Authorization", readOnly.bearer())
+        .when()
+        .get("/api/passport/root")
+        .then()
+        .statusCode(HttpStatus.OK.value());
   }
 }

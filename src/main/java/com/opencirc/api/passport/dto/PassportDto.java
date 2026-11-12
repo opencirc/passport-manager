@@ -19,17 +19,20 @@ public class PassportDto {
 
   @JsonProperty private String id;
 
+  @JsonProperty private String projectId;
+
   @JsonProperty private String name;
 
   @JsonProperty private String status;
 
   @JsonProperty private String parentId;
 
+  /** Id of the API key that created the passport; null for the root passport. */
   @JsonProperty private String createdById;
 
-  @JsonProperty private CreatedByDto createdBy;
-
   @JsonProperty private OffsetDateTime createdTime;
+
+  @JsonProperty private OffsetDateTime archivedTime;
 
   private List<DatasheetDto> datasheets;
 
@@ -37,11 +40,12 @@ public class PassportDto {
   public static PassportDto from(Passport passport) {
     PassportDto dto = new PassportDto();
     dto.setId(passport.getId());
+    dto.setProjectId(passport.getProjectId());
     dto.setName(passport.getName());
-    dto.setStatus(passport.getStatus().getValue());
+    dto.setStatus(passport.getStatus() != null ? passport.getStatus().getValue() : null);
     dto.setCreatedById(passport.getCreatedById());
-    dto.setCreatedBy(passport.getCreatedBy());
     dto.setCreatedTime(passport.getCreatedTime());
+    dto.setArchivedTime(passport.getArchivedTime());
     dto.setParentId(passport.getParentId());
 
     if (passport.getDatasheets() != null) {

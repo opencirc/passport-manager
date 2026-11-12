@@ -3,41 +3,40 @@ package com.opencirc.api.passport.helper.test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.opencirc.api.passport.auth.principal.UserPrincipal;
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
-import com.opencirc.api.passport.model.User;
+import com.opencirc.api.passport.auth.principal.AdminPrincipal;
+import com.opencirc.api.passport.auth.service.AdminDetailsService;
+import com.opencirc.api.passport.model.Admin;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-/** Helper class to mock authentication related operations. */
+/** Helper class to mock administrator authentication. */
 public class MockAuthenticationTestHelper {
 
-  /** Mocks User data. */
-  public void mockUserDetails(
-      AuthUserDetailsService authUserDetailsService, AuthenticationManager authenticationManager) {
-    String existingUserId = "87510a3c-4357-47bc-80a1-9ed02285fbae";
-    User mockUser = new User();
-    mockUser.setId(existingUserId);
-    mockUser.setFirstName("User");
-    mockUser.setLastName("One");
-    mockUser.setPassword("user1password");
-    mockUser.setEmail("user1@test.com");
-    mockUser.setActive(true);
-    mockUser.setRole(User.Role.USER);
+  public static final String ADMIN_ID = "87510a3c-4357-47bc-80a1-9ed02285fbae";
 
-    UserPrincipal mockUserPrincipal = new UserPrincipal(mockUser);
+  /** Mocks administrator details and the authentication manager. */
+  public void mockUserDetails(
+      AdminDetailsService adminDetailsService, AuthenticationManager authenticationManager) {
+    Admin mockAdmin = new Admin();
+    mockAdmin.setId(ADMIN_ID);
+    mockAdmin.setFirstName("User");
+    mockAdmin.setLastName("One");
+    mockAdmin.setPassword("user1password");
+    mockAdmin.setEmail("user1@test.com");
+    mockAdmin.setActive(true);
+
+    AdminPrincipal mockPrincipal = new AdminPrincipal(mockAdmin);
 
     UsernamePasswordAuthenticationToken mockAuthenticationToken =
         new UsernamePasswordAuthenticationToken(
-            mockUserPrincipal, null, mockUserPrincipal.getAuthorities());
+            mockPrincipal, null, mockPrincipal.getAuthorities());
 
-    when(authUserDetailsService.loadUserById("87510a3c-4357-47bc-80a1-9ed02285fbae"))
-        .thenReturn(mockUserPrincipal);
+    when(adminDetailsService.loadUserById(ADMIN_ID)).thenReturn(mockPrincipal);
 
-    when(authUserDetailsService.loadUserById("999"))
-        .thenThrow(new UsernameNotFoundException("User not found"));
+    when(adminDetailsService.loadUserById("999"))
+        .thenThrow(new UsernameNotFoundException("Admin not found"));
 
     when(authenticationManager.authenticate(any()))
         .thenAnswer(

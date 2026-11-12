@@ -1,7 +1,7 @@
 package com.opencirc.api.passport.auth.principal;
 
-import com.opencirc.api.passport.model.User;
-import com.opencirc.api.passport.model.User.Role;
+import com.opencirc.api.passport.constants.AppConstants;
+import com.opencirc.api.passport.model.Admin;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
@@ -9,46 +9,41 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-/** UserPrincipal class. */
-public class UserPrincipal implements UserDetails {
+/** Authenticated administrator. Every administrator carries the same authority. */
+public class AdminPrincipal implements UserDetails {
 
   /** serial version. */
   private static final long serialVersionUID = 1L;
 
-  /** User Id. */
-  private final String userId;
+  /** Admin Id. */
+  private final String adminId;
 
-  /** User Email. */
+  /** Admin Email. */
   private final String email;
 
-  /** User full name. */
+  /** Admin full name. */
   private final String fullName;
 
-  /** User password. */
+  /** Admin password. */
   private final String password;
 
-  /** User role. */
-  private final Role role;
-
-  /** Indicates whether the user account is enabled (active) or disabled. */
+  /** Indicates whether the account is enabled (active) or disabled. */
   private final boolean enabled;
 
-  /** Constructs a UserPrincipal from a User entity. */
-  public UserPrincipal(User user) {
-    Objects.requireNonNull(user, "User cannot be null");
-    this.userId = (user.getId() != null) ? user.getId() : null;
-    this.email = user.getEmail();
-    this.fullName = user.getFullName();
-    this.password = user.getPassword();
-    this.enabled = user.isActive();
-    this.role = user.getRole();
+  /** Constructs an AdminPrincipal from an Admin entity. */
+  public AdminPrincipal(Admin admin) {
+    Objects.requireNonNull(admin, "Admin cannot be null");
+    this.adminId = admin.getId();
+    this.email = admin.getEmail();
+    this.fullName = admin.getFullName();
+    this.password = admin.getPassword();
+    this.enabled = admin.isActive();
   }
 
   /** Get authorities. */
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    String authority = (role != null) ? role.getValue() : "USER";
-    return Collections.singleton(new SimpleGrantedAuthority(authority));
+    return Collections.singleton(new SimpleGrantedAuthority(AppConstants.AUTHORITY_ADMIN));
   }
 
   /** Get the password. */
@@ -57,9 +52,9 @@ public class UserPrincipal implements UserDetails {
     return password;
   }
 
-  /** Get userId. */
-  public String getUserId() {
-    return userId;
+  /** Get adminId. */
+  public String getAdminId() {
+    return adminId;
   }
 
   /** Get email. */
@@ -67,14 +62,14 @@ public class UserPrincipal implements UserDetails {
     return email;
   }
 
-  /** Gets fullName of the user. */
+  /** Gets fullName of the administrator. */
   public String getFullName() {
     return fullName;
   }
 
   /**
-   * This method is required by UserDetails interface. Since this application identifies users by
-   * their email address, the email is returned here instead of a username.
+   * This method is required by UserDetails interface. Since this application identifies
+   * administrators by their email address, the email is returned here instead of a username.
    */
   @Override
   public String getUsername() {
@@ -103,10 +98,5 @@ public class UserPrincipal implements UserDetails {
   @Override
   public boolean isEnabled() {
     return enabled;
-  }
-
-  /** Gets the role of the user. */
-  public Role getRole() {
-    return role;
   }
 }

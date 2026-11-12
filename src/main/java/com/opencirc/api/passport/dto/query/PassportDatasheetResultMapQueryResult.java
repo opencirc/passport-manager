@@ -8,6 +8,9 @@ public interface PassportDatasheetResultMapQueryResult {
   /** Returns the ID of the passport. */
   String getPassportId();
 
+  /** Returns the ID of the project the passport belongs to. */
+  String getProjectId();
+
   /** Returns the name of the passport. */
   String getPassportName();
 
@@ -17,16 +20,13 @@ public interface PassportDatasheetResultMapQueryResult {
   /** Returns the parent ID of the passport (if any). */
   String getParentId();
 
-  /** Returns the user id who created the passport. */
+  /** Returns the id of the API key that created the passport. */
   String getPassportCreatedById();
-
-  /** Returns the JSON (as text) containing user information who created the passport. */
-  String getPassportCreatedBy();
 
   /** Returns the creation timestamp of the passport. */
   Instant getPassportCreatedTime();
 
-  /** Returns the ID of the associated datasheet. */
+  /** Returns the ID of the associated datasheet instance. */
   String getDatasheetId();
 
   /** Returns the platform. */
@@ -53,11 +53,8 @@ public interface PassportDatasheetResultMapQueryResult {
   /** Returns the JSON data of the datasheet as a string. */
   String getData();
 
-  /** Returns the user id who created the datasheet. */
+  /** Returns the id of the API key that attached the datasheet. */
   String getDatasheetCreatedById();
-
-  /** Returns the JSON (as text) containing user information who created the datasheet. */
-  String getDatasheetCreatedBy();
 
   /** Returns the creation timestamp of the datasheet. */
   Instant getDatasheetCreatedTime();

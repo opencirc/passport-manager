@@ -1,5 +1,6 @@
 package com.opencirc.api.passport.service.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,15 +11,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.opencirc.api.passport.adapter.PlatformAdapterFactory;
-import com.opencirc.api.passport.config.AppProperties;
+import com.opencirc.api.passport.auth.principal.ApiKeyPrincipal;
 import com.opencirc.api.passport.dao.DatasheetRepository;
 import com.opencirc.api.passport.dao.PassportRepository;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.PassportDto;
-import com.opencirc.api.passport.dto.UserDto;
 import com.opencirc.api.passport.dto.query.PassportDatasheetResultMapQueryResult;
 import com.opencirc.api.passport.enums.PassportLogAction;
 import com.opencirc.api.passport.enums.Platform;
+import com.opencirc.api.passport.exception.ForbiddenException;
+import com.opencirc.api.passport.model.AccessGroupPermissions;
 import com.opencirc.api.passport.model.Passport;
 import com.opencirc.api.passport.service.DatasheetDefinitionService;
 import com.opencirc.api.passport.service.EpdEnrichmentService;
@@ -29,21 +31,27 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class TestPassportService {
 
+  private static final String PROJECT_ID = "project-1";
+  private static final String ROOT_ID = "root-id";
+  private static final ApiKeyPrincipal ACTOR =
+      new ApiKeyPrincipal("key-1", "Key", "group-1", PROJECT_ID, AccessGroupPermissions.full());
+
   @Mock private DatasheetRepository datasheetRepository;
-  @Mock private PassportRepository passportRepository;
   @Mock private DatasheetDefinitionService datasheetDefinitionService;
+  @Mock private PassportRepository passportRepository;
   @Mock private PlatformAdapterFactory platformAdapterFactory;
   @Mock private ObjectMapper objectMapper;
-  @Mock private AppProperties appProperties;
   @Mock private EpdEnrichmentService epdEnrichmentService;
   @Mock private PassportLogService passportLogService;
 
@@ -58,23 +66,71 @@ public class TestPassportService {
             passportRepository,
             platformAdapterFactory,
             objectMapper,
-            appProperties,
             epdEnrichmentService,
             passportLogService);
+  }
+
+  private static Passport activePassport(String id) {
+    Passport passport = new Passport();
+    passport.setId(id);
+    passport.setProjectId(PROJECT_ID);
+    passport.setStatus(Passport.Status.ACTIVE);
+    return passport;
+  }
+
+  private void stubRoot() {
+    when(passportRepository.findPassport(ROOT_ID, Passport.Status.ACTIVE))
+        .thenReturn(Optional.of(activePassport(ROOT_ID)));
   }
 
   @Test
   public void shouldRejectExistingPassportIdBeforeSaving() {
     CreatePassportUsingPlatformRequestDto request = new CreatePassportUsingPlatformRequestDto();
     request.setId("existing-passport");
+    request.setParentId(ROOT_ID);
     when(passportRepository.existsById("existing-passport")).thenReturn(true);
 
     assertThrows(
         com.opencirc.api.passport.exception.InvalidInputException.class,
-        () -> passportService.createPassportUsingPlatform(Platform.BSDD, request, new UserDto()));
+        () -> passportService.createPassportUsingPlatform(Platform.BSDD, request, ACTOR));
 
     org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
     org.mockito.Mockito.verifyNoInteractions(datasheetDefinitionService);
+  }
+
+  @Test
+  public void shouldRejectChildWithoutParent() {
+    CreatePassportUsingPlatformRequestDto request = new CreatePassportUsingPlatformRequestDto();
+    request.setName("Orphan");
+    request.setPlatformId("platform-id");
+
+    ResponseStatusException exception =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> passportService.createPassportUsingPlatform(Platform.BSDD, request, ACTOR));
+
+    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.getStatusCode());
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
+  }
+
+  @Test
+  public void shouldRejectParentFromAnotherProject() {
+    CreatePassportUsingPlatformRequestDto request = new CreatePassportUsingPlatformRequestDto();
+    request.setName("Child");
+    request.setPlatformId("platform-id");
+    request.setParentId("foreign-root");
+    Passport foreignRoot = activePassport("foreign-root");
+    foreignRoot.setProjectId("project-2");
+    when(passportRepository.findPassport("foreign-root", Passport.Status.ACTIVE))
+        .thenReturn(Optional.of(foreignRoot));
+
+    HttpServerErrorException exception =
+        assertThrows(
+            HttpServerErrorException.class,
+            () -> passportService.createPassportUsingPlatform(Platform.BSDD, request, ACTOR));
+
+    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.getStatusCode());
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
   }
 
   @Test
@@ -90,7 +146,7 @@ public class TestPassportService {
         com.opencirc.api.passport.exception.InvalidInputException.class,
         () ->
             passportService.batchCreatePassportsUsingPlatform(
-                Platform.BSDD, List.of(firstRequest, secondRequest), new UserDto()));
+                Platform.BSDD, List.of(firstRequest, secondRequest), ACTOR));
 
     org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
     org.mockito.Mockito.verifyNoInteractions(datasheetDefinitionService);
@@ -111,7 +167,7 @@ public class TestPassportService {
         com.opencirc.api.passport.exception.InvalidInputException.class,
         () ->
             passportService.batchCreatePassportsUsingPlatform(
-                Platform.BSDD, List.of(firstRequest, secondRequest), new UserDto()));
+                Platform.BSDD, List.of(firstRequest, secondRequest), ACTOR));
 
     org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never()).save(any());
   }
@@ -122,17 +178,15 @@ public class TestPassportService {
     CreatePassportUsingPlatformRequestDto request = new CreatePassportUsingPlatformRequestDto();
     request.setName("Test Passport");
     request.setPlatformId("platform-id");
-    UserDto author = new UserDto();
-    author.setId("author-id");
+    request.setParentId(ROOT_ID);
+    stubRoot();
 
     // Passport created inside the service
-    Passport passport = new Passport();
-    passport.setId("generated-id");
-    passport.setStatus(Passport.Status.ACTIVE);
+    Passport passport = activePassport("generated-id");
     when(passportRepository.save(any(Passport.class))).thenAnswer(i -> i.getArguments()[0]);
-    when(passportRepository.findById(anyString())).thenReturn(java.util.Optional.of(passport));
+    when(passportRepository.findById(anyString())).thenReturn(Optional.of(passport));
 
-    passportService.createPassportUsingPlatform(platform, request, author);
+    passportService.createPassportUsingPlatform(platform, request, ACTOR);
 
     var eventOrder = org.mockito.Mockito.inOrder(passportLogService, datasheetDefinitionService);
     eventOrder
@@ -144,27 +198,30 @@ public class TestPassportService {
   }
 
   @Test
-  public void shouldUseProvidedIdWhenCreatingPassport() throws Exception {
+  public void shouldUseProvidedIdAndScopeToActorProjectWhenCreatingPassport() throws Exception {
     Platform platform = Platform.BSDD;
     CreatePassportUsingPlatformRequestDto request = new CreatePassportUsingPlatformRequestDto();
     request.setId("my-custom-id");
     request.setName("Test Passport");
     request.setPlatformId("platform-id");
-    UserDto author = new UserDto();
-    author.setId("author-id");
+    request.setParentId(ROOT_ID);
+    stubRoot();
 
-    // Passport created inside the service
-    Passport passport = new Passport();
-    passport.setId("my-custom-id");
-    passport.setStatus(Passport.Status.ACTIVE);
+    Passport passport = activePassport("my-custom-id");
     when(passportRepository.save(any(Passport.class))).thenAnswer(i -> i.getArguments()[0]);
-    when(passportRepository.findById("my-custom-id")).thenReturn(java.util.Optional.of(passport));
+    when(passportRepository.findById("my-custom-id")).thenReturn(Optional.of(passport));
 
-    var createdPassport = passportService.createPassportUsingPlatform(platform, request, author);
+    var createdPassport = passportService.createPassportUsingPlatform(platform, request, ACTOR);
 
     verify(passportLogService)
         .logEvent(eq("my-custom-id"), eq(PassportLogAction.CREATE), any(java.util.List.class));
-    org.junit.jupiter.api.Assertions.assertEquals("my-custom-id", createdPassport.getId());
+    assertEquals("my-custom-id", createdPassport.getId());
+
+    ArgumentCaptor<Passport> saved = ArgumentCaptor.forClass(Passport.class);
+    verify(passportRepository).save(saved.capture());
+    assertEquals(PROJECT_ID, saved.getValue().getProjectId());
+    assertEquals("key-1", saved.getValue().getCreatedById());
+    assertEquals(ROOT_ID, saved.getValue().getParentId());
   }
 
   @Test
@@ -178,9 +235,10 @@ public class TestPassportService {
     childReq.setName("Child Passport");
     childReq.setPlatformId("platform-id");
 
-    // Create parent
+    // Create parent, hanging from the project root
     CreatePassportUsingPlatformRequestDto parentReq = new CreatePassportUsingPlatformRequestDto();
     parentReq.setId("parent-id");
+    parentReq.setParentId(ROOT_ID);
     parentReq.setName("Parent Passport");
     parentReq.setPlatformId("platform-id");
 
@@ -188,19 +246,9 @@ public class TestPassportService {
     java.util.List<CreatePassportUsingPlatformRequestDto> batch =
         java.util.List.of(childReq, parentReq);
 
-    UserDto author = new UserDto();
-    author.setId("author-id");
-
-    // For parent creation
-    Passport parentPassport = new Passport();
-    parentPassport.setId("parent-id");
-    parentPassport.setStatus(Passport.Status.ACTIVE);
-
-    // For child creation
-    Passport childPassport = new Passport();
-    childPassport.setId("child-id");
+    Passport parentPassport = activePassport("parent-id");
+    Passport childPassport = activePassport("child-id");
     childPassport.setParentId("parent-id");
-    childPassport.setStatus(Passport.Status.ACTIVE);
 
     java.util.List<String> saveOrder = new java.util.ArrayList<>();
     java.util.Set<String> savedIds = new java.util.HashSet<>();
@@ -213,33 +261,29 @@ public class TestPassportService {
               return p;
             });
 
-    when(passportRepository.findById("parent-id"))
-        .thenReturn(java.util.Optional.of(parentPassport));
-    when(passportRepository.findById("child-id")).thenReturn(java.util.Optional.of(childPassport));
+    when(passportRepository.findById("parent-id")).thenReturn(Optional.of(parentPassport));
+    when(passportRepository.findById("child-id")).thenReturn(Optional.of(childPassport));
     when(passportRepository.findPassport(anyString(), eq(Passport.Status.ACTIVE)))
         .thenAnswer(
             i -> {
               String id = i.getArgument(0);
-              if (!savedIds.contains(id)) {
+              if (!ROOT_ID.equals(id) && !savedIds.contains(id)) {
                 return Optional.empty();
               }
-              Passport found = new Passport();
-              found.setId(id);
-              found.setStatus(Passport.Status.ACTIVE);
-              return Optional.of(found);
+              return Optional.of(activePassport(id));
             });
 
     var createdPassports =
-        passportService.batchCreatePassportsUsingPlatform(platform, batch, author);
+        passportService.batchCreatePassportsUsingPlatform(platform, batch, ACTOR);
 
-    org.junit.jupiter.api.Assertions.assertEquals(2, createdPassports.size());
+    assertEquals(2, createdPassports.size());
     // The returned list should maintain the original input order
-    org.junit.jupiter.api.Assertions.assertEquals("child-id", createdPassports.get(0).getId());
-    org.junit.jupiter.api.Assertions.assertEquals("parent-id", createdPassports.get(1).getId());
+    assertEquals("child-id", createdPassports.get(0).getId());
+    assertEquals("parent-id", createdPassports.get(1).getId());
 
     // BUT the actual processing/saving order must be topological (parent first)
-    org.junit.jupiter.api.Assertions.assertEquals("parent-id", saveOrder.get(0));
-    org.junit.jupiter.api.Assertions.assertEquals("child-id", saveOrder.get(1));
+    assertEquals("parent-id", saveOrder.get(0));
+    assertEquals("child-id", saveOrder.get(1));
   }
 
   @Test
@@ -256,9 +300,9 @@ public class TestPassportService {
 
     java.util.List<CreatePassportUsingPlatformRequestDto> batch = java.util.List.of(p1, p2);
 
-    org.junit.jupiter.api.Assertions.assertThrows(
+    assertThrows(
         com.opencirc.api.passport.exception.InvalidInputException.class,
-        () -> passportService.batchCreatePassportsUsingPlatform(platform, batch, new UserDto()));
+        () -> passportService.batchCreatePassportsUsingPlatform(platform, batch, ACTOR));
   }
 
   @Test
@@ -270,9 +314,12 @@ public class TestPassportService {
             new java.io.File("test.json"),
             new tools.jackson.core.type.TypeReference<
                 java.util.List<CreatePassportUsingPlatformRequestDto>>() {});
-
-    UserDto author = new UserDto();
-    author.setId("author-id");
+    // Top-level entries of the sample hang from the project root in the target model.
+    for (var d : dataArray) {
+      if (d.getParentId() == null || d.getParentId().isBlank()) {
+        d.setParentId(ROOT_ID);
+      }
+    }
 
     java.util.Set<String> savedIds = new java.util.HashSet<>();
     java.util.List<String> saveOrder = new java.util.ArrayList<>();
@@ -295,12 +342,9 @@ public class TestPassportService {
             i -> {
               String id = i.getArgument(0);
               if (savedIds.contains(id) || !batchIds.contains(id)) {
-                Passport p = new Passport();
-                p.setId(id);
-                p.setStatus(Passport.Status.ACTIVE);
-                return java.util.Optional.of(p);
+                return Optional.of(activePassport(id));
               }
-              return java.util.Optional.empty();
+              return Optional.empty();
             });
 
     when(passportRepository.findPassport(anyString(), eq(Passport.Status.ACTIVE)))
@@ -308,27 +352,24 @@ public class TestPassportService {
             i -> {
               String id = i.getArgument(0);
               if (savedIds.contains(id) || !batchIds.contains(id)) {
-                Passport p = new Passport();
-                p.setId(id);
-                p.setStatus(Passport.Status.ACTIVE);
-                return java.util.Optional.of(p);
+                return Optional.of(activePassport(id));
               }
-              return java.util.Optional.empty();
+              return Optional.empty();
             });
 
     var createdPassports =
-        passportService.batchCreatePassportsUsingPlatform(platform, dataArray, author);
-    org.junit.jupiter.api.Assertions.assertEquals(18, createdPassports.size());
+        passportService.batchCreatePassportsUsingPlatform(platform, dataArray, ACTOR);
+    assertEquals(18, createdPassports.size());
 
     java.util.Set<CreatePassportUsingPlatformRequestDto> set = new java.util.HashSet<>(dataArray);
-    org.junit.jupiter.api.Assertions.assertEquals(18, set.size(), "Set size should be 18");
+    assertEquals(18, set.size(), "Set size should be 18");
 
     // Verify topological order: every parent in the batch must be saved before its child
     for (var d : dataArray) {
       if (d.getParentId() != null && batchIds.contains(d.getParentId())) {
         int parentIndex = saveOrder.indexOf(d.getParentId());
         int childIndex = saveOrder.indexOf(d.getId());
-        org.junit.jupiter.api.Assertions.assertTrue(
+        assertTrue(
             parentIndex < childIndex,
             "Parent " + d.getParentId() + " should be saved before child " + d.getId());
       }
@@ -351,34 +392,47 @@ public class TestPassportService {
     HttpServerErrorException exception =
         assertThrows(
             HttpServerErrorException.class,
-            () ->
-                passportService.batchCreatePassportsUsingPlatform(platform, batch, new UserDto()));
+            () -> passportService.batchCreatePassportsUsingPlatform(platform, batch, ACTOR));
 
-    org.junit.jupiter.api.Assertions.assertEquals(
-        HttpStatus.UNPROCESSABLE_ENTITY, exception.getStatusCode());
+    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.getStatusCode());
     assertTrue(exception.getMessage().contains("Invalid parentId: active parent not found"));
   }
 
   @Test
   public void getImmediateChildren_ShouldThrowNotFound_WhenPassportDoesNotExist() {
     String passportId = "non-existent-id";
-    when(passportRepository.existsById(passportId)).thenReturn(false);
+    when(passportRepository.findById(passportId)).thenReturn(Optional.empty());
 
     HttpServerErrorException exception =
         assertThrows(
-            HttpServerErrorException.class, () -> passportService.getImmediateChildren(passportId));
+            HttpServerErrorException.class,
+            () -> passportService.getImmediateChildren(passportId, ACTOR));
 
-    org.junit.jupiter.api.Assertions.assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     assertTrue(exception.getMessage().contains("Could not find passport with ID " + passportId));
+  }
+
+  @Test
+  public void getImmediateChildren_ShouldRejectPassportOfAnotherProject() {
+    Passport foreign = activePassport("foreign-id");
+    foreign.setProjectId("project-2");
+    when(passportRepository.findById("foreign-id")).thenReturn(Optional.of(foreign));
+
+    assertThrows(
+        ForbiddenException.class, () -> passportService.getImmediateChildren("foreign-id", ACTOR));
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never())
+        .findImmediateChildren(anyString(), anyString());
   }
 
   @Test
   public void getImmediateChildren_ShouldReturnEmptyList_WhenNoChildrenExist() {
     String passportId = "parent-id";
-    when(passportRepository.existsById(passportId)).thenReturn(true);
-    when(passportRepository.findImmediateChildren(passportId)).thenReturn(Optional.empty());
+    when(passportRepository.findById(passportId))
+        .thenReturn(Optional.of(activePassport(passportId)));
+    when(passportRepository.findImmediateChildren(passportId, PROJECT_ID))
+        .thenReturn(Optional.empty());
 
-    List<PassportDto> children = passportService.getImmediateChildren(passportId);
+    List<PassportDto> children = passportService.getImmediateChildren(passportId, ACTOR);
 
     assertTrue(children.isEmpty());
   }
@@ -386,7 +440,8 @@ public class TestPassportService {
   @Test
   public void getImmediateChildren_ShouldReturnChildren_WhenChildrenExist() {
     String passportId = "parent-id";
-    when(passportRepository.existsById(passportId)).thenReturn(true);
+    when(passportRepository.findById(passportId))
+        .thenReturn(Optional.of(activePassport(passportId)));
 
     PassportDatasheetResultMapQueryResult childRow =
         mock(PassportDatasheetResultMapQueryResult.class);
@@ -395,14 +450,44 @@ public class TestPassportService {
     when(childRow.getStatus()).thenReturn("active");
     when(childRow.getParentId()).thenReturn(passportId);
 
-    when(passportRepository.findImmediateChildren(passportId))
+    when(passportRepository.findImmediateChildren(passportId, PROJECT_ID))
         .thenReturn(Optional.of(List.of(childRow)));
 
-    List<PassportDto> children = passportService.getImmediateChildren(passportId);
+    List<PassportDto> children = passportService.getImmediateChildren(passportId, ACTOR);
 
-    org.junit.jupiter.api.Assertions.assertEquals(1, children.size());
-    org.junit.jupiter.api.Assertions.assertEquals("child-id", children.get(0).getId());
-    org.junit.jupiter.api.Assertions.assertEquals("Child Passport", children.get(0).getName());
-    org.junit.jupiter.api.Assertions.assertEquals(passportId, children.get(0).getParentId());
+    assertEquals(1, children.size());
+    assertEquals("child-id", children.get(0).getId());
+    assertEquals("Child Passport", children.get(0).getName());
+    assertEquals(passportId, children.get(0).getParentId());
+  }
+
+  @Test
+  public void archivePassport_ShouldRefuseRootPassport() {
+    Passport root = activePassport(ROOT_ID);
+    when(passportRepository.findById(ROOT_ID)).thenReturn(Optional.of(root));
+
+    assertThrows(
+        com.opencirc.api.passport.exception.InvalidInputException.class,
+        () -> passportService.archivePassport(ROOT_ID, ACTOR));
+    org.mockito.Mockito.verify(passportRepository, org.mockito.Mockito.never())
+        .archiveSubtree(anyString(), any());
+  }
+
+  @Test
+  public void archivePassport_ShouldArchiveSubtreeAndLog() {
+    Passport child = activePassport("child-id");
+    child.setParentId(ROOT_ID);
+    Passport archived = activePassport("child-id");
+    archived.setParentId(ROOT_ID);
+    archived.setStatus(Passport.Status.ARCHIVED);
+    when(passportRepository.findById("child-id"))
+        .thenReturn(Optional.of(child), Optional.of(archived));
+    when(passportRepository.archiveSubtree(eq("child-id"), any())).thenReturn(3);
+
+    PassportDto result = passportService.archivePassport("child-id", ACTOR);
+
+    assertEquals("archived", result.getStatus());
+    verify(passportLogService)
+        .logEvent(eq("child-id"), eq(PassportLogAction.ARCHIVE), any(java.util.List.class));
   }
 }

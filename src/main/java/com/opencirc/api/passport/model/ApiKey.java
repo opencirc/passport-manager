@@ -1,8 +1,10 @@
 package com.opencirc.api.passport.model;
 
+import com.opencirc.api.passport.enums.ApiKeyStatus;
+import com.opencirc.api.passport.util.ApiKeyStatusConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
@@ -11,43 +13,48 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.UuidGenerator;
 
-/** JPA entity representing API keys assigned to users. */
+/**
+ * Machine credential issued to an access group. The id is the public key id embedded in the token
+ * ({@code opc_live_<key_id>_<secret>}); only the SHA-256 hash of the secret is stored.
+ */
 @Entity
 @Table(
     name = "api_keys",
-    indexes = {@Index(name = "idx_api_keys_user_id", columnList = "user_id")})
+    indexes = {@Index(name = "idx_api_keys_access_group_id", columnList = "access_group_id")})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApiKey {
 
-  /** Unique identifier for the API key. */
+  /** Public key id used for indexed lookup; assigned by the service, never generated. */
   @Id
-  @GeneratedValue
-  @UuidGenerator
-  @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
+  @Column(name = "id", updatable = false, nullable = false)
   private String id;
 
-  /** Hashed secret associated with this API key. */
-  @Column(nullable = false)
-  private String secret;
+  /** Access group that issued this key. */
+  @Column(name = "access_group_id", nullable = false)
+  private String accessGroupId;
 
-  /** ID of the user who owns this API key, as UUID. */
-  @Column(name = "user_id", nullable = false)
-  private String userId;
+  /** Hex SHA-256 hash of the secret component of the token. */
+  @Column(name = "secret_hash", columnDefinition = "TEXT", nullable = false)
+  private String secretHash;
 
-  /** User-defined display name for the API key. */
+  /** Display name for the key. */
   @Column(name = "name", length = 100, nullable = false)
   private String name;
 
-  /** Timestamp when the API key record was created. */
+  /** Operational status; revoked keys are rejected but kept for provenance. */
+  @Column(name = "status", nullable = false)
+  @Convert(converter = ApiKeyStatusConverter.class)
+  private ApiKeyStatus status;
+
+  /** Timestamp when the key was created. */
   @Column(name = "created_time", nullable = false, updatable = false, insertable = false)
   private ZonedDateTime createdTime;
 
-  /** Optional timestamp indicating when the API key expires. */
+  /** Optional timestamp after which the key is rejected. */
   @Column(name = "expiration_time")
   private ZonedDateTime expirationTime;
 }

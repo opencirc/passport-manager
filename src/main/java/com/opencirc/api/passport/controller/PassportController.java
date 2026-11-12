@@ -1,6 +1,6 @@
 package com.opencirc.api.passport.controller;
 
-import com.opencirc.api.passport.context.UserContext;
+import com.opencirc.api.passport.context.ActorContext;
 import com.opencirc.api.passport.dto.AddDatasheetsToPassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.CreatePassportUsingPlatformRequestDto;
 import com.opencirc.api.passport.dto.DataDictionaryTreeStructureDto;
@@ -28,19 +28,23 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Controller for operations related to passports. */
+/**
+ * Machine-facing passport operations. Every request is authenticated with an API key and confined
+ * to the key's project and access group permissions.
+ */
 @RestController
 @Tag(name = "Passport", description = "Operations related to passports")
 public class PassportController {
 
   @Autowired private PassportService passportService;
 
-  @Autowired private UserContext userContext;
+  @Autowired private ActorContext actorContext;
 
-  /** Creates a passport using information from the provided platform. */
-  @Operation(summary = "Creates a passport using information from the provided platform.")
+  /** Creates a child passport using information from the provided platform. */
+  @Operation(summary = "Creates a child passport using information from the provided platform.")
   @PostMapping(
       value = "/api/passport/platform/{platform}",
       produces = {"application/json"},
@@ -57,10 +61,10 @@ public class PassportController {
       throws InvalidInputException, JsonValidationException {
     return ResponseEntity.ok(
         passportService.createPassportUsingPlatform(
-            Platform.fromValue(platform), data, userContext.getCurrentUser()));
+            Platform.fromValue(platform), data, actorContext.requireApiKey()));
   }
 
-  /** Creates multiple passports using information from the provided platforms. */
+  /** Creates multiple child passports using information from the provided platforms. */
   @Operation(summary = "Creates multiple passports using information from the provided platforms.")
   @PostMapping(
       value = "/api/passport/platform/{platform}/batch",
@@ -78,7 +82,7 @@ public class PassportController {
       throws InvalidInputException, JsonValidationException {
     return ResponseEntity.ok(
         passportService.batchCreatePassportsUsingPlatform(
-            Platform.fromValue(platform), data, userContext.getCurrentUser()));
+            Platform.fromValue(platform), data, actorContext.requireApiKey()));
   }
 
   /**
@@ -106,7 +110,7 @@ public class PassportController {
             Platform.fromValue(data.getPlatform()),
             data.getPlatformId(),
             Datasheet.DataCategory.fromValue(data.getDataCategory()),
-            userContext.getCurrentUser()));
+            actorContext.requireApiKey()));
   }
 
   /** Removes a datasheet from the passport. */
@@ -117,7 +121,8 @@ public class PassportController {
           String passportId,
       @PathVariable @Parameter(description = "Datasheet ID", required = true, in = ParameterIn.PATH)
           String datasheetId) {
-    return ResponseEntity.ok(passportService.removeDatasheet(passportId, datasheetId));
+    return ResponseEntity.ok(
+        passportService.removeDatasheet(passportId, datasheetId, actorContext.requireApiKey()));
   }
 
   /** Updates the parent for the given passport. */
@@ -129,17 +134,20 @@ public class PassportController {
       @PathVariable
           @Parameter(description = "New Parent ID", required = true, in = ParameterIn.PATH)
           String parentId) {
-    return ResponseEntity.ok(passportService.updateParent(passportId, parentId));
+    return ResponseEntity.ok(
+        passportService.updateParent(passportId, parentId, actorContext.requireApiKey()));
   }
 
   /** Fetch a passport. */
-  @Operation(summary = "Retrieves the Passport")
+  @Operation(summary = "Retrieves the Passport; an archived one only with include_archived=true")
   @GetMapping("/api/passport/{passportId}")
   public ResponseEntity<PassportDto> getPassport(
       @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
           @PathVariable
-          String passportId) {
-    return ResponseEntity.ok(passportService.getPassport(passportId));
+          String passportId,
+      @RequestParam(name = "include_archived", defaultValue = "false") boolean includeArchived) {
+    return ResponseEntity.ok(
+        passportService.getPassport(passportId, actorContext.requireApiKey(), includeArchived));
   }
 
   /** Fetch the specified passport and its descendants. */
@@ -149,7 +157,8 @@ public class PassportController {
       @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
           @PathVariable
           String passportId) {
-    return ResponseEntity.ok(passportService.getPassportChildren(passportId));
+    return ResponseEntity.ok(
+        passportService.getPassportChildren(passportId, actorContext.requireApiKey()));
   }
 
   /** Fetch the immediate children of the specified passport. */
@@ -159,14 +168,26 @@ public class PassportController {
       @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
           @PathVariable
           String passportId) {
-    return ResponseEntity.ok(passportService.getImmediateChildren(passportId));
+    return ResponseEntity.ok(
+        passportService.getImmediateChildren(passportId, actorContext.requireApiKey()));
   }
 
-  /** Fetch all the root passports. */
-  @Operation(summary = "Get all the root passports available")
+  /** Fetch the root passport of the key's project. */
+  @Operation(summary = "Get the root passport of the project the API key belongs to")
   @GetMapping("/api/passport/root")
   public ResponseEntity<List<PassportDto>> getRootPassports() {
-    return ResponseEntity.ok(passportService.getRootPassports());
+    return ResponseEntity.ok(passportService.getRootPassports(actorContext.requireApiKey()));
+  }
+
+  /** Soft-archives a passport and its subtree. */
+  @Operation(summary = "Soft-archives a passport and its descendants; nothing is deleted")
+  @DeleteMapping("/api/passport/{passportId}")
+  public ResponseEntity<PassportDto> archivePassport(
+      @Parameter(description = "ID of the Passport", required = true, in = ParameterIn.PATH)
+          @PathVariable
+          String passportId) {
+    return ResponseEntity.ok(
+        passportService.archivePassport(passportId, actorContext.requireApiKey()));
   }
 
   /** Update the properties for the given passport and property group. */
@@ -186,7 +207,8 @@ public class PassportController {
           String passportId)
       throws InvalidInputException {
 
-    return ResponseEntity.ok(passportService.updateData(passportId, request));
+    return ResponseEntity.ok(
+        passportService.updateData(passportId, request, actorContext.requireApiKey()));
   }
 
   /** Fetch the list of passports corresponding to the specified platform and code. */
@@ -195,7 +217,8 @@ public class PassportController {
   public ResponseEntity<List<PassportDto>> listPassportsByCode(
       @Parameter(description = "Code", required = true, in = ParameterIn.PATH) @PathVariable
           String code) {
-    return ResponseEntity.ok(passportService.listPassportsByCode(code));
+    return ResponseEntity.ok(
+        passportService.listPassportsByCode(code, actorContext.requireApiKey()));
   }
 
   /** Get the tree structure of the dictionary. */

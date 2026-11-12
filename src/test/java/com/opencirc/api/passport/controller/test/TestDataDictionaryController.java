@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.opencirc.api.passport.PassportManager;
-import com.opencirc.api.passport.auth.service.AuthUserDetailsService;
+import com.opencirc.api.passport.auth.service.AdminDetailsService;
 import com.opencirc.api.passport.helper.test.BsddMockStubHelper;
 import com.opencirc.api.passport.helper.test.MockAuthenticationTestHelper;
 import com.opencirc.api.passport.helper.test.TestConfig;
@@ -46,10 +46,10 @@ public class TestDataDictionaryController {
   /** Assigns random port number in which application runs. */
   @LocalServerPort private int port;
 
-  /** AuthUserDetailsService mock bean. */
-  @MockitoBean private AuthUserDetailsService authUserDetailsService;
+  /** AdminDetailsService mock bean. */
+  @MockitoBean private AdminDetailsService adminDetailsService;
 
-  /** AuthUserDetailsService mock bean. */
+  /** AdminDetailsService mock bean. */
   @MockitoBean private AuthenticationManager authenticationManager;
 
   /** JWT token. */
@@ -73,7 +73,7 @@ public class TestDataDictionaryController {
     MockitoAnnotations.openMocks(this);
     // Mock auth
     MockAuthenticationTestHelper helper = new MockAuthenticationTestHelper();
-    helper.mockUserDetails(authUserDetailsService, authenticationManager);
+    helper.mockUserDetails(adminDetailsService, authenticationManager);
 
     generateMockJwtToken();
   }

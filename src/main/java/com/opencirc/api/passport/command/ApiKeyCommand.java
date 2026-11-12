@@ -5,8 +5,12 @@ import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.ApiKey;
 import com.opencirc.api.passport.service.ApiKeyService;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +19,7 @@ import org.springframework.shell.core.command.annotation.CommandGroup;
 import org.springframework.shell.core.command.annotation.Option;
 import org.springframework.stereotype.Component;
 
+/** Commands to issue, list and revoke machine API keys under access groups. */
 @Component
 @CommandGroup(name = "API Key commands")
 @Slf4j
@@ -23,108 +28,113 @@ public class ApiKeyCommand {
 
   private final ApiKeyService apiKeyService;
 
-  private static final String API_TOKEN_ROW_FORMAT = "%-40s %-20s %-25s%n";
+  private static final String API_KEY_ROW_FORMAT = "%-16s %-25s %-10s %-25s%n";
 
-  /** Creates a new API key for the specified user. */
+  /** Issues a new API key under the specified access group. */
   @Command(
       name = "create-api-key",
       description =
           """
-            Create a new API key for a user.
+            Issue a new API key under an access group. The token is printed once.
             Parameters:
-              --userId         (required) ID of the user
-              --expiration-date (optional) Expiration date in yyyy-MM-dd
-              --name  name of the token
+              --accessGroupId   (required) ID of the access group
+              --name            (required) name of the key
+              --expirationDate  (optional) Expiration date in yyyy-MM-dd
             Example:
-              create-api-key --userId <<user id>>
-              --expiration-date 2025-12-31 --name test
+              create-api-key --accessGroupId <<access group id>> --name revit-pipeline
+              --expirationDate 2027-12-31
             """)
   public void createApiKey(
-      @Option(longName = "userId", required = true) String userId,
-      @Option(longName = "expirationDate") String expirationDate,
-      @Option(longName = "name", required = true) String name) {
+      @Option(longName = "accessGroupId", required = true) String accessGroupId,
+      @Option(longName = "name", required = true) String name,
+      @Option(longName = "expirationDate") String expirationDate) {
 
     try {
-      if (userId == null || userId.isEmpty()) {
-        throw new InvalidInputException("User ID is required.");
+      if (accessGroupId == null || accessGroupId.isBlank()) {
+        throw new InvalidInputException("Access group ID is required.");
       }
-
       if (name == null || name.isBlank()) {
         throw new InvalidInputException("Name is required.");
       }
 
-      LocalDate formattedExpirationDate = null;
+      ZonedDateTime expirationTime = null;
       if (expirationDate != null && !expirationDate.isBlank()) {
+        LocalDate parsedDate;
         try {
-          formattedExpirationDate = LocalDate.parse(expirationDate.trim());
-
+          parsedDate = LocalDate.parse(expirationDate.trim());
         } catch (DateTimeParseException e) {
           throw new InvalidInputException(
               "Invalid expiration date " + "format. Expected yyyy-MM-dd.");
         }
-
-        if (formattedExpirationDate.isBefore(LocalDate.now())) {
+        if (parsedDate.isBefore(LocalDate.now())) {
           throw new InvalidInputException("Expiration date cannot be in the past.");
         }
+        expirationTime =
+            parsedDate
+                .atTime(LocalTime.MAX)
+                .truncatedTo(ChronoUnit.MICROS)
+                .atZone(ZoneId.systemDefault());
       }
 
-      GeneratedApiKeyDto generatedApiKey =
-          apiKeyService.createApiKey(userId.trim(), formattedExpirationDate, name.trim());
+      GeneratedApiKeyDto generated =
+          apiKeyService.createApiKey(accessGroupId.trim(), name.trim(), expirationTime);
 
-      System.out.println("API Key created successfully");
-      System.out.println("X-Api-Key: " + generatedApiKey.getApiKey().getId());
-      System.out.println("X-Api-Secret: " + generatedApiKey.getRawSecret());
+      System.out.println("API key created successfully");
+      System.out.println("Key id: " + generated.getId());
+      System.out.println("Token (shown once): " + generated.getToken());
+      System.out.println("Use it as: Authorization: Bearer " + generated.getToken());
 
     } catch (InvalidInputException e) {
       log.warn("Validation error: {}", e.getMessage());
       System.err.println("Validation error: " + e.getMessage());
-      return;
     } catch (Exception e) {
       log.error("Error while creating API key: {}", e.getMessage(), e);
       System.err.println(e.getMessage());
     }
   }
 
-  /** Lists all available API tokens for the specified user. */
+  /** Lists the API keys issued by the specified access group. */
   @Command(
-      name = "list-api-tokens",
+      name = "list-api-keys",
       description =
           """
-            Retrieves all the API tokens associated with the user.
+            Lists the API keys issued by an access group.
             Parameters:
-              --userId         (required) ID of the user
+              --accessGroupId   (required) ID of the access group
             Example:
-              list-api-tokens --userId <<user id>>
+              list-api-keys --accessGroupId <<access group id>>
             """)
-  public void getApiTokens(@Option(longName = "userId", required = true) String userId) {
+  public void listApiKeys(
+      @Option(longName = "accessGroupId", required = true) String accessGroupId) {
 
-    if (userId == null || userId.isBlank()) {
-      log.warn("Validation error: User ID is required.");
-      System.err.println("Validation error: User ID is required.");
+    if (accessGroupId == null || accessGroupId.isBlank()) {
+      log.warn("Validation error: Access group ID is required.");
+      System.err.println("Validation error: Access group ID is required.");
       return;
     }
 
     try {
-      List<ApiKey> tokens = apiKeyService.getApiTokens(userId.trim());
-      if (tokens.isEmpty()) {
-        System.out.println("No API tokens found for user: " + userId);
+      List<ApiKey> keys = apiKeyService.listApiKeys(accessGroupId.trim());
+      if (keys.isEmpty()) {
+        System.out.println("No API keys found for access group: " + accessGroupId);
         return;
       }
 
       DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-      System.out.printf(API_TOKEN_ROW_FORMAT, "Key", "Name", "Expiration");
+      System.out.printf(API_KEY_ROW_FORMAT, "Key id", "Name", "Status", "Expiration");
       System.out.println(
           "---------------------------------------" + "------------------------------------");
 
-      for (ApiKey token : tokens) {
+      for (ApiKey key : keys) {
         String expiration =
-            (token.getExpirationTime() == null)
+            (key.getExpirationTime() == null)
                 ? "Never"
-                : token.getExpirationTime().format(dateTimeFormatter);
+                : key.getExpirationTime().format(dateTimeFormatter);
         System.out.printf(
-            API_TOKEN_ROW_FORMAT,
-            token.getId(),
-            token.getName() == null ? "" : token.getName(),
+            API_KEY_ROW_FORMAT,
+            key.getId(),
+            key.getName() == null ? "" : key.getName(),
+            key.getStatus() == null ? "" : key.getStatus().getValue(),
             expiration);
       }
     } catch (Exception e) {
@@ -133,18 +143,18 @@ public class ApiKeyCommand {
     }
   }
 
-  /** Deletes the api token for the given key. */
+  /** Revokes the API key with the given id. */
   @Command(
-      name = "delete-api-token",
+      name = "revoke-api-key",
       description =
           """
-            Deletes an API token by ID.
+            Revokes an API key by id. The key is kept for provenance but rejected from now on.
             Parameters:
               --key         (required) ID of the API key
             Example:
-              delete-api-token --key <<key id>>
+              revoke-api-key --key <<key id>>
             """)
-  public void deleteApiToken(@Option(longName = "key", required = true) String keyId) {
+  public void revokeApiKey(@Option(longName = "key", required = true) String keyId) {
 
     if (keyId == null || keyId.isBlank()) {
       log.warn("Validation error: Key ID is required.");
@@ -153,17 +163,13 @@ public class ApiKeyCommand {
     }
 
     try {
-      boolean deleted = apiKeyService.deleteApiToken(keyId);
-      if (deleted) {
-        System.out.println("Deleted API token: " + keyId);
-      } else {
-        System.err.println("Key not found: " + keyId);
-      }
+      ApiKey revoked = apiKeyService.revokeApiKey(keyId.trim());
+      System.out.println("Revoked API key: " + revoked.getId());
     } catch (InvalidInputException e) {
       log.warn("Validation error: {}", e.getMessage());
       System.err.println("Validation error: " + e.getMessage());
     } catch (Exception e) {
-      log.error("Error while deleting API key: {}", e.getMessage(), e);
+      log.error("Error while revoking API key: {}", e.getMessage(), e);
       System.err.println("Error: " + e.getMessage());
     }
   }
