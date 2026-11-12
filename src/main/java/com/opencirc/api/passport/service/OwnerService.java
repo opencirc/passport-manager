@@ -1,7 +1,9 @@
 package com.opencirc.api.passport.service;
 
 import com.opencirc.api.passport.dao.OwnerRepository;
+import com.opencirc.api.passport.dao.ProjectRepository;
 import com.opencirc.api.passport.dto.OwnerDto;
+import com.opencirc.api.passport.enums.ProjectStatus;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.Owner;
 import java.util.List;
@@ -16,9 +18,13 @@ public class OwnerService {
 
   private final OwnerRepository ownerRepository;
 
+  /** Projects are counted before an owner may be deleted. */
+  private final ProjectRepository projectRepository;
+
   /** Constructor. */
-  public OwnerService(OwnerRepository ownerRepository) {
+  public OwnerService(OwnerRepository ownerRepository, ProjectRepository projectRepository) {
     this.ownerRepository = ownerRepository;
+    this.projectRepository = projectRepository;
   }
 
   /** Creates an owner. */
@@ -26,7 +32,7 @@ public class OwnerService {
   public OwnerDto createOwner(String name) {
     Owner owner = new Owner();
     owner.setName(requireName(name));
-    return OwnerDto.from(ownerRepository.save(owner));
+    return OwnerDto.from(ownerRepository.saveAndFlush(owner));
   }
 
   /** Lists owners in creation order. */
@@ -49,10 +55,22 @@ public class OwnerService {
     return OwnerDto.from(ownerRepository.save(owner));
   }
 
-  /** Deletes an owner; its projects keep existing with their owner reference cleared. */
+  /**
+   * Deletes an owner that has no active projects. Archived projects keep existing without an owner;
+   * active ones must be reassigned or archived first, so ownership is never lost silently.
+   */
   @Transactional
   public void deleteOwner(String id) {
-    ownerRepository.delete(requireOwner(id));
+    Owner owner = requireOwner(id);
+    long activeProjects = projectRepository.countByOwnerIdAndStatus(id, ProjectStatus.ACTIVE);
+    if (activeProjects > 0) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          "Owner still has "
+              + activeProjects
+              + " active project(s); reassign or archive them before deleting the owner");
+    }
+    ownerRepository.delete(owner);
   }
 
   private Owner requireOwner(String id) {

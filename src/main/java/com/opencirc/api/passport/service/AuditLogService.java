@@ -112,7 +112,7 @@ public class AuditLogService {
     log.setAction(action);
     log.setDiff(diff);
     log.setCreatedById(actor != null ? actor.createdById() : null);
-    return auditLogRepository.save(log);
+    return auditLogRepository.saveAndFlush(log);
   }
 
   /** Loads an audit log entry or fails with 404. */

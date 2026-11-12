@@ -241,6 +241,46 @@ public class TestAccessHierarchyLifecycle {
         .body("targetId", hasItem(rootPassportId))
         .body("targetId", hasItem(childId));
 
+    // The administrator inspects the same trail and passports with the session, not a token.
+    given()
+        .cookie("access_token", adminCookie)
+        .when()
+        .get("/api/admin/projects/{projectId}/audit-logs", projectId)
+        .then()
+        .statusCode(HttpStatus.OK.value())
+        .body("targetId", hasItem(childId));
+    given()
+        .cookie("access_token", adminCookie)
+        .when()
+        .get("/api/admin/projects/{projectId}/root-passport", projectId)
+        .then()
+        .statusCode(HttpStatus.OK.value())
+        .body("id", is(rootPassportId));
+    given()
+        .cookie("access_token", adminCookie)
+        .when()
+        .get(
+            "/api/admin/projects/{projectId}/passports/{passportId}/children",
+            projectId,
+            rootPassportId)
+        .then()
+        .statusCode(HttpStatus.OK.value())
+        .body("id", hasItem(childId));
+    given()
+        .cookie("access_token", adminCookie)
+        .when()
+        .get(
+            "/api/admin/projects/{projectId}/passports/{passportId}/audit-logs", projectId, childId)
+        .then()
+        .statusCode(HttpStatus.OK.value())
+        .body("[0].id", is(logId));
+    given()
+        .header("Authorization", "Bearer " + token)
+        .when()
+        .get("/api/admin/projects/{projectId}/audit-logs", projectId)
+        .then()
+        .statusCode(not(HttpStatus.OK.value()));
+
     // 4. The state is validated with a signed tag and the signature verifies.
     given()
         .header("Authorization", "Bearer " + token)
@@ -354,7 +394,27 @@ public class TestAccessHierarchyLifecycle {
         .body("[0].id", is(rootPassportId))
         .body("[0].status", is("active"));
 
-    // Deleting the owner keeps the project, now without an owner.
+    // The owner cannot be deleted while it still has an active project ...
+    given()
+        .cookie("access_token", adminCookie)
+        .when()
+        .delete("/api/admin/owners/{id}", ownerId)
+        .then()
+        .statusCode(HttpStatus.CONFLICT.value());
+
+    // ... so ownership is reassigned first (here: cleared) through the project update endpoint.
+    given()
+        .cookie("access_token", adminCookie)
+        .contentType(ContentType.JSON)
+        .body(
+            "{\"name\": \"Lifecycle Building\", \"description\": \"reassigned\", \"ownerId\": null}")
+        .when()
+        .put("/api/admin/projects/{projectId}", projectId)
+        .then()
+        .statusCode(HttpStatus.OK.value())
+        .body("name", is("Lifecycle Building"))
+        .body("ownerId", org.hamcrest.Matchers.nullValue());
+
     given()
         .cookie("access_token", adminCookie)
         .when()

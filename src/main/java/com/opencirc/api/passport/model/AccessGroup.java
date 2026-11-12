@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.UuidGenerator;
 
 /** Policy profile within a project defining the CRUD permissions of its API keys. */
@@ -54,6 +55,7 @@ public class AccessGroup {
   @ColumnTransformer(write = "?::jsonb")
   private CreatedByDto createdBy;
 
+  @Generated
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;
 }

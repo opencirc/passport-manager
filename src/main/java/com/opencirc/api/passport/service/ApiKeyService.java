@@ -94,7 +94,7 @@ public class ApiKeyService {
     apiKey.setName(name.trim());
     apiKey.setStatus(ApiKeyStatus.ACTIVE);
     apiKey.setExpirationTime(expirationTime);
-    apiKey = apiKeyRepository.save(apiKey);
+    apiKey = apiKeyRepository.saveAndFlush(apiKey);
 
     return GeneratedApiKeyDto.from(apiKey, buildToken(keyId, secret));
   }

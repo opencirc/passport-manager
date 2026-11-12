@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.UuidGenerator;
 
 /** Organization or corporate entity that commissions and owns construction projects. */
@@ -30,6 +31,7 @@ public class Owner {
   @Column(name = "name", columnDefinition = "TEXT", nullable = false)
   private String name;
 
+  @Generated
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;
 }

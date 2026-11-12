@@ -33,6 +33,9 @@ public final class AppConstants {
   /** Cors Maximum age. */
   public static final int CORS_MAX_AGE = 25;
 
+  /** Servlet path of the administrator login endpoint, exempt from cookie authentication. */
+  public static final String LOGIN_PATH = "/api/auth/login";
+
   /** hexString. */
   public static final int HEX_STRING = 0xff;
 

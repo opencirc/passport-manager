@@ -18,4 +18,7 @@ public interface AccessGroupRepository extends JpaRepository<AccessGroup, String
 
   /** Finds an access group of a project by name. */
   Optional<AccessGroup> findFirstByProjectIdAndName(String projectId, String name);
+
+  /** Counts the access groups of a project. */
+  long countByProjectId(String projectId);
 }

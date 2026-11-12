@@ -29,6 +29,9 @@ public class AccessGroupDto {
 
   private OffsetDateTime createdTime;
 
+  /** Active, unexpired API keys issued under the access group. */
+  private long activeApiKeyCount;
+
   /** Maps an AccessGroup to its DTO. */
   public static AccessGroupDto from(AccessGroup accessGroup) {
     return new AccessGroupDto(
@@ -39,6 +42,7 @@ public class AccessGroupDto {
         accessGroup.getPermissions(),
         accessGroup.getCreatedById(),
         accessGroup.getCreatedBy(),
-        accessGroup.getCreatedTime());
+        accessGroup.getCreatedTime(),
+        0L);
   }
 }

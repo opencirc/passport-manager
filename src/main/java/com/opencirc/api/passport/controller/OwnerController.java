@@ -58,8 +58,10 @@ public class OwnerController {
     return ResponseEntity.ok(ownerService.updateOwner(id, request.getName()));
   }
 
-  /** Deletes an owner; its projects keep existing without an owner. */
-  @Operation(summary = "Deletes an owner organization; its projects are kept without an owner")
+  /** Deletes an owner without active projects; archived projects are kept without an owner. */
+  @Operation(
+      summary =
+          "Deletes an owner organization; refused with 409 while it still has active projects")
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteOwner(@PathVariable String id) {
     ownerService.deleteOwner(id);

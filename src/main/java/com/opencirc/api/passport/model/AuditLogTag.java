@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.UuidGenerator;
 
 /**
@@ -55,6 +56,7 @@ public class AuditLogTag {
   @Column(name = "signature", columnDefinition = "TEXT", nullable = false)
   private String signature;
 
+  @Generated
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;
 

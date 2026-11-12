@@ -33,6 +33,12 @@ public class ProjectDto {
 
   private OffsetDateTime archivedTime;
 
+  /** Access groups of the project. */
+  private long accessGroupCount;
+
+  /** Active, unexpired API keys across the access groups of the project. */
+  private long activeApiKeyCount;
+
   /** Maps a Project and the id of its root passport to the DTO. */
   public static ProjectDto from(Project project, String rootPassportId) {
     ProjectDto dto = new ProjectDto();

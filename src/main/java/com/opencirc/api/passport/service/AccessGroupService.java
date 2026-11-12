@@ -1,12 +1,15 @@
 package com.opencirc.api.passport.service;
 
 import com.opencirc.api.passport.dao.AccessGroupRepository;
+import com.opencirc.api.passport.dao.ApiKeyRepository;
 import com.opencirc.api.passport.dto.AccessGroupDto;
 import com.opencirc.api.passport.dto.AccessGroupRequestDto;
 import com.opencirc.api.passport.dto.CreatedByDto;
+import com.opencirc.api.passport.enums.ApiKeyStatus;
 import com.opencirc.api.passport.exception.InvalidInputException;
 import com.opencirc.api.passport.model.AccessGroup;
 import com.opencirc.api.passport.model.AccessGroupPermissions;
+import java.time.ZonedDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,11 +24,16 @@ public class AccessGroupService {
 
   private final ProjectService projectService;
 
+  private final ApiKeyRepository apiKeyRepository;
+
   /** Constructor. */
   public AccessGroupService(
-      AccessGroupRepository accessGroupRepository, ProjectService projectService) {
+      AccessGroupRepository accessGroupRepository,
+      ProjectService projectService,
+      ApiKeyRepository apiKeyRepository) {
     this.accessGroupRepository = accessGroupRepository;
     this.projectService = projectService;
+    this.apiKeyRepository = apiKeyRepository;
   }
 
   /** Creates an access group in an active project. */
@@ -42,7 +50,7 @@ public class AccessGroupService {
     accessGroup.setPermissions(request.getPermissions());
     accessGroup.setCreatedById(createdById);
     accessGroup.setCreatedBy(createdBy);
-    return AccessGroupDto.from(accessGroupRepository.save(accessGroup));
+    return toDto(accessGroupRepository.saveAndFlush(accessGroup));
   }
 
   /** Updates the name, description and permissions of an access group. */
@@ -54,7 +62,7 @@ public class AccessGroupService {
     accessGroup.setName(request.getName().trim());
     accessGroup.setDescription(request.getDescription());
     accessGroup.setPermissions(request.getPermissions());
-    return AccessGroupDto.from(accessGroupRepository.save(accessGroup));
+    return toDto(accessGroupRepository.save(accessGroup));
   }
 
   /** Lists the access groups of a project. */
@@ -62,14 +70,22 @@ public class AccessGroupService {
   public List<AccessGroupDto> listAccessGroups(String projectId) {
     projectService.getProject(projectId, true);
     return accessGroupRepository.findAllByProjectIdOrderByCreatedTimeAsc(projectId).stream()
-        .map(AccessGroupDto::from)
+        .map(this::toDto)
         .toList();
   }
 
   /** Retrieves an access group of a project. */
   @Transactional(readOnly = true)
   public AccessGroupDto getAccessGroup(String projectId, String accessGroupId) {
-    return AccessGroupDto.from(requireAccessGroup(projectId, accessGroupId));
+    return toDto(requireAccessGroup(projectId, accessGroupId));
+  }
+
+  private AccessGroupDto toDto(AccessGroup accessGroup) {
+    AccessGroupDto dto = AccessGroupDto.from(accessGroup);
+    dto.setActiveApiKeyCount(
+        apiKeyRepository.countUsableByAccessGroupId(
+            accessGroup.getId(), ApiKeyStatus.ACTIVE, ZonedDateTime.now()));
+    return dto;
   }
 
   private AccessGroup requireAccessGroup(String projectId, String accessGroupId) {

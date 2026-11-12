@@ -61,6 +61,16 @@ public class JwtFilter extends OncePerRequestFilter {
     this.objectMapper = objectMapper;
   }
 
+  /**
+   * The login endpoint establishes a session and must not be blocked by a stale or foreign session
+   * cookie left on the host by an earlier session or another local application.
+   */
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    return AppConstants.LOGIN_PATH.equals(request.getServletPath())
+        && ApiKeyService.resolveToken(request) == null;
+  }
+
   /** Processes incoming HTTP requests and validates authentication. */
   @Override
   protected void doFilterInternal(

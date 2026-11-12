@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.UuidGenerator;
 
 /** Distinct physical building, construction development, or material workspace. */
@@ -54,6 +55,7 @@ public class Project {
   @ColumnTransformer(write = "?::jsonb")
   private CreatedByDto createdBy;
 
+  @Generated
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;
 

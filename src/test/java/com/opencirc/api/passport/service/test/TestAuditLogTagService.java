@@ -68,7 +68,8 @@ public class TestAuditLogTagService {
   @Test
   void signsNewTagWithTheRequestsKeySecret() {
     when(auditLogTagRepository.findByLogId("log-1")).thenReturn(Optional.empty());
-    when(auditLogTagRepository.save(any(AuditLogTag.class))).thenAnswer(i -> i.getArgument(0));
+    when(auditLogTagRepository.saveAndFlush(any(AuditLogTag.class)))
+        .thenAnswer(i -> i.getArgument(0));
 
     AuditLogTagDto tag =
         service.tag("log-1", ValidationStatus.APPROVED, "lead.auditor@certifier.org", SIGNER);
@@ -89,7 +90,8 @@ public class TestAuditLogTagService {
     existing.setApiKeyId("key-1");
     existing.setSignature("old");
     when(auditLogTagRepository.findByLogId("log-1")).thenReturn(Optional.of(existing));
-    when(auditLogTagRepository.save(any(AuditLogTag.class))).thenAnswer(i -> i.getArgument(0));
+    when(auditLogTagRepository.saveAndFlush(any(AuditLogTag.class)))
+        .thenAnswer(i -> i.getArgument(0));
 
     AuditLogTagDto tag =
         service.tag("log-1", ValidationStatus.REJECTED, "lead.auditor@certifier.org", SIGNER);
@@ -102,7 +104,8 @@ public class TestAuditLogTagService {
   @Test
   void verifiesAnUntouchedTagAndDetectsTampering() {
     when(auditLogTagRepository.findByLogId("log-1")).thenReturn(Optional.empty());
-    when(auditLogTagRepository.save(any(AuditLogTag.class))).thenAnswer(i -> i.getArgument(0));
+    when(auditLogTagRepository.saveAndFlush(any(AuditLogTag.class)))
+        .thenAnswer(i -> i.getArgument(0));
     AuditLogTagDto signed =
         service.tag("log-1", ValidationStatus.APPROVED, "lead.auditor@certifier.org", SIGNER);
 

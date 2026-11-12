@@ -308,7 +308,7 @@ public class PassportService {
     passport.setCreatedTime(OffsetDateTime.now());
     passport.setDatasheets(new HashSet<>());
 
-    passport = passportRepository.save(passport);
+    passport = passportRepository.saveAndFlush(passport);
     auditLogService.record(
         AuditTargetType.PASSPORT,
         passport.getId(),
@@ -393,6 +393,49 @@ public class PassportService {
   }
 
   /** Loads a passport of any status and verifies it belongs to the actor's project. */
+  /** Retrieves the root passport of a project for inspection, whatever its status. */
+  @Transactional(readOnly = true)
+  public PassportDto getRootPassportInProject(String projectId) {
+    return passportRepository
+        .findFirstByProjectIdAndParentIdIsNull(projectId)
+        .map(PassportDto::from)
+        .orElseThrow(
+            () ->
+                new HttpServerErrorException(
+                    HttpStatus.NOT_FOUND, "Project has no root passport: " + projectId));
+  }
+
+  /** Retrieves a passport of a project for inspection; archived ones only when requested. */
+  @Transactional(readOnly = true)
+  public PassportDto getPassportInProject(
+      String passportId, String projectId, boolean includeArchived) {
+    Optional<Passport> optionalPassport =
+        passportRepository.findByIdInProject(passportId, projectId);
+    if (optionalPassport.isEmpty()
+        || (!includeArchived && optionalPassport.get().getStatus() == Passport.Status.ARCHIVED)) {
+      throw new HttpServerErrorException(
+          HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId);
+    }
+    return PassportDto.from(optionalPassport.get());
+  }
+
+  /** Retrieves the non-archived passports with the given parent ID in a project. */
+  @Transactional(readOnly = true)
+  public List<PassportDto> getImmediateChildrenInProject(String passportId, String projectId) {
+    Passport parent =
+        passportRepository
+            .findById(passportId)
+            .filter(candidate -> projectId.equals(candidate.getProjectId()))
+            .orElseThrow(
+                () ->
+                    new HttpServerErrorException(
+                        HttpStatus.NOT_FOUND, "Could not find passport with ID " + passportId));
+    return assemblePassportsFromResultRows(
+        passportRepository
+            .findImmediateChildren(parent.getId(), projectId)
+            .orElse(Collections.emptyList()));
+  }
+
   private Passport loadOwnedPassport(String passportId, ApiKeyPrincipal actor) {
     Passport passport =
         passportRepository
@@ -527,7 +570,7 @@ public class PassportService {
       datasheet.setDefinition(definition);
       datasheet.setDataCategory(dataCategory);
       datasheet.setCreatedById(actor != null ? actor.getKeyId() : null);
-      datasheet = datasheetRepository.save(datasheet);
+      datasheet = datasheetRepository.saveAndFlush(datasheet);
       passport.getDatasheets().add(datasheet);
 
       auditLogService.record(

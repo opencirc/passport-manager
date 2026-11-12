@@ -86,7 +86,7 @@ public class TestPassportServiceStructureLogging {
     definition.setName("Test Definition");
     when(datasheetDefinitionService.resolveDefinitions(platform, platformId, false))
         .thenReturn(List.of(definition));
-    when(datasheetRepository.save(any(Datasheet.class)))
+    when(datasheetRepository.saveAndFlush(any(Datasheet.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     passportService.addDatasheetsToPassportUsingPlatform(

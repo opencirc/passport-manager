@@ -74,7 +74,7 @@ public class TestApiKeyService {
   void issuesStructuredTokenAndStoresOnlyTheHash() {
     when(accessGroupRepository.existsById("group-1")).thenReturn(true);
     when(apiKeyRepository.existsById(anyString())).thenReturn(false);
-    when(apiKeyRepository.save(any(ApiKey.class))).thenAnswer(i -> i.getArgument(0));
+    when(apiKeyRepository.saveAndFlush(any(ApiKey.class))).thenAnswer(i -> i.getArgument(0));
 
     GeneratedApiKeyDto generated = apiKeyService.createApiKey("group-1", "Pipeline", null);
 
@@ -85,7 +85,7 @@ public class TestApiKeyService {
     assertEquals(AppConstants.API_KEY_SECRET_LENGTH, parsed.secret().length());
 
     ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
-    org.mockito.Mockito.verify(apiKeyRepository).save(saved.capture());
+    org.mockito.Mockito.verify(apiKeyRepository).saveAndFlush(saved.capture());
     assertEquals(ApiKeyService.hashSecret(parsed.secret()), saved.getValue().getSecretHash());
     assertNotEquals(parsed.secret(), saved.getValue().getSecretHash());
     assertEquals(ApiKeyStatus.ACTIVE, saved.getValue().getStatus());

@@ -203,6 +203,12 @@ seed --type all                 # Adds the administrator and passport data from 
 seed                            # Defaults to all
 ```
 
+Scripted seeding: the shell reads commands from standard input, so a fresh local stack gets its administrator with
+
+```bash
+printf 'seed --type admin\nexit\n' | docker compose --profile shell run --rm -T shell mvn -q spring-boot:run
+```
+
 The passport seeders provision a `Seed Owner`, a `Seed Project` with its root passport, a `Seed Integrator` access group with full permissions and a `Seed Key` API key, reusing them on later runs. The key's token is printed once when it is first issued.
 
 

@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.UuidGenerator;
 import tools.jackson.databind.JsonNode;
 
@@ -70,6 +71,7 @@ public class AuditLog {
   @Column(name = "created_by_id")
   private String createdById;
 
+  @Generated
   @Column(name = "created_time", updatable = false, insertable = false)
   private OffsetDateTime createdTime;
 }
